@@ -2,9 +2,6 @@
 #include "gameObjects/gameObject3D.h"
 #include "gameObjects/meshObject.h"
 
-class WallIndex {
-
-};
 
 class Room : public GameObject3D {
 public:
@@ -14,6 +11,13 @@ public:
 		South, 
 		West,
 	};
+	enum WallState {
+		solid,
+		window,
+		door
+	};
+	std::string wallMeshIdentifiers[3]{"SpaceShip/room.glb:Mesh_3", "SpaceShip/room.glb:Mesh_1", 
+		"SpaceShip/room.glb:Mesh_2"};
 
 	/// <summary>
 	/// Helper function that returns a index offset for the selected neighbor.
@@ -56,7 +60,7 @@ public:
 	/// </summary>
 	/// <param name="wall"></param>
 	/// <param name="active"></param>
-	void SetWallState(Room::WallIndex wall, bool active);
+	void SetWallState(Room::WallIndex wall, Room::WallState wallState);
 
 	/// <summary>
 	/// Overridden to dissallow any parent other than SpaceShip

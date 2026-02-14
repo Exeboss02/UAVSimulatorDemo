@@ -304,7 +304,9 @@ void Renderer::RenderPass() {
 
 	// Bind meshes
 	for (size_t i = 0; i < this->meshRenderQueue.size(); i++) {
-		if ((this->meshRenderQueue)[i].expired()) {
+		std::weak_ptr<MeshObject> meshObject = this->meshRenderQueue[i];
+
+		if (meshObject.expired()) {
 			// This should get rid of empty objects
 			Logger::Log("The renderer deleted a meshObject");
 			this->meshRenderQueue.erase(this->meshRenderQueue.begin() + i);
@@ -312,7 +314,9 @@ void Renderer::RenderPass() {
 			continue;
 		}
 
-		RenderMeshObject((this->meshRenderQueue)[i].lock().get());
+		if (!meshObject.lock()->IsActive() || meshObject.lock()->IsHidden()) continue;
+
+		RenderMeshObject(meshObject.lock().get());
 	}
 }
 

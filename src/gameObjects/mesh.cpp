@@ -8,9 +8,9 @@ Mesh::~Mesh() {
 
 }
 
-std::string& Mesh::GetName()
+std::string& Mesh::GetIdentifier()
 {
-    return this->name;
+    return this->identifier;
 }
 
 std::vector<SubMesh>& Mesh::GetSubMeshes()
@@ -28,9 +28,9 @@ IndexBuffer& Mesh::GetIndexBuffer()
     return this->indexbuffer;
 }
 
-void Mesh::SetName(std::string name)
+void Mesh::SetIdentifier(std::string name)
 {
-    this->name = name;
+    this->identifier = name;
 }
 
 SubMesh::SubMesh(size_t startIndex, size_t nrOfIndices)

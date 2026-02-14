@@ -112,7 +112,12 @@ void PhysicsQueue::SolveCollisions()
 }
 
 bool PhysicsQueue::castRay(Ray& ray, RayCastData& rayCastData, float maxDistance) {
-    
+	//not ok but done elsewhere so if fps no good, fix this everywhere 
+    for (int i = allColiders.size() - 1; i >= 0; i--) {
+		std::shared_ptr<Collider> thisCollider = this->allColiders[i].lock();
+		if (!thisCollider) {
+			this->allColiders.erase(this->allColiders.begin() + i);
+		}
+	}
    return this->rayCaster.castRay(ray, rayCastData, this->allColiders, maxDistance);
-
 }

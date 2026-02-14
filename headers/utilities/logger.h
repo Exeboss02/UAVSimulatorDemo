@@ -9,6 +9,7 @@
 #include <string>
 #include <type_traits>
 #include "core/filepathHolder.h"
+#include <format>
 
 enum LogOption { consoleAndLogFile, consoleOnly, logFileOnly };
 

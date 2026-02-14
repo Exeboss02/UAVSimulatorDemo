@@ -1,4 +1,5 @@
 #include "rendering/textureCube.h"
+#include "utilities/logger.h"
 
 void TextureCube::CreateTextures(ID3D11Device* device, ID3D11DeviceContext* deviceContext, std::string filepath) 
 {

@@ -189,7 +189,7 @@ bool ObjectLoader::LoadGltf(std::filesystem::path localpath, MeshLoadData& meshL
 			}
 
 			std::string materialIdent = path.generic_string() + ":Mat_" + std::to_string(materials.size());
-			materialOut->BaseMaterial::identifier = materialIdent;
+			materialOut->BaseMaterial::SetIdentifier(materialIdent);
 
 			current_materials.emplace_back(materialOut);
 			materials.emplace(materialIdent, std::move(materialOut));
@@ -201,7 +201,7 @@ bool ObjectLoader::LoadGltf(std::filesystem::path localpath, MeshLoadData& meshL
 		IndexBuffer indexBuffer;
 		indexBuffer.Init(device, indices.size(), indices.data());
 
-		mesh->SetName(localpath.generic_string() + ":Mesh_" + std::to_string(meshIndex));
+		mesh->SetIdentifier(localpath.generic_string() + ":Mesh_" + std::to_string(meshIndex));
 		mesh->Init(std::move(vertexBuffer), std::move(indexBuffer), std::move(submeshes));
 		data.SetMesh(mesh);
 

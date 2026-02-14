@@ -35,15 +35,15 @@ public:
 
 	void Init(VertexBuffer vertexbuffer, IndexBuffer indexbuffer, std::vector<SubMesh>&& submeshes);
 
-	std::string& GetName();
 	std::vector<SubMesh>& GetSubMeshes();
 	VertexBuffer& GetVertexBuffer();
 	IndexBuffer& GetIndexBuffer();
 
-	void SetName(std::string name);
+	std::string& GetIdentifier();
+	void SetIdentifier(std::string identifier);
 
 private:
-	std::string name;
+	std::string identifier;
 	std::vector<SubMesh> subMeshes;
 	VertexBuffer vertexbuffer;
 	IndexBuffer indexbuffer;

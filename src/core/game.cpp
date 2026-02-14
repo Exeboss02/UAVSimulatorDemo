@@ -73,3 +73,5 @@ void Game::Run(HINSTANCE hInstance, int nCmdShow)
 
 std::filesystem::path FilepathHolder::exeDirectory;
 std::filesystem::path FilepathHolder::assetsDirectory;
+
+bool ImguiManager::showObjectHierarchy = false;

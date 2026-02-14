@@ -92,10 +92,11 @@ public:
 
 	virtual void ShowInHierarchy() override;
 
+	size_t GetCameraId();
+
 private:
 	static CameraObject* mainCamera;
-	static size_t cameraId;
-	size_t thisCameraId;
+	static size_t cameraIdCounter;
 
 	// CameraMatrixContainer cameraMatrix;
 
@@ -110,4 +111,7 @@ private:
 	float farPlane;
 
 	//void UpdateCameraMatrix();
+
+protected:
+	size_t cameraId;
 };

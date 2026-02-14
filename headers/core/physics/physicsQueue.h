@@ -12,9 +12,27 @@ public:
 
 	static PhysicsQueue& GetInstance();
 
+    /// <summary>
+    /// Adds RigidBody to PhysicsQueue to check and resolve collisions
+    /// </summary>
+    /// <param name="rigidBody"></param>
     void AddRigidBody(std::weak_ptr<RigidBody> rigidBody);
+
+    /// <summary>
+    /// Adds Collider with GameObject3D parent or no parent at all to PhysicsQueue to check and resolve collisions
+    /// </summary>
+    /// <param name="collider"></param>
     void AddStrayCollider(std::weak_ptr<Collider> collider);
+
+    /// <summary>
+    /// Adds collider to the array with all existing colliders
+    /// </summary>
+    /// <param name="collider"></param>
     void AddToAllColliders(std::weak_ptr<Collider> collider);
+
+    /// <summary>
+    /// Starts checking and resolving current collisions
+    /// </summary>
     void SolveCollisions();
     /// <summary>
     /// casts ray with origin point and direction aswell as optional max distance,

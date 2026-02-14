@@ -2,10 +2,10 @@
 #include "DirectXMath.h"
 
 CameraObject* CameraObject::mainCamera = nullptr;
-size_t CameraObject::cameraId = 0;
+size_t CameraObject::cameraIdCounter = 0;
 
 CameraObject::CameraObject()
-	: fieldOfView(80.0f), thisCameraId(CameraObject::cameraId++), farPlane(1000.), nearPlane(0.1),
+	: fieldOfView(80.0f), cameraId(CameraObject::cameraIdCounter++), farPlane(1000.), nearPlane(0.1),
 	  aspectRatio(16. / 9.) {
 	if (!this->mainCamera) {
 		SetMainCamera();
@@ -112,6 +112,8 @@ void CameraObject::ShowInHierarchy()
 	}
 	ImGui::SliderFloat("FOV", &this->fieldOfView, 1.0f, 120.0f);
 }
+
+size_t CameraObject::GetCameraId() { return this->cameraId; }
 
 //void CameraObject::UpdateCameraMatrix() {
 //	// Position

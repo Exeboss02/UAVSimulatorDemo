@@ -19,8 +19,26 @@ void RigidBody::Start()
 	Logger::Log("Added Rigidbody to physics queue");
 }
 
-void RigidBody::SetParent(std::weak_ptr<GameObject> parent)
+void RigidBody::Tick()
 {
+	this->GameObject3D::Tick();
+
+	if(this->gravity) this->linearVelocity.y -= 6.0f * Time::GetInstance().GetDeltaTime();
+}
+
+void RigidBody::LateTick()
+{
+	using namespace DirectX;
+	GameObject3D::LatePhysicsTick();
+
+	XMVECTOR moveVector = XMLoadFloat3(&this->linearVelocity);
+	this->transform.Move(moveVector, 1); //vector is already scaled
+}
+
+void RigidBody::PhysicsTick() {}
+void RigidBody::LatePhysicsTick() {}
+
+void RigidBody::SetParent(std::weak_ptr<GameObject> parent) {
 	//do we need to add other things?
 	
 	if(parent.expired())

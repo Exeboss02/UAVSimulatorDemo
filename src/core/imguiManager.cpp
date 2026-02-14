@@ -278,6 +278,7 @@ void ImguiManager::MainMenuImGui()
 		}
 		if (ImGui::BeginMenu("Edit"))
 		{
+			ImGui::MenuItem("Object Hierarchy", nullptr, &this->showObjectHierarchy);
 			ImGui::MenuItem("Transform", nullptr, &this->showTransformWindow);
 			ImGui::MenuItem("Sound", nullptr, &this->showSoundWindow);
 			ImGui::MenuItem("Music", nullptr, &this->showMusicWindow);

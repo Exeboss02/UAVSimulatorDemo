@@ -9,6 +9,8 @@
 
 void DebugCamera::Tick() {
 	this->CameraObject::Tick();
+
+	if (this->cameraId != CameraObject::GetMainCamera().GetCameraId()) return;
 	
 	if (keyboardInput.Quit()) {
 		PostQuitMessage(0);
@@ -36,18 +38,16 @@ void DebugCamera::Tick() {
 	if (!showCursor) {
 		std::array<float, 2> lookVector = keyboardInput.GetLookVector();
 
-		static float rot[3] = {0, 0, 0};
-
 		float sensitivity = 2.f;
 		float rotSpeed = sensitivity * Time::GetInstance().GetDeltaTime();
 
-		rot[0] += rotSpeed * lookVector[1];
-		rot[1] += rotSpeed * lookVector[0];
+		this->rot[0] += rotSpeed * lookVector[1];
+		this->rot[1] += rotSpeed * lookVector[0];
 
-		if (rot[0] > 1.5f) rot[0] = 1.5f;
-		if (rot[0] < -1.5f) rot[0] = -1.5f;
+		if (this->rot[0] > 1.5f) this->rot[0] = 1.5f;
+		if (this->rot[0] < -1.5f) this->rot[0] = -1.5f;
 
-		this->transform.SetRotationRPY(0.0f, rot[0], rot[1]);
+		this->transform.SetRotationRPY(0.0f, this->rot[0], this->rot[1]);
 	}
 
 	InputManager::GetInstance().ReadControllerInput(this->controllerInput.GetControllerIndex());
@@ -85,5 +85,10 @@ void DebugCamera::shootRay() {
 
 		Logger::Log(hitString, " at distance: ", std::to_string(rayCastData.distance));
 	}
+}
 
+void DebugCamera::SaveToJson(nlohmann::json& data) 
+{
+	this->CameraObject::SaveToJson(data);
+	data["type"] = "DebugCamera";
 }

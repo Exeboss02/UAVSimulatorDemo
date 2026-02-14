@@ -3,6 +3,9 @@
 #include "alc.h"
 #include "sndfile.h"
 
+/// <summary>
+/// This should not be used! will be removed soon
+/// </summary>
 struct AudioInstruction
 {
 	bool loopSound;

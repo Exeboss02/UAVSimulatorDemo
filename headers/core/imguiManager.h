@@ -30,6 +30,9 @@ public:
 	void SetSaveSceneAsChangeCallback(std::function<void(const std::string&)> callback);
 	void SetLoadSceneChangeCallback(std::function<void(const std::string&)> callback);
 
+	// Edit
+	static bool showObjectHierarchy;
+
 private:
 	void ConsoleImGui();
 	void WindowOptionsImGui();

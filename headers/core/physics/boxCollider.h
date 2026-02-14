@@ -18,12 +18,37 @@ public:
 	void LoadFromJson(const nlohmann::json& data) override;
 	void SaveToJson(nlohmann::json& data) override;
 
-	//Center and Size is only in the transform
+	/// <summary>
+	/// ONLY USED BY ENGINE - Starts the double dispatch call chain to automatically determine collision case
+	/// </summary>
+	/// <param name="otherCollider"></param>
+	/// <param name="mtvAxis"></param>
+	/// <param name="mtvDistance"></param>
+	/// <returns></returns>
 	bool DoubleDispatchCollision(Collider* otherCollider, DirectX::XMFLOAT3& mtvAxis, float& mtvDistance) override;
 
+	/// <summary>
+	/// Sets position and updates SAT-data
+	/// </summary>
+	/// <param name="newCenter"></param>
 	void SetPosition(DirectX::XMFLOAT3 newCenter) override;
+
+	/// <summary>
+	/// Sets rotation and updates SAT-data
+	/// </summary>
+	/// <param name="newRotation"></param>
 	void SetRotation(DirectX::XMFLOAT3 newRotation);
+
+	/// <summary>
+	/// Sets extents, a float3 with lengths from center of box to each side
+	/// </summary>
+	/// <param name="newSize"></param>
 	void SetExtents(DirectX::XMFLOAT3 newSize);
+
+	/// <summary>
+	/// Retrieve extents float3
+	/// </summary>
+	/// <returns></returns>
 	DirectX::XMFLOAT3 GetExtents();
 
 	bool IntersectWithRay(const Ray& ray, float& distance, float maxDistance) override;

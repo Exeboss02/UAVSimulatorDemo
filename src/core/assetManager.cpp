@@ -73,11 +73,11 @@ bool AssetManager::LoadNewGltf(std::string identifier) {
 	}
 	for (std::shared_ptr<Mesh>& data : meshLoadData.meshes)
 	{
-		this->meshes.emplace(data->GetName(), std::move(data));
+		this->meshes.emplace(data->GetIdentifier(), std::move(data));
 	}
 	for (std::shared_ptr<GenericMaterial>& data : meshLoadData.materials)
 	{
-		this->materials.emplace(data->identifier, std::move(data));
+		this->materials.emplace(data->GetIdentifier(), std::move(data));
 	}
 	for (std::shared_ptr<Texture>& data : meshLoadData.textures)
 	{
@@ -85,7 +85,7 @@ bool AssetManager::LoadNewGltf(std::string identifier) {
 	}
 	for (MeshObjData& data : meshLoadData.meshData)
 	{
-		this->meshObjDataSets.emplace(data.GetMeshIdent(), std::move(data));
+		this->meshObjDataSets.emplace(data.GetMeshIdentifier(), std::move(data));
 	}
 
 	return true;
@@ -184,6 +184,6 @@ void AssetManager::AddShader(std::string identifier, std::shared_ptr<Shader> sha
 
 void AssetManager::AddMaterial(std::string identifier, std::shared_ptr<BaseMaterial> material)
 {
-	material->identifier = identifier;
+	material->SetIdentifier(identifier);
 	this->materials.emplace(identifier, std::move(material));
 }

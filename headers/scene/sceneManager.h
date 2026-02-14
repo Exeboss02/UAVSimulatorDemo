@@ -15,8 +15,8 @@
 #include <scene/scene.h>
 #include <utilities/logger.h>
 #include "core/physics/rigidBody.h"
-
 #include "core/physics/testPlayer.h"
+#include "game/player.h"
 
 #include <fstream>
 #include <nlohmann/json.hpp>

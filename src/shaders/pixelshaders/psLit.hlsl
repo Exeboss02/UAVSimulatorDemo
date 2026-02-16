@@ -88,7 +88,7 @@ float4 main(PixelShaderInput input) : SV_TARGET
         float sceneDepth = ndc.z;
         float mapDepth = shadowMaps.SampleLevel(shadowSampler, float3(uv, i), 0.f).r;
         
-        const float bias = 0.000001f;
+        const float bias = 0.01f;
         bool islit = (mapDepth + bias) >= sceneDepth;
         
         

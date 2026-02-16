@@ -44,6 +44,8 @@ void SpotlightObject::Start() {
 
 	// Attach camera for shadowpass
 	this->camera = this->factory->CreateGameObjectOfType<CameraObject>();
+	this->camera.lock()->SetParent(this->GetPtr());
+	this->camera.lock()->SetFov(90);
 	this->camera.lock()->SetAspectRatio(1 / 1);
 	this->camera.lock()->SetFarPlane(1000.);
 }

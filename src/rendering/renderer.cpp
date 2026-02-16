@@ -136,8 +136,7 @@ void Renderer::CreateSampler() {
 	this->sampler->Init(this->device.Get(), D3D11_TEXTURE_ADDRESS_WRAP);
 
 	this->shadowSampler = std::unique_ptr<Sampler>(new Sampler());
-	this->shadowSampler->Init(this->device.Get(), D3D11_TEXTURE_ADDRESS_BORDER,
-							  D3D11_FILTER_COMPARISON_MIN_MAG_LINEAR_MIP_POINT,
+	this->shadowSampler->Init(this->device.Get(), D3D11_TEXTURE_ADDRESS_BORDER, D3D11_FILTER_ANISOTROPIC,
 							  D3D11_COMPARISON_LESS_EQUAL, {1, 1, 1, 1});
 }
 

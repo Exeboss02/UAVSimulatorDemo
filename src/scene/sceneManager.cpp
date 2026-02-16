@@ -35,12 +35,6 @@ void SceneManager::SceneTick()
 	}
 
 	this->mainScene->SceneTick(this->isPaused);
-
-	//ImGui::Begin("SceneTest");
-	//if (ImGui::Button("Delete Scene")) {
-	//	DeleteScene(this->mainScene);
-	//}
-	//ImGui::End();
 }
 
 void SceneManager::LoadScene(Scenes scene)
@@ -164,6 +158,22 @@ void SceneManager::SetMainCameraInScene(std::shared_ptr<Scene>& scene)
 
 void SceneManager::TogglePause(bool enable) 
 { this->isPaused = enable; }
+
+void SceneManager::SkyboxMenu() 
+{
+	if (ImGui::MenuItem("Old town")) {
+		RenderQueue::ChangeSkybox("cubeMap.dds");
+	}
+	if (ImGui::MenuItem("Space")) {
+		RenderQueue::ChangeSkybox("space.dds");
+	}
+	if (ImGui::MenuItem("Asteroid")) {
+		RenderQueue::ChangeSkybox("asteroids.dds");
+	}
+	if (ImGui::MenuItem("Planet")) {
+		RenderQueue::ChangeSkybox("mars.dds");
+	}
+}
 
 void SceneManager::SaveSceneToCurrentFile()
 {

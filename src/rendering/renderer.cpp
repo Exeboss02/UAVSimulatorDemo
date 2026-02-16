@@ -5,9 +5,7 @@
 Renderer::Renderer()
 	: viewport(), currentPixelShader(nullptr), currentVertexShader(nullptr), currentRasterizerState(nullptr),
 	  currentMaterial(nullptr), currentMesh(nullptr), maximumSpotlights(16),
-	  renderQueue(this->meshRenderQueue, this->spotLightRenderQueue, this->pointLightRenderQueue) {}
-	  maximumSpotlights(16),
-	  renderQueue(this->meshRenderQueue, this->spotLightRenderQueue, this->pointLightRenderQueue) 
+	  renderQueue(this->meshRenderQueue, this->spotLightRenderQueue, this->pointLightRenderQueue)
 {
 	this->renderQueue.newSkyboxCallback = [this](std::string filename) { this->ChangeSkybox(filename); };
 }
@@ -312,9 +310,7 @@ void Renderer::RenderPass() {
 
 	// Bind meshes
 	for (size_t i = 0; i < this->meshRenderQueue.size(); i++) {
-		std::weak_ptr<MeshObject> meshObject = this->meshRenderQueue[i];
-
-		if (meshObject.expired()) {
+		if (this->meshRenderQueue[i].expired()) {
 			// This should get rid of empty objects
 			Logger::Log("The renderer deleted a meshObject");
 			this->meshRenderQueue.erase(this->meshRenderQueue.begin() + i);
@@ -322,9 +318,11 @@ void Renderer::RenderPass() {
 			continue;
 		}
 
-		if (!meshObject.lock()->IsActive() || meshObject.lock()->IsHidden()) continue;
+		std::shared_ptr<MeshObject> meshObject = this->meshRenderQueue[i].lock();
 
-		RenderMeshObject(meshObject.lock().get());
+		if (!meshObject->IsActive() || meshObject->IsHidden()) continue;
+
+		RenderMeshObject(meshObject.get());
 	}
 }
 
@@ -730,9 +728,10 @@ void Renderer::RenderMeshObject(MeshObject* meshObject, bool renderMaterial) {
 			Logger::Error("Trying to render expired material, trying to continue...");
 		} else {
 			if (!this->renderAllWireframe && renderMaterial) {
-				if (weak_material.lock().get() != this->currentMaterial) {
-					BindMaterial(weak_material.lock().get());
-					this->currentMaterial = weak_material.lock().get();
+				std::shared_ptr<BaseMaterial> sharedMaterial = weak_material.lock();
+				if (sharedMaterial.get() != this->currentMaterial) {
+					BindMaterial(sharedMaterial.get());
+					this->currentMaterial = sharedMaterial.get();
 				}
 			}
 

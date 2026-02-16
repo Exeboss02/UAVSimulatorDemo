@@ -1,14 +1,14 @@
 #include "rendering/renderQueue.h"
 #include "gameObjects/gameObject.h"
 #include "gameObjects/meshObject.h"
+#include "gameObjects/pointLightObject.h"
 #include "gameObjects/spotlightObject.h"
 
 RenderQueue* RenderQueue::instance = nullptr;
 
 RenderQueue::RenderQueue(std::vector<std::weak_ptr<MeshObject>>& meshRenderQueue,
 						 std::vector<std::weak_ptr<SpotlightObject>>& lightRenderQueue,
-						 std::vector<std::weak_ptr<PointLightObject>>& pointLightRenderQueue
-)
+						 std::vector<std::weak_ptr<PointLightObject>>& pointLightRenderQueue)
 	: meshRenderQueue(meshRenderQueue), lightRenderQueue(lightRenderQueue),
 	  pointLightRenderQueue(pointLightRenderQueue) {
 	Logger::Log("Initializing RenderQueue.");
@@ -75,7 +75,7 @@ void RenderQueue::AddPointLight(std::weak_ptr<GameObject> newPointLight) {
 
 	auto light = std::static_pointer_cast<PointLightObject>(newPointLight.lock());
 
-	instance->pointLightRenderQueue.push_back(light); 
+	instance->pointLightRenderQueue.push_back(light);
 }
 
 void RenderQueue::ClearAllQueues() {
@@ -88,6 +88,7 @@ void RenderQueue::ClearAllQueues() {
 
 	instance->meshRenderQueue.clear();
 	instance->lightRenderQueue.clear();
+	instance->pointLightRenderQueue.clear();
 
 	Logger::Log("Clearing render queue successful.");
 }

@@ -181,15 +181,11 @@ void Renderer::CreateRendererConstantBuffers() {
 	this->worldMatrixBuffer->Init(this->device.Get(), sizeof(Renderer::WorldMatrixBufferContainer), &worldMatrix,
 								  D3D11_USAGE_DYNAMIC, D3D11_CPU_ACCESS_WRITE);
 
-	SpotlightObject::SpotLightContainer defaultSpotlights[16]{};
-	this->spotlightBuffer = std::make_unique<StructuredBuffer>();
-	this->spotlightBuffer->Init(this->device.Get(), sizeof(SpotlightObject::SpotLightContainer),
-								this->maximumSpotlights, defaultSpotlights);
+	this->spotlightBuffer = std::make_unique<StructuredBuffer<SpotlightObject::SpotLightContainer>>();
+	this->spotlightBuffer->Init(this->device.Get(),this->maximumSpotlights ,{});
 
-	PointLightObject::PointLightContainer defaultPointlights[16]{};
-	this->pointlightBuffer = std::make_unique<StructuredBuffer>();
-	this->pointlightBuffer->Init(this->device.Get(), sizeof(PointLightObject::PointLightContainer),
-								 this->maximumSpotlights, defaultPointlights);
+	this->pointlightBuffer = std::make_unique<StructuredBuffer<PointLightObject::PointLightContainer>>();
+	this->pointlightBuffer->Init(this->device.Get(), this->maximumSpotlights, {});
 
 	Renderer::LightCountBufferContainer lightCountContainer = {};
 	this->spotlightCountBuffer = std::make_unique<ConstantBuffer>();
@@ -603,7 +599,7 @@ void Renderer::BindLights() {
 			}
 
 			// Updates and binds buffer
-			this->spotlightBuffer->UpdateBuffer(this->immediateContext.Get(), spotlights.data());
+			this->spotlightBuffer->UpdateBuffer(this->immediateContext.Get(), spotlights);
 			ID3D11ShaderResourceView* lightSrv = this->spotlightBuffer->GetSRV();
 			this->immediateContext->PSSetShaderResources(0, 1, &lightSrv);
 		}
@@ -643,7 +639,7 @@ void Renderer::BindLights() {
 			}
 
 			// Updates and binds buffer
-			this->pointlightBuffer->UpdateBuffer(this->immediateContext.Get(), pointLights.data());
+			this->pointlightBuffer->UpdateBuffer(this->immediateContext.Get(), pointLights);
 			ID3D11ShaderResourceView* lightSrv = this->pointlightBuffer->GetSRV();
 			this->immediateContext->PSSetShaderResources(6, 1, &lightSrv);
 		}

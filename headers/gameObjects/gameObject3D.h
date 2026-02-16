@@ -37,8 +37,6 @@ public:
 	/// <returns></returns>
 	DirectX::XMMATRIX GetGlobalWorldMatrix(bool inverseTranspose) const override;
 
-	DirectX::XMMATRIX GetGlobalViewMatrix() const override;
-
 	/// <summary>
 	/// Maybe misleading name, but returns the forward vector of the object in global space
 	/// </summary>

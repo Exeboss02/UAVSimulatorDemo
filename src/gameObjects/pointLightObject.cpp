@@ -55,6 +55,8 @@ bool PointLightObject::GetResolutionChanged() const { return this->resolutionCha
 
 ID3D11ShaderResourceView* PointLightObject::GetSRV() const { return this->shadowCubeMap.GetSrv(); }
 
+void SetCameraOrientation(CameraObject* cam, DirectX::XMFLOAT3 forwardF, DirectX::XMFLOAT3 upF);
+
 void PointLightObject::Start() {
 	RenderQueue::AddPointLight(this->GetPtr());
 
@@ -62,7 +64,7 @@ void PointLightObject::Start() {
 	for (size_t i = 0; i < 6; i++) {
 		this->cameras[i] = this->factory->CreateGameObjectOfType<CameraObject>();
 		this->cameras[i].lock()->SetAspectRatio(1 / 1);
-		this->cameras[i].lock()->SetFarPlane(20.);
+		this->cameras[i].lock()->SetFarPlane(1000.);
 		this->cameras[i].lock()->SetFov(90);
 		this->cameras[i].lock()->SetParent(this->GetPtr());
 	}
@@ -162,8 +164,6 @@ void SetCameraOrientation(CameraObject* cam, DirectX::XMFLOAT3 forwardF, DirectX
     };
 
     XMVECTOR q = XMQuaternionRotationMatrix(worldMat);
-    XMFLOAT4 quat;
-    XMStoreFloat4(&quat, q);
 
-    cam->transform.SetRotationQuaternion(quat); // or convert quaternion to whatever your transform API needs
+    cam->transform.SetRotationQuaternion(q); // or convert quaternion to whatever your transform API needs
 }

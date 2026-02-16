@@ -33,7 +33,7 @@ void ShadowCube::Init(ID3D11Device* device, size_t res) {
 	srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURECUBE;
 	srvDesc.TextureCube.MipLevels = 1;
 
-	hr = device->CreateShaderResourceView(texture, &srvDesc, this->shaderResourceView.GetAddressOf());
+	hr = device->CreateShaderResourceView(texture.Get(), &srvDesc, this->shaderResourceView.GetAddressOf());
 	if (FAILED(hr)) {
 		std::string error =
 			std::format("Failed to create shadow shader resource view, HRESULT: 0x{:08X}", static_cast<unsigned long>(hr));
@@ -50,7 +50,7 @@ void ShadowCube::Init(ID3D11Device* device, size_t res) {
 
 	for (size_t i = 0; i < 6; i++) {
 		dsvDesc.Texture2DArray.FirstArraySlice = i;
-		hr = device->CreateDepthStencilView(texture, &dsvDesc, this->depthStencilViews[i].GetAddressOf());
+		hr = device->CreateDepthStencilView(texture.Get(), &dsvDesc, this->depthStencilViews[i].GetAddressOf());
 
 		if (FAILED(hr)) {
 			std::string error =

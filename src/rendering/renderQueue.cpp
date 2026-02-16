@@ -2,6 +2,7 @@
 #include "gameObjects/gameObject.h"
 #include "gameObjects/meshObject.h"
 #include "gameObjects/spotlightObject.h"
+#include "core/filepathHolder.h"
 
 RenderQueue* RenderQueue::instance = nullptr;
 
@@ -100,4 +101,20 @@ void RenderQueue::ClearAllQueues() {
 	instance->lightRenderQueue.clear();
 
 	Logger::Log("Clearing render queue successful.");
+}
+
+void RenderQueue::ChangeSkybox(std::string filename) 
+{ 
+	if (!instance) {
+		Logger::Error("Tried to change skybox, but RenderQueue is not initialized.");
+		throw std::runtime_error("Fatal error in RenderQueue.");
+	}
+
+	if (instance->newSkyboxCallback) {
+		std::string newSkyboxFilename = (FilepathHolder::GetAssetsDirectory() / "skybox" / filename).string();
+		instance->newSkyboxCallback(newSkyboxFilename);
+	} else {
+		Logger::Error("Tried to change skybox, but the callback is not set.");
+		throw std::runtime_error("Fatal error in RenderQueue.");
+	}
 }

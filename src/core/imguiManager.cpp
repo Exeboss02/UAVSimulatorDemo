@@ -149,6 +149,10 @@ void ImguiManager::SetLoadSceneChangeCallback(std::function<void(const std::stri
 	this->loadSceneChangeCallback = std::move(callback);
 }
 
+void ImguiManager::SetSkyboxPopupCallback(std::function<void()> callback) {
+	this->skyboxMenuCallback = std::move(callback);
+}
+
 void ImguiManager::ConsoleImGui()
 {
 	static bool isOpen = true;
@@ -279,6 +283,10 @@ void ImguiManager::MainMenuImGui()
 		if (ImGui::BeginMenu("Edit"))
 		{
 			ImGui::MenuItem("Object Hierarchy", nullptr, &this->showObjectHierarchy);
+			if (ImGui::BeginMenu("Skybox")) {
+				this->skyboxMenuCallback();
+				ImGui::EndMenu();
+			}
 			ImGui::MenuItem("Transform", nullptr, &this->showTransformWindow);
 			ImGui::MenuItem("Sound", nullptr, &this->showSoundWindow);
 			ImGui::MenuItem("Music", nullptr, &this->showMusicWindow);

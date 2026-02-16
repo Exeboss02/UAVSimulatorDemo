@@ -98,8 +98,7 @@ void Room::SetParent(std::weak_ptr<GameObject> parentWeak) {
 }
 
 void Room::SetupPathfindingNodes(std::shared_ptr<SpaceShip> parent) { 
-	// 9 nodes in local room-space, 1 in the center, and 8 around the center in a circle, with radius size / 4, starting
-	// with the one directly east of the center and going clockwise
+	// 9 nodes in local room-space, 1 in the center, and 8 around the center in a circle, with radius size/4
 	std::array<DirectX::XMVECTOR, 9> nodesLocal;
 	nodesLocal[0] = DirectX::XMVectorSet(0, 0, 0, 1);
 	for (size_t i = 0; i < 8; i++) {

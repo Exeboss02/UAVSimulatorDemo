@@ -62,6 +62,8 @@ TextureCube pointLightShadowMaps : register(t7);
 SamplerState mainSampler : register(s0);
 SamplerState shadowSampler : register(s1);
 
+float3 ComputeNormal(float3 fragmentpos, float2 fragmentUV, float3 camPos, float3 fragmentNormal, float3 normalSample);
+
 float4 main(PixelShaderInput input) : SV_TARGET
 {    
     float3 normal = normalize(input.normal);
@@ -73,6 +75,15 @@ float4 main(PixelShaderInput input) : SV_TARGET
     
     uint numLights, stride;
     spotlightBuffer.GetDimensions(numLights, stride);
+    
+    // Move to cpu
+    float2 inputUV = float2(input.uv.x, 1 - input.uv.y);
+    float hasNormal = (textureSlots & 8) != 0;
+    if (hasNormal)
+    {
+        float4 normalSample = normalTexture.Sample(mainSampler, inputUV);
+        normal = ComputeNormal(input.worldPosition.xyz, inputUV, input.cameraPosition, input.normal, normalSample.xyz);
+    }
         
     // Seems structured buffer might be made larger than the number of lights, as such we do need to use ugly constant buffer
     for (int i = 0; i < spotlightCount; i++)
@@ -98,7 +109,7 @@ float4 main(PixelShaderInput input) : SV_TARGET
         
         if (lightCosAngle > lightdata.spotCosAngle && islit)
         {
-            float intensity = (1 / dot(LightToHit, LightToHit)) * max(0.0f, dot(-lightDir, normal));
+            float intensity = (1 / dot(LightToHit, LightToHit)) * max(0.0f, dot(-lightDir, normal)) * lightdata.intensity;
     
             float3 halfWayVector = normalize(lightDir + normalize(camToPixel));
             float specularDot = max(dot(normal, -halfWayVector), 0);
@@ -108,7 +119,7 @@ float4 main(PixelShaderInput input) : SV_TARGET
             specularColor += lighting.z * lightdata.color;
         }
     }
-    for (int i = 0; i < pointLightCount; i++)
+    for (i = 0; i < pointLightCount; i++)
     {
         PointLight lightdata = pointLightBuffer[i];
         // Vector from light to the fragment
@@ -146,7 +157,7 @@ float4 main(PixelShaderInput input) : SV_TARGET
         if (islit)
         {
             float distSq = max(dot(LightToHit, LightToHit), 1e-6f);
-            float intensity = (1.0f / distSq) * max(0.0f, dot(-lightDir, normal));
+            float intensity = (1.0f / distSq) * max(0.0f, dot(-lightDir, normal)) * lightdata.intensity;
 
             float3 halfWayVector = normalize(lightDir + normalize(camToPixel));
             float specularDot = max(dot(normal, -halfWayVector), 0);
@@ -165,12 +176,10 @@ float4 main(PixelShaderInput input) : SV_TARGET
     float hasDiffuse = (textureSlots & 1) != 0;
     float hasAmbient = (textureSlots & 2) != 0;
     float hasSpecular = (textureSlots & 4) != 0;
-    //float hasNormal = (textureSlots & 8) != 0;
 
     float4 diffuseSample = diffuseTexture.Sample(mainSampler, uv);
     float4 ambientSample = ambientTexture.Sample(mainSampler, uv);
     float4 specularSample = specularTexture.Sample(mainSampler, uv);
-    //float4 normalSample = normalTexture.Sample(mainSampler, uv);
 
     float4 diffuseTextureColor =
     lerp(float4(1, 1, 1, 1), diffuseSample, hasDiffuse);
@@ -185,4 +194,30 @@ float4 main(PixelShaderInput input) : SV_TARGET
     float4 color = diffuseTextureColor * diffuseColor + ambientTextureColor * ambientColor + specularTextureColor * specularColor;
     
     return color;
+}
+
+float3 ComputeNormal(float3 fragmentpos, float2 fragmentUV, float3 camPos, float3 fragmentNormal, float3 normalSample)
+{
+    // compute tangent and Bitangent
+    float3 dPdx = ddx(fragmentpos);
+    float3 dPdy = ddy(fragmentpos);
+    float2 dUVdx = ddx(fragmentUV);
+    float2 dUVdy = ddy(fragmentUV);
+
+    float3 tangent = normalize(dUVdy.y * dPdx - dUVdx.y * dPdy);
+    tangent = normalize(tangent - fragmentNormal.xyz * dot(fragmentNormal.xyz, tangent));
+        
+    float3 bitangent = cross(fragmentNormal.xyz, tangent);
+        
+        // Convert view direction to tangent space
+    float3 viewDir = normalize(fragmentpos.xyz - camPos);
+    float3x3 TBN = float3x3(tangent, bitangent, fragmentNormal.xyz);
+    float3 viewDirTangent = normalize(mul(TBN, viewDir));
+    
+    float3 worldNormal = normalize(
+            normalSample.x * tangent +
+            normalSample.y * bitangent +
+            normalSample.z * fragmentNormal
+        );
+    return worldNormal;
 }

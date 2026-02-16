@@ -5,7 +5,10 @@
 Renderer::Renderer()
 	: viewport(), currentPixelShader(nullptr), currentVertexShader(nullptr), currentRasterizerState(nullptr),
 	  maximumSpotlights(16),
-	  renderQueue(this->meshRenderQueue, this->spotLightRenderQueue, this->pointLightRenderQueue) {}
+	  renderQueue(this->meshRenderQueue, this->spotLightRenderQueue, this->pointLightRenderQueue) 
+{
+	this->renderQueue.newSkyboxCallback = [this](std::string filename) { this->ChangeSkybox(filename); };
+}
 
 void Renderer::Init(const Window& window) {
 	SetViewport(window);

@@ -55,9 +55,6 @@ public:
 private:
 	static RenderQueue* instance;
 
-	std::shared_ptr<std::vector<std::weak_ptr<MeshObject>>> meshRenderQueue;
-	std::shared_ptr<std::vector<std::weak_ptr<SpotlightObject>>> lightRenderQueue;
-
 	std::function<void(std::string)> newSkyboxCallback;
 
 	friend Renderer;

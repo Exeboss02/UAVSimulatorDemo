@@ -55,7 +55,7 @@ void Room::Start() {
 	}
 	for (size_t i = 0; i < 4; i++) {
 
-		auto meshobjWeak = this->factory->CreateGameObjectOfType<MeshObject>();
+		auto meshobjWeak = this->factory->CreateGameObjectOfType<Wall>();
 
 		auto meshobj = meshobjWeak.lock();
 		meshobj->SetParent(this->GetPtr());
@@ -77,7 +77,7 @@ void Room::SetSize(float size) { Room::size = size; }
 
 void Room::SetWallState(Room::WallIndex wallindex, Room::WallState wallState) {
 
-	std::shared_ptr<MeshObject> wall = this->walls[wallindex].lock();
+	std::shared_ptr<Wall> wall = this->walls[wallindex].lock();
 	wall->SetMesh(AssetManager::GetInstance().GetMeshObjData(this->wallMeshIdentifiers[static_cast<int>(wallState)]));
 }
 

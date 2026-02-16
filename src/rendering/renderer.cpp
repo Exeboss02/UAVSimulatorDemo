@@ -556,7 +556,7 @@ void Renderer::BindMaterial(BaseMaterial* material) {
 	}
 
 	// FIX
-	this->immediateContext->PSSetShaderResources(1, 1 /*renderData.textures.size()*/, renderData.textures.data());
+	this->immediateContext->PSSetShaderResources(1, renderData.textures.size(), renderData.textures.data());
 
 	// Also bind constant buffers
 	for (size_t i = 0; i < renderData.pixelBuffers.size(); i++) {

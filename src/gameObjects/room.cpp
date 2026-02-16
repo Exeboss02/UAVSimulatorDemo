@@ -65,7 +65,7 @@ void Room::Start() {
 		meshobj->SetMesh(meshdata);
 
 		meshobj->transform.SetRotationRPY(0, 0, i * std::numbers::pi / 2);
-		this->floor = meshobj;
+		meshobj->SetWAllIndex(i);
 
 		this->walls[i] = meshobj;
 	}

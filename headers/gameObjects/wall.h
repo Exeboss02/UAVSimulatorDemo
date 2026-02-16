@@ -4,6 +4,7 @@
 #include "core/physics/boxCollider.h"
 
 
+
 class Wall : public MeshObject {
 public:
 	virtual void OnObserve() override;
@@ -11,6 +12,10 @@ public:
 
 	virtual void Start() override;
 
+	void SetWAllIndex(int wallIndex);
+
 private:
 	std::weak_ptr<BoxCollider> interactable;
+
+	int wallIndex;
 };

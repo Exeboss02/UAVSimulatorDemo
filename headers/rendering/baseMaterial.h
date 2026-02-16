@@ -37,7 +37,11 @@ public:
 	BaseMaterial(ID3D11Device* device) {}
 	virtual RenderData GetRenderData(ID3D11DeviceContext* context) = 0;
 
-	std::string identifier;
+	std::string GetIdentifier() { return this->identifier; }
+	void SetIdentifier(std::string identifier) { this->identifier = identifier; }
 
 	bool wireframe = false;
+
+private:
+	std::string identifier;
 };

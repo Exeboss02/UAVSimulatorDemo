@@ -34,8 +34,8 @@ void SpaceShip::CreateRoom(size_t x, size_t y) {
 				auto neighbor = neighborWeak.lock();
 
 				Room::WallIndex reversedWallIndex = (Room::WallIndex) ((i + 2) % 4);
-				roomMesh->SetWallState(wallIndex, false);
-				neighbor->SetWallState(reversedWallIndex, false);
+				roomMesh->SetWallState(wallIndex, Room::WallState::door);
+				neighbor->SetWallState(reversedWallIndex, Room::WallState::door);
 			}
 		}
 

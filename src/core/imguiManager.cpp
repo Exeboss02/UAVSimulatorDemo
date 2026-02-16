@@ -48,7 +48,7 @@ namespace
 		ofn.hwndOwner = hwnd;
 		ofn.lpstrFile = filePath;
 		ofn.nMaxFile = MAX_PATH;
-		ofn.lpstrFilter = L"Scene Files (*.scene)\0*.scene\0All Files (*.*)\0*.*\0";
+		ofn.lpstrFilter = L"Scene Files (*.scene;*.json)\0*.scene;*.json\0All Files (*.*)\0*.*\0";
 		ofn.nFilterIndex = 1;
 		ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
 
@@ -130,6 +130,11 @@ void ImguiManager::SetWireframeChangeCallback(std::function<void(bool)> callback
 	this->wireframeChangeCallback = std::move(callback);
 }
 
+void ImguiManager::SetPauseExecutionChangeCallback(std::function<void(bool)> callback) 
+{
+	this->pauseChangeCallback = std::move(callback);
+}
+
 void ImguiManager::SetSaveSceneChangeCallback(std::function<void(const std::string &)> callback)
 {
 	this->saveSceneChangeCallback = std::move(callback);
@@ -142,6 +147,10 @@ void ImguiManager::SetSaveSceneAsChangeCallback(std::function<void(const std::st
 void ImguiManager::SetLoadSceneChangeCallback(std::function<void(const std::string &)> callback)
 {
 	this->loadSceneChangeCallback = std::move(callback);
+}
+
+void ImguiManager::SetSkyboxPopupCallback(std::function<void()> callback) {
+	this->skyboxMenuCallback = std::move(callback);
 }
 
 void ImguiManager::ConsoleImGui()
@@ -263,11 +272,21 @@ void ImguiManager::MainMenuImGui()
 		if (ImGui::BeginMenu("Debug"))
 		{
 			ImGui::MenuItem("Console", nullptr, &this->showConsoleWindow);
-			ImGui::MenuItem("Wireframe", nullptr, &this->showWireframe);
+			if (ImGui::MenuItem("Wireframe", nullptr, &this->showWireframe) && this->wireframeChangeCallback) {
+				this->wireframeChangeCallback(this->showWireframe);
+			}
+			if (ImGui::MenuItem("Pause", nullptr, &this->pauseExecution) && this->pauseChangeCallback) {
+				this->pauseChangeCallback(this->pauseExecution);
+			}
 			ImGui::EndMenu();
 		}
 		if (ImGui::BeginMenu("Edit"))
 		{
+			ImGui::MenuItem("Object Hierarchy", nullptr, &this->showObjectHierarchy);
+			if (ImGui::BeginMenu("Skybox")) {
+				this->skyboxMenuCallback();
+				ImGui::EndMenu();
+			}
 			ImGui::MenuItem("Transform", nullptr, &this->showTransformWindow);
 			ImGui::MenuItem("Sound", nullptr, &this->showSoundWindow);
 			ImGui::MenuItem("Music", nullptr, &this->showMusicWindow);

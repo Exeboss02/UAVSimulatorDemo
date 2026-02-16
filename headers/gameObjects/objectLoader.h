@@ -12,6 +12,8 @@
 #include <filesystem>
 #include <string>
 
+#include "core/filepathHolder.h"
+
 struct MeshLoadData {
 	std::vector<std::shared_ptr<Mesh>> meshes;
 	std::vector<std::shared_ptr<GenericMaterial>> materials;
@@ -21,7 +23,7 @@ struct MeshLoadData {
 
 class ObjectLoader {
 public:
-	ObjectLoader(std::filesystem::path basePath = "../../../../assets");
+	ObjectLoader(std::filesystem::path basePath = FilepathHolder::GetAssetsDirectory());
 	~ObjectLoader();
 
 	/// <summary>

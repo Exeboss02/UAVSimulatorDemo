@@ -16,12 +16,12 @@ void MeshObjData::SetMaterial(size_t index, std::shared_ptr<BaseMaterial> materi
 
 	this->materials.at(index) = material;
 };
-std::string MeshObjData::GetMeshIdent() {
+std::string MeshObjData::GetMeshIdentifier() {
 	if (!this->mesh.expired()) {
-		return this->mesh.lock()->GetName();
+		return this->mesh.lock()->GetIdentifier();
 	}
 	else {
-		Logger::Warn("Called 'GetMeshIdent' but mesh has expired");
+		Logger::Warn("Called 'GetMeshIdentifier' but mesh has expired");
 		return "";
 	}
 }

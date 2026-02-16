@@ -1,11 +1,12 @@
 #include "scene/sceneManager.h"
 #include "gameObjects/room.h"
+#include "core/filepathHolder.h"
+#include "gameObjects/pointLightObject.h"
 
 // Very good macro, please don't remove
 #define NAMEOF(x) #x
 
-SceneManager::SceneManager(Renderer *rend) : mainScene(nullptr), renderer(rend), objectFromString()
-{
+SceneManager::SceneManager(Renderer* rend) : mainScene(nullptr), renderer(rend), objectFromString(), isPaused(false) {
 	this->objectFromString.RegisterType<GameObject>(NAMEOF(GameObject));
 	this->objectFromString.RegisterType<GameObject3D>(NAMEOF(GameObject3D));
 	this->objectFromString.RegisterType<MeshObject>(NAMEOF(MeshObject));
@@ -14,6 +15,14 @@ SceneManager::SceneManager(Renderer *rend) : mainScene(nullptr), renderer(rend),
 	this->objectFromString.RegisterType<DebugCamera>(NAMEOF(DebugCamera));
 	this->objectFromString.RegisterType<SpaceShip>(NAMEOF(SpaceShip));
 	this->objectFromString.RegisterType<Room>(NAMEOF(Room));
+	this->objectFromString.RegisterType<BoxCollider>(NAMEOF(BoxCollider));
+	this->objectFromString.RegisterType<SphereCollider>(NAMEOF(SphereCollider));
+	this->objectFromString.RegisterType<RigidBody>(NAMEOF(RigidBody));
+	this->objectFromString.RegisterType<SoundSourceObject>(NAMEOF(SoundSourceObject));
+	this->objectFromString.RegisterType<PointLightObject>(NAMEOF(PointLightObject));
+	this->objectFromString.RegisterType<TestPlayer>(NAMEOF(TestPlayer));
+
+	this->objectFromString.RegisterType<Player>(NAMEOF(Player));//Game specific
 
 	CreateNewScene(this->emptyScene);
 	this->emptyScene->CreateGameObjectOfType<CameraObject>();
@@ -25,13 +34,7 @@ void SceneManager::SceneTick()
 		this->mainScene = this->emptyScene;
 	}
 
-	this->mainScene->SceneTick();
-
-	ImGui::Begin("SceneTest");
-	if (ImGui::Button("Delete Scene")) {
-		DeleteScene(this->mainScene);
-	}
-	ImGui::End();
+	this->mainScene->SceneTick(this->isPaused);
 }
 
 void SceneManager::LoadScene(Scenes scene)
@@ -49,7 +52,7 @@ void SceneManager::LoadScene(Scenes scene)
 		Logger::Warn("There is no end credits scene.");
 		break;
 	case Scenes::DEMO:
-		LoadSceneFromFile("../../../../assets/scenes/testresult.scene");
+		LoadSceneFromFile((FilepathHolder::GetAssetsDirectory() / "scenes" / "testresult.json").string());
 		break;
 	default:
 		break;
@@ -133,6 +136,11 @@ void SceneManager::SaveSceneToFile(const std::string &filePath)
 		}
 	}
 
+	//Logger::Log(this->mainScene->GetNumberOfGameObjects());
+	//this->mainScene->QueueDeleteGameObject(light2);
+	//Logger::Log("Loaded scene");
+
+	////////////////
 	std::ofstream outFile(filePath);
 	outFile << data;
 	outFile.close();
@@ -145,6 +153,25 @@ void SceneManager::SetMainCameraInScene(std::shared_ptr<Scene>& scene)
 		newMainCamera.lock()->SetMainCamera();
 	} else {
 		Logger::Error("Couldn't find a camera in the scene.");
+	}
+}
+
+void SceneManager::TogglePause(bool enable) 
+{ this->isPaused = enable; }
+
+void SceneManager::SkyboxMenu() 
+{
+	if (ImGui::MenuItem("Old town")) {
+		RenderQueue::ChangeSkybox("cubeMap.dds");
+	}
+	if (ImGui::MenuItem("Space")) {
+		RenderQueue::ChangeSkybox("space.dds");
+	}
+	if (ImGui::MenuItem("Asteroid")) {
+		RenderQueue::ChangeSkybox("asteroids.dds");
+	}
+	if (ImGui::MenuItem("Planet")) {
+		RenderQueue::ChangeSkybox("mars.dds");
 	}
 }
 

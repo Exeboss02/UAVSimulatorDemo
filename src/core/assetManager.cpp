@@ -73,11 +73,11 @@ bool AssetManager::LoadNewGltf(std::string identifier) {
 	}
 	for (std::shared_ptr<Mesh>& data : meshLoadData.meshes)
 	{
-		this->meshes.emplace(data->GetName(), std::move(data));
+		this->meshes.emplace(data->GetIdentifier(), std::move(data));
 	}
 	for (std::shared_ptr<GenericMaterial>& data : meshLoadData.materials)
 	{
-		this->materials.emplace(data->identifier, std::move(data));
+		this->materials.emplace(data->GetIdentifier(), std::move(data));
 	}
 	for (std::shared_ptr<Texture>& data : meshLoadData.textures)
 	{
@@ -85,7 +85,7 @@ bool AssetManager::LoadNewGltf(std::string identifier) {
 	}
 	for (MeshObjData& data : meshLoadData.meshData)
 	{
-		this->meshObjDataSets.emplace(data.GetMeshIdent(), std::move(data));
+		this->meshObjDataSets.emplace(data.GetMeshIdentifier(), std::move(data));
 	}
 
 	return true;
@@ -151,12 +151,21 @@ void AssetManager::CreateDefaultAssets()
 	pixelShaderUnlit->Init(this->d3d11Device, ShaderType::PIXEL_SHADER, "PSUnlit.cso");
 	AddShader("PSUnlit", pixelShaderUnlit);
 
+	auto skyboxVertexShader = std::shared_ptr<Shader>(new Shader());
+	skyboxVertexShader->Init(this->d3d11Device, ShaderType::VERTEX_SHADER, "vsSkybox.cso");
+	AddShader("VSSkybox", skyboxVertexShader);
+
+	auto skyboxPixelShader = std::shared_ptr<Shader>(new Shader());
+	skyboxPixelShader->Init(this->d3d11Device, ShaderType::PIXEL_SHADER, "psSkybox.cso");
+	AddShader("PSSkybox", skyboxPixelShader);
+
+
+
 
 	// Materials
 
 	auto defaultMat = std::make_shared<GenericMaterial>(this->d3d11Device);
 	AddMaterial("defaultLitMaterial", defaultMat);
-
 
 	auto defaultUnlitMat = std::make_shared<UnlitMaterial>(this->d3d11Device);
 	defaultUnlitMat->unlitShader = pixelShaderUnlit;
@@ -175,6 +184,6 @@ void AssetManager::AddShader(std::string identifier, std::shared_ptr<Shader> sha
 
 void AssetManager::AddMaterial(std::string identifier, std::shared_ptr<BaseMaterial> material)
 {
-	material->identifier = identifier;
+	material->SetIdentifier(identifier);
 	this->materials.emplace(identifier, std::move(material));
 }

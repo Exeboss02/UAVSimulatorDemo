@@ -1,0 +1,458 @@
+{
+  "gameObjects": [
+    {
+      "fov": 80.0,
+      "transform": {
+        "position": [
+          0.0,
+          4.0,
+          0.0
+        ],
+        "rotation": [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "type": "DebugCamera"
+    },
+
+    {
+      "transform": {
+        "position": [
+          5.0,
+          0.0,
+          -5.0
+        ],
+        "rotation": [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ],
+        "scale": [
+          2.0,
+          1.0,
+          2.0
+        ]
+      },
+      "type": "GameObject3D",
+      "children": [
+      {
+      "transform": {
+        "position": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation": [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ],
+        "scale": [
+          2.0,
+          2.0,
+          2.0
+        ]
+      },
+      "type": "BoxCollider",
+      "tag": 1,
+      "targetTag": 0,
+      "solid": true,
+      "dynamic": false
+    },
+      {
+      "meshIdentifier": "TexBox/TextureCube.glb:Mesh_0",
+      "transform": {
+        "position": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation": [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "type": "MeshObject"
+    }
+      ]
+    },
+
+    {
+      "transform": {
+        "position": [
+          -12.0,
+          0.0,
+          -8.0
+        ],
+        "rotation": [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "type": "GameObject3D",
+      "children": [
+      {
+      "transform": {
+        "position": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation": [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ],
+        "scale": [
+          6.0,
+          6.0,
+          6.0
+        ]
+      },
+      "type": "SphereCollider",
+      "tag": 1,
+      "targetTag": 0,
+      "solid": true,
+      "dynamic": false
+    },
+      {
+      "meshIdentifier": "TexBox/TextureCube.glb:Mesh_0",
+      "transform": {
+        "position": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation": [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "type": "MeshObject"
+    }
+      ]
+    },
+
+    {
+      "transform": {
+        "position": [
+          -5.0,
+          0.0,
+          -5.0
+        ],
+        "rotation": [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ],
+        "scale": [
+          2.0,
+          2.0,
+          2.0
+        ]
+      },
+      "type": "GameObject3D",
+      "children": [
+      {
+      "transform": {
+        "position": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation": [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "type": "BoxCollider",
+      "tag": 1,
+      "targetTag": 0,
+      "solid": true,
+      "dynamic": false
+    },
+      {
+      "meshIdentifier": "TexBox/TextureCube.glb:Mesh_0",
+      "transform": {
+        "position": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation": [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "type": "MeshObject"
+    }
+      ]
+    },
+
+    {
+      "transform": {
+        "position": [
+          -4.0,
+          0.0,
+          0.0
+        ],
+        "rotation": [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "type": "TestPlayer",
+      "children": [
+      {
+      "transform": {
+        "position": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation": [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ],
+        "scale": [
+          4.0,
+          4.0,
+          4.0
+        ]
+      },
+      "type": "SphereCollider",
+      "tag": 1,
+      "targetTag": 0,
+      "solid": true,
+      "dynamic": true
+    },
+    {
+      "transform": {
+        "position": [
+          3.0,
+          0.0,
+          0.0
+        ],
+        "rotation": [
+          0.0,
+          0.0,
+          1.1,
+          1.0
+        ],
+        "scale": [
+          2.0,
+          2.0,
+          2.0
+        ]
+      },
+      "type": "SphereCollider",
+      "tag": 1,
+      "targetTag": 3,
+      "solid": true,
+      "dynamic": true
+    },
+      {
+      "meshIdentifier": "TexBox/TextureCube.glb:Mesh_0",
+      "transform": {
+        "position": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation": [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "type": "MeshObject"
+    }
+      ]
+    },
+    {
+      "children": [
+        {
+          "children": [
+            {
+              "children": [
+                {
+                  "meshIdentifier": "TexBox/TextureCube.glb:Mesh_0",
+                  "transform": {
+                    "position": [
+                      0.0,
+                      2.0,
+                      0.0
+                    ],
+                    "rotation": [
+                      0.0,
+                      0.0,
+                      0.0,
+                      1.0
+                    ],
+                    "scale": [
+                      1.0,
+                      1.0,
+                      1.0
+                    ]
+                  },
+                  "type": "MeshObject"
+                }
+              ],
+              "fov": 120.0,
+              "transform": {
+                "position": [
+                  0.0,
+                  2.0,
+                  0.0
+                ],
+                "rotation": [
+                  0.0,
+                  0.0,
+                  0.0,
+                  1.0
+                ],
+                "scale": [
+                  1.0,
+                  1.0,
+                  1.0
+                ]
+              },
+              "type": "CameraObject"
+            }
+          ],
+          "meshIdentifier": "TexBox/TextureCube.glb:Mesh_0",
+          "transform": {
+            "position": [
+              5.0,
+              0.0,
+              0.0
+            ],
+            "rotation": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ],
+            "scale": [
+              1.0,
+              1.0,
+              1.0
+            ]
+          },
+          "type": "MeshObject"
+        }
+      ],
+      "meshIdentifier": "CS/cs2.glb:Mesh_0",
+      "transform": {
+        "position": [
+          0.0,
+          0.0,
+          10.0
+        ],
+        "rotation": [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "type": "MeshObject"
+    },
+    {
+      "angleRadians": 6.2831854820251465,
+      "color": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "intensity": 5.0,
+      "transform": {
+        "position": [
+          0.0,
+          0.0,
+          5.0
+        ],
+        "rotation": [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "type": "SpotlightObject"
+    }
+  ]
+}

@@ -21,20 +21,73 @@ public:
 
 	virtual void Tick() override;
 
+	/// <summary>
+	/// Starts playing a sound clip. Is a trigger and should be called once when it should start
+	/// </summary>
+	/// <param name="soundClip"></param>
 	void Play(SoundClip* soundClip);
+
+	/// <summary>
+	/// Sets sound source volume
+	/// </summary>
+	/// <param name="gain"></param>
 	void SetGain(float gain);
+
+	/// <summary>
+	/// Sets sound source pitch
+	/// </summary>
+	/// <param name="pitch"></param>
 	void SetPitch(float pitch);
+
+	/// <summary>
+	/// BETA - Sets random pitch between min and max pitch
+	/// </summary>
+	/// <param name="minPitch"></param>
+	/// <param name="maxPitch"></param>
 	void SetRandomPitch(float minPitch, float maxPitch);
+
+	/// <summary>
+	/// Turns up or down the current picth
+	/// </summary>
+	/// <param name="pitchChange"></param>
 	void ChangePitch(float pitchChange);
+
+	/// <summary>
+	/// Turns up or down the current volume
+	/// </summary>
+	/// <param name="gainChange"></param>
 	void ChangeGain(float gainChange);
+
+	/// <summary>
+	/// WARNING! Should not be used and will be removed
+	/// </summary>
+	/// <param name="instructionSet"></param>
 	void SetAudioInstruction(AudioInstruction instructionSet);
+
+	/// <summary>
+	/// Sets id for sound source, should not be used by developer!
+	/// </summary>
+	/// <param name="newId"></param>
 	void SetId(int newId);
+
+	/// <summary>
+	/// Retrieves the sound source id
+	/// </summary>
+	/// <returns></returns>
 	int GetId();
 
+	/// <summary>
+	/// ONLY FOR DEBUG - Retrieves the sound source state for sound source at INDEX within this sound source object (one sound source object has multiple sound sources)
+	/// </summary>
+	/// <param name="index"></param>
+	/// <param name="sourceState"></param>
 	void GetSourceState(int index, ALint& sourceState); //for debug
-	void GetCurrentSourcePosition(ALfloat* position); //for debug
 
-	void LinkMasterSoundEffectsGain(float* masterGainLink);
+	/// <summary>
+	/// Retrieves sound source position
+	/// </summary>
+	/// <param name="position"></param>
+	void GetCurrentSourcePosition(ALfloat* position); //for debug
 
 private:
 	int id = -1;

@@ -89,6 +89,18 @@ public:
 	DirectX::XMVECTOR GetDirectionVector() const;
 
 	/// <summary>
+	/// Returns the right direction vector based on current rotation
+	/// </summary>
+	/// <returns></returns>
+	DirectX::XMVECTOR GetRightVector() const;
+
+	/// <summary>
+	/// Returns the up direction vector based on current rotation
+	/// </summary>
+	/// <returns></returns>
+	DirectX::XMVECTOR GetUpVector() const;
+
+	/// <summary>
 	/// Returns the scale vector for the transform
 	/// </summary>
 	/// <returns></returns>
@@ -99,6 +111,12 @@ public:
 	/// </summary>
 	/// <returns>Worldmatrix</returns>
 	DirectX::XMFLOAT4X4 GetWorldMatrix(bool inverseTranspose) const;
+
+	/// <summary>
+	/// Makes the view matrix for transform
+	/// </summary>
+	/// <returns>ViewMatrix</returns>
+	DirectX::XMFLOAT4X4 GetViewMatrix() const;
 
 	/// <summary>
 	/// Returns a rotation quaternion based on yaw and pitch, making sure up is up

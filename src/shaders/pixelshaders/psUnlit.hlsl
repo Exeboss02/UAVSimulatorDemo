@@ -16,7 +16,7 @@ cbuffer MaterialBuffer : register(b1)
     int textureSlots;
 };
 
-Texture2D diffuseTexture : register(t0);
+Texture2D diffuseTexture : register(t1);
 
 SamplerState mainSampler : register(s0);
 

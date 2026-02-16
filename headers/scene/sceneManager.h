@@ -7,11 +7,16 @@
 #include "gameObjects/debugCamera.h"
 #include "gameObjects/meshObject.h"
 #include "rendering/renderer.h"
+#include "core/physics/rigidBody.h"
+#include "core/physics/collision.h"
 #include "scene/objectFromStringFactory.h"
 #include "utilities/masterVolume.h"
 #include <memory>
 #include <scene/scene.h>
 #include <utilities/logger.h>
+#include "core/physics/rigidBody.h"
+#include "core/physics/testPlayer.h"
+#include "game/player.h"
 
 #include <fstream>
 #include <nlohmann/json.hpp>
@@ -59,6 +64,9 @@ public:
 
 	void SetMainCameraInScene(std::shared_ptr<Scene>& scene);
 
+	void TogglePause(bool enable);
+	void SkyboxMenu();
+
 private:
 	std::shared_ptr<Scene> mainScene;
 	std::shared_ptr<Scene> emptyScene;
@@ -69,4 +77,6 @@ private:
 	std::string currentScenePath;
 
 	std::vector<std::unique_ptr<Mesh>> tempMeshes; // This is also temporary
+
+	bool isPaused;
 };

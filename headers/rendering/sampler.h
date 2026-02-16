@@ -20,7 +20,9 @@ public:
 	Sampler(Sampler&& other) = delete;
 	Sampler& operator=(Sampler&& other) = delete;
 
-	void Init(ID3D11Device* device, D3D11_TEXTURE_ADDRESS_MODE adressMode);
+	void Init(ID3D11Device* device, D3D11_TEXTURE_ADDRESS_MODE adressMode,
+			  D3D11_FILTER filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR,
+			  D3D11_COMPARISON_FUNC compFunc = D3D11_COMPARISON_NEVER, std::array<float, 4> borderColor = {0, 0, 0, 1});
 
 	ID3D11SamplerState* GetSamplerState() const;
 };

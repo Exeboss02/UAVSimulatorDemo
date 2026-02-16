@@ -17,15 +17,24 @@ public:
 	/// <param name="newMesh"></param>
 	void SetMesh(MeshObjData newMesh);
 
-	MeshObjData GetMesh();
+	MeshObjData& GetMesh();
 
 	virtual void Tick() override;
 
 	virtual void LoadFromJson(const nlohmann::json& data) override;
 	virtual void SaveToJson(nlohmann::json& data) override;
 
+	virtual void ShowInHierarchy() override;
+
+	bool IsHidden();
+
 private:
 	MeshObjData mesh;
 
+	char imguiNewMeshIdent[128]; 
+	char imguiNewMatIdent[128]; 
+
 	int tempId;
+
+	bool hide;
 };

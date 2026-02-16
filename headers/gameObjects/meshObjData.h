@@ -28,10 +28,12 @@ public:
 
 	void SetMesh(std::shared_ptr<Mesh> mesh);
 	void SetMaterial(size_t index, std::shared_ptr<BaseMaterial> material);
-	std::string GetMeshIdent();
+	
 	std::weak_ptr<Mesh> GetMesh();
 	std::optional<SubMeshData> GetSubMeshData(size_t index);
 	std::weak_ptr<BaseMaterial> GetMaterial(size_t index);
+
+	std::string GetMeshIdentifier();
 
 private:
 	std::weak_ptr<Mesh> mesh;

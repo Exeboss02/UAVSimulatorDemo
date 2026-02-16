@@ -1,0 +1,202 @@
+{
+  "gameObjects": [
+    {
+      "fov": 80.0,
+      "transform": {
+        "position": [
+          0.0,
+          4.0,
+          0.0
+        ],
+        "rotation": [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "type": "DebugCamera"
+    },
+    {
+      "children": [
+        {
+          "children": [
+            {
+              "children": [
+                {
+                  "meshIdentifier": "Box/indicatorSphere.glb:Mesh_0",
+                  "transform": {
+                    "position": [
+                      0.0,
+                      2.0,
+                      0.0
+                    ],
+                    "rotation": [
+                      0.0,
+                      0.0,
+                      0.0,
+                      1.0
+                    ],
+                    "scale": [
+                      1.0,
+                      1.0,
+                      1.0
+                    ]
+                  },
+                  "type": "MeshObject"
+                }
+              ],
+              "fov": 120.0,
+              "transform": {
+                "position": [
+                  0.0,
+                  2.0,
+                  0.0
+                ],
+                "rotation": [
+                  0.0,
+                  0.0,
+                  0.0,
+                  1.0
+                ],
+                "scale": [
+                  1.0,
+                  1.0,
+                  1.0
+                ]
+              },
+              "type": "CameraObject"
+            }
+          ],
+          "meshIdentifier": "TexBox/TextureCube.glb:Mesh_0",
+          "transform": {
+            "position": [
+              5.0,
+              0.0,
+              0.0
+            ],
+            "rotation": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ],
+            "scale": [
+              1.0,
+              1.0,
+              1.0
+            ]
+          },
+          "type": "MeshObject"
+        }
+      ],
+      "meshIdentifier": "CS/cs2.glb:Mesh_0",
+      "transform": {
+        "position": [
+          0.0,
+          0.0,
+          10.0
+        ],
+        "rotation": [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "type": "MeshObject"
+    },
+    {
+      "angleRadians": 6.2831854820251465,
+      "color": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "intensity": 20.0,
+      "transform": {
+        "position": [
+          0.0,
+          0.0,
+          5.0
+        ],
+        "rotation": [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "type": "SpotlightObject"
+    },
+    {
+      "angleRadians": 6.2831854820251465,
+      "color": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "intensity": 5.0,
+      "transform": {
+        "position": [
+          0.0,
+          0.0,
+          5.0
+        ],
+        "rotation": [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "type": "SpaceShip",
+      "children": [
+        {
+          "meshIdentifier": "TexBox/TextureCube.glb:Mesh_0",
+          "transform": {
+            "position": [
+              0.0,
+              2.0,
+              0.0
+            ],
+            "rotation": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ],
+            "scale": [
+              1.0,
+              1.0,
+              1.0
+            ]
+          },
+          "type": "MeshObject"
+        }
+      ]
+    }
+  ]
+}

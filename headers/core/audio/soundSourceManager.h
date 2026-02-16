@@ -3,6 +3,9 @@
 
 #include "soundSourceObject.h"
 
+/// <summary>
+/// WARNING! Should probably not be used, GameObject3D's should manage their own sound sources instead
+/// </summary>
 class SoundSourceManager
 {
 public:

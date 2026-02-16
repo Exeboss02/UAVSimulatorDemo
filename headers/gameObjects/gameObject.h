@@ -57,10 +57,41 @@ public:
 	// This should be in Transform but that doesn't work because GameObjects doesn't have transforms, only GameObject3D
 	virtual DirectX::XMMATRIX GetGlobalWorldMatrix(bool inverseTranspose) const;
 
+	virtual DirectX::XMMATRIX GetGlobalViewMatrix() const;
+
 	std::shared_ptr<GameObject> GetPtr();
 
 	virtual void LoadFromJson(const nlohmann::json& data);
 	virtual void SaveToJson(nlohmann::json& data);
+
+	/// <summary>
+	/// What the object shows in the hierarchy. Look at how other objects (CameraObject, MeshObject etc) have implemented it.
+	/// </summary>
+	virtual void ShowInHierarchy();
+
+	/// <summary>
+	/// If this is the same as a different object, it will lead to undefined behaviour
+	/// </summary>
+	/// <param name="newName"></param>
+	virtual void SetName(std::string newName);
+
+	virtual const std::string& GetName();
+
+	/// <summary>
+	/// Get if the gameObject is active
+	/// </summary>
+	/// <returns></returns>
+	bool IsActive();
+
+	/// <summary>
+	/// Sets active on the object and for all children
+	/// </summary>
+	void SetActive(bool isActive);
+
+	/// <summary>
+	/// Engine only. Set active for children.
+	/// </summary>
+	void SetActiveOverride(bool isActive);
 
 private:
 	/// <summary>
@@ -83,6 +114,15 @@ private:
 
 	std::weak_ptr<GameObject> myPtr;
 
+	char imguiName[64];
+
 protected:
+	// Any interaction with the scene is done through the factory.
 	GameObjectFactory* factory;
+
+	std::string name; // Mostly used for the object hierarchy.
+	bool isActive; // If false, then this object is marked as inactive.
+	bool isActiveOverride; // If true, then a parent of this object is inactive.
+
+	bool imguiIsActive;
 };

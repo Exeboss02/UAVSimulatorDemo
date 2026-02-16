@@ -25,6 +25,8 @@ void RigidBody::Start()
 void RigidBody::Tick()
 {
 	this->GameObject3D::Tick();
+
+		Logger::Log("in update, transform position: " + std::to_string(this->transform.GetPosition().m128_f32[0]) + ", " + std::to_string(this->transform.GetPosition().m128_f32[1]) + ", " + std::to_string(this->transform.GetPosition().m128_f32[2]));
 }
 
 void RigidBody::PhysicsTick()
@@ -32,11 +34,6 @@ void RigidBody::PhysicsTick()
 	this->GameObject3D::PhysicsTick();
 
 	if(this->gravity) this->linearVelocity.y -= 6.0f * Time::GetInstance().GetDeltaTime();
-
-	this->previousPhysicsPosition = this->physicsPosition;
-
-	Logger::Log("PREVIOUS PHYS POSITION: " + std::to_string(this->previousPhysicsPosition.m128_f32[0]) + ", " + std::to_string(this->previousPhysicsPosition.m128_f32[1]) + ", " + std::to_string(this->previousPhysicsPosition.m128_f32[2]));
-	Logger::Log("PHYS POSITION: " + std::to_string(this->physicsPosition.m128_f32[0]) + ", " + std::to_string(this->physicsPosition.m128_f32[1]) + ", " + std::to_string(this->physicsPosition.m128_f32[2]));
 }
 
 void RigidBody::LatePhysicsTick()
@@ -45,13 +42,27 @@ void RigidBody::LatePhysicsTick()
 
 	//the total move for this frame
 	DirectX::XMVECTOR moveVector = XMLoadFloat3(&this->linearVelocity);
-	this->physicsPosition = DirectX::XMVectorAdd(this->transform.GetPosition(), moveVector);
 
-	Logger::Log("linear velocity: " + std::to_string(this->linearVelocity.x) + ", " + std::to_string(this->linearVelocity.y) + ", " + std::to_string(this->linearVelocity.z));
-
-	this->transform.SetPosition(this->previousPhysicsPosition);
+	DirectX::XMVECTOR collisionCheckPosition = DirectX::XMVectorAdd(this->transform.GetPosition(), moveVector);
+	this->transform.SetPosition(collisionCheckPosition); //all velocity has been added, it will first be moved here, 
+	//then do collision checks to determin the new valid physics position after collision. Then the new current position will be lerped between the last physics pos and this new valid physics pos
 
 	//collision checks should happen after this in sceneManager
+}
+
+DirectX::XMVECTOR RigidBody::GetPhysicsPosition()
+{
+	return this->physicsPosition;
+}
+
+void RigidBody::SetPhysicsPosition(DirectX::XMVECTOR physicsPosition)
+{
+	this->physicsPosition = physicsPosition;
+}
+
+void RigidBody::SetPreviousPhysicsPosition(DirectX::XMVECTOR oldPosition) 
+{
+	this->previousPhysicsPosition = oldPosition;
 }
 
 void RigidBody::LateTick()
@@ -67,7 +78,13 @@ void RigidBody::LateTick()
 	DirectX::XMFLOAT3 lerpedPosition = FLOAT3LERP(previousPosition, targetPosition, lerpProcent);
 	DirectX::XMVECTOR newPosition = DirectX::XMLoadFloat3(&lerpedPosition);
 
-	//this->transform.SetPosition(newPosition);
+	this->transform.SetPosition(newPosition);
+
+	Logger::Log("\n----------------");
+	Logger::Log("transform position: " + std::to_string(this->transform.GetPosition().m128_f32[0]) + ", " + std::to_string(this->transform.GetPosition().m128_f32[1]) + ", " + std::to_string(this->transform.GetPosition().m128_f32[2]));
+	Logger::Log("PREVIOUS PHYS POSITION: " + std::to_string(this->previousPhysicsPosition.m128_f32[0]) + ", " + std::to_string(this->previousPhysicsPosition.m128_f32[1]) + ", " + std::to_string(this->previousPhysicsPosition.m128_f32[2]));
+	Logger::Log("PHYS POSITION: " + std::to_string(this->physicsPosition.m128_f32[0]) + ", " + std::to_string(this->physicsPosition.m128_f32[1]) + ", " + std::to_string(this->physicsPosition.m128_f32[2]));
+	Logger::Log("\n----------------");
 }
 
 void RigidBody::SetParent(std::weak_ptr<GameObject> parent) {

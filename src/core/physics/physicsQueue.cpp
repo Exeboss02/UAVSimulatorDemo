@@ -4,6 +4,18 @@ PhysicsQueue::~PhysicsQueue()
 {
 }
 
+void PhysicsQueue::UpdatePhysicsPositions()
+{
+    for(int i = 0; i < this->rigidBodies.size(); i++)
+    {
+        std::shared_ptr<RigidBody> rigidBody = this->rigidBodies[i].lock();
+        if(!rigidBody) continue;
+
+        rigidBody->SetPreviousPhysicsPosition(rigidBody->GetPhysicsPosition());
+        rigidBody->SetPhysicsPosition(rigidBody->transform.GetPosition());
+    }
+}
+
 PhysicsQueue::PhysicsQueue()
 {
 }

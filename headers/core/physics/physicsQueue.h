@@ -18,6 +18,11 @@ public:
     void Tick();
 
     /// <summary>
+    /// Should be called after collision checks and resolutions have been done so all rigidbodies gets their new valid physics position
+    /// </summary>
+    void UpdatePhysicsPositions();
+
+    /// <summary>
     /// Adds RigidBody to PhysicsQueue to check and resolve collisions
     /// </summary>
     /// <param name="rigidBody"></param>

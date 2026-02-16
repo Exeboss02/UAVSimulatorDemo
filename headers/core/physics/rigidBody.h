@@ -19,6 +19,10 @@ public:
 	void PhysicsTick() override;
 	void LatePhysicsTick() override;
 
+	DirectX::XMVECTOR GetPhysicsPosition();
+	void SetPhysicsPosition(DirectX::XMVECTOR physicsPosition);
+	void SetPreviousPhysicsPosition(DirectX::XMVECTOR oldPosition);
+
 	/// <summary>
 	/// Sets parent
 	/// </summary>

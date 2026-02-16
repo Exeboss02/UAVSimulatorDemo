@@ -75,6 +75,7 @@ void Scene::SceneLateTick(bool isPaused)
 
 		//Check and solve collisions
 		PhysicsQueue::GetInstance().SolveCollisions();
+		PhysicsQueue::GetInstance().UpdatePhysicsPositions();
 	}
 
 	for (size_t i = 0; i < this->gameObjects.size(); i++)

@@ -1,6 +1,7 @@
 #include "rendering/renderer.h"
 #include "core/filepathHolder.h"
 #include "gameObjects/objectLoader.h"
+#include <chrono>
 
 Renderer::Renderer()
 	: viewport(), currentPixelShader(nullptr), currentVertexShader(nullptr), currentRasterizerState(nullptr),
@@ -216,11 +217,20 @@ void Renderer::LoadShaders() {
 }
 
 void Renderer::Render() {
+	ImGui::Begin("Timer");
+
+	const auto start{std::chrono::steady_clock::now()};
 	BindInputLayout();
 	auto shadowmaps = this->ShadowPass();
 	this->GetContext()->PSSetShaderResources(5, shadowmaps.spotlightSRVs.size(), shadowmaps.spotlightSRVs.data());
 	this->GetContext()->PSSetShaderResources(7, shadowmaps.pointLightSRVs.size(), shadowmaps.pointLightSRVs.data());
+	const auto afterShadow{std::chrono::steady_clock::now()};
+	const std::chrono::duration<double> elapsed_seconds{afterShadow - start};
+	ImGui::Text(("Shadow pass: " + std::to_string(elapsed_seconds.count())).c_str());
 	RenderPass();
+	const auto afterRender{std::chrono::steady_clock::now()};
+	const std::chrono::duration<double> elapsed_seconds2{afterRender - afterShadow};
+	ImGui::Text(("Entire renderpass: " + std::to_string(elapsed_seconds2.count())).c_str());
 
 	// Unbinding shadowmaps to allow input on them again
 	for (auto& spotLightShadowMaps : shadowmaps.spotlightSRVs) {
@@ -238,12 +248,7 @@ void Renderer::Render() {
 	}
 	this->GetContext()->PSSetShaderResources(7, shadowmaps.pointLightSRVs.size(), shadowmaps.pointLightSRVs.data());
 
-	// ImGui::Begin("Change Skybox");
-	// if (ImGui::Button("Change")) {
-	//	this->skybox->SwapCubemap(this->device.Get(), this->immediateContext.Get(),
-	//"../../../../assets/skybox/space.dds");
-	// }
-	// ImGui::End();
+	ImGui::End();
 }
 
 void Renderer::Present() { this->swapChain->Present(this->isVSyncEnabled ? 1 : 0, 0); }
@@ -277,6 +282,7 @@ ID3D11DeviceContext* Renderer::GetContext() const { return this->immediateContex
 IDXGISwapChain* Renderer::GetSwapChain() const { return this->swapChain.Get(); }
 
 void Renderer::RenderPass() {
+	const auto start{std::chrono::steady_clock::now()};
 
 	// Bind basic stuff (it probably doesn't need to be set every frame)
 	if (!this->hasBoundStatic) {
@@ -307,6 +313,13 @@ void Renderer::RenderPass() {
 		BindMaterial(this->defaultUnlitMat.lock().get());
 		BindRasterizerState(this->wireframeRasterizerState.get());
 	}
+
+	// World Matrix Buffer only needs to be bound once per frame
+	BindWorldMatrix(this->worldMatrixBuffer->GetBuffer());
+
+	const auto afterBinds{std::chrono::steady_clock::now()};
+	const std::chrono::duration<double> elapsed_seconds{afterBinds - start};
+	ImGui::Text(("Render pass setup: " + std::to_string(elapsed_seconds.count())).c_str());
 
 	// Bind meshes
 	for (size_t i = 0; i < this->meshRenderQueue.size(); i++) {
@@ -717,7 +730,7 @@ void Renderer::RenderMeshObject(MeshObject* meshObject, bool renderMaterial) {
 	Renderer::WorldMatrixBufferContainer worldMatrixBufferContainer = {worldMatrix, worldMatrixInverseTransposed};
 
 	this->worldMatrixBuffer->UpdateBuffer(this->immediateContext.Get(), &worldMatrixBufferContainer);
-	BindWorldMatrix(this->worldMatrixBuffer->GetBuffer());
+	//BindWorldMatrix(this->worldMatrixBuffer->GetBuffer());
 
 	// Draw submeshes
 	size_t index = 0;

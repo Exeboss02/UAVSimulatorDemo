@@ -1,13 +1,9 @@
 #pragma once
 
-#define NOMINMAX
-#define WIN32_LEAN_AND_MEAN
-
-
 // std
 #include <chrono>
-#include <string>
 #include <format>
+#include <string>
 
 class Time {
 public:
@@ -62,7 +58,7 @@ inline float Time::GetSessionTime() const { return this->sessionTime; }
 inline std::string Time::GetTimeInBolivia() const {
 	using namespace std::chrono;
 
-	zoned_time bolivia{ "America/La_Paz", system_clock::now() };
+	zoned_time bolivia{"America/La_Paz", system_clock::now()};
 	auto localTime = bolivia.get_local_time();
 
 	return std::format("Time in Bolivia: {:%H:%M}", localTime);

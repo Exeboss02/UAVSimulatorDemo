@@ -1,12 +1,11 @@
 #pragma once
-#define WIN32_LEAN_AND_MEAN
-#define NOMINMAX
-#include <vector>
-#include <d3d11.h>
-#include <string>
-#include <wrl/client.h>
+
 #include "utilities/logger.h"
+#include <d3d11.h>
 #include <format>
+#include <string>
+#include <vector>
+#include <wrl/client.h>
 
 class InputLayout {
 private:

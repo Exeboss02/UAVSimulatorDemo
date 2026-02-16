@@ -1,16 +1,14 @@
 #pragma once
-#define WIN32_LEAN_AND_MEAN
-#define NOMINMAX
-#include <optional> // Needs C++ 17 or higher
+
 #include <array>
+#include <optional> // Needs C++ 17 or higher
 #include <wrl/client.h>
 
 #include <d3d11.h>
 
 #include <format>
 
-class Sampler
-{
+class Sampler {
 private:
 	Microsoft::WRL::ComPtr<ID3D11SamplerState> sampler = nullptr;
 

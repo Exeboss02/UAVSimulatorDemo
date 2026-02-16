@@ -1,13 +1,11 @@
 #pragma once
-#define WIN32_LEAN_AND_MEAN
-#define NOMINMAX
+
 #include <d3d11.h>
+#include <format>
 #include <iostream>
 #include <wrl/client.h>
-#include <format>
 
-class VertexBuffer
-{
+class VertexBuffer {
 private:
 	Microsoft::WRL::ComPtr<ID3D11Buffer> buffer = nullptr;
 	UINT nrOfVertices = 0;
@@ -28,8 +26,7 @@ public:
 	/// <param name="sizeOfVertex">Size of one vertex in bytes</param>
 	/// <param name="nrOfVerticesInBuffer">Number of vertices</param>
 	/// <param name="vertexData">An array of all vertices with correct layout e.g. position, normals, uv</param>
-	void Init(ID3D11Device* device, UINT sizeOfVertex,
-		UINT nrOfVerticesInBuffer, void* vertexData);
+	void Init(ID3D11Device* device, UINT sizeOfVertex, UINT nrOfVerticesInBuffer, void* vertexData);
 
 	UINT GetNrOfVertices() const;
 	UINT GetVertexSize() const;

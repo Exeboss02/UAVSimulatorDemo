@@ -1,12 +1,13 @@
 #include "rendering/renderQueue.h"
+#include "gameObjects/gameObject.h"
 #include "gameObjects/meshObject.h"
+#include "gameObjects/spotlightObject.h"
 
 RenderQueue* RenderQueue::instance = nullptr;
 
 RenderQueue::RenderQueue(std::shared_ptr<std::vector<std::weak_ptr<MeshObject>>> meshRenderQueue,
 						 std::shared_ptr<std::vector<std::weak_ptr<SpotlightObject>>> lightRenderQueue)
-	: meshRenderQueue(meshRenderQueue), lightRenderQueue(lightRenderQueue)
-{
+	: meshRenderQueue(meshRenderQueue), lightRenderQueue(lightRenderQueue) {
 	Logger::Log("Initializing RenderQueue.");
 
 	if (instance) {
@@ -28,14 +29,12 @@ void RenderQueue::AddMeshObject(std::weak_ptr<GameObject> newMeshObject) {
 		throw std::runtime_error("Fatal error in RenderQueue.");
 	}
 
-	if (!instance) 
-	{
+	if (!instance) {
 		Logger::Error("Tried to add object to queue, but RenderQueue is not initialized.");
 		throw std::runtime_error("Fatal error in RenderQueue.");
 	}
 
-	if (!instance->meshRenderQueue)
-	{
+	if (!instance->meshRenderQueue) {
 		Logger::Error("meshRenderQueue is null.");
 		throw std::runtime_error("Fatal error in RenderQueue");
 	}
@@ -43,8 +42,7 @@ void RenderQueue::AddMeshObject(std::weak_ptr<GameObject> newMeshObject) {
 	instance->meshRenderQueue->push_back(std::static_pointer_cast<MeshObject>(newMeshObject.lock()));
 }
 
-void RenderQueue::RemoveMeshObject()
-{
+void RenderQueue::RemoveMeshObject() {
 	if (!instance) {
 		throw std::runtime_error("Tried to remove object to queue, but RenderQueue is not initialized.");
 	}
@@ -61,8 +59,7 @@ void RenderQueue::AddLightObject(std::weak_ptr<GameObject> newSpotlightObject) {
 		throw std::runtime_error("Fatal error in RenderQueue.");
 	}
 
-	if (!instance->lightRenderQueue)
-	{
+	if (!instance->lightRenderQueue) {
 		Logger::Error("lightRenderQueue is null.");
 		throw std::runtime_error("Fatal error in RenderQueue.");
 	}
@@ -70,8 +67,7 @@ void RenderQueue::AddLightObject(std::weak_ptr<GameObject> newSpotlightObject) {
 	instance->lightRenderQueue->push_back(std::static_pointer_cast<SpotlightObject>(newSpotlightObject.lock()));
 }
 
-void RenderQueue::ClearAllQueues()
-{
+void RenderQueue::ClearAllQueues() {
 	Logger::Log("Clearing render queue...");
 
 	if (!instance) {

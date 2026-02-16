@@ -1,37 +1,26 @@
 #pragma once
 
-#define NOMINMAX
-#define WIN32_LEAN_AND_MEAN
-
-#include <memory>
-#include <scene/scene.h>
-#include <utilities/logger.h>
-#include "gameObjects/cameraObject.h"
 #include "core/assetManager.h"
+#include "core/audio/soundEngine.h"
+#include "gameObjects/SpaceShipObj.h"
+#include "gameObjects/cameraObject.h"
+#include "gameObjects/debugCamera.h"
 #include "gameObjects/meshObject.h"
 #include "rendering/renderer.h"
 #include "scene/objectFromStringFactory.h"
-#include "gameObjects/debugCamera.h"
-#include "gameObjects/SpaceShipObj.h"
-#include "core/audio/soundEngine.h"
 #include "utilities/masterVolume.h"
+#include <memory>
+#include <scene/scene.h>
+#include <utilities/logger.h>
 
 #include <fstream>
 #include <nlohmann/json.hpp>
 
-class SceneManager
-{
+class SceneManager {
 public:
+	enum Scenes { EMPTY, MAIN_MENU, GAME, END_CREDITS, DEMO };
 
-	enum Scenes {
-		EMPTY,
-		MAIN_MENU,
-		GAME,
-		END_CREDITS,
-		DEMO
-	};
-
-	SceneManager(Renderer *rend); // The renderer reference is temporary
+	SceneManager(Renderer* rend); // The renderer reference is temporary
 	~SceneManager() = default;
 
 	void SceneTick();
@@ -41,14 +30,14 @@ public:
 	/// </summary>
 	void LoadScene(Scenes scene);
 
-	//Sound effects
-	void InitializeSoundBank(std::string pathToSoundFolder); //end the path with /
+	// Sound effects
+	void InitializeSoundBank(std::string pathToSoundFolder); // end the path with /
 	void AddSoundClipStandardFolder(std::string filename, std::string id);
 	void AddSoundClip(std::string path, std::string id);
 	std::string GetPathToSoundFolder();
-	SoundClip *GetSoundClip(std::string id);
+	SoundClip* GetSoundClip(std::string id);
 
-	//Music
+	// Music
 	void AudioManagerTick();
 	void InitializeMusicTrackManager(std::string pathToMusicFolder); // always end path with /
 	void AddMusicTrackStandardFolder(std::string filename, std::string id);
@@ -76,7 +65,7 @@ private:
 	ObjectFromStringFactory objectFromString;
 	AudioManager audioManager;
 
-	Renderer *renderer; // This is temporary
+	Renderer* renderer; // This is temporary
 	std::string currentScenePath;
 
 	std::vector<std::unique_ptr<Mesh>> tempMeshes; // This is also temporary

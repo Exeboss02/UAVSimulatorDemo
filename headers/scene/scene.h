@@ -1,14 +1,11 @@
 #pragma once
 
-#define NOMINMAX
-#define WIN32_LEAN_AND_MEAN
-
-#include <vector>
 #include "gameObjects/gameObject.h"
-#include "utilities/logger.h"
-#include <memory>
 #include "gameObjects/gameObjectFactory.h"
+#include "utilities/logger.h"
 #include <algorithm>
+#include <memory>
+#include <vector>
 
 class SceneManager;
 

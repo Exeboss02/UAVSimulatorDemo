@@ -1,32 +1,28 @@
 #pragma once
 
-#define NOMINMAX
-#define WIN32_LEAN_AND_MEAN
-
+#include "core/assetManager.h"
 #include "core/window.h"
 #include "d3d11.h"
-#include "wrl/client.h"
-#include "rendering/renderTarget.h"
-#include "rendering/depthBuffer.h"
-#include "rendering/shader.h"
-#include "rendering/inputLayout.h"
-#include "rendering/sampler.h"
-#include "rendering/vertex.h"
-#include "rendering/vertexBuffer.h"
-#include "rendering/constantBuffer.h"
-#include "rendering/indexBuffer.h"
-#include "rendering/material.h"
-#include "rendering/renderQueue.h"
-#include "rendering/rasterizerState.h"
 #include "gameObjects/cameraObject.h"
 #include "gameObjects/meshObject.h"
 #include "gameObjects/spotlightObject.h"
+#include "rendering/constantBuffer.h"
+#include "rendering/depthBuffer.h"
+#include "rendering/indexBuffer.h"
+#include "rendering/inputLayout.h"
+#include "rendering/material.h"
+#include "rendering/rasterizerState.h"
+#include "rendering/renderQueue.h"
+#include "rendering/renderTarget.h"
+#include "rendering/sampler.h"
+#include "rendering/shader.h"
 #include "rendering/structuredBuffer.h"
+#include "rendering/vertex.h"
+#include "rendering/vertexBuffer.h"
+#include "wrl/client.h"
 #include <algorithm>
-#include "core/assetManager.h"
 
-class Renderer
-{
+class Renderer {
 public:
 	Renderer();
 	~Renderer() = default;
@@ -35,7 +31,7 @@ public:
 	/// Initialize the renderer
 	/// </summary>
 	/// <param name="window"></param>
-	void Init(const Window &window);
+	void Init(const Window& window);
 
 	/// <summary>
 	/// Set all default material stuff,
@@ -57,7 +53,7 @@ public:
 	/// Resizes swapchain to fit window
 	/// </summary>
 	/// <param name="window"></param>
-	void Resize(const Window &window);
+	void Resize(const Window& window);
 
 	/// <summary>
 	/// Toggles VSync
@@ -65,21 +61,19 @@ public:
 	/// <param name="enable"></param>
 	void ToggleVSync(bool enable);
 
-	ID3D11Device *GetDevice() const;
-	ID3D11DeviceContext *GetContext() const;
-	IDXGISwapChain *GetSwapChain() const;
+	ID3D11Device* GetDevice() const;
+	ID3D11DeviceContext* GetContext() const;
+	IDXGISwapChain* GetSwapChain() const;
 
 private:
 	const size_t maximumSpotlights;
 
-	struct WorldMatrixBufferContainer
-	{
+	struct WorldMatrixBufferContainer {
 		DirectX::XMFLOAT4X4 worldMatrix;
 		DirectX::XMFLOAT4X4 worldMatrixInversedTransposed;
 	};
 
-	struct LightCountBufferContainer
-	{
+	struct LightCountBufferContainer {
 		uint32_t spotlightCount;
 		float padding[3];
 	};
@@ -135,11 +129,11 @@ private:
 	bool renderAllWireframe = false;
 	bool hasBoundStatic = false;
 
-	void SetViewport(const Window &window);
-	void CreateDeviceAndSwapChain(const Window &window);
+	void SetViewport(const Window& window);
+	void CreateDeviceAndSwapChain(const Window& window);
 	void CreateRenderTarget();
-	void CreateDepthBuffer(const Window &window);
-	void CreateInputLayout(const std::string &vShaderByteCode);
+	void CreateDepthBuffer(const Window& window);
+	void CreateInputLayout(const std::string& vShaderByteCode);
 	void CreateSampler();
 	void CreateRasterizerStates();
 
@@ -162,23 +156,23 @@ private:
 	/// </summary>
 	void ClearRenderTargetViewAndDepthStencilView();
 
-	void ResizeSwapChain(const Window &window);
+	void ResizeSwapChain(const Window& window);
 
 	void BindSampler();
 	void BindInputLayout();
 	void BindRenderTarget();
 	void BindViewport();
-	void BindRasterizerState(RasterizerState *rastState);
+	void BindRasterizerState(RasterizerState* rastState);
 
-	void BindMaterial(BaseMaterial *material);
+	void BindMaterial(BaseMaterial* material);
 	void BindLights();
 
 	void BindCameraMatrix();
-	void BindWorldMatrix(ID3D11Buffer *buffer);
+	void BindWorldMatrix(ID3D11Buffer* buffer);
 
 	/// <summary>
 	/// Renders a single MeshObject
 	/// </summary>
 	/// <param name="meshObject"></param>
-	void RenderMeshObject(MeshObject *meshObject);
+	void RenderMeshObject(MeshObject* meshObject);
 };

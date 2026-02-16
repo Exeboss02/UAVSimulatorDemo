@@ -1,12 +1,9 @@
 #pragma once
 
-#define NOMINMAX
-#define WIN32_LEAN_AND_MEAN
-
+#include "rendering/constantBuffer.h"
 #include "rendering/shader.h"
 #include <d3d11.h>
 #include <memory>
-#include "rendering/constantBuffer.h"
 #include <vector>
 
 struct RenderData {
@@ -28,8 +25,7 @@ public:
 		float padding[2];
 	};
 
-	enum TextureSlots : unsigned int
-	{ 
+	enum TextureSlots : unsigned int {
 		none = 0,
 		first = 1,
 		second = 2,

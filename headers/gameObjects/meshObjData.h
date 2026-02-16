@@ -1,12 +1,9 @@
 #pragma once
 
-#define NOMINMAX
-#define WIN32_LEAN_AND_MEAN
-
-#include <string>
-#include "rendering/baseMaterial.h"
 #include "gameObjects/mesh.h"
+#include "rendering/baseMaterial.h"
 #include <optional>
+#include <string>
 
 #include <memory>
 
@@ -26,7 +23,7 @@ public:
 	MeshObjData() = default;
 	MeshObjData(MeshObjData&&) noexcept = default;
 	MeshObjData& operator=(MeshObjData&&) noexcept = default;
-	MeshObjData(MeshObjData&)= default;
+	MeshObjData(MeshObjData&) = default;
 	MeshObjData& operator=(MeshObjData&) = default;
 
 	void SetMesh(std::shared_ptr<Mesh> mesh);
@@ -35,6 +32,7 @@ public:
 	std::weak_ptr<Mesh> GetMesh();
 	std::optional<SubMeshData> GetSubMeshData(size_t index);
 	std::weak_ptr<BaseMaterial> GetMaterial(size_t index);
+
 private:
 	std::weak_ptr<Mesh> mesh;
 	std::vector<std::weak_ptr<BaseMaterial>> materials;

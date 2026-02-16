@@ -113,7 +113,12 @@ file(GLOB_RECURSE PROJECT_HEADERS CONFIGURE_DEPENDS "${CMAKE_SOURCE_DIR}/headers
 add_executable(${PROJECT_NAME} WIN32 ${PROJECT_SOURCES} ${PROJECT_HEADERS})
 
 # Target-scoped Windows Unicode defines
-target_compile_definitions(${PROJECT_NAME} PRIVATE UNICODE _UNICODE)
+target_compile_definitions(${PROJECT_NAME} PRIVATE
+    UNICODE
+    _UNICODE
+    NOMINMAX
+    WIN32_LEAN_AND_MEAN
+)
 
 # Unity build (optional)
 option(ENABLE_UNITY_BUILD "Enable Unity build for faster compiles" ON)

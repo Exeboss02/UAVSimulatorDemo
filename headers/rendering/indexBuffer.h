@@ -1,13 +1,11 @@
 #pragma once
-#define WIN32_LEAN_AND_MEAN
-#define NOMINMAX
+
 #include <cstdint>
 #include <d3d11.h>
-#include <wrl\client.h>
 #include <format>
+#include <wrl\client.h>
 
-class IndexBuffer
-{
+class IndexBuffer {
 private:
 	Microsoft::WRL::ComPtr<ID3D11Buffer> buffer;
 	size_t nrOfIndices = 0;

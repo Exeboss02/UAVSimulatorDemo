@@ -1,14 +1,12 @@
 #pragma once
-#define WIN32_LEAN_AND_MEAN
-#define NOMINMAX
-#include <d3d11.h>
-#include <wrl/client.h>
-#include <format>
-#include <string>
-#include <iostream>
 
-class ConstantBuffer
-{
+#include <d3d11.h>
+#include <format>
+#include <iostream>
+#include <string>
+#include <wrl/client.h>
+
+class ConstantBuffer {
 private:
 	Microsoft::WRL::ComPtr<ID3D11Buffer> buffer;
 	size_t bufferSize = 0;

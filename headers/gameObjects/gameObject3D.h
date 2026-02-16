@@ -1,9 +1,5 @@
 #pragma once
 
-#define NOMINMAX
-#define WIN32_LEAN_AND_MEAN
-
-
 #include "gameObjects/gameObject.h"
 #include "gameObjects/transform.h"
 
@@ -49,12 +45,9 @@ public:
 
 	virtual void LoadFromJson(const nlohmann::json& data) override;
 	virtual void SaveToJson(nlohmann::json& data) override;
+
 private:
-	enum TransformComponent {
-		SCALE,
-		ROTATION,
-		TRANSLATAION
-	};
+	enum TransformComponent { SCALE, ROTATION, TRANSLATAION };
 
 	DirectX::XMVECTOR GetDecomposedWorldMatrix(const TransformComponent& component) const;
 };

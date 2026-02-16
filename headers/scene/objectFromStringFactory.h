@@ -1,13 +1,13 @@
 #pragma once
 
-#define NOMINMAX
-#define WIN32_LEAN_AND_MEAN
-
-#include <unordered_map>
-#include <string>
 #include "utilities/logger.h"
+#include <string>
+#include <unordered_map>
 
-template <class T> void* Constructor() { return (void*)new T(); }
+template <class T>
+void* Constructor() {
+	return (void*) new T();
+}
 
 class ObjectFromStringFactory {
 public:
@@ -32,8 +32,7 @@ public:
 	void* Construct(std::string const& n);
 };
 
-template<class T>
-inline void ObjectFromStringFactory::RegisterType(std::string const& n)
-{
+template <class T>
+inline void ObjectFromStringFactory::RegisterType(std::string const& n) {
 	classes.insert(std::make_pair(n, &Constructor<T>));
 }

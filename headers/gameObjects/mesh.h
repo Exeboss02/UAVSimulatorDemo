@@ -1,16 +1,12 @@
 #pragma once
 
-#define NOMINMAX
-#define WIN32_LEAN_AND_MEAN
-
-
-#include <string>
-#include <array>
-#include <vector>
-#include "rendering/vertex.h"
-#include "rendering/vertexBuffer.h"
 #include "rendering/indexBuffer.h"
 #include "rendering/texture.h"
+#include "rendering/vertex.h"
+#include "rendering/vertexBuffer.h"
+#include <array>
+#include <string>
+#include <vector>
 
 class SubMesh {
 public:
@@ -25,7 +21,6 @@ public:
 	size_t GetNrOfIndices() const;
 
 private:
-
 	size_t startIndex;
 	size_t nrOfIndices;
 };

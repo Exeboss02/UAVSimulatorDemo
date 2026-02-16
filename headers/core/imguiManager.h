@@ -1,11 +1,8 @@
 #pragma once
 
-#define WIN32_LEAN_AND_MEAN
-#define NOMINMAX
-
 #include "imgui.h"
-#include "imgui_impl_win32.h"
 #include "imgui_impl_dx11.h"
+#include "imgui_impl_win32.h"
 
 // std
 #include <Windows.h>
@@ -13,14 +10,13 @@
 #include <functional>
 #include <string>
 
-class ImguiManager
-{
+class ImguiManager {
 public:
 	ImguiManager() = default;
-	ImguiManager(HWND hwnd, ID3D11Device *device, ID3D11DeviceContext *immediateContext);
+	ImguiManager(HWND hwnd, ID3D11Device* device, ID3D11DeviceContext* immediateContext);
 	~ImguiManager();
 
-	void InitalizeImgui(HWND hwnd, ID3D11Device *device, ID3D11DeviceContext *immediateContext);
+	void InitalizeImgui(HWND hwnd, ID3D11Device* device, ID3D11DeviceContext* immediateContext);
 
 	void ImguiAtFrameStart();
 	void ImguiAtFrameEnd();
@@ -29,9 +25,9 @@ public:
 	void SetFullscreenChangeCallback(std::function<void(bool)> callback);
 	void SetVSyncChangeCallback(std::function<void(bool)> callback);
 	void SetWireframeChangeCallback(std::function<void(bool)> callback);
-	void SetSaveSceneChangeCallback(std::function<void(const std::string &)> callback);
-	void SetSaveSceneAsChangeCallback(std::function<void(const std::string &)> callback);
-	void SetLoadSceneChangeCallback(std::function<void(const std::string &)> callback);
+	void SetSaveSceneChangeCallback(std::function<void(const std::string&)> callback);
+	void SetSaveSceneAsChangeCallback(std::function<void(const std::string&)> callback);
+	void SetLoadSceneChangeCallback(std::function<void(const std::string&)> callback);
 
 private:
 	void ConsoleImGui();
@@ -59,8 +55,8 @@ private:
 	std::function<void(bool)> fullscreenChangeCallback;
 	std::function<void(bool)> vSyncChangeCallback;
 	std::function<void(bool)> wireframeChangeCallback;
-	std::function<void(const std::string &)> saveSceneChangeCallback;
-	std::function<void(const std::string &)> saveSceneAsChangeCallback;
-	std::function<void(const std::string &)> loadSceneChangeCallback;
+	std::function<void(const std::string&)> saveSceneChangeCallback;
+	std::function<void(const std::string&)> saveSceneAsChangeCallback;
+	std::function<void(const std::string&)> loadSceneChangeCallback;
 	std::string currentScenePath;
 };

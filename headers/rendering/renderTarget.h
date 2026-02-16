@@ -1,10 +1,9 @@
 #pragma once
-#define WIN32_LEAN_AND_MEAN
-#define NOMINMAX
-#include <wrl/client.h>
+
 #include <d3d11.h>
-#include <iostream>
 #include <format>
+#include <iostream>
+#include <wrl/client.h>
 
 class RenderTarget {
 private:

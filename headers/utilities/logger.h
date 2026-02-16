@@ -1,109 +1,83 @@
 #pragma once
 
-#define NOMINMAX
-#define WIN32_LEAN_AND_MEAN
-
-#include <iostream>
-#include <string>
-#include <fstream>
 #include <ctime>
-#include <sstream>
-#include <source_location>
-#include <type_traits>
 #include <filesystem>
+#include <fstream>
+#include <iostream>
+#include <source_location>
+#include <sstream>
+#include <string>
+#include <type_traits>
 
-enum LogOption
-{
-    consoleAndLogFile,
-    consoleOnly,
-    logFileOnly
-};
+enum LogOption { consoleAndLogFile, consoleOnly, logFileOnly };
 
-class Logger
-{
+class Logger {
 
 public:
-    struct LogMsg
-    {
-        std::string message;
-        std::source_location loc;
+	struct LogMsg {
+		std::string message;
+		std::source_location loc;
 
-        template <typename T>
-        LogMsg(const T &msg, std::source_location loc = std::source_location::current())
-            : loc(loc)
-        {
-            std::ostringstream ss;
-            ss << msg;
-            message = ss.str();
-        }
-    };
+		template <typename T>
+		LogMsg(const T& msg, std::source_location loc = std::source_location::current()) : loc(loc) {
+			std::ostringstream ss;
+			ss << msg;
+			message = ss.str();
+		}
+	};
 
 private:
-    enum LogType
-    {
-        log = 0,
-        warning = 1,
-        error = 2
-    };
+	enum LogType { log = 0, warning = 1, error = 2 };
 
-    inline static std::string logString = "";
+	inline static std::string logString = "";
 
-    static constexpr const char *colors[3] = {"\033[0m", "\033[33m", "\033[31m"};
-    static constexpr const char *logTexts[3] = {"", "[WARNING]", "[ERROR] "};
+	static constexpr const char* colors[3] = {"\033[0m", "\033[33m", "\033[31m"};
+	static constexpr const char* logTexts[3] = {"", "[WARNING]", "[ERROR] "};
 
-    static void PrintToFile(std::string info)
-    {
-        std::ofstream file("../../log.txt", std::ios::app);
-        file << info << "\n";
-        file.close();
-    }
+	static void PrintToFile(std::string info) {
+		std::ofstream file("../../log.txt", std::ios::app);
+		file << info << "\n";
+		file.close();
+	}
 
-    template <typename T, typename... Types>
-    static void createLog(std::string logOutput, T info, Types... infos)
-    {
-        std::ostringstream stringToReturn;
-        stringToReturn << info;
-        logOutput.append(stringToReturn.str());
-        createLog(logOutput, infos...);
-    }
+	template <typename T, typename... Types>
+	static void createLog(std::string logOutput, T info, Types... infos) {
+		std::ostringstream stringToReturn;
+		stringToReturn << info;
+		logOutput.append(stringToReturn.str());
+		createLog(logOutput, infos...);
+	}
 
-    static void createLog(std::string logOutput)
-    {
-        logString.append(logOutput + "\n");
+	static void createLog(std::string logOutput) {
+		logString.append(logOutput + "\n");
 
-        std::cout << logOutput << "\033[0m" << std::endl;
-        PrintToFile(logOutput);
-    }
+		std::cout << logOutput << "\033[0m" << std::endl;
+		PrintToFile(logOutput);
+	}
 
 public:
-    template <typename... Types>
-    static void Warn(LogMsg firstArg, Types... args)
-    {
-        std::string prefix = std::string(logTexts[LogType::warning]) + "[" +
-                             std::filesystem::path(firstArg.loc.file_name()).filename().string() + ":" +
-                             std::to_string(firstArg.loc.line()) + "] ";
+	template <typename... Types>
+	static void Warn(LogMsg firstArg, Types... args) {
+		std::string prefix = std::string(logTexts[LogType::warning]) + "[" +
+							 std::filesystem::path(firstArg.loc.file_name()).filename().string() + ":" +
+							 std::to_string(firstArg.loc.line()) + "] ";
 
-        createLog(prefix, firstArg.message, args...);
-    }
+		createLog(prefix, firstArg.message, args...);
+	}
 
-    template <typename T, typename... Types>
-    static void Log(T info, Types... infos)
-    {
-        createLog(logTexts[LogType::log], info, infos...);
-    }
+	template <typename T, typename... Types>
+	static void Log(T info, Types... infos) {
+		createLog(logTexts[LogType::log], info, infos...);
+	}
 
-    template <typename... Types>
-    static void Error(LogMsg firstArg, Types... args)
-    {
-        std::string prefix = std::string(logTexts[LogType::error]) + "[" +
-                             std::filesystem::path(firstArg.loc.file_name()).filename().string() + ":" +
-                             std::to_string(firstArg.loc.line()) + "] ";
+	template <typename... Types>
+	static void Error(LogMsg firstArg, Types... args) {
+		std::string prefix = std::string(logTexts[LogType::error]) + "[" +
+							 std::filesystem::path(firstArg.loc.file_name()).filename().string() + ":" +
+							 std::to_string(firstArg.loc.line()) + "] ";
 
-        createLog(prefix, firstArg.message, args...);
-    }
+		createLog(prefix, firstArg.message, args...);
+	}
 
-    static std::string_view getLogStringRef()
-    {
-        return logString;
-    }
+	static std::string_view getLogStringRef() { return logString; }
 };

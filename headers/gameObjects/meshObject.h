@@ -1,13 +1,10 @@
 #pragma once
 
-#define NOMINMAX
-#define WIN32_LEAN_AND_MEAN
-
+#include "core/assetManager.h"
 #include "gameObjects/gameObject3D.h"
 #include "gameObjects/mesh.h"
-#include "rendering/renderQueue.h"
 #include "gameObjects/meshObjData.h"
-#include "core/assetManager.h"
+#include "rendering/renderQueue.h"
 
 class MeshObject : public GameObject3D {
 public:
@@ -26,8 +23,9 @@ public:
 
 	virtual void LoadFromJson(const nlohmann::json& data) override;
 	virtual void SaveToJson(nlohmann::json& data) override;
+
 private:
-	MeshObjData mesh; 
+	MeshObjData mesh;
 
 	int tempId;
 };

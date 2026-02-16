@@ -1,35 +1,23 @@
 #pragma once
-#define WIN32_LEAN_AND_MEAN
-#define NOMINMAX
+
 #include <d3d11.h>
 
-#include <iostream>
 #include <fstream>
+#include <iostream>
 #include <string>
 
 #include <wrl/client.h>
 
 #include <format>
 
-enum class ShaderType
-{
-	VERTEX_SHADER,
-	HULL_SHADER,
-	DOMAIN_SHADER,
-	GEOMETRY_SHADER,
-	PIXEL_SHADER,
-	COMPUTE_SHADER
-};
+enum class ShaderType { VERTEX_SHADER, HULL_SHADER, DOMAIN_SHADER, GEOMETRY_SHADER, PIXEL_SHADER, COMPUTE_SHADER };
 
-class Shader
-{
+class Shader {
 private:
-
 	ShaderType type;
 
 	// ComPtr:s didn't work well in a union, maybe someone should check out if there's a different approach
-	union
-	{
+	union {
 		ID3D11VertexShader* vertex = nullptr;
 		ID3D11HullShader* hull;
 		ID3D11DomainShader* domain;

@@ -1,15 +1,13 @@
 #pragma once
-#define WIN32_LEAN_AND_MEAN
-#define NOMINMAX
 
-#include <vector>
-#include <memory>
-#include <array>
+#include "gameObjects/gameObjectFactory.h"
+#include "imgui.h"
 #include "utilities/logger.h"
 #include <DirectXMath.h>
-#include "gameObjects/gameObjectFactory.h"
+#include <array>
+#include <memory>
 #include <nlohmann/json.hpp>
-#include "imgui.h"
+#include <vector>
 
 class Scene;
 class GameObjectFactory;
@@ -79,11 +77,12 @@ private:
 
 	std::vector<std::weak_ptr<GameObject>> children;
 	std::weak_ptr<GameObject> parent;
-	//std::weak_ptr<GameObject> weakPtr;
+	// std::weak_ptr<GameObject> weakPtr;
 
 	friend Scene;
 
-	std::weak_ptr<GameObject> myPtr;		
+	std::weak_ptr<GameObject> myPtr;
+
 protected:
 	GameObjectFactory* factory;
 };

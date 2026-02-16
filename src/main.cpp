@@ -1,21 +1,15 @@
-#define WIN32_LEAN_AND_MEAN
-#define NOMINMAX
-
 #include "Windows.h"
-#include <iostream>
-#include "test.h"
-#include "utilities/logger.h"
 #include "core/game.h"
 #include "gameObjects/objectLoader.h"
+#include "test.h"
+#include "utilities/logger.h"
 #include <filesystem>
+#include <iostream>
 
 // Main code
-int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
-	_In_opt_ HINSTANCE hPrevInstance,
-	_In_ LPWSTR    lpCmdLine,
-	_In_ int       nCmdShow) 
-{
-	// Normal batchfile run "C:\\Users\\Simon Nilsson\\source\\repos\\lillaspel\\build\\Debug" 
+int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPWSTR lpCmdLine,
+					  _In_ int nCmdShow) {
+	// Normal batchfile run "C:\\Users\\Simon Nilsson\\source\\repos\\lillaspel\\build\\Debug"
 	//					          C:\Users\Simon Nilsson\source\repos\LillaSpel\out\build\x64-debug\Debug\lillaspel.exe
 	// Visual studio run "C:\\Users\\Simon Nilsson\\source\\repos\\LillaSpel\\out\\build\\x64-debug"
 	// Some memory leak flags here
@@ -27,8 +21,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	Logger::Log("Starting game...");
 	try {
 		game->Run(hInstance, nCmdShow);
-	}
-	catch (const std::exception& e) {
+	} catch (const std::exception& e) {
 		Logger::Error(e.what());
 	}
 	int x = 5;

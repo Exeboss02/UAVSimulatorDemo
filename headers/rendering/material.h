@@ -1,14 +1,10 @@
 #pragma once
 
-#define NOMINMAX
-#define WIN32_LEAN_AND_MEAN
-
-
-#include "rendering/shader.h"
 #include "rendering/constantBuffer.h"
-#include <vector>
-#include "utilities/logger.h"
+#include "rendering/shader.h"
 #include "rendering/texture.h"
+#include "utilities/logger.h"
+#include <vector>
 
 class Material {
 private:

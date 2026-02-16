@@ -1,11 +1,10 @@
 #pragma once
-#define NOMINMAX
-#define WIN32_LEAN_AND_MEAN
 
-#include <vector>
-#include <iostream>
 #include "utilities/logger.h"
+
+#include <iostream>
 #include <memory>
+#include <vector>
 
 class MeshObject;
 class SpotlightObject;
@@ -38,6 +37,7 @@ public:
 	/// Clears all render queues
 	/// </summary>
 	static void ClearAllQueues();
+
 private:
 	static RenderQueue* instance;
 

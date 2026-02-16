@@ -1,6 +1,7 @@
 #include "UI/button.h"
 
 #include "core/input/inputManager.h"
+#include <nlohmann/json.hpp>
 #include <string>
 
 void UI::Button::Start() {
@@ -79,3 +80,16 @@ void UI::Button::ShowInHierarchy() {
 void UI::Button::SetLabel(const std::string& l) { this->label = l; }
 
 std::string UI::Button::GetLabel() const { return this->label; }
+
+void UI::Button::LoadFromJson(const nlohmann::json& data) {
+	// Load base widget fields
+	this->Widget::LoadFromJson(data);
+
+	if (data.contains("label")) this->SetLabel(data.at("label").get<std::string>());
+}
+
+void UI::Button::SaveToJson(nlohmann::json& data) {
+	this->Widget::SaveToJson(data);
+	data["type"] = "UI::Button";
+	data["label"] = this->GetLabel();
+}

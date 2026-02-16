@@ -36,6 +36,10 @@ public:
 	virtual void Draw();
 	virtual bool HitTest(Vec2 point) const;
 
+	// Serialization
+	virtual void LoadFromJson(const nlohmann::json& data) override;
+	virtual void SaveToJson(nlohmann::json& data) override;
+
 	// Show widget-specific options in the inspector
 	virtual void ShowInHierarchy() override;
 

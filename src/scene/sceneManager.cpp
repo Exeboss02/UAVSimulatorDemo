@@ -1,5 +1,7 @@
 #include "scene/sceneManager.h"
+#include "UI/button.h"
 #include "UI/canvasObject.h"
+#include "UI/text.h"
 #include "core/filepathHolder.h"
 #include "gameObjects/pointLightObject.h"
 #include "gameObjects/room.h"
@@ -22,7 +24,12 @@ SceneManager::SceneManager(Renderer* rend) : mainScene(nullptr), renderer(rend),
 	this->objectFromString.RegisterType<SoundSourceObject>(NAMEOF(SoundSourceObject));
 	this->objectFromString.RegisterType<PointLightObject>(NAMEOF(PointLightObject));
 	this->objectFromString.RegisterType<TestPlayer>(NAMEOF(TestPlayer));
+
+	// UI widget types
 	this->objectFromString.RegisterType<UI::CanvasObject>(NAMEOF(UI::CanvasObject));
+	this->objectFromString.RegisterType<UI::Widget>(NAMEOF(UI::Widget));
+	this->objectFromString.RegisterType<UI::Button>(NAMEOF(UI::Button));
+	this->objectFromString.RegisterType<UI::Text>(NAMEOF(UI::Text));
 
 	this->objectFromString.RegisterType<Player>(NAMEOF(Player)); // Game specific
 

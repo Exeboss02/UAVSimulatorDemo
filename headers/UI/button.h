@@ -27,6 +27,10 @@ public:
 	void SetLabel(const std::string& l);
 	std::string GetLabel() const;
 
+	// Serialization
+	virtual void LoadFromJson(const nlohmann::json& data) override;
+	virtual void SaveToJson(nlohmann::json& data) override;
+
 private:
 	bool hovered = false;
 	bool pressed = false;

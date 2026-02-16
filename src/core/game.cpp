@@ -38,7 +38,7 @@ void Game::Run(HINSTANCE hInstance, int nCmdShow) {
 	this->imguiManager.SetWireframeChangeCallback([&](bool enable) { this->renderer.ToggleWireframe(enable); });
 	this->imguiManager.SetPauseExecutionChangeCallback([&](bool enable) { this->sceneManager->TogglePause(enable); });
 
-	this->sceneManager->LoadScene(SceneManager::Scenes::MAIN_MENU);
+	this->sceneManager->LoadScene(SceneManager::Scenes::DEMO);
 
 	MSG msg = {};
 

@@ -3,6 +3,7 @@
 
 // dx11
 #include <DirectXMath.h>
+#include <nlohmann/json.hpp>
 
 UI::Widget::Widget(MeshObjData& mesh) { SetMesh(mesh); }
 
@@ -100,4 +101,38 @@ void UI::Widget::OnDestroy() {
 
 	// Call base cleanup if any
 	GameObject::OnDestroy();
+}
+
+void UI::Widget::LoadFromJson(const nlohmann::json& data) {
+	// Base properties (name etc)
+	this->GameObject::LoadFromJson(data);
+
+	if (data.contains("visible")) this->SetVisible(data.at("visible").get<bool>());
+	if (data.contains("enabled")) this->SetEnabled(data.at("enabled").get<bool>());
+
+	if (data.contains("transform") && data["transform"].contains("position") && data["transform"].contains("size")) {
+		auto pos = data["transform"]["position"];
+		auto sz = data["transform"]["size"];
+		if (pos.is_array() && pos.size() == 2 && sz.is_array() && sz.size() == 2) {
+			UI::Vec2 p{pos[0].get<float>(), pos[1].get<float>()};
+			UI::Vec2 s{sz[0].get<float>(), sz[1].get<float>()};
+			this->SetPosition(p);
+			this->SetSize(s);
+		}
+	}
+}
+
+void UI::Widget::SaveToJson(nlohmann::json& data) {
+	// Write common GameObject fields (children, name)
+	this->GameObject::SaveToJson(data);
+	// Mark as UI::Widget so loader can construct the right type
+	data["type"] = "UI::Widget";
+
+	// Widget-specific fields
+	data["visible"] = this->IsVisible();
+	data["enabled"] = this->isEnabled();
+	auto pos = this->GetPosition();
+	auto sz = this->GetSize();
+	data["transform"]["position"] = {pos.x, pos.y};
+	data["transform"]["size"] = {sz.x, sz.y};
 }

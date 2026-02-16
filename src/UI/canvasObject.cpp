@@ -1,6 +1,8 @@
 #include "UI/canvasObject.h"
 #include "UI/button.h"
 #include "UI/canvas.h"
+#include "UI/text.h"
+#include "gameObjects/cameraObject.h"
 
 namespace UI {
 
@@ -60,7 +62,35 @@ void CanvasObject::Start() {
 		this->SetCanvas(std::make_shared<Canvas>());
 	}
 
+	// Default canvas size: if not set, attempt to use main camera aspect ratio
+	// (approximate viewport). Fallback to 1920x1080.
+	if (this->canvas) {
+		auto sz = this->canvas->GetSize();
+		if (sz.x == 0.0f || sz.y == 0.0f) {
+			try {
+				auto& cam = CameraObject::GetMainCamera();
+				float aspect = cam.GetAspectRatio();
+				float height = 1080.0f;
+				float width = aspect * height;
+				this->canvas->SetSize(UI::Vec2{width, height});
+			} catch (...) {
+				this->canvas->SetSize(UI::Vec2{1920.0f, 1080.0f});
+			}
+		}
+	}
+
 	this->SetName("UI Canvas");
+
+	// If any child GameObjects were created by the scene loader, collect
+	// widgets and add them to the canvas now.
+	for (const auto& w : this->GetChildren()) {
+		if (w.expired()) continue;
+		auto child = w.lock();
+		if (!child) continue;
+		if (auto widget = std::dynamic_pointer_cast<UI::Widget>(child)) {
+			this->AddChild(widget);
+		}
+	}
 }
 
 void CanvasObject::Tick() {
@@ -123,7 +153,7 @@ void UI::CanvasObject::ShowInHierarchy() {
 		}
 		if (ImGui::Selectable("Text")) {
 			if (this->factory) {
-				auto newWidgetWeak = this->factory->CreateGameObjectOfType<UI::Widget>();
+				auto newWidgetWeak = this->factory->CreateGameObjectOfType<UI::Text>();
 				if (!newWidgetWeak.expired()) {
 					auto newWidget = newWidgetWeak.lock();
 					newWidget->SetName("Text");
@@ -185,9 +215,18 @@ void UI::CanvasObject::LoadFromJson(const nlohmann::json& data) {
 		if (!this->HasCanvas()) this->SetCanvas(std::make_shared<Canvas>());
 		if (this->canvas) this->canvas->SetSize(s);
 	}
+	if (c.contains("scaleMode") && c["scaleMode"].is_string() && this->canvas) {
+		std::string m = c["scaleMode"].get<std::string>();
+		if (m == "stretch")
+			this->canvas->SetScaleMode(Canvas::ScaleMode::Stretch);
+		else
+			this->canvas->SetScaleMode(Canvas::ScaleMode::Pixel);
+	}
 
-	// Widgets
-	if (data.contains("widgets") && data["widgets"].is_array() && this->factory) {
+	// Widgets: legacy support only — if the scene loader already created child GameObjects
+	// we must not create duplicates. Only create widgets from the "widgets" array when
+	// there are no existing children for this CanvasObject.
+	if (data.contains("widgets") && data["widgets"].is_array() && this->factory && this->GetChildren().empty()) {
 		for (const auto& w : data["widgets"]) {
 			if (!w.contains("type")) continue;
 			std::string type = w.at("type").get<std::string>();
@@ -195,6 +234,8 @@ void UI::CanvasObject::LoadFromJson(const nlohmann::json& data) {
 			std::weak_ptr<GameObject> createdWeak;
 			if (type == "Button") {
 				createdWeak = this->factory->CreateGameObjectOfType<UI::Button>();
+			} else if (type == "Text") {
+				createdWeak = this->factory->CreateGameObjectOfType<UI::Text>();
 			} else {
 				createdWeak = this->factory->CreateGameObjectOfType<UI::Widget>();
 			}
@@ -234,6 +275,19 @@ void UI::CanvasObject::LoadFromJson(const nlohmann::json& data) {
 					}
 				}
 
+				// Text specific
+				if (type == "Text") {
+					if (auto txt = std::dynamic_pointer_cast<UI::Text>(widget)) {
+						if (w.contains("text")) txt->SetText(w.at("text").get<std::string>());
+						if (w.contains("font")) txt->SetFont(w.at("font").get<std::string>());
+						if (w.contains("color") && w["color"].is_array() && w["color"].size() == 4) {
+							DirectX::XMFLOAT4 col{w["color"][0].get<float>(), w["color"][1].get<float>(),
+												  w["color"][2].get<float>(), w["color"][3].get<float>()};
+							txt->SetColor(col);
+						}
+					}
+				}
+
 				// Add to canvas
 				this->AddChild(widget);
 			}
@@ -254,39 +308,8 @@ void UI::CanvasObject::SaveToJson(nlohmann::json& data) {
 	// Canvas
 	auto size = c->GetSize();
 	data["canvas"]["size"] = {size.x, size.y};
+	data["canvas"]["scaleMode"] = (c->GetScaleMode() == Canvas::ScaleMode::Stretch) ? "stretch" : "pixel";
 
-	// Widgets
-	const auto& children = c->GetChildren();
-	for (size_t i = 0; i < children.size(); ++i) {
-		auto& child = children[i];
-		if (!child) continue;
-
-		nlohmann::json w;
-		// Type
-		if (dynamic_cast<UI::Button*>(child.get())) {
-			w["type"] = "Button";
-		} else {
-			w["type"] = "Widget";
-		}
-
-		// Common fields
-		w["name"] = child->GetName();
-		w["active"] = child->IsActive();
-
-		// Widget-specific properties
-		if (auto widget = std::dynamic_pointer_cast<UI::Widget>(child)) {
-			w["visible"] = widget->IsVisible();
-			w["enabled"] = widget->isEnabled();
-			auto pos = widget->GetPosition();
-			auto sz = widget->GetSize();
-			w["transform"]["position"] = {pos.x, pos.y};
-			w["transform"]["size"] = {sz.x, sz.y};
-
-			if (auto btn = std::dynamic_pointer_cast<UI::Button>(widget)) {
-				w["label"] = btn->GetLabel();
-			}
-		}
-
-		data["widgets"].push_back(w);
-	}
+	// Note: widgets are saved as separate GameObject entries by the scene system.
+	// Do not serialize a separate "widgets" array here to avoid duplication on load.
 }

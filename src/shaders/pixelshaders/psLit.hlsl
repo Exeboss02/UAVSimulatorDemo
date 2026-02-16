@@ -57,7 +57,7 @@ StructuredBuffer<Spotlight> spotlightBuffer : register(t0);
 Texture2DArray<unorm float> shadowMaps : register(t5);
 
 StructuredBuffer<PointLight> pointLightBuffer : register(t6);
-Texture2DArray<unorm float> pointLightShadowMaps : register(t7);
+TextureCube pointLightShadowMaps : register(t7);
 
 SamplerState mainSampler : register(s0);
 SamplerState shadowSampler : register(s1);
@@ -111,37 +111,45 @@ float4 main(PixelShaderInput input) : SV_TARGET
     for (int i = 0; i < pointLightCount; i++)
     {
         PointLight lightdata = pointLightBuffer[i];
+        // Vector from light to the fragment
         float3 LightToHit = input.worldPosition.xyz - lightdata.position;
         float3 lightDir = normalize(LightToHit);
-        
-        bool islit;
-        
-        for (int j = 0; j < 6; j++)
-        {
-            
-            float4 lightClip = mul(float4(input.worldPosition.xyz, 1), lightdata.vpMatrix[j]);
-            float3 ndc = lightClip.xyz / lightClip.w;
-        
-            float2 uv = float2(ndc.x * 0.5f + 0.5f, ndc.y * -0.5f + 0.5f);
-            const float bias = 0.01f;
-        
-            float sceneDepth = ndc.z;
-            float mapDepth = pointLightShadowMaps.SampleLevel(shadowSampler, float3(uv, i * 6 + j), 0.f).r;
-        
-            islit = (mapDepth + bias) >= sceneDepth;
-            if (!islit)
-                break;
-        
+
+        // Direction used to sample the cubemap
+        float3 sampleDir = normalize(LightToHit);
+
+        // Determine which cubemap face the direction maps to so we can use
+        // the corresponding view-projection matrix that was used when rendering
+        // that face. Cube face ordering: +X, -X, +Y, -Y, +Z, -Z -> 0..5
+        int faceIndex = 0;
+        float3 absDir = abs(sampleDir);
+        if (absDir.x >= absDir.y && absDir.x >= absDir.z) {
+            faceIndex = sampleDir.x > 0 ? 0 : 1;
+        } else if (absDir.y >= absDir.x && absDir.y >= absDir.z) {
+            faceIndex = sampleDir.y > 0 ? 2 : 3;
+        } else {
+            faceIndex = sampleDir.z > 0 ? 4 : 5;
         }
-        
+
+        // Project the world position with the same view-projection matrix
+        // that was used to render the corresponding cubemap face and compare
+        // the resulting depth (z/w) with the sampled depth from the cubemap.
+        float4 lightClip = mul(float4(input.worldPosition.xyz, 1), lightdata.vpMatrix[faceIndex]);
+        float sceneDepth = lightClip.z / lightClip.w;
+
+        const float bias = 0.01f;
+        float mapDepth = pointLightShadowMaps.SampleLevel(shadowSampler, sampleDir, 0).r;
+        bool islit = (mapDepth + bias) >= sceneDepth;
+
         if (islit)
         {
-            float intensity = (1 / dot(LightToHit, LightToHit)) * max(0.0f, dot(-lightDir, normal));
-    
+            float distSq = max(dot(LightToHit, LightToHit), 1e-6f);
+            float intensity = (1.0f / distSq) * max(0.0f, dot(-lightDir, normal));
+
             float3 halfWayVector = normalize(lightDir + normalize(camToPixel));
             float specularDot = max(dot(normal, -halfWayVector), 0);
             float4 lighting = lit(intensity, specularDot, shininess);
-            
+
             diffuseColor += lighting.y * lightdata.color;
             specularColor += lighting.z * lightdata.color;
         }

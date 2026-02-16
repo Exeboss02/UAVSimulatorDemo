@@ -2,7 +2,7 @@
 
 #include "gameObjects/cameraObject.h"
 #include "gameObjects/gameObject3D.h"
-#include "rendering/depthBuffer.h"
+#include "rendering/shadowCube.h"
 #include "rendering/renderQueue.h"
 #include <DirectXMath.h>
 
@@ -24,7 +24,7 @@ public:
 	std::array<ID3D11DepthStencilView*, 6> GetDepthStencilViews() const;
 	const D3D11_VIEWPORT& GetViewPort() const;
 	bool GetResolutionChanged() const;
-	std::array<ID3D11ShaderResourceView*, 6> GetSRVs() const;
+	ID3D11ShaderResourceView* GetSRV() const;
 
 	virtual void Start() override;
 	virtual void Tick() override;
@@ -33,7 +33,7 @@ public:
 	virtual void SaveToJson(nlohmann::json& data) override;
 
 	std::array<std::weak_ptr<CameraObject>, 6> cameras;
-	void SetShadowResolution(size_t width, size_t height);
+	void SetShadowResolution(size_t res);
 	void SetDepthBuffers(ID3D11Device* device);
 
 	virtual void ShowInHierarchy() override;
@@ -43,5 +43,5 @@ private:
 
 	D3D11_VIEWPORT shadowViewPort;
 	PointLightContainer data;
-	std::array<DepthBuffer, 6> shadowbuffer;
+	ShadowCube shadowCubeMap;
 };

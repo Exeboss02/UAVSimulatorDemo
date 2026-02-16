@@ -34,9 +34,12 @@ PointLightObject::PointLightContainer PointLightObject::GetPointLightData() {
 
 std::array<ID3D11DepthStencilView*, 6> PointLightObject::GetDepthStencilViews() const {
 	return {
-		this->shadowbuffer[0].GetDepthStencilView(), this->shadowbuffer[1].GetDepthStencilView(),
-		this->shadowbuffer[2].GetDepthStencilView(), this->shadowbuffer[3].GetDepthStencilView(),
-		this->shadowbuffer[4].GetDepthStencilView(), this->shadowbuffer[5].GetDepthStencilView(),
+		this->shadowCubeMap.GetDsv(0),
+		this->shadowCubeMap.GetDsv(1),
+		this->shadowCubeMap.GetDsv(2),
+		this->shadowCubeMap.GetDsv(3),
+		this->shadowCubeMap.GetDsv(4),
+		this->shadowCubeMap.GetDsv(5),
 	};
 }
 
@@ -50,13 +53,7 @@ const D3D11_VIEWPORT& PointLightObject::GetViewPort() const {
 
 bool PointLightObject::GetResolutionChanged() const { return this->resolutionChanged; }
 
-std::array<ID3D11ShaderResourceView*, 6> PointLightObject::GetSRVs() const {
-	return {
-		this->shadowbuffer[0].GetShaderResourceView(), this->shadowbuffer[1].GetShaderResourceView(),
-		this->shadowbuffer[2].GetShaderResourceView(), this->shadowbuffer[3].GetShaderResourceView(),
-		this->shadowbuffer[4].GetShaderResourceView(), this->shadowbuffer[5].GetShaderResourceView(),
-	};
-}
+ID3D11ShaderResourceView* PointLightObject::GetSRV() const { return this->shadowCubeMap.GetSrv(); }
 
 void PointLightObject::Start() {
 	RenderQueue::AddPointLight(this->GetPtr());
@@ -70,13 +67,12 @@ void PointLightObject::Start() {
 		this->cameras[i].lock()->SetParent(this->GetPtr());
 	}
 
-	// Pray the directions are correct
-	this->cameras[0].lock()->transform.SetRotationRPY(0, 0, 0);
-	this->cameras[1].lock()->transform.SetRotationRPY(0, DirectX::XM_PIDIV2, 0);
-	this->cameras[2].lock()->transform.SetRotationRPY(0, DirectX::XM_PIDIV2 * 2, 0);
-	this->cameras[3].lock()->transform.SetRotationRPY(0, DirectX::XM_PIDIV2 * 3, 0);
-	this->cameras[4].lock()->transform.SetRotationRPY(0, 0, DirectX::XM_PIDIV2);
-	this->cameras[5].lock()->transform.SetRotationRPY(0, 0, -DirectX::XM_PIDIV2);
+	SetCameraOrientation(this->cameras[0].lock().get(), {1,0,0}, {0,1,0});
+	SetCameraOrientation(this->cameras[1].lock().get(), {-1,0,0}, {0,1,0});
+	SetCameraOrientation(this->cameras[2].lock().get(), {0,1,0}, {0,0,-1});
+	SetCameraOrientation(this->cameras[3].lock().get(), {0,-1,0}, {0,0,1});
+	SetCameraOrientation(this->cameras[4].lock().get(), {0,0,1}, {0,1,0});
+	SetCameraOrientation(this->cameras[5].lock().get(), {0,0,-1}, {0,1,0});
 }
 
 void PointLightObject::Tick() {
@@ -124,12 +120,12 @@ void PointLightObject::SaveToJson(nlohmann::json& data) {
 	data["intensity"] = this->data.intensity;
 }
 
-void PointLightObject::SetShadowResolution(size_t width, size_t height) {
+void PointLightObject::SetShadowResolution(size_t res) {
 	this->shadowViewPort = {
 		.TopLeftX = 0,
 		.TopLeftY = 0,
-		.Width = static_cast<FLOAT>(width),
-		.Height = static_cast<FLOAT>(height),
+		.Width = static_cast<FLOAT>(res),
+		.Height = static_cast<FLOAT>(res),
 		.MinDepth = 0.0f,
 		.MaxDepth = 1.0f,
 	};
@@ -138,9 +134,7 @@ void PointLightObject::SetShadowResolution(size_t width, size_t height) {
 }
 
 void PointLightObject::SetDepthBuffers(ID3D11Device* device) {
-	for (auto& shadowbuff : this->shadowbuffer) {
-		shadowbuff.Init(device, this->shadowViewPort.Width, this->shadowViewPort.Height);
-	}
+	this->shadowCubeMap.Init(device, this->shadowViewPort.Width);
 	this->resolutionChanged = false;
 }
 
@@ -151,4 +145,25 @@ void PointLightObject::ShowInHierarchy() {
 	float intensity = this->data.intensity;
 	ImGui::SliderFloat("Intensity", &intensity, 0.0f, 200.0f);
 	this->data.intensity = intensity;
+}
+
+void SetCameraOrientation(CameraObject* cam, DirectX::XMFLOAT3 forwardF, DirectX::XMFLOAT3 upF) {
+    using namespace DirectX;
+    XMVECTOR forward = XMVector3Normalize(XMLoadFloat3(&forwardF));
+    XMVECTOR up = XMVector3Normalize(XMLoadFloat3(&upF));
+    XMVECTOR right = XMVector3Normalize(XMVector3Cross(up, forward));
+    up = XMVector3Cross(forward, right); // orthonormalize
+
+    XMMATRIX worldMat = {
+        right, // row/col depends on your conventions — this builds basis columns
+        up,
+        forward,
+        XMVectorSet(0,0,0,1)
+    };
+
+    XMVECTOR q = XMQuaternionRotationMatrix(worldMat);
+    XMFLOAT4 quat;
+    XMStoreFloat4(&quat, q);
+
+    cam->transform.SetRotationQuaternion(quat); // or convert quaternion to whatever your transform API needs
 }

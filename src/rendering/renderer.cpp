@@ -136,7 +136,8 @@ void Renderer::CreateSampler() {
 	this->sampler->Init(this->device.Get(), D3D11_TEXTURE_ADDRESS_WRAP);
 
 	this->shadowSampler = std::unique_ptr<Sampler>(new Sampler());
-	this->shadowSampler->Init(this->device.Get(), D3D11_TEXTURE_ADDRESS_BORDER, D3D11_FILTER_ANISOTROPIC,
+	this->shadowSampler->Init(this->device.Get(), D3D11_TEXTURE_ADDRESS_BORDER,
+							  D3D11_FILTER_COMPARISON_MIN_MAG_LINEAR_MIP_POINT,
 							  D3D11_COMPARISON_LESS_EQUAL, {1, 1, 1, 1});
 }
 
@@ -395,7 +396,7 @@ std::vector<ID3D11ShaderResourceView*> Renderer::SpotLightShadowPass() {
 }
 
 std::vector<ID3D11ShaderResourceView*> Renderer::PointLightShadowPass() {
-	const uint32_t lightCount = std::min<uint32_t>(this->pointLightRenderQueue.size(), this->maximumSpotlights);
+	uint32_t lightCount = std::min<uint32_t>(this->pointLightRenderQueue.size(), this->maximumSpotlights);
 
 	std::vector<ID3D11ShaderResourceView*> depthStencilViews;
 	depthStencilViews.reserve(lightCount);
@@ -406,6 +407,7 @@ std::vector<ID3D11ShaderResourceView*> Renderer::PointLightShadowPass() {
 			Logger::Log("The renderer deleted a light");
 			this->pointLightRenderQueue.erase(this->pointLightRenderQueue.begin() + i);
 			i--;
+			lightCount = std::min<uint32_t>(this->pointLightRenderQueue.size(), this->maximumSpotlights);
 			continue;
 		}
 
@@ -415,7 +417,7 @@ std::vector<ID3D11ShaderResourceView*> Renderer::PointLightShadowPass() {
 		}
 
 		auto DSViews = light->GetDepthStencilViews();
-		auto SRVs = light->GetSRVs();
+		auto srv = light->GetSRV();
 
 		for (size_t j = 0; j < 6; j++) {
 
@@ -440,8 +442,8 @@ std::vector<ID3D11ShaderResourceView*> Renderer::PointLightShadowPass() {
 				if (mesh.expired()) continue;
 				this->RenderMeshObject(mesh.lock().get(), false);
 			}
-			depthStencilViews.push_back(SRVs[j]);
 		}
+		depthStencilViews.push_back(srv);
 	}
 
 	return depthStencilViews;
@@ -488,7 +490,7 @@ void Renderer::BindSampler() {
 	ID3D11SamplerState* sampler = this->sampler->GetSamplerState();
 	immediateContext->PSSetSamplers(0, 1, &sampler);
 
-	// Shadow samplerF
+	// Shadow sampler
 	ID3D11SamplerState* shadowSampler = this->shadowSampler->GetSamplerState();
 	immediateContext->PSSetSamplers(1, 1, &shadowSampler);
 }

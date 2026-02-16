@@ -17,26 +17,58 @@ void RigidBody::Start()
 	std::weak_ptr<RigidBody> rigidBody = std::static_pointer_cast<RigidBody>(this->GetPtr());
 	PhysicsQueue::GetInstance().AddRigidBody(rigidBody);
 	Logger::Log("Added Rigidbody to physics queue");
+
+	this->physicsPosition = this->transform.GetPosition();
+	this->previousPhysicsPosition = this->physicsPosition;
 }
 
 void RigidBody::Tick()
 {
 	this->GameObject3D::Tick();
+}
+
+void RigidBody::PhysicsTick()
+{
+	this->GameObject3D::PhysicsTick();
 
 	if(this->gravity) this->linearVelocity.y -= 6.0f * Time::GetInstance().GetDeltaTime();
+
+	this->previousPhysicsPosition = this->physicsPosition;
+
+	Logger::Log("PREVIOUS PHYS POSITION: " + std::to_string(this->previousPhysicsPosition.m128_f32[0]) + ", " + std::to_string(this->previousPhysicsPosition.m128_f32[1]) + ", " + std::to_string(this->previousPhysicsPosition.m128_f32[2]));
+	Logger::Log("PHYS POSITION: " + std::to_string(this->physicsPosition.m128_f32[0]) + ", " + std::to_string(this->physicsPosition.m128_f32[1]) + ", " + std::to_string(this->physicsPosition.m128_f32[2]));
+}
+
+void RigidBody::LatePhysicsTick()
+{
+	this->GameObject3D::LatePhysicsTick();
+
+	//the total move for this frame
+	DirectX::XMVECTOR moveVector = XMLoadFloat3(&this->linearVelocity);
+	this->physicsPosition = DirectX::XMVectorAdd(this->transform.GetPosition(), moveVector);
+
+	Logger::Log("linear velocity: " + std::to_string(this->linearVelocity.x) + ", " + std::to_string(this->linearVelocity.y) + ", " + std::to_string(this->linearVelocity.z));
+
+	this->transform.SetPosition(this->previousPhysicsPosition);
+
+	//collision checks should happen after this in sceneManager
 }
 
 void RigidBody::LateTick()
 {
-	using namespace DirectX;
 	GameObject3D::LatePhysicsTick();
 
-	XMVECTOR moveVector = XMLoadFloat3(&this->linearVelocity);
-	this->transform.Move(moveVector, 1); //vector is already scaled
-}
+	DirectX::XMFLOAT3 previousPosition;
+	DirectX::XMFLOAT3 targetPosition;
+	DirectX::XMStoreFloat3(&previousPosition, this->previousPhysicsPosition);
+	DirectX::XMStoreFloat3(&targetPosition, this->physicsPosition);
 
-void RigidBody::PhysicsTick() {}
-void RigidBody::LatePhysicsTick() {}
+	float lerpProcent = PhysicsQueue::GetInstance().GetFixedDeltaTimeBuffer() / Time::GetInstance().GetFixedDeltaTime();
+	DirectX::XMFLOAT3 lerpedPosition = FLOAT3LERP(previousPosition, targetPosition, lerpProcent);
+	DirectX::XMVECTOR newPosition = DirectX::XMLoadFloat3(&lerpedPosition);
+
+	//this->transform.SetPosition(newPosition);
+}
 
 void RigidBody::SetParent(std::weak_ptr<GameObject> parent) {
 	//do we need to add other things?

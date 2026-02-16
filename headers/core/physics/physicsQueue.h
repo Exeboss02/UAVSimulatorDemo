@@ -3,7 +3,6 @@
 #include "core/physics/rayCaster.h"
 #include <limits>
 
-
 class PhysicsQueue
 {
 public:
@@ -11,6 +10,12 @@ public:
 	PhysicsQueue& operator=(const PhysicsQueue&) = delete;
 
 	static PhysicsQueue& GetInstance();
+
+    int GetPhysicsTickCounter();
+    void ResetPhysicsTickCounter();
+    float GetFixedDeltaTimeBuffer();
+
+    void Tick();
 
     /// <summary>
     /// Adds RigidBody to PhysicsQueue to check and resolve collisions
@@ -51,10 +56,12 @@ private:
     int rigidBodyIdCounter = 0;
     int colliderIdCounter = 0;
 
+    float fixedDeltaTimeBuffer = 0;
+    float physicsTickCounter = 0;
+
     std::vector<std::weak_ptr<RigidBody>> rigidBodies;
     std::vector<std::weak_ptr<Collider>> allColiders;
 	std::vector<std::weak_ptr<Collider>> strayColliders;
-
 
     RayCaster rayCaster;
 };

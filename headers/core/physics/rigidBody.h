@@ -73,4 +73,7 @@ public:
 private:
 	std::vector<std::weak_ptr<Collider>> colliderChildren;
 	int id = -1;
+
+	DirectX::XMVECTOR physicsPosition = {};
+	DirectX::XMVECTOR previousPhysicsPosition = {};
 };

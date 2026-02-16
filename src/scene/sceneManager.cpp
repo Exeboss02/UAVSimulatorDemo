@@ -32,7 +32,13 @@ void SceneManager::SceneTick()
 		this->mainScene = this->emptyScene;
 	}
 
+	PhysicsQueue::GetInstance().Tick();
+
+	Logger::Log("Nr of physics ticks: " + std::to_string(PhysicsQueue::GetInstance().GetPhysicsTickCounter()));
+
 	this->mainScene->SceneTick(this->isPaused);
+	this->mainScene->SceneLateTick(this->isPaused);
+	PhysicsQueue::GetInstance().ResetPhysicsTickCounter();
 
 	//ImGui::Begin("SceneTest");
 	//if (ImGui::Button("Delete Scene")) {

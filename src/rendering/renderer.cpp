@@ -340,12 +340,12 @@ void Renderer::RenderPass() {
 	this->immediateContext->OMSetDepthStencilState(nullptr, 0);
 
 	// Render only UI widgets from the mesh queue
-	for (size_t i = 0; i < this->meshRenderQueue->size(); i++) {
-		auto meshObject = (*this->meshRenderQueue)[i];
+	for (size_t i = 0; i < this->meshRenderQueue.size(); i++) {
+		auto meshObject = (this->meshRenderQueue)[i];
 
 		if (meshObject.expired()) {
 			// Remove expired entries
-			this->meshRenderQueue->erase(this->meshRenderQueue->begin() + i);
+			this->meshRenderQueue.erase(this->meshRenderQueue.begin() + i);
 			i--;
 			continue;
 		}

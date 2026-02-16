@@ -198,12 +198,12 @@ void Renderer::CreateRendererConstantBuffers()
 	this->spotlightCountBuffer->Init(this->device.Get(), sizeof(Renderer::LightCountBufferContainer), &lightCountContainer, D3D11_USAGE_DYNAMIC, D3D11_CPU_ACCESS_WRITE);
 }
 
-void Renderer::CreateRenderQueue()
-{
+void Renderer::CreateRenderQueue() {
 	this->meshRenderQueue = std::make_shared<std::vector<std::weak_ptr<MeshObject>>>();
 	this->lightRenderQueue = std::make_shared<std::vector<std::weak_ptr<SpotlightObject>>>();
 	this->renderQueue = std::unique_ptr<RenderQueue>(new RenderQueue(this->meshRenderQueue, this->lightRenderQueue));
-	this->renderQueue->newSkyboxCallback = [this](std::string filename) { this->ChangeSkybox(filename); }
+	this->renderQueue->newSkyboxCallback = [this](std::string filename) { this->ChangeSkybox(filename); };
+}
 
 void Renderer::LoadShaders()
 {

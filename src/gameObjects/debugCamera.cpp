@@ -28,18 +28,6 @@ void DebugCamera::Tick() {
 		ShowCursor(showCursor);
 	}
 
-	ImGui::Begin("Skybox");
-	if (ImGui::Button("oldtown")) {
-		RenderQueue::ChangeSkybox("cubeMap.dds");
-	}
-	if (ImGui::Button("space")) {
-		RenderQueue::ChangeSkybox("space.dds");
-	}
-	if (ImGui::Button("asteroid")) {
-		RenderQueue::ChangeSkybox("asteroids.dds");
-	}
-	ImGui::End();
-
 	this->shootRay();
 
 	float speed = Time::GetInstance().GetDeltaTime() * 15;

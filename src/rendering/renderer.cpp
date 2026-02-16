@@ -4,7 +4,7 @@
 
 Renderer::Renderer()
 	: viewport(), currentPixelShader(nullptr), currentVertexShader(nullptr), currentRasterizerState(nullptr),
-	  maximumSpotlights(16),
+	  currentMaterial(nullptr), currentMesh(nullptr), maximumSpotlights(16),
 	  renderQueue(this->meshRenderQueue, this->spotLightRenderQueue, this->pointLightRenderQueue) {}
 
 void Renderer::Init(const Window& window) {
@@ -383,6 +383,7 @@ std::vector<ID3D11ShaderResourceView*> Renderer::SpotLightShadowPass() {
 		// Draw all objects to depthstencil
 		for (auto& mesh : this->meshRenderQueue) {
 			if (mesh.expired()) continue;
+			if (!mesh.lock()->IsActive() || mesh.lock()->IsHidden()) continue;
 			this->RenderMeshObject(mesh.lock().get(), false);
 		}
 		depthStencilViews.push_back(light->GetSRV());
@@ -435,6 +436,7 @@ std::vector<ID3D11ShaderResourceView*> Renderer::PointLightShadowPass() {
 			// Draw all objects to depthstencil
 			for (auto& mesh : this->meshRenderQueue) {
 				if (mesh.expired()) continue;
+				if (!mesh.lock()->IsActive() || mesh.lock()->IsHidden()) continue;
 				this->RenderMeshObject(mesh.lock().get(), false);
 			}
 		}
@@ -685,13 +687,16 @@ void Renderer::RenderMeshObject(MeshObject* meshObject, bool renderMaterial) {
 
 	std::shared_ptr<Mesh> mesh = weak_mesh.lock();
 
-	VertexBuffer vBuf = mesh->GetVertexBuffer();
+	if (mesh.get() != this->currentMesh) {
+		VertexBuffer vBuf = mesh->GetVertexBuffer();
 
-	UINT stride = vBuf.GetVertexSize();
-	UINT offset = 0;
-	ID3D11Buffer* vBuff = vBuf.GetBuffer();
-	this->immediateContext->IASetVertexBuffers(0, 1, &vBuff, &stride, &offset);
-	this->immediateContext->IASetIndexBuffer(mesh->GetIndexBuffer().GetBuffer(), DXGI_FORMAT_R32_UINT, 0);
+		UINT stride = vBuf.GetVertexSize();
+		UINT offset = 0;
+		ID3D11Buffer* vBuff = vBuf.GetBuffer();
+		this->immediateContext->IASetVertexBuffers(0, 1, &vBuff, &stride, &offset);
+		this->immediateContext->IASetIndexBuffer(mesh->GetIndexBuffer().GetBuffer(), DXGI_FORMAT_R32_UINT, 0);
+		this->currentMesh = mesh.get();
+	}
 
 	// Bind worldmatrix
 	DirectX::XMFLOAT4X4 worldMatrix;
@@ -713,8 +718,10 @@ void Renderer::RenderMeshObject(MeshObject* meshObject, bool renderMaterial) {
 			Logger::Error("Trying to render expired material, trying to continue...");
 		} else {
 			if (!this->renderAllWireframe && renderMaterial) {
-
-				BindMaterial(weak_material.lock().get());
+				if (weak_material.lock().get() != this->currentMaterial) {
+					BindMaterial(weak_material.lock().get());
+					this->currentMaterial = weak_material.lock().get();
+				}
 			}
 
 			// Draw to screen

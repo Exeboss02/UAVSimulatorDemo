@@ -120,6 +120,10 @@ private:
 
 	std::unique_ptr<Skybox> skybox;
 
+	BaseMaterial* currentMaterial;
+
+	Mesh* currentMesh;
+
 	// Render Queue:
 
 	RenderQueue renderQueue;
@@ -175,7 +179,6 @@ private:
 	ShadowResourceViews ShadowPass();
 
 	std::vector<ID3D11ShaderResourceView*> SpotLightShadowPass();
-
 	std::vector<ID3D11ShaderResourceView*> PointLightShadowPass();
 
 	/// <summary>

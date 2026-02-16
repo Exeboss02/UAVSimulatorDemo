@@ -39,6 +39,9 @@ public:
 	// Show canvas-specific options in the inspector/hierarchy
 	void ShowInHierarchy() override;
 
+	virtual void LoadFromJson(const nlohmann::json& data) override;
+	virtual void SaveToJson(nlohmann::json& data) override;
+
 private:
 	std::shared_ptr<Canvas> canvas; // owned Canvas for this CanvasObject
 };

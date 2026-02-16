@@ -36,6 +36,12 @@ public:
 	virtual void Draw();
 	virtual bool HitTest(Vec2 point) const;
 
+	// Show widget-specific options in the inspector
+	virtual void ShowInHierarchy() override;
+
+	// Clean up when destroyed (remove from canvas if parented to one)
+	void OnDestroy() override;
+
 	void SetWidgetMesh(MeshObjData& mesh);
 
 protected:

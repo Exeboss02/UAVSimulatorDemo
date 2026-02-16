@@ -1,14 +1,14 @@
 #include "rendering/renderer.h"
-#include "gameObjects/objectLoader.h"
 #include "core/filepathHolder.h"
+#include "gameObjects/objectLoader.h"
+// UI
+#include "UI/widget.h"
 
 Renderer::Renderer()
 	: viewport(), currentPixelShader(nullptr), currentVertexShader(nullptr), currentRasterizerState(nullptr),
-	  maximumSpotlights(16) {
-}
+	  maximumSpotlights(16) {}
 
-void Renderer::Init(const Window& window)
-{
+void Renderer::Init(const Window& window) {
 	SetViewport(window);
 
 	CreateDeviceAndSwapChain(window);
@@ -18,8 +18,7 @@ void Renderer::Init(const Window& window)
 	CreateRenderQueue();
 }
 
-void Renderer::SetAllDefaults()
-{
+void Renderer::SetAllDefaults() {
 	CreateSampler();
 
 	CreateInputLayout(AssetManager::GetInstance().GetShaderPtr("VSStandard")->GetShaderByteCode());
@@ -31,11 +30,11 @@ void Renderer::SetAllDefaults()
 	LoadShaders();
 
 	this->skybox = std::make_unique<Skybox>();
-	this->skybox->Init(this->device.Get(), this->immediateContext.Get(), (FilepathHolder::GetAssetsDirectory() / "skybox" / "space.dds").string());
+	this->skybox->Init(this->device.Get(), this->immediateContext.Get(),
+					   (FilepathHolder::GetAssetsDirectory() / "skybox" / "space.dds").string());
 }
 
-void Renderer::SetViewport(const Window& window)
-{
+void Renderer::SetViewport(const Window& window) {
 	RECT rc{};
 	GetClientRect(window.GetHWND(), &rc);
 	UINT clientWidth = static_cast<UINT>(rc.right - rc.left);
@@ -44,8 +43,7 @@ void Renderer::SetViewport(const Window& window)
 		clientWidth = window.GetWidth();
 		clientHeight = window.GetHeight();
 	}
-	if (clientWidth == 0 || clientHeight == 0)
-	{
+	if (clientWidth == 0 || clientHeight == 0) {
 		clientWidth = 1;
 		clientHeight = 1;
 	}
@@ -58,8 +56,7 @@ void Renderer::SetViewport(const Window& window)
 	this->viewport.TopLeftY = 0;
 }
 
-void Renderer::CreateDeviceAndSwapChain(const Window& window)
-{
+void Renderer::CreateDeviceAndSwapChain(const Window& window) {
 	RECT rc{};
 	GetClientRect(window.GetHWND(), &rc);
 	UINT clientWidth = static_cast<UINT>(rc.right - rc.left);
@@ -84,24 +81,22 @@ void Renderer::CreateDeviceAndSwapChain(const Window& window)
 	swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;
 	swapChainDesc.Flags = 0;
 
-	HRESULT hr = D3D11CreateDeviceAndSwapChain(nullptr, D3D_DRIVER_TYPE_HARDWARE, nullptr, D3D11_CREATE_DEVICE_DEBUG, nullptr, 0,
-		D3D11_SDK_VERSION, &swapChainDesc, this->swapChain.GetAddressOf(),
-		this->device.GetAddressOf(), nullptr, this->immediateContext.GetAddressOf());
+	HRESULT hr =
+		D3D11CreateDeviceAndSwapChain(nullptr, D3D_DRIVER_TYPE_HARDWARE, nullptr, D3D11_CREATE_DEVICE_DEBUG, nullptr, 0,
+									  D3D11_SDK_VERSION, &swapChainDesc, this->swapChain.GetAddressOf(),
+									  this->device.GetAddressOf(), nullptr, this->immediateContext.GetAddressOf());
 
-	if (FAILED(hr))
-	{
+	if (FAILED(hr)) {
 		throw std::runtime_error("Failed to create device and swapchain, Error: " + hr);
 	}
 }
 
-void Renderer::CreateRenderTarget()
-{
+void Renderer::CreateRenderTarget() {
 	this->renderTarget = std::unique_ptr<RenderTarget>(new RenderTarget());
 	this->renderTarget->Init(this->device.Get(), this->swapChain.Get());
 }
 
-void Renderer::CreateDepthBuffer(const Window& window)
-{
+void Renderer::CreateDepthBuffer(const Window& window) {
 	RECT rc{};
 	GetClientRect(window.GetHWND(), &rc);
 	UINT clientWidth = static_cast<UINT>(rc.right - rc.left);
@@ -129,8 +124,7 @@ void Renderer::CreateDepthBuffer(const Window& window)
 	this->depthBuffer->Init(this->device.Get(), clientWidth, clientHeight);
 }
 
-void Renderer::CreateInputLayout(const std::string& vShaderByteCode)
-{
+void Renderer::CreateInputLayout(const std::string& vShaderByteCode) {
 	this->inputLayout = std::unique_ptr<InputLayout>(new InputLayout());
 	this->inputLayout->AddInputElement("POSITION", DXGI_FORMAT_R32G32B32_FLOAT);
 	this->inputLayout->AddInputElement("NORMAL", DXGI_FORMAT_R32G32B32_FLOAT);
@@ -138,8 +132,7 @@ void Renderer::CreateInputLayout(const std::string& vShaderByteCode)
 	this->inputLayout->FinalizeInputLayout(this->device.Get(), vShaderByteCode.c_str(), vShaderByteCode.length());
 }
 
-void Renderer::CreateSampler()
-{
+void Renderer::CreateSampler() {
 	this->sampler = std::unique_ptr<Sampler>(new Sampler());
 	this->sampler->Init(this->device.Get(), D3D11_TEXTURE_ADDRESS_WRAP);
 
@@ -148,8 +141,7 @@ void Renderer::CreateSampler()
 							  D3D11_COMPARISON_LESS_EQUAL, {1, 1, 1, 1});
 }
 
-void Renderer::CreateRasterizerStates()
-{
+void Renderer::CreateRasterizerStates() {
 	D3D11_RASTERIZER_DESC rastDesc;
 	ZeroMemory(&rastDesc, sizeof(rastDesc));
 	rastDesc.CullMode = D3D11_CULL_BACK;
@@ -179,34 +171,35 @@ void Renderer::CreateRasterizerStates()
 	this->skyboxRasterizerState->Init(this->device.Get(), &skyboxRastDesc);
 }
 
-void Renderer::CreateRendererConstantBuffers()
-{
+void Renderer::CreateRendererConstantBuffers() {
 	CameraObject::CameraMatrixContainer camMatrix = {};
 	this->cameraBuffer = std::make_unique<ConstantBuffer>();
-	this->cameraBuffer->Init(this->device.Get(), sizeof(CameraObject::CameraMatrixContainer), &camMatrix, D3D11_USAGE_DYNAMIC, D3D11_CPU_ACCESS_WRITE);
+	this->cameraBuffer->Init(this->device.Get(), sizeof(CameraObject::CameraMatrixContainer), &camMatrix,
+							 D3D11_USAGE_DYNAMIC, D3D11_CPU_ACCESS_WRITE);
 
 	Renderer::WorldMatrixBufferContainer worldMatrix = {};
 	this->worldMatrixBuffer = std::make_unique<ConstantBuffer>();
-	this->worldMatrixBuffer->Init(this->device.Get(), sizeof(Renderer::WorldMatrixBufferContainer), &worldMatrix, D3D11_USAGE_DYNAMIC, D3D11_CPU_ACCESS_WRITE);
+	this->worldMatrixBuffer->Init(this->device.Get(), sizeof(Renderer::WorldMatrixBufferContainer), &worldMatrix,
+								  D3D11_USAGE_DYNAMIC, D3D11_CPU_ACCESS_WRITE);
 
 	SpotlightObject::SpotLightContainer defaultSpotlights[1];
 	this->spotlightBuffer = std::make_unique<StructuredBuffer>();
-	this->spotlightBuffer->Init(this->device.Get(), sizeof(SpotlightObject::SpotLightContainer), this->maximumSpotlights, defaultSpotlights);
+	this->spotlightBuffer->Init(this->device.Get(), sizeof(SpotlightObject::SpotLightContainer),
+								this->maximumSpotlights, defaultSpotlights);
 
 	Renderer::LightCountBufferContainer lightCountContainer = {};
 	this->spotlightCountBuffer = std::make_unique<ConstantBuffer>();
-	this->spotlightCountBuffer->Init(this->device.Get(), sizeof(Renderer::LightCountBufferContainer), &lightCountContainer, D3D11_USAGE_DYNAMIC, D3D11_CPU_ACCESS_WRITE);
+	this->spotlightCountBuffer->Init(this->device.Get(), sizeof(Renderer::LightCountBufferContainer),
+									 &lightCountContainer, D3D11_USAGE_DYNAMIC, D3D11_CPU_ACCESS_WRITE);
 }
 
-void Renderer::CreateRenderQueue()
-{
+void Renderer::CreateRenderQueue() {
 	this->meshRenderQueue = std::make_shared<std::vector<std::weak_ptr<MeshObject>>>();
 	this->lightRenderQueue = std::make_shared<std::vector<std::weak_ptr<SpotlightObject>>>();
 	this->renderQueue = std::unique_ptr<RenderQueue>(new RenderQueue(this->meshRenderQueue, this->lightRenderQueue));
 }
 
-void Renderer::LoadShaders()
-{
+void Renderer::LoadShaders() {
 	this->vertexShader = AssetManager::GetInstance().GetShaderPtr("VSStandard");
 	this->pixelShaderLit = AssetManager::GetInstance().GetShaderPtr("PSLit");
 	this->pixelShaderUnlit = AssetManager::GetInstance().GetShaderPtr("PSUnlit");
@@ -215,8 +208,7 @@ void Renderer::LoadShaders()
 	this->defaultUnlitMat = AssetManager::GetInstance().GetMaterialWeakPtr("defaultUnlitMaterial");
 }
 
-void Renderer::Render()
-{
+void Renderer::Render() {
 	BindInputLayout();
 	auto shadowmaps = this->ShadowPass();
 	this->GetContext()->PSSetShaderResources(5, shadowmaps.size(), shadowmaps.data());
@@ -230,20 +222,17 @@ void Renderer::Render()
 	}
 	this->GetContext()->PSSetShaderResources(5, shadowmaps.size(), shadowmaps.data());
 
-	//ImGui::Begin("Change Skybox");
-	//if (ImGui::Button("Change")) {
-	//	this->skybox->SwapCubemap(this->device.Get(), this->immediateContext.Get(), "../../../../assets/skybox/space.dds");
-	//}
-	//ImGui::End();
+	// ImGui::Begin("Change Skybox");
+	// if (ImGui::Button("Change")) {
+	//	this->skybox->SwapCubemap(this->device.Get(), this->immediateContext.Get(),
+	//"../../../../assets/skybox/space.dds");
+	// }
+	// ImGui::End();
 }
 
-void Renderer::Present()
-{
-	this->swapChain->Present(this->isVSyncEnabled ? 1 : 0, 0);
-}
+void Renderer::Present() { this->swapChain->Present(this->isVSyncEnabled ? 1 : 0, 0); }
 
-void Renderer::Resize(const Window& window)
-{
+void Renderer::Resize(const Window& window) {
 	this->ResizeSwapChain(window);
 
 	BindRenderTarget();
@@ -257,23 +246,13 @@ void Renderer::ToggleWireframe(bool enable) {
 	this->renderAllWireframe = enable;
 }
 
-ID3D11Device* Renderer::GetDevice() const
-{
-	return this->device.Get();
-}
+ID3D11Device* Renderer::GetDevice() const { return this->device.Get(); }
 
-ID3D11DeviceContext* Renderer::GetContext() const
-{
-	return this->immediateContext.Get();
-}
+ID3D11DeviceContext* Renderer::GetContext() const { return this->immediateContext.Get(); }
 
-IDXGISwapChain* Renderer::GetSwapChain() const
-{
-	return this->swapChain.Get();
-}
+IDXGISwapChain* Renderer::GetSwapChain() const { return this->swapChain.Get(); }
 
-void Renderer::RenderPass()
-{
+void Renderer::RenderPass() {
 
 	// Bind basic stuff (it probably doesn't need to be set every frame)
 	if (!this->hasBoundStatic) {
@@ -306,12 +285,10 @@ void Renderer::RenderPass()
 	}
 
 	// Bind meshes
-	for (size_t i = 0; i < this->meshRenderQueue->size(); i++)
-	{
+	for (size_t i = 0; i < this->meshRenderQueue->size(); i++) {
 		std::weak_ptr<MeshObject> meshObject = (*this->meshRenderQueue)[i];
 
-		if (meshObject.expired())
-		{
+		if (meshObject.expired()) {
 			// This should get rid of empty objects
 			Logger::Log("The renderer deleted a meshObject");
 			this->meshRenderQueue->erase(this->meshRenderQueue->begin() + i);
@@ -323,9 +300,50 @@ void Renderer::RenderPass()
 
 		RenderMeshObject((*this->meshRenderQueue)[i].lock().get());
 	}
+
+	// UI pass: render UI widgets in an orthographic projection on top of the scene
+
+	// Prepare an orthographic camera matching the render target (top-left origin)
+	CameraObject::CameraMatrixContainer uiCamera{};
+	DirectX::XMMATRIX view = DirectX::XMMatrixIdentity();
+	DirectX::XMMATRIX proj =
+		DirectX::XMMatrixOrthographicOffCenterLH(0.0f, this->viewport.Width, this->viewport.Height, 0.0f, 0.0f, 1.0f);
+	DirectX::XMMATRIX viewProj = view * proj;
+	DirectX::XMStoreFloat4x4(&uiCamera.viewProjectionMatrix, viewProj);
+	uiCamera.cameraPosition = DirectX::XMVectorZero();
+
+	// Update camera buffer for UI
+	this->cameraBuffer->UpdateBuffer(this->immediateContext.Get(), &uiCamera);
+	ID3D11Buffer* camBuf = this->cameraBuffer->GetBuffer();
+	this->immediateContext->VSSetConstantBuffers(0, 1, &camBuf);
+
+	// Disable depth testing so UI draws on top
+	this->immediateContext->OMSetDepthStencilState(nullptr, 0);
+
+	// Render only UI widgets from the mesh queue
+	for (size_t i = 0; i < this->meshRenderQueue->size(); i++) {
+		auto meshObject = (*this->meshRenderQueue)[i];
+
+		if (meshObject.expired()) {
+			// Remove expired entries
+			this->meshRenderQueue->erase(this->meshRenderQueue->begin() + i);
+			i--;
+			continue;
+		}
+
+		if (!meshObject.lock()->IsActive() || meshObject.lock()->IsHidden()) continue;
+
+		// Only render UI widgets in this pass
+		if (dynamic_cast<UI::Widget*>(meshObject.lock().get()) == nullptr) continue;
+
+		RenderMeshObject(meshObject.lock().get());
+	}
+
+	// Restore depth/stencil by rebinding render target (rebinds depth stencil)
+	BindRenderTarget();
 }
 
-std::vector<ID3D11ShaderResourceView*> Renderer::ShadowPass() { 
+std::vector<ID3D11ShaderResourceView*> Renderer::ShadowPass() {
 
 	this->hasBoundStatic = false;
 	if (this->currentVertexShader != this->vertexShader.get()) {
@@ -338,7 +356,6 @@ std::vector<ID3D11ShaderResourceView*> Renderer::ShadowPass() {
 
 	std::vector<ID3D11ShaderResourceView*> depthStencilViews;
 	depthStencilViews.reserve(lightCount);
-
 
 	for (uint32_t i = 0; i < lightCount; i++) {
 		if ((*this->lightRenderQueue)[i].expired()) {
@@ -357,7 +374,6 @@ std::vector<ID3D11ShaderResourceView*> Renderer::ShadowPass() {
 		this->immediateContext->ClearDepthStencilView(light->GetDepthStencilView(), D3D11_CLEAR_DEPTH, 1, 0);
 		this->immediateContext->OMSetRenderTargets(0, nullptr, light->GetDepthStencilView());
 
-
 		if (light->camera.expired()) {
 			Logger::Error("Lights shadow camera was dead");
 			continue;
@@ -375,7 +391,6 @@ std::vector<ID3D11ShaderResourceView*> Renderer::ShadowPass() {
 		for (auto& mesh : *this->meshRenderQueue.get()) {
 			if (mesh.expired()) continue;
 			this->RenderMeshObject(mesh.lock().get(), false);
-			
 		}
 		depthStencilViews.push_back(light->GetSRV());
 	}
@@ -386,20 +401,18 @@ std::vector<ID3D11ShaderResourceView*> Renderer::ShadowPass() {
 	// Reset ViewPort
 	this->BindViewport();
 
-	return depthStencilViews; 
-
+	return depthStencilViews;
 }
 
-void Renderer::ClearRenderTargetViewAndDepthStencilView()
-{
+void Renderer::ClearRenderTargetViewAndDepthStencilView() {
 	// Clear previous frame
-	float clearColor[4] = { 0,0,0.1,0 };
+	float clearColor[4] = {0, 0, 0.1, 0};
 	this->immediateContext->ClearRenderTargetView(this->renderTarget->GetRenderTargetView(), clearColor);
-	this->immediateContext->ClearDepthStencilView(this->depthBuffer->GetDepthStencilView(0), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1, 0);
+	this->immediateContext->ClearDepthStencilView(this->depthBuffer->GetDepthStencilView(0),
+												  D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1, 0);
 }
 
-void Renderer::ResizeSwapChain(const Window& window)
-{
+void Renderer::ResizeSwapChain(const Window& window) {
 	if (window.GetWidth() == 0 || window.GetHeight() == 0) {
 		return;
 	}
@@ -415,8 +428,7 @@ void Renderer::ResizeSwapChain(const Window& window)
 
 	// Resize swapchain
 	HRESULT hr = this->swapChain->ResizeBuffers(0, window.GetWidth(), window.GetHeight(), DXGI_FORMAT_UNKNOWN, 0);
-	if (FAILED(hr))
-	{
+	if (FAILED(hr)) {
 		throw std::runtime_error("Failed to resize swapchain buffers, Error: " + hr);
 	}
 
@@ -428,8 +440,7 @@ void Renderer::ResizeSwapChain(const Window& window)
 	SetViewport(window);
 }
 
-void Renderer::BindSampler()
-{
+void Renderer::BindSampler() {
 	// Sampler
 	ID3D11SamplerState* sampler = this->sampler->GetSamplerState();
 	immediateContext->PSSetSamplers(0, 1, &sampler);
@@ -439,30 +450,23 @@ void Renderer::BindSampler()
 	immediateContext->PSSetSamplers(1, 1, &shadowSampler);
 }
 
-void Renderer::BindInputLayout()
-{
+void Renderer::BindInputLayout() {
 	// Set up inputs
 	this->immediateContext->IASetInputLayout(this->inputLayout->GetInputLayout());
 	this->immediateContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 }
 
-void Renderer::BindRenderTarget()
-{
+void Renderer::BindRenderTarget() {
 	// Render target
 	ID3D11RenderTargetView* rtv = this->renderTarget->GetRenderTargetView();
 	this->immediateContext->OMSetRenderTargets(1, &rtv, this->depthBuffer->GetDepthStencilView(0));
 	this->immediateContext->OMSetDepthStencilState(this->depthBuffer->GetDepthStencilState(), 1);
 }
 
-void Renderer::BindViewport()
-{
-	this->immediateContext->RSSetViewports(1, &this->viewport);
-}
+void Renderer::BindViewport() { this->immediateContext->RSSetViewports(1, &this->viewport); }
 
-void Renderer::BindRasterizerState(RasterizerState* rastState)
-{
-	if (rastState == nullptr)
-	{
+void Renderer::BindRasterizerState(RasterizerState* rastState) {
+	if (rastState == nullptr) {
 		Logger::Error("RasterizerState is nullptr");
 	}
 
@@ -471,20 +475,15 @@ void Renderer::BindRasterizerState(RasterizerState* rastState)
 	this->currentRasterizerState = rastState;
 }
 
-void Renderer::BindMaterial(BaseMaterial* material)
-{
+void Renderer::BindMaterial(BaseMaterial* material) {
 	RenderData renderData = material->GetRenderData(this->immediateContext.Get());
 
-	if (material->wireframe) 
-	{
+	if (material->wireframe) {
 		if (this->currentRasterizerState != this->wireframeRasterizerState.get()) {
 			BindRasterizerState(this->wireframeRasterizerState.get());
 		}
-	} 
-	else 
-	{
-		if (this->currentRasterizerState == this->wireframeRasterizerState.get()) 
-		{
+	} else {
+		if (this->currentRasterizerState == this->wireframeRasterizerState.get()) {
 			BindRasterizerState(this->standardRasterizerState.get());
 		}
 	}
@@ -492,62 +491,50 @@ void Renderer::BindMaterial(BaseMaterial* material)
 	// Bind shaders
 	// Checks to avoid making unnecessary GPU calls
 	// Since shaders will almost always be the same
-	if (renderData.vertexShader)
-	{
-		if (this->currentVertexShader != renderData.vertexShader.get())
-		{
+	if (renderData.vertexShader) {
+		if (this->currentVertexShader != renderData.vertexShader.get()) {
 			renderData.vertexShader->BindShader(this->immediateContext.Get());
 			this->currentVertexShader = renderData.vertexShader.get();
 		}
-	}
-	else
-	{
-		if (this->currentVertexShader != this->vertexShader.get())
-		{
+	} else {
+		if (this->currentVertexShader != this->vertexShader.get()) {
 			this->vertexShader->BindShader(this->immediateContext.Get());
 			this->currentVertexShader = this->vertexShader.get();
 		}
 	}
 
-	if (renderData.pixelShader)
-	{
-		if (this->currentPixelShader != renderData.pixelShader.get())
-		{
+	if (renderData.pixelShader) {
+		if (this->currentPixelShader != renderData.pixelShader.get()) {
 			renderData.pixelShader->BindShader(this->immediateContext.Get());
 			this->currentPixelShader = renderData.pixelShader.get();
 		}
-	}
-	else
-	{
-		if (this->currentPixelShader != this->pixelShaderLit.get())
-		{
+	} else {
+		if (this->currentPixelShader != this->pixelShaderLit.get()) {
 			this->pixelShaderLit->BindShader(this->immediateContext.Get());
 			this->currentPixelShader = this->pixelShaderLit.get();
 		}
 	}
 
 	// FIX
-	this->immediateContext->PSSetShaderResources(1, 1/*renderData.textures.size()*/, renderData.textures.data());
+	this->immediateContext->PSSetShaderResources(1, 1 /*renderData.textures.size()*/, renderData.textures.data());
 
 	// Also bind constant buffers
-	for (size_t i = 0; i < renderData.pixelBuffers.size(); i++)
-	{
+	for (size_t i = 0; i < renderData.pixelBuffers.size(); i++) {
 		ID3D11Buffer* buf = renderData.pixelBuffers[i]->GetBuffer();
 		this->immediateContext->PSSetConstantBuffers(i + 1, 1, &buf); // i + 1 because first slot is always occupied
 	}
 
-	for (size_t i = 0; i < renderData.pixelBuffers.size(); i++)
-	{
+	for (size_t i = 0; i < renderData.pixelBuffers.size(); i++) {
 		ID3D11Buffer* buf = renderData.pixelBuffers[i]->GetBuffer();
-		this->immediateContext->VSSetConstantBuffers(i + 2, 1, &buf); // i + 2 because the first two slots are always occupied
+		this->immediateContext->VSSetConstantBuffers(i + 2, 1,
+													 &buf); // i + 2 because the first two slots are always occupied
 	}
 }
 
-void Renderer::BindLights()
-{
-	if (this->lightRenderQueue->size() > this->maximumSpotlights)
-	{
-		Logger::Log("Just letting you know, there's more lights in the scene than the renderer supports. Increase maximumSpotlights.");
+void Renderer::BindLights() {
+	if (this->lightRenderQueue->size() > this->maximumSpotlights) {
+		Logger::Log("Just letting you know, there's more lights in the scene than the renderer supports. Increase "
+					"maximumSpotlights.");
 	}
 
 	uint32_t lightCount = std::min<uint32_t>(this->lightRenderQueue->size(), this->maximumSpotlights);
@@ -556,10 +543,8 @@ void Renderer::BindLights()
 
 		// Inefficient, should be fixed
 		std::vector<SpotlightObject::SpotLightContainer> spotlights;
-		for (uint32_t i = 0; i < lightCount; i++)
-		{
-			if ((*this->lightRenderQueue)[i].expired()) 
-			{
+		for (uint32_t i = 0; i < lightCount; i++) {
+			if ((*this->lightRenderQueue)[i].expired()) {
 				// This should remove deleted lights
 				Logger::Log("The renderer deleted a light");
 				this->lightRenderQueue->erase(this->lightRenderQueue->begin() + i);
@@ -579,14 +564,13 @@ void Renderer::BindLights()
 	}
 
 	// Updates and binds light count constant buffer
-	Renderer::LightCountBufferContainer lightCountContainer = { lightCount, 1, 1, 1 };
+	Renderer::LightCountBufferContainer lightCountContainer = {lightCount, 1, 1, 1};
 	this->spotlightCountBuffer->UpdateBuffer(this->immediateContext.Get(), &lightCountContainer);
 	ID3D11Buffer* buf = this->spotlightCountBuffer->GetBuffer();
 	this->immediateContext->PSSetConstantBuffers(0, 1, &buf);
 }
 
-void Renderer::BindCameraMatrix()
-{
+void Renderer::BindCameraMatrix() {
 	auto cameraMatrix = CameraObject::GetMainCamera().GetCameraMatrix();
 
 	this->cameraBuffer->UpdateBuffer(this->immediateContext.Get(), &cameraMatrix);
@@ -595,9 +579,7 @@ void Renderer::BindCameraMatrix()
 	this->immediateContext->VSSetConstantBuffers(0, 1, &buffer);
 }
 
-void Renderer::BindWorldMatrix(ID3D11Buffer* buffer)
-{
-	this->immediateContext->VSSetConstantBuffers(1, 1, &buffer); }
+void Renderer::BindWorldMatrix(ID3D11Buffer* buffer) { this->immediateContext->VSSetConstantBuffers(1, 1, &buffer); }
 
 void Renderer::DrawSkybox() {
 	this->skybox->Draw(this->immediateContext.Get());
@@ -610,8 +592,7 @@ void Renderer::DrawSkybox() {
 	BindMaterial(this->defaultMat.lock().get());
 }
 
-void Renderer::RenderMeshObject(MeshObject* meshObject, bool renderMaterial)
-{
+void Renderer::RenderMeshObject(MeshObject* meshObject, bool renderMaterial) {
 	// Bind mesh
 	MeshObjData data = meshObject->GetMesh();
 	std::weak_ptr<Mesh> weak_mesh = data.GetMesh();
@@ -630,34 +611,26 @@ void Renderer::RenderMeshObject(MeshObject* meshObject, bool renderMaterial)
 	this->immediateContext->IASetVertexBuffers(0, 1, &vBuff, &stride, &offset);
 	this->immediateContext->IASetIndexBuffer(mesh->GetIndexBuffer().GetBuffer(), DXGI_FORMAT_R32_UINT, 0);
 
-
-
 	// Bind worldmatrix
 	DirectX::XMFLOAT4X4 worldMatrix;
 	DirectX::XMStoreFloat4x4(&worldMatrix, meshObject->GetGlobalWorldMatrix(false));
 	DirectX::XMFLOAT4X4 worldMatrixInverseTransposed;
 	DirectX::XMStoreFloat4x4(&worldMatrixInverseTransposed, meshObject->GetGlobalWorldMatrix(true));
 
-	Renderer::WorldMatrixBufferContainer worldMatrixBufferContainer = { worldMatrix, worldMatrixInverseTransposed };
+	Renderer::WorldMatrixBufferContainer worldMatrixBufferContainer = {worldMatrix, worldMatrixInverseTransposed};
 
 	this->worldMatrixBuffer->UpdateBuffer(this->immediateContext.Get(), &worldMatrixBufferContainer);
 	BindWorldMatrix(this->worldMatrixBuffer->GetBuffer());
 
-
 	// Draw submeshes
 	size_t index = 0;
-	for (auto& subMesh : mesh->GetSubMeshes())
-	{
+	for (auto& subMesh : mesh->GetSubMeshes()) {
 		std::weak_ptr<BaseMaterial> weak_material = data.GetMaterial(index);
 
-		if (weak_material.expired())
-		{
+		if (weak_material.expired()) {
 			Logger::Error("Trying to render expired material, trying to continue...");
-		}
-		else
-		{
-			if (!this->renderAllWireframe && renderMaterial)
-			{
+		} else {
+			if (!this->renderAllWireframe && renderMaterial) {
 
 				BindMaterial(weak_material.lock().get());
 			}

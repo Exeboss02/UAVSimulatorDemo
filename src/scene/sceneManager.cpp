@@ -1,6 +1,7 @@
 #include "scene/sceneManager.h"
-#include "gameObjects/room.h"
+#include "UI/canvasObject.h"
 #include "core/filepathHolder.h"
+#include "gameObjects/room.h"
 
 // Very good macro, please don't remove
 #define NAMEOF(x) #x
@@ -19,35 +20,34 @@ SceneManager::SceneManager(Renderer* rend) : mainScene(nullptr), renderer(rend),
 	this->objectFromString.RegisterType<RigidBody>(NAMEOF(RigidBody));
 	this->objectFromString.RegisterType<SoundSourceObject>(NAMEOF(SoundSourceObject));
 	this->objectFromString.RegisterType<TestPlayer>(NAMEOF(TestPlayer));
+	this->objectFromString.RegisterType<UI::CanvasObject>(NAMEOF(UI::CanvasObject));
 
-	this->objectFromString.RegisterType<Player>(NAMEOF(Player));//Game specific
+	this->objectFromString.RegisterType<Player>(NAMEOF(Player)); // Game specific
 
 	CreateNewScene(this->emptyScene);
 	this->emptyScene->CreateGameObjectOfType<CameraObject>();
 }
 
-void SceneManager::SceneTick()
-{
+void SceneManager::SceneTick() {
 	if (!this->mainScene.get()) {
 		this->mainScene = this->emptyScene;
 	}
 
 	this->mainScene->SceneTick(this->isPaused);
 
-	//ImGui::Begin("SceneTest");
-	//if (ImGui::Button("Delete Scene")) {
+	// ImGui::Begin("SceneTest");
+	// if (ImGui::Button("Delete Scene")) {
 	//	DeleteScene(this->mainScene);
-	//}
-	//ImGui::End();
+	// }
+	// ImGui::End();
 }
 
-void SceneManager::LoadScene(Scenes scene)
-{
+void SceneManager::LoadScene(Scenes scene) {
 	switch (scene) {
 	case Scenes::EMPTY:
 		break;
 	case Scenes::MAIN_MENU:
-		Logger::Warn("There is no main menu scene.");
+		LoadSceneFromFile((FilepathHolder::GetAssetsDirectory() / "scenes" / "MainMenu.scene").string());
 		break;
 	case Scenes::GAME:
 		Logger::Warn("There is no game scene.");
@@ -63,25 +63,21 @@ void SceneManager::LoadScene(Scenes scene)
 	}
 }
 
-void SceneManager::CreateNewScene(std::shared_ptr<Scene>& scene)
-{
-	if (scene.get())
-	{
+void SceneManager::CreateNewScene(std::shared_ptr<Scene>& scene) {
+	if (scene.get()) {
 		DeleteScene(scene);
 	}
 
 	scene = std::make_shared<Scene>();
 }
 
-void SceneManager::DeleteScene(std::shared_ptr<Scene>& scene)
-{
+void SceneManager::DeleteScene(std::shared_ptr<Scene>& scene) {
 	scene.reset();
 	RenderQueue::ClearAllQueues();
 	Logger::Log("Deleted scene: ", this->currentScenePath);
 }
 
-void SceneManager::LoadSceneFromFile(const std::string &filePath)
-{
+void SceneManager::LoadSceneFromFile(const std::string& filePath) {
 	CreateNewScene(this->mainScene);
 
 	this->mainScene->finishedLoading = false;
@@ -100,49 +96,41 @@ void SceneManager::LoadSceneFromFile(const std::string &filePath)
 	SetMainCameraInScene(this->mainScene);
 }
 
-void SceneManager::CreateObjectsFromJsonRecursively(const nlohmann::json &data, std::weak_ptr<GameObject> parent)
-{
-	for (const nlohmann::json &objectData : data)
-	{
+void SceneManager::CreateObjectsFromJsonRecursively(const nlohmann::json& data, std::weak_ptr<GameObject> parent) {
+	for (const nlohmann::json& objectData : data) {
 		// Logger::Log(objectData.dump());
 
-		if (!objectData.contains("type"))
-		{
+		if (!objectData.contains("type")) {
 			throw std::runtime_error("Failed to load scene: GameObject doesn't have a type.");
 		}
 
-		GameObject *gameObjectPointer = static_cast<GameObject *>(objectFromString.Construct(objectData.at("type")));
+		GameObject* gameObjectPointer = static_cast<GameObject*>(objectFromString.Construct(objectData.at("type")));
 		auto obj = std::shared_ptr<GameObject>(gameObjectPointer);
 		this->mainScene->RegisterGameObject(obj);
 		obj->LoadFromJson(objectData);
-		if (!parent.expired())
-		{
+		if (!parent.expired()) {
 			obj->SetParent(parent);
 		}
 
-		if (objectData.contains("children"))
-		{
+		if (objectData.contains("children")) {
 			CreateObjectsFromJsonRecursively(objectData["children"], obj);
 		}
 	}
 }
 
-void SceneManager::SaveSceneToFile(const std::string &filePath)
-{
+void SceneManager::SaveSceneToFile(const std::string& filePath) {
 	nlohmann::json data;
 
 	int iterator = 0;
-	for (size_t i = 0; i < this->mainScene->gameObjects.size(); i++)
-	{
-		if (this->mainScene->gameObjects[i]->GetParent().expired())
-		{
+	for (size_t i = 0; i < this->mainScene->gameObjects.size(); i++) {
+		if (this->mainScene->gameObjects[i]->GetParent().expired()) {
 			this->mainScene->gameObjects[i]->SaveToJson(data["gameObjects"][iterator++]);
 		}
 	}
 
-	//Logger::Log(this->mainScene->GetNumberOfGameObjects());
-	//this->mainScene->QueueDeleteGameObject(light2);
-	//Logger::Log("Loaded scene");
+	// Logger::Log(this->mainScene->GetNumberOfGameObjects());
+	// this->mainScene->QueueDeleteGameObject(light2);
+	// Logger::Log("Loaded scene");
 
 	////////////////
 	std::ofstream outFile(filePath);
@@ -151,8 +139,7 @@ void SceneManager::SaveSceneToFile(const std::string &filePath)
 	this->currentScenePath = filePath;
 }
 
-void SceneManager::SetMainCameraInScene(std::shared_ptr<Scene>& scene)
-{
+void SceneManager::SetMainCameraInScene(std::shared_ptr<Scene>& scene) {
 	if (auto newMainCamera = this->mainScene->FindObjectOfType<CameraObject>(); !newMainCamera.expired()) {
 		newMainCamera.lock()->SetMainCamera();
 	} else {
@@ -160,95 +147,58 @@ void SceneManager::SetMainCameraInScene(std::shared_ptr<Scene>& scene)
 	}
 }
 
-void SceneManager::TogglePause(bool enable) 
-{ this->isPaused = enable; }
+void SceneManager::TogglePause(bool enable) { this->isPaused = enable; }
 
-void SceneManager::SaveSceneToCurrentFile()
-{
-	if (this->currentScenePath.empty())
-	{
+void SceneManager::SaveSceneToCurrentFile() {
+	if (this->currentScenePath.empty()) {
 		Logger::Log("No current scene file path set. Use Save As to choose a file.");
 		return;
 	}
 	SaveSceneToFile(this->currentScenePath);
 }
 
-void SceneManager::InitializeSoundBank(std::string pathToSoundFolder)
-{
+void SceneManager::InitializeSoundBank(std::string pathToSoundFolder) {
 	AssetManager::GetInstance().InitializeSoundBank(pathToSoundFolder);
 }
 
-void SceneManager::AddSoundClipStandardFolder(std::string filename, std::string id)
-{
+void SceneManager::AddSoundClipStandardFolder(std::string filename, std::string id) {
 	AssetManager::GetInstance().AddSoundClipStandardFolder(filename, id);
 }
 
-void SceneManager::AddSoundClip(std::string path, std::string id)
-{
+void SceneManager::AddSoundClip(std::string path, std::string id) {
 	AssetManager::GetInstance().AddSoundClip(path, id);
 }
 
-std::string SceneManager::GetPathToSoundFolder()
-{
-	return AssetManager::GetInstance().GetPathToSoundFolder();
-}
+std::string SceneManager::GetPathToSoundFolder() { return AssetManager::GetInstance().GetPathToSoundFolder(); }
 
-SoundClip *SceneManager::GetSoundClip(std::string id)
-{
-	return AssetManager::GetInstance().GetSoundClip(id);
-}
+SoundClip* SceneManager::GetSoundClip(std::string id) { return AssetManager::GetInstance().GetSoundClip(id); }
 
-void SceneManager::AudioManagerTick()
-{
-	this->audioManager.Tick();
-}
+void SceneManager::AudioManagerTick() { this->audioManager.Tick(); }
 
-void SceneManager::InitializeMusicTrackManager(std::string pathToMusicFolder)
-{
+void SceneManager::InitializeMusicTrackManager(std::string pathToMusicFolder) {
 	this->audioManager.InitializeMusicTrackManager(pathToMusicFolder);
 }
 
-void SceneManager::AddMusicTrackStandardFolder(std::string filename, std::string id)
-{
+void SceneManager::AddMusicTrackStandardFolder(std::string filename, std::string id) {
 	this->audioManager.AddMusicTrackStandardFolder(filename, id);
 }
 
-void SceneManager::AddMusicTrack(std::string path, std::string id)
-{
-	this->audioManager.AddMusicTrack(path, id);
-}
+void SceneManager::AddMusicTrack(std::string path, std::string id) { this->audioManager.AddMusicTrack(path, id); }
 
-void SceneManager::PlayMusicTrack(std::string id)
-{
-	this->audioManager.Play(id);
-}
+void SceneManager::PlayMusicTrack(std::string id) { this->audioManager.Play(id); }
 
-void SceneManager::StopMusicTrack(std::string id)
-{
-	this->audioManager.Stop(id);
-}
+void SceneManager::StopMusicTrack(std::string id) { this->audioManager.Stop(id); }
 
-void SceneManager::FadeInPlayMusicTrack(std::string id, float startGain, float seconds)
-{
+void SceneManager::FadeInPlayMusicTrack(std::string id, float startGain, float seconds) {
 	this->audioManager.FadeInPlay(id, startGain, seconds);
 }
 
-void SceneManager::FadeOutStopMusicTrack(std::string id, float seconds)
-{
-	this->audioManager.FadeOutStop(id, seconds);
-}
+void SceneManager::FadeOutStopMusicTrack(std::string id, float seconds) { this->audioManager.FadeOutStop(id, seconds); }
 
-void SceneManager::GetMusicTrackSourceState(std::string id, ALint& sourceState)
-{
+void SceneManager::GetMusicTrackSourceState(std::string id, ALint& sourceState) {
 	this->audioManager.GetMusicTrackSourceState(id, sourceState);
 }
 
-void SceneManager::SetMusicTrackGain(std::string id, float gain)
-{
-	this->audioManager.SetGain(id, gain);
-}
+void SceneManager::SetMusicTrackGain(std::string id, float gain) { this->audioManager.SetGain(id, gain); }
 
-MusicTrack* SceneManager::GetMusicTrack(std::string id)
-{
-	return this->audioManager.GetMusicTrack(id);
-}
+MusicTrack* SceneManager::GetMusicTrack(std::string id) { return this->audioManager.GetMusicTrack(id); }

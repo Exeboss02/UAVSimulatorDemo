@@ -2,6 +2,30 @@
   "gameObjects": [
     {
       "fov": 80.0,
+      "name": "Best Camera",
+      "transform": {
+        "position": [
+          -0.46982070803642273,
+          3.5271661281585693,
+          -13.324150085449219
+        ],
+        "rotation": [
+          -0.12485740333795547,
+          -0.025584008544683456,
+          0.0032206345349550247,
+          -0.991839587688446
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "type": "DebugCamera"
+    },
+    {
+      "meshIdentifier": "meshes/indicatorSphere05.glb:Mesh_0",
+      "name": "GameObject 1",
       "transform": {
         "position": [
           0.0,
@@ -20,31 +44,8 @@
           1.0
         ]
       },
-      "type": "DebugCamera",
-      "name": "Best Camera"
+      "type": "MeshObject"
     },
-      {
-        "meshIdentifier": "meshes/indicatorSphere05.glb:Mesh_0",
-        "transform": {
-          "position": [
-            0.0,
-            2.0,
-            0.0
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0,
-            1.0
-          ],
-          "scale": [
-            1.0,
-            1.0,
-            1.0
-          ]
-        },
-        "type": "MeshObject"
-      },
     {
       "children": [
         {
@@ -53,6 +54,7 @@
               "children": [
                 {
                   "meshIdentifier": "CS/cs2.glb:Mesh_0",
+                  "name": "GameObject 5",
                   "transform": {
                     "position": [
                       0.0,
@@ -75,10 +77,11 @@
                 }
               ],
               "fov": 120.0,
+              "name": "GameObject 4",
               "transform": {
                 "position": [
-                  0.0,
-                  2.0,
+                  -5.0,
+                  -5.0,
                   0.0
                 ],
                 "rotation": [
@@ -97,11 +100,12 @@
             }
           ],
           "meshIdentifier": "TexBox/TextureCube.glb:Mesh_0",
+          "name": "GameObject 3",
           "transform": {
             "position": [
               5.0,
               0.0,
-              0.0
+              -5.0
             ],
             "rotation": [
               0.0,
@@ -119,11 +123,12 @@
         }
       ],
       "meshIdentifier": "Box/indicatorSphereWithMaterial.glb:Mesh_0",
+      "name": "GameObject 2",
       "transform": {
         "position": [
           0.0,
           0.0,
-          10.0
+          5.0
         ],
         "rotation": [
           0.0,
@@ -140,7 +145,6 @@
       "type": "MeshObject"
     },
     {
-      "angleRadians": 6.2831854820251465,
       "color": [
         1.0,
         1.0,
@@ -148,11 +152,12 @@
         1.0
       ],
       "intensity": 20.0,
+      "name": "GameObject 6",
       "transform": {
         "position": [
           0.0,
           0.0,
-          5.0
+          0.0
         ],
         "rotation": [
           0.0,
@@ -169,19 +174,19 @@
       "type": "PointLightObject"
     },
     {
-      "angleRadians": 6.2831854820251465,
       "color": [
         1.0,
         1.0,
         1.0,
         1.0
       ],
-      "intensity": 5.0,
+      "intensity": 20.0,
+      "name": "GameObject 6",
       "transform": {
         "position": [
           0.0,
           0.0,
-          5.0
+          0.0
         ],
         "rotation": [
           0.0,
@@ -195,10 +200,13 @@
           1.0
         ]
       },
-      "type": "SpaceShip",
+      "type": "SpotlightObject"
+    },
+    {
       "children": [
         {
           "meshIdentifier": "TexBox/TextureCube.glb:Mesh_0",
+          "name": "Spaceship",
           "transform": {
             "position": [
               0.0,
@@ -217,10 +225,29 @@
               1.0
             ]
           },
-          "type": "MeshObject",
-          "name": "Spaceship"
+          "type": "MeshObject"
         }
-      ]
+      ],
+      "name": "GameObject 7",
+      "transform": {
+        "position": [
+          -5.0,
+          0.0,
+          0.0
+        ],
+        "rotation": [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "type": "GameObject3D"
     }
   ]
 }

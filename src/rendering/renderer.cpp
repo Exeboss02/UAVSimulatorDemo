@@ -31,7 +31,7 @@ void Renderer::SetAllDefaults()
 	LoadShaders();
 
 	this->skybox = std::make_unique<Skybox>();
-	this->skybox->Init(this->device.Get(), this->immediateContext.Get(), (FilepathHolder::GetAssetsDirectory() / "skybox" / "space.dds").string());
+	this->skybox->Init(this->device.Get(), this->immediateContext.Get(), (FilepathHolder::GetAssetsDirectory() / "skybox" / "asteroids.dds").string());
 }
 
 void Renderer::SetViewport(const Window& window)
@@ -203,7 +203,7 @@ void Renderer::CreateRenderQueue()
 	this->meshRenderQueue = std::make_shared<std::vector<std::weak_ptr<MeshObject>>>();
 	this->lightRenderQueue = std::make_shared<std::vector<std::weak_ptr<SpotlightObject>>>();
 	this->renderQueue = std::unique_ptr<RenderQueue>(new RenderQueue(this->meshRenderQueue, this->lightRenderQueue));
-}
+	this->renderQueue->newSkyboxCallback = [this](std::string filename) { this->ChangeSkybox(filename); }
 
 void Renderer::LoadShaders()
 {
@@ -255,6 +255,11 @@ void Renderer::ToggleVSync(bool enable) { this->isVSyncEnabled = enable; }
 void Renderer::ToggleWireframe(bool enable) {
 	Logger::Log("test");
 	this->renderAllWireframe = enable;
+}
+
+void Renderer::ChangeSkybox(std::string filepath) 
+{
+	this->skybox->SwapCubemap(this->device.Get(), this->immediateContext.Get(), filepath);
 }
 
 ID3D11Device* Renderer::GetDevice() const

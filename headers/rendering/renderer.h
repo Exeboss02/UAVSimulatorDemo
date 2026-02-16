@@ -24,6 +24,8 @@
 #include "core/assetManager.h"
 #include "rendering/skybox.h"
 
+#include <functional>
+
 class Renderer {
 public:
 	Renderer();
@@ -68,6 +70,8 @@ public:
 	/// </summary>
 	/// <param name="enable"></param>
 	void ToggleWireframe(bool enable);
+
+	void ChangeSkybox(std::string filepath);
 
 	ID3D11Device* GetDevice() const;
 	ID3D11DeviceContext* GetContext() const;

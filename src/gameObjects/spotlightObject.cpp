@@ -43,13 +43,11 @@ void SpotlightObject::Start() {
 	RenderQueue::AddLightObject(this->GetPtr());
 
 	// Attach camera for shadowpass
-	if (this->camera.expired()) {
-		this->camera = this->factory->CreateGameObjectOfType<CameraObject>();
-		this->camera.lock()->SetParent(this->GetPtr());
-		this->camera.lock()->SetFov(90);
-	}
+	this->camera = this->factory->CreateGameObjectOfType<CameraObject>();
+	this->camera.lock()->SetParent(this->GetPtr());
+	this->camera.lock()->SetFov(90);
 	this->camera.lock()->SetAspectRatio(1 / 1);
-	this->camera.lock()->SetFarPlane(20.);
+	this->camera.lock()->SetFarPlane(1000.);
 }
 
 void SpotlightObject::Tick() {
@@ -66,8 +64,6 @@ void SpotlightObject::Tick() {
 	auto cameraLocked = this->camera.lock();
 
 	this->data.spotCosAngleRadians = cos(DirectX::XMConvertToRadians(cameraLocked->GetFov()) / 2);
-
-	cameraLocked->GetCameraMatrix().cameraPosition = GetGlobalPosition();
 
 	auto viewProj = cameraLocked->GetCameraMatrix(true).viewProjectionMatrix;
 

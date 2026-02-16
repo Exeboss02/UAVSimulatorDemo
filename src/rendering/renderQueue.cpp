@@ -5,9 +5,12 @@
 
 RenderQueue* RenderQueue::instance = nullptr;
 
-RenderQueue::RenderQueue(std::shared_ptr<std::vector<std::weak_ptr<MeshObject>>> meshRenderQueue,
-						 std::shared_ptr<std::vector<std::weak_ptr<SpotlightObject>>> lightRenderQueue)
-	: meshRenderQueue(meshRenderQueue), lightRenderQueue(lightRenderQueue) {
+RenderQueue::RenderQueue(std::vector<std::weak_ptr<MeshObject>>& meshRenderQueue,
+						 std::vector<std::weak_ptr<SpotlightObject>>& lightRenderQueue,
+						 std::vector<std::weak_ptr<PointLightObject>>& pointLightRenderQueue
+)
+	: meshRenderQueue(meshRenderQueue), lightRenderQueue(lightRenderQueue),
+	  pointLightRenderQueue(pointLightRenderQueue) {
 	Logger::Log("Initializing RenderQueue.");
 
 	if (instance) {
@@ -15,7 +18,7 @@ RenderQueue::RenderQueue(std::shared_ptr<std::vector<std::weak_ptr<MeshObject>>>
 		throw std::runtime_error("Fatal error in RenderQueue.");
 	}
 
-	instance = this;
+	RenderQueue::instance = this;
 }
 
 void RenderQueue::AddMeshObject(std::weak_ptr<GameObject> newMeshObject) {
@@ -34,12 +37,7 @@ void RenderQueue::AddMeshObject(std::weak_ptr<GameObject> newMeshObject) {
 		throw std::runtime_error("Fatal error in RenderQueue.");
 	}
 
-	if (!instance->meshRenderQueue) {
-		Logger::Error("meshRenderQueue is null.");
-		throw std::runtime_error("Fatal error in RenderQueue");
-	}
-
-	instance->meshRenderQueue->push_back(std::static_pointer_cast<MeshObject>(newMeshObject.lock()));
+	RenderQueue::instance->meshRenderQueue.push_back(std::static_pointer_cast<MeshObject>(newMeshObject.lock()));
 }
 
 void RenderQueue::RemoveMeshObject() {
@@ -59,14 +57,25 @@ void RenderQueue::AddLightObject(std::weak_ptr<GameObject> newSpotlightObject) {
 		throw std::runtime_error("Fatal error in RenderQueue.");
 	}
 
-	if (!instance->lightRenderQueue) {
-		Logger::Error("lightRenderQueue is null.");
+	auto light = std::static_pointer_cast<SpotlightObject>(newSpotlightObject.lock());
+
+	instance->lightRenderQueue.push_back(light);
+}
+
+void RenderQueue::AddPointLight(std::weak_ptr<GameObject> newPointLight) {
+	if (newPointLight.expired()) {
+		Logger::Error("Tried to add expired light.");
 		throw std::runtime_error("Fatal error in RenderQueue.");
 	}
 
-	auto light = std::static_pointer_cast<SpotlightObject>(newSpotlightObject.lock());
+	if (!instance) {
+		Logger::Error("Tried to add light to queue, but RenderQueue is not initialized.");
+		throw std::runtime_error("Fatal error in RenderQueue.");
+	}
 
-	instance->lightRenderQueue->push_back(light);
+	auto light = std::static_pointer_cast<PointLightObject>(newPointLight.lock());
+
+	instance->pointLightRenderQueue.push_back(light); 
 }
 
 void RenderQueue::ClearAllQueues() {
@@ -77,8 +86,8 @@ void RenderQueue::ClearAllQueues() {
 		throw std::runtime_error("Fatal error in RenderQueue.");
 	}
 
-	instance->meshRenderQueue->clear();
-	instance->lightRenderQueue->clear();
+	instance->meshRenderQueue.clear();
+	instance->lightRenderQueue.clear();
 
 	Logger::Log("Clearing render queue successful.");
 }

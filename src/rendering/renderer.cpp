@@ -1,12 +1,12 @@
 #include "rendering/renderer.h"
+#include "UI/widget.h"
 #include "core/filepathHolder.h"
 #include "gameObjects/objectLoader.h"
-// UI
-#include "UI/widget.h"
 
 Renderer::Renderer()
 	: viewport(), currentPixelShader(nullptr), currentVertexShader(nullptr), currentRasterizerState(nullptr),
-	  maximumSpotlights(16) {}
+	  maximumSpotlights(16),
+	  renderQueue(this->meshRenderQueue, this->spotLightRenderQueue, this->pointLightRenderQueue) {}
 
 void Renderer::Init(const Window& window) {
 	SetViewport(window);
@@ -182,21 +182,31 @@ void Renderer::CreateRendererConstantBuffers() {
 	this->worldMatrixBuffer->Init(this->device.Get(), sizeof(Renderer::WorldMatrixBufferContainer), &worldMatrix,
 								  D3D11_USAGE_DYNAMIC, D3D11_CPU_ACCESS_WRITE);
 
-	SpotlightObject::SpotLightContainer defaultSpotlights[1];
+	SpotlightObject::SpotLightContainer defaultSpotlights[16]{};
 	this->spotlightBuffer = std::make_unique<StructuredBuffer>();
 	this->spotlightBuffer->Init(this->device.Get(), sizeof(SpotlightObject::SpotLightContainer),
 								this->maximumSpotlights, defaultSpotlights);
+
+	PointLightObject::PointLightContainer defaultPointlights[16]{};
+	this->pointlightBuffer = std::make_unique<StructuredBuffer>();
+	this->pointlightBuffer->Init(this->device.Get(), sizeof(PointLightObject::PointLightContainer),
+								 this->maximumSpotlights, defaultPointlights);
 
 	Renderer::LightCountBufferContainer lightCountContainer = {};
 	this->spotlightCountBuffer = std::make_unique<ConstantBuffer>();
 	this->spotlightCountBuffer->Init(this->device.Get(), sizeof(Renderer::LightCountBufferContainer),
 									 &lightCountContainer, D3D11_USAGE_DYNAMIC, D3D11_CPU_ACCESS_WRITE);
+
+	this->pointlightCountBuffer = std::make_unique<ConstantBuffer>();
+	this->pointlightCountBuffer->Init(this->device.Get(), sizeof(Renderer::LightCountBufferContainer),
+									  &lightCountContainer, D3D11_USAGE_DYNAMIC, D3D11_CPU_ACCESS_WRITE);
 }
 
 void Renderer::CreateRenderQueue() {
-	this->meshRenderQueue = std::make_shared<std::vector<std::weak_ptr<MeshObject>>>();
-	this->lightRenderQueue = std::make_shared<std::vector<std::weak_ptr<SpotlightObject>>>();
-	this->renderQueue = std::unique_ptr<RenderQueue>(new RenderQueue(this->meshRenderQueue, this->lightRenderQueue));
+	// this->meshRenderQueue = std::make_shared<std::vector<std::weak_ptr<MeshObject>>>();
+	// this->SpotLightRenderQueue = std::make_shared<std::vector<std::weak_ptr<SpotlightObject>>>();
+	// this->renderQueue = std::unique_ptr<RenderQueue>(new RenderQueue(this->meshRenderQueue,
+	// this->SpotLightRenderQueue));
 }
 
 void Renderer::LoadShaders() {
@@ -211,16 +221,25 @@ void Renderer::LoadShaders() {
 void Renderer::Render() {
 	BindInputLayout();
 	auto shadowmaps = this->ShadowPass();
-	this->GetContext()->PSSetShaderResources(5, shadowmaps.size(), shadowmaps.data());
+	this->GetContext()->PSSetShaderResources(5, shadowmaps.spotlightSRVs.size(), shadowmaps.spotlightSRVs.data());
+	this->GetContext()->PSSetShaderResources(7, shadowmaps.pointLightSRVs.size(), shadowmaps.pointLightSRVs.data());
 	RenderPass();
 
 	// Unbinding shadowmaps to allow input on them again
-	for (auto& shadowMap : shadowmaps) {
+	for (auto& spotLightShadowMaps : shadowmaps.spotlightSRVs) {
 		// Since shadowmaps vector is just a non owning clone of all views, it is safe to just set them to nullptr
 		// for unbinding the shadowmaps
-		shadowMap = nullptr;
+		spotLightShadowMaps = nullptr;
 	}
-	this->GetContext()->PSSetShaderResources(5, shadowmaps.size(), shadowmaps.data());
+	this->GetContext()->PSSetShaderResources(5, shadowmaps.spotlightSRVs.size(), shadowmaps.spotlightSRVs.data());
+
+	// Unbinding shadowmaps to allow input on them again
+	for (auto& pointLightShadowMaps : shadowmaps.pointLightSRVs) {
+		// Since shadowmaps vector is just a non owning clone of all views, it is safe to just set them to nullptr
+		// for unbinding the shadowmaps
+		pointLightShadowMaps = nullptr;
+	}
+	this->GetContext()->PSSetShaderResources(7, shadowmaps.pointLightSRVs.size(), shadowmaps.pointLightSRVs.data());
 
 	// ImGui::Begin("Change Skybox");
 	// if (ImGui::Button("Change")) {
@@ -285,20 +304,20 @@ void Renderer::RenderPass() {
 	}
 
 	// Bind meshes
-	for (size_t i = 0; i < this->meshRenderQueue->size(); i++) {
-		std::weak_ptr<MeshObject> meshObject = (*this->meshRenderQueue)[i];
+	for (size_t i = 0; i < this->meshRenderQueue.size(); i++) {
+		std::weak_ptr<MeshObject> meshObject = this->meshRenderQueue[i];
 
 		if (meshObject.expired()) {
 			// This should get rid of empty objects
 			Logger::Log("The renderer deleted a meshObject");
-			this->meshRenderQueue->erase(this->meshRenderQueue->begin() + i);
+			this->meshRenderQueue.erase(this->meshRenderQueue.begin() + i);
 			i--;
 			continue;
 		}
 
 		if (!meshObject.lock()->IsActive() || meshObject.lock()->IsHidden()) continue;
 
-		RenderMeshObject((*this->meshRenderQueue)[i].lock().get());
+		RenderMeshObject(meshObject.lock().get());
 	}
 
 	// UI pass: render UI widgets in an orthographic projection on top of the scene
@@ -343,7 +362,9 @@ void Renderer::RenderPass() {
 	BindRenderTarget();
 }
 
-std::vector<ID3D11ShaderResourceView*> Renderer::ShadowPass() {
+Renderer::ShadowResourceViews Renderer::ShadowPass() {
+
+	ShadowResourceViews shadowSRVs{};
 
 	this->hasBoundStatic = false;
 	if (this->currentVertexShader != this->vertexShader.get()) {
@@ -352,21 +373,39 @@ std::vector<ID3D11ShaderResourceView*> Renderer::ShadowPass() {
 	}
 	this->GetContext()->PSSetShader(nullptr, nullptr, 0);
 
-	const uint32_t lightCount = std::min<uint32_t>(this->lightRenderQueue->size(), this->maximumSpotlights);
+	shadowSRVs.spotlightSRVs = this->SpotLightShadowPass();
+	shadowSRVs.pointLightSRVs = this->PointLightShadowPass();
+
+	// Rebind default pixel shader
+	this->pixelShaderLit->BindShader(this->immediateContext.Get());
+	this->currentPixelShader = this->pixelShaderLit.get();
+
+	// Reset renderTarget and deapthStencil
+	this->BindRenderTarget();
+
+	// Reset ViewPort
+	this->BindViewport();
+
+	return shadowSRVs;
+}
+
+std::vector<ID3D11ShaderResourceView*> Renderer::SpotLightShadowPass() {
+
+	const uint32_t lightCount = std::min<uint32_t>(this->spotLightRenderQueue.size(), this->maximumSpotlights);
 
 	std::vector<ID3D11ShaderResourceView*> depthStencilViews;
 	depthStencilViews.reserve(lightCount);
 
 	for (uint32_t i = 0; i < lightCount; i++) {
-		if ((*this->lightRenderQueue)[i].expired()) {
+		if ((this->spotLightRenderQueue)[i].expired()) {
 			// This should remove deleted lights
 			Logger::Log("The renderer deleted a light");
-			this->lightRenderQueue->erase(this->lightRenderQueue->begin() + i);
+			this->spotLightRenderQueue.erase(this->spotLightRenderQueue.begin() + i);
 			i--;
 			continue;
 		}
 
-		auto light = (*this->lightRenderQueue)[i].lock();
+		auto light = (this->spotLightRenderQueue)[i].lock();
 		if (light->GetResolutionChanged()) {
 			light->SetDepthBuffer(this->GetDevice());
 		}
@@ -388,18 +427,65 @@ std::vector<ID3D11ShaderResourceView*> Renderer::ShadowPass() {
 		this->immediateContext->VSSetConstantBuffers(0, 1, &buffer);
 
 		// Draw all objects to depthstencil
-		for (auto& mesh : *this->meshRenderQueue.get()) {
+		for (auto& mesh : this->meshRenderQueue) {
 			if (mesh.expired()) continue;
 			this->RenderMeshObject(mesh.lock().get(), false);
 		}
 		depthStencilViews.push_back(light->GetSRV());
 	}
+	return depthStencilViews;
+}
 
-	// Reset renderTarget and deapthStencil
-	this->BindRenderTarget();
+std::vector<ID3D11ShaderResourceView*> Renderer::PointLightShadowPass() {
+	uint32_t lightCount = std::min<uint32_t>(this->pointLightRenderQueue.size(), this->maximumSpotlights);
 
-	// Reset ViewPort
-	this->BindViewport();
+	std::vector<ID3D11ShaderResourceView*> depthStencilViews;
+	depthStencilViews.reserve(lightCount);
+
+	for (uint32_t i = 0; i < lightCount; i++) {
+		if (this->pointLightRenderQueue[i].expired()) {
+			// This should remove deleted lights
+			Logger::Log("The renderer deleted a light");
+			this->pointLightRenderQueue.erase(this->pointLightRenderQueue.begin() + i);
+			i--;
+			lightCount = std::min<uint32_t>(this->pointLightRenderQueue.size(), this->maximumSpotlights);
+			continue;
+		}
+
+		auto light = this->pointLightRenderQueue[i].lock();
+		if (light->GetResolutionChanged()) {
+			light->SetDepthBuffers(this->GetDevice());
+		}
+
+		auto DSViews = light->GetDepthStencilViews();
+		auto srv = light->GetSRV();
+
+		for (size_t j = 0; j < 6; j++) {
+
+			this->immediateContext->ClearDepthStencilView(DSViews[j], D3D11_CLEAR_DEPTH, 1, 0);
+			this->immediateContext->OMSetRenderTargets(0, nullptr, DSViews[j]);
+
+			if (light->cameras[j].expired()) {
+				Logger::Error("Lights shadow camera was dead");
+				continue;
+			}
+			auto matrixContainer = light->cameras[j].lock()->GetCameraMatrix();
+
+			const auto& viewPort = light->GetViewPort();
+			this->immediateContext->RSSetViewports(1, &viewPort);
+			this->cameraBuffer->UpdateBuffer(this->GetContext(), &matrixContainer);
+
+			ID3D11Buffer* buffer = this->cameraBuffer->GetBuffer();
+			this->immediateContext->VSSetConstantBuffers(0, 1, &buffer);
+
+			// Draw all objects to depthstencil
+			for (auto& mesh : this->meshRenderQueue) {
+				if (mesh.expired()) continue;
+				this->RenderMeshObject(mesh.lock().get(), false);
+			}
+		}
+		depthStencilViews.push_back(srv);
+	}
 
 	return depthStencilViews;
 }
@@ -445,7 +531,7 @@ void Renderer::BindSampler() {
 	ID3D11SamplerState* sampler = this->sampler->GetSamplerState();
 	immediateContext->PSSetSamplers(0, 1, &sampler);
 
-	// Shadow samplerF
+	// Shadow sampler
 	ID3D11SamplerState* shadowSampler = this->shadowSampler->GetSamplerState();
 	immediateContext->PSSetSamplers(1, 1, &shadowSampler);
 }
@@ -532,42 +618,84 @@ void Renderer::BindMaterial(BaseMaterial* material) {
 }
 
 void Renderer::BindLights() {
-	if (this->lightRenderQueue->size() > this->maximumSpotlights) {
-		Logger::Log("Just letting you know, there's more lights in the scene than the renderer supports. Increase "
-					"maximumSpotlights.");
-	}
-
-	uint32_t lightCount = std::min<uint32_t>(this->lightRenderQueue->size(), this->maximumSpotlights);
-
-	if (lightCount > 0) {
-
-		// Inefficient, should be fixed
-		std::vector<SpotlightObject::SpotLightContainer> spotlights;
-		for (uint32_t i = 0; i < lightCount; i++) {
-			if ((*this->lightRenderQueue)[i].expired()) {
-				// This should remove deleted lights
-				Logger::Log("The renderer deleted a light");
-				this->lightRenderQueue->erase(this->lightRenderQueue->begin() + i);
-				i--;
-				// Lazy solution
-				BindLights();
-				return;
-			}
-
-			spotlights.push_back((*this->lightRenderQueue)[i].lock()->GetSpotLightData());
+	{
+		if (this->spotLightRenderQueue.size() > this->maximumSpotlights) {
+			Logger::Warn("Just letting you know, there's more spotlights in the scene than the renderer supports. "
+						 "Increase maximumSpotlights.");
 		}
 
-		// Updates and binds buffer
-		this->spotlightBuffer->UpdateBuffer(this->immediateContext.Get(), spotlights.data());
-		ID3D11ShaderResourceView* lightSrv = this->spotlightBuffer->GetSRV();
-		this->immediateContext->PSSetShaderResources(0, 1, &lightSrv);
-	}
+		uint32_t lightCount = std::min<uint32_t>(this->spotLightRenderQueue.size(), this->maximumSpotlights);
 
-	// Updates and binds light count constant buffer
-	Renderer::LightCountBufferContainer lightCountContainer = {lightCount, 1, 1, 1};
-	this->spotlightCountBuffer->UpdateBuffer(this->immediateContext.Get(), &lightCountContainer);
-	ID3D11Buffer* buf = this->spotlightCountBuffer->GetBuffer();
-	this->immediateContext->PSSetConstantBuffers(0, 1, &buf);
+		if (lightCount > 0) {
+
+			// Inefficient, should be fixed
+			std::vector<SpotlightObject::SpotLightContainer> spotlights;
+			for (uint32_t i = 0; i < lightCount; i++) {
+				if ((this->spotLightRenderQueue)[i].expired()) {
+					// This should remove deleted lights
+					Logger::Log("The renderer deleted a light");
+					this->spotLightRenderQueue.erase(this->spotLightRenderQueue.begin() + i);
+					i--;
+					// Lazy solution
+					BindLights();
+					return;
+				}
+
+				spotlights.push_back((this->spotLightRenderQueue)[i].lock()->GetSpotLightData());
+			}
+
+			// Updates and binds buffer
+			this->spotlightBuffer->UpdateBuffer(this->immediateContext.Get(), spotlights.data());
+			ID3D11ShaderResourceView* lightSrv = this->spotlightBuffer->GetSRV();
+			this->immediateContext->PSSetShaderResources(0, 1, &lightSrv);
+		}
+
+		// Updates and binds light count constant buffer
+		Renderer::LightCountBufferContainer lightCountContainer = {lightCount, 1, 1, 1};
+		this->spotlightCountBuffer->UpdateBuffer(this->immediateContext.Get(), &lightCountContainer);
+		ID3D11Buffer* buf = this->spotlightCountBuffer->GetBuffer();
+		this->immediateContext->PSSetConstantBuffers(0, 1, &buf);
+	}
+	{
+
+		if (this->pointLightRenderQueue.size() > this->maximumSpotlights) {
+			Logger::Warn(
+				"Just letting you know, there's more pointlights in the scene than the renderer supports. Increase "
+				"maximumSpotlights.");
+		}
+
+		uint32_t lightCount = std::min<uint32_t>(this->pointLightRenderQueue.size(), this->maximumSpotlights);
+
+		if (lightCount > 0) {
+
+			// Inefficient, should be fixed
+			std::vector<PointLightObject::PointLightContainer> pointLights;
+			for (uint32_t i = 0; i < lightCount; i++) {
+				if ((this->pointLightRenderQueue)[i].expired()) {
+					// This should remove deleted lights
+					Logger::Log("The renderer deleted a light");
+					this->pointLightRenderQueue.erase(this->pointLightRenderQueue.begin() + i);
+					i--;
+					// Lazy solution
+					BindLights();
+					return;
+				}
+
+				pointLights.push_back((this->pointLightRenderQueue)[i].lock()->GetPointLightData());
+			}
+
+			// Updates and binds buffer
+			this->pointlightBuffer->UpdateBuffer(this->immediateContext.Get(), pointLights.data());
+			ID3D11ShaderResourceView* lightSrv = this->pointlightBuffer->GetSRV();
+			this->immediateContext->PSSetShaderResources(6, 1, &lightSrv);
+		}
+
+		// Updates and binds light count constant buffer
+		Renderer::LightCountBufferContainer lightCountContainer = {lightCount, 1, 1, 1};
+		this->pointlightCountBuffer->UpdateBuffer(this->immediateContext.Get(), &lightCountContainer);
+		ID3D11Buffer* buf = this->pointlightCountBuffer->GetBuffer();
+		this->immediateContext->PSSetConstantBuffers(2, 1, &buf);
+	}
 }
 
 void Renderer::BindCameraMatrix() {

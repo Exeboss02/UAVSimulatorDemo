@@ -33,7 +33,7 @@ void StructuredBuffer::Init(ID3D11Device* device, UINT sizeOfElement, size_t nrO
 		srvDesc.Buffer.NumElements = this->nrOfElements;
 		//srvDesc.Buffer.ElementWidth = this->elementSize;
 
-		HRESULT hr2 = device->CreateShaderResourceView(this->buffer.Get(), &srvDesc, &this->srv);
+		HRESULT hr2 = device->CreateShaderResourceView(this->buffer.Get(), &srvDesc, this->srv.GetAddressOf());
 		if (FAILED(hr2))
 		{
 			throw std::exception(std::format("Failed to create structured buffer srv, HRESULT: 0x{:08X}", static_cast<unsigned long>(hr2)).c_str());
@@ -49,7 +49,7 @@ void StructuredBuffer::Init(ID3D11Device* device, UINT sizeOfElement, size_t nrO
 		uavDesc.Buffer.NumElements = this->nrOfElements;
 		uavDesc.Buffer.Flags = 0;
 
-		HRESULT hr2 = device->CreateUnorderedAccessView(this->buffer.Get(), &uavDesc, &this->uav);
+		HRESULT hr2 = device->CreateUnorderedAccessView(this->buffer.Get(), &uavDesc, this->uav.GetAddressOf());
 		if (FAILED(hr2))
 		{
 			throw std::exception(std::format("Failed to create structured buffer uav, HRESULT: 0x{:08X}", static_cast<unsigned long>(hr2)).c_str());

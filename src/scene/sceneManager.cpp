@@ -1,6 +1,7 @@
 #include "scene/sceneManager.h"
 #include "UI/canvasObject.h"
 #include "core/filepathHolder.h"
+#include "gameObjects/pointLightObject.h"
 #include "gameObjects/room.h"
 
 // Very good macro, please don't remove
@@ -19,6 +20,7 @@ SceneManager::SceneManager(Renderer* rend) : mainScene(nullptr), renderer(rend),
 	this->objectFromString.RegisterType<SphereCollider>(NAMEOF(SphereCollider));
 	this->objectFromString.RegisterType<RigidBody>(NAMEOF(RigidBody));
 	this->objectFromString.RegisterType<SoundSourceObject>(NAMEOF(SoundSourceObject));
+	this->objectFromString.RegisterType<PointLightObject>(NAMEOF(PointLightObject));
 	this->objectFromString.RegisterType<TestPlayer>(NAMEOF(TestPlayer));
 	this->objectFromString.RegisterType<UI::CanvasObject>(NAMEOF(UI::CanvasObject));
 

@@ -29,12 +29,19 @@ public:
 	};
 
 	void UpdateBuffer(ID3D11DeviceContext* context, std::vector<T> data) {
-		this->_UpdateBuffer(context, data.data(), sizeof(T) * data.size());
+		size_t size = data.size();
+		if (data.size() > this->nrOfElements) {
+			std::string error = "Trying to write more data than buffer size, disregarding elements";
+			Logger::Error(error);
+			size = this->nrOfElements;
+		}
+
+		this->_UpdateBuffer(context, data.data(), sizeof(T) * size);
 	};
 
 private:
-	void _Init(ID3D11Device* device, UINT sizeOfElement, size_t nrOfElementsInBuffer, void* bufferData = nullptr, size_t initialDataSize = 0,
-			   bool dynamic = true, bool hasSRV = true, bool hasUAV = false);
+	void _Init(ID3D11Device* device, UINT sizeOfElement, size_t nrOfElementsInBuffer, void* bufferData = nullptr,
+			   size_t initialDataSize = 0, bool dynamic = true, bool hasSRV = true, bool hasUAV = false);
 
 	void _UpdateBuffer(ID3D11DeviceContext* context, void* data, size_t bytes);
 	Microsoft::WRL::ComPtr<ID3D11Buffer> buffer = nullptr;
@@ -46,7 +53,7 @@ private:
 
 template <class T>
 void StructuredBuffer<T>::_Init(ID3D11Device* device, UINT sizeOfElement, size_t nrOfElementsInBuffer, void* bufferData,
-							 size_t initialDataBytes, bool dynamic, bool hasSRV, bool hasUAV) {
+								size_t initialDataBytes, bool dynamic, bool hasSRV, bool hasUAV) {
 	this->elementSize = sizeOfElement;
 	this->nrOfElements = nrOfElementsInBuffer;
 
@@ -116,7 +123,9 @@ void StructuredBuffer<T>::_UpdateBuffer(ID3D11DeviceContext* context, void* data
 	// Turn on GPU access
 }
 template <class T>
-UINT StructuredBuffer<T>::GetElementSize() const { return this->elementSize; }
+UINT StructuredBuffer<T>::GetElementSize() const {
+	return this->elementSize;
+}
 
 template <class T>
 size_t StructuredBuffer<T>::GetNrOfElements() const {

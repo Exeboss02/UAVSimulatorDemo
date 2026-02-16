@@ -1,6 +1,5 @@
 #include "gameObjects/room.h"
 #include "core/assetManager.h"
-#include "gameObjects/spaceShipObj.h"
 
 static const std::array<std::array<int, 2>, 4> wallpositions = {
 	std::array<int, 2>({0, 1}),
@@ -20,6 +19,8 @@ void Room::CreateRoom(WallIndex wallIndex) {
 	}
 
 	auto parent = std::static_pointer_cast<SpaceShip>(parentWeak.lock());
+
+	this->SetupPathfindingNodes(parent);
 
 	auto neighOffset = Room::GetNeighborOffset(wallIndex);
 	Logger::Log("Position: ", this->pos[0], " ", this->pos[1]);
@@ -83,12 +84,6 @@ void Room::Start() {
 
 		this->walls[i] = meshobj;
 	}
-
-	// place first pathfinding point in the middle of the room, then place the rest around it in a grid pattern
-	DirectX::XMVECTOR center = this->transform.GetPosition();
-	DirectX::XMFLOAT4 centerFloat4;
-	DirectX::XMStoreFloat4(&centerFloat4, center);
-	this->pathfindingPoints[0] = AStarPoint(static_cast<int>(centerFloat4.x), static_cast<int>(centerFloat4.z));
 }
 
 void Room::Tick() {
@@ -140,5 +135,37 @@ void Room::SetParent(std::weak_ptr<GameObject> parentWeak) {
 	} else {
 		Logger::Error("Trying to set parent when parent doesn't exist???");
 		return;
+	}
+}
+
+void Room::SetupPathfindingNodes(std::shared_ptr<SpaceShip> parent) { 
+	// 9 nodes in local room-space, 1 in the center, and 8 around the center in a circle, with radius size / 4, starting
+	// with the one directly east of the center and going clockwise
+	std::array<DirectX::XMVECTOR, 9> nodesLocal;
+	nodesLocal[0] = DirectX::XMVectorSet(0, 0, 0, 1);
+	for (size_t i = 0; i < 8; i++) {
+		float angle = i * (DirectX::XM_PI / 4);
+		nodesLocal[i] = DirectX::XMVectorSet(std::cos(angle) * (this->size / 4), 0, std::sin(angle) * (this->size / 4), 1);
+	}
+
+	// Create vertices for each node, translate to world space
+	for (size_t i = 0; i < this->pathfindingNodes.size(); ++i) {
+		this->pathfindingNodes[i]->SetParent(this->GetPtr());
+		this->pathfindingNodes[i] = std::make_shared<AStarVertex>(nodesLocal[i]);
+
+		parent->GetPathfinder()->AddVertex(this->pathfindingNodes[i]);
+	}
+
+	// Create edges from all outside nodes to the center node
+	for (size_t i = 1; i < this->pathfindingNodes.size(); ++i) {
+		parent->GetPathfinder()->AddEdge(this->pathfindingNodes[0], this->pathfindingNodes[i],
+										 static_cast<unsigned int>(this->size / 3));
+	}
+
+	// Create edges between adjacent outside nodes
+	for (size_t i = 1; i < this->pathfindingNodes.size(); ++i) {
+		size_t nextIndex = (i % 8) + 1;
+		parent->GetPathfinder()->AddEdge(this->pathfindingNodes[i], this->pathfindingNodes[nextIndex],
+										 static_cast<unsigned int>(this->size / 4));
 	}
 }

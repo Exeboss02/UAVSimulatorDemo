@@ -7,9 +7,9 @@
 
 #include "utilities/logger.h"
 #include "utilities/minPriorityQueue.h"
+#include "gameObjects/gameObject3D.h"
 
-
-typedef std::pair<int, int> AStarPoint;
+namespace DX = DirectX;
 
 /// <summary>
 /// A path between two vertices
@@ -33,14 +33,14 @@ struct Edge {
 /// <param name="hCost">Heuristic cost from this vertex to the goal vertex</param>
 /// <param name="fCost">Total cost (gCost + hCost) used for prioritization in the open list</param>
 /// <param name="parent">Pointer to the parent vertex in the path, used for path reconstruction</param>
-struct AStarVertex {
-	AStarPoint position;
+struct AStarVertex : public GameObject3D {
+	DX::XMVECTOR position;
 	std::vector<struct Edge> edges;
 	int gCost, hCost, fCost;
-	AStarVertex* parent;
-	AStarVertex(AStarPoint position) : position(position), gCost(INT_MAX), hCost(0), fCost(0), parent(nullptr) {}
+	std::shared_ptr<AStarVertex> parent;
+	AStarVertex(DX::XMVECTOR position) : position(position), gCost(INT_MAX), hCost(0), fCost(0), parent(nullptr) {}
 	inline bool operator<(const AStarVertex& other) const { return this->fCost < other.fCost; }
-	inline bool operator==(const AStarVertex& other) const { return this->position == other.position; }
+	inline bool operator==(const AStarVertex& other) const { return DX::XMVector4NearEqual(this->position, other.position, DX::XMVectorSet(0.01f, 0.01f, 0.01f, 0.01f)); }
 };
 
 class AStar {
@@ -51,31 +51,32 @@ public:
 
 	~AStar() = default;
 
-	bool AddVertex(AStarPoint position);
-	void RemoveVertex(AStarPoint position);
+	bool AddVertex(std::shared_ptr<AStarVertex> vertex);
+	void RemoveVertex(std::shared_ptr<AStarVertex> vertexToRemove);
 
-	bool AddEdge(AStarVertex* from, AStarVertex* to, const unsigned int cost);
+	bool AddEdge(std::shared_ptr<AStarVertex> from, std::shared_ptr<AStarVertex> to, const unsigned int cost);
 
-	void SetGoal(AStarPoint goal);
+	void SetGoal(std::shared_ptr<AStarVertex> goal);
 
-	std::vector<AStarPoint> FindPath(AStarPoint start);
+	std::vector<std::shared_ptr<AStarVertex>> FindPath(std::shared_ptr<AStarVertex> start);
 
 private:
-	std::vector<std::unique_ptr<AStarVertex>> vertices;
-	AStarVertex* goal;
+	std::vector<std::shared_ptr<AStarVertex>> vertices;
+	std::shared_ptr<AStarVertex> goal;
 
 	MinPriorityQueue<AStarVertex*> openList;
 	std::vector<AStarVertex*> closedList;
 
-	std::vector<AStarPoint> path;
+	std::vector<std::shared_ptr<AStarVertex>> path;
 
 	const int CalculateHeuristic(AStarVertex* vertex);
 	void ClearPathfindingData();
 
-	AStarVertex* GetVertex(AStarPoint position);
+	std::shared_ptr<AStarVertex> GetVertex(DX::XMVECTOR position);
+
 	const int GetEdgeCost(AStarVertex* from, AStarVertex* to);
 	std::vector<AStarVertex*> GetNeighbors(AStarVertex* vertex);
-	std::vector<AStarPoint>& ReconstructPath();
+	std::vector<std::shared_ptr<AStarVertex>>& ReconstructPath();
 };
 
 
@@ -84,14 +85,14 @@ private:
 /// </summary>
 /// <param name="position">Integer pair representing the coordinates of the vertex.</param>
 /// <returns>Returns true: Successfully added vertex. Returns false: vertex already exsist</returns>
-inline bool AStar::AddVertex(AStarPoint position) {
-
+inline bool AStar::AddVertex(std::shared_ptr<AStarVertex> vertex) {
+	DX::XMVECTOR position = vertex->GetGlobalPosition();
 	if (this->GetVertex(position)) {
-		Logger::Log("vertex already exists at position: (", position.first, ", ", position.second, ").");
+		//Logger::Log("vertex already exists at position: (", position, ").");
 		return false;
 	}
 
-	this->vertices.push_back(std::make_unique<AStarVertex>(position));
+	this->vertices.push_back(vertex);
 	return true;
 }
 
@@ -99,19 +100,13 @@ inline bool AStar::AddVertex(AStarPoint position) {
 /// Removes a vertex at the specified position from the graph, along with all edges connected to it.
 /// </summary>
 /// <param name="position">The position of the vertex to remove from the graph.</param>
-inline void AStar::RemoveVertex(AStarPoint position) { 
-	AStarVertex* vertexToRemove = this->GetVertex(position);
-	if (!vertexToRemove) {
-		Logger::Log("No vertex found at position: (", position.first, ", ", position.second, ").");
-		return;
-	}
-
+inline void AStar::RemoveVertex(std::shared_ptr<AStarVertex> vertexToRemove) {
 	// Remove edges connected to this vertex
 	for (auto& vertex : this->vertices) {
 		for (auto& edge : vertex->edges) {
-			if (*edge.to == vertexToRemove->position) {
+			if (*edge.to == *vertexToRemove) {
 				vertex->edges.erase(std::remove_if(vertex->edges.begin(), vertex->edges.end(),
-								   [vertexToRemove](const Edge& edge) { return *edge.to == vertexToRemove->position; }),
+												   [vertexToRemove](const Edge& edge) { return *edge.to == vertexToRemove->GetGlobalPosition(); }),
 									vertex->edges.end());
 			}
 		}
@@ -119,8 +114,8 @@ inline void AStar::RemoveVertex(AStarPoint position) {
 
 	// Remove the vertex itself
 	this->vertices.erase(std::remove_if(this->vertices.begin(), this->vertices.end(),
-										[position](const std::unique_ptr<AStarVertex>& vertex) { return vertex->position == position; }),
-										this->vertices.end());
+							   [vertexToRemove](const std::shared_ptr<AStarVertex>& vertex) { return *vertex == vertexToRemove->position; }),
+						 this->vertices.end());
 }
 
 /// <summary>
@@ -130,7 +125,7 @@ inline void AStar::RemoveVertex(AStarPoint position) {
 /// <param name="to"></param>
 /// <param name="cost"></param>
 /// <returns>Successfully added edge</returns>
-inline bool AStar::AddEdge(AStarVertex* from, AStarVertex* to, const unsigned int cost) {
+inline bool AStar::AddEdge(std::shared_ptr<AStarVertex> from, std::shared_ptr<AStarVertex> to, const unsigned int cost) {
 	
 	if (!from || !to) {
 		Logger::Log("Invalid vertexs for edge creation.");
@@ -139,18 +134,17 @@ inline bool AStar::AddEdge(AStarVertex* from, AStarVertex* to, const unsigned in
 	
 	// Check if the edge already exists
 	for (auto& edge : from->edges) {
-		if (*edge.to == to->position) {
-			Logger::Log("Edge already exists between (", from->position.first, ", ", from->position.second, ") and (",
-						to->position.first, ", ", to->position.second, ").");
+		if (*edge.to == *to) {
+			//Logger::Log("Edge already exists between (", from->GetGlobalPosition(), ") and (", to->GetGlobalPosition(), ").");
 			return false; // Edge already exists
 		}
 	}
-	from->edges.emplace_back(from, to, cost);
-	to->edges.emplace_back(to, from, cost);
+	from->edges.emplace_back(from.get(), to.get(), cost);
+	to->edges.emplace_back(to.get(), from.get(), cost);
 	return true;
 }
 
-inline void AStar::SetGoal(AStarPoint goal) { this->goal = this->GetVertex(goal); }
+inline void AStar::SetGoal(std::shared_ptr<AStarVertex> goal) { this->goal = goal; }
 
 /// <summary>
 /// Finds the shortest path between two vertices using the A* pathfinding algorithm.
@@ -158,16 +152,15 @@ inline void AStar::SetGoal(AStarPoint goal) { this->goal = this->GetVertex(goal)
 /// <param name="start">A shared pointer to the starting vertex for the pathfinding search.</param>
 /// <param name="goal">A shared pointer to the target vertex to reach.</param>
 /// <returns>A vector of coordinate pairs representing the path from start to goal.</returns>
-inline std::vector<std::pair<int, int>> AStar::FindPath(AStarPoint start) {
+inline std::vector<std::shared_ptr<AStarVertex>> AStar::FindPath(std::shared_ptr<AStarVertex> start) {
 	this->ClearPathfindingData(); // Reset the state of the algorithm before starting a new search
-
-	AStarVertex* startVertex = this->GetVertex(start);
-	if (!startVertex || !this->goal) {
-	    Logger::Log("Invalid start or goal position.");
+	
+	if (!this->goal) {
+	    Logger::Log("NO GOAL HAS BEEN SET!");
 	    return {};
 	}
-	startVertex->gCost = 0;
-	this->openList.Enqueue(startVertex, 0); // Force Start with the initial vertex in the open list
+	start->gCost = 0;
+	this->openList.Enqueue(start.get(), 0); // Force Start with the initial vertex in the open list
 
 	while (!this->openList.IsEmpty()) {
 		AStarVertex* current = this->openList.Dequeue();
@@ -190,7 +183,7 @@ inline std::vector<std::pair<int, int>> AStar::FindPath(AStarPoint start) {
 				neighbor->gCost = tentativeGCost;
 				neighbor->hCost = this->CalculateHeuristic(neighbor);
 				neighbor->fCost = neighbor->gCost + neighbor->hCost;
-				neighbor->parent = current;
+				neighbor->parent = this->GetVertex(current->GetGlobalPosition());
 				this->openList.Enqueue(neighbor, neighbor->fCost);
 			}
 		}
@@ -206,9 +199,14 @@ inline std::vector<std::pair<int, int>> AStar::FindPath(AStarPoint start) {
 /// <param name="goal">Goal vertex used for calculating the heuristic.</param>
 /// <returns>The heuristic value in form of an integer.</returns>
 inline const int AStar::CalculateHeuristic(AStarVertex* vertex) {
-	int dx = vertex->position.first - goal->position.first;
-	int dy = vertex->position.second - goal->position.second;
-	return static_cast<int>(std::sqrt(dx*dx + dy*dy));
+
+	DX::XMVECTOR goalPos = this->goal->GetGlobalPosition();
+	DX::XMVECTOR vertexPos = vertex->GetGlobalPosition();
+
+	DX::XMVECTOR delta = DX::XMVectorSubtract(vertexPos, goalPos);
+	float distance = DX::XMVectorGetX(DX::XMVector3Length(delta));
+
+	return static_cast<int>(distance);
 }
 
 /// <summary>
@@ -233,10 +231,10 @@ inline void AStar::ClearPathfindingData() {
 /// </summary>
 /// <param name="position">The position of the vertex to find.</param>
 /// <returns>A shared pointer to the vertex, or nullptr if no matching vertex is found.</returns>
-inline AStarVertex* AStar::GetVertex(AStarPoint position) {
+inline std::shared_ptr<AStarVertex> AStar::GetVertex(DX::XMVECTOR position) {
 	for (auto& vertex : this->vertices) {
-		if (vertex->position == position) {
-			return vertex.get();
+		if (DX::XMVector4NearEqual(vertex->GetGlobalPosition(), position, DX::XMVectorSet(0.01f, 0.01f, 0.01f, 0.01f))) {
+			return vertex;
 		}
 	}
 	return nullptr; // vertex not found
@@ -250,7 +248,7 @@ inline AStarVertex* AStar::GetVertex(AStarPoint position) {
 /// <returns>The cost of the edge.</returns>
 inline const int AStar::GetEdgeCost(AStarVertex* from, AStarVertex* to) { 
 	for (auto& edge : from->edges) {
-		if (*edge.to == to->position) {
+		if (*edge.to == *to) {
 			return edge.cost;
 		}
 	}
@@ -274,11 +272,13 @@ inline std::vector<AStarVertex*> AStar::GetNeighbors(AStarVertex* vertex) {
 /// Reconstructs the path from the start to the goal by following parent pointers backward from the goal vertex.
 /// </summary>
 /// <returns>A vector of coordinate pairs representing the path from start to goal.</returns>
-inline std::vector<AStarPoint>& AStar::ReconstructPath() {
+inline std::vector<std::shared_ptr<AStarVertex>>& AStar::ReconstructPath() {
 	this->path.clear();
-	AStarVertex* currentvertex = this->goal;
+
+	std::shared_ptr<AStarVertex> currentvertex = this->goal;
+
 	while (currentvertex) {
-		this->path.emplace_back(currentvertex->position);
+		this->path.push_back(currentvertex);
 		currentvertex = currentvertex->parent;
 	}
 

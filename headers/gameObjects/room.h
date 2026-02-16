@@ -1,6 +1,9 @@
 #pragma once
 #include "gameObjects/gameObject3D.h"
 #include "gameObjects/meshObject.h"
+// Forward declaration to fix C2955 error
+class SpaceShip;
+#include "gameObjects/spaceShipObj.h"
 #include "utilities/aStar.h"
 
 class WallIndex {
@@ -72,5 +75,7 @@ private:
 	std::weak_ptr<MeshObject> floor;
 	std::array<std::weak_ptr<MeshObject>, 4> walls;
 
-	std::array<AStarPoint, 9> pathfindingPoints;
+	std::array<std::shared_ptr<AStarVertex>, 9> pathfindingNodes;
+
+	void SetupPathfindingNodes(std::shared_ptr<SpaceShip> parent);
 };

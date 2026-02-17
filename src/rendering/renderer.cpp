@@ -9,6 +9,7 @@ Renderer::Renderer()
 	: viewport(), currentPixelShader(nullptr), currentVertexShader(nullptr), currentRasterizerState(nullptr),
 	  maximumSpotlights(16),
 	  renderQueue(this->meshRenderQueue, this->spotLightRenderQueue, this->pointLightRenderQueue, this->uiRenderQueue) {
+	this->renderQueue.newSkyboxCallback = [this](std::string filename) { this->ChangeSkybox(filename); };
 }
 
 void Renderer::Init(const Window& window) {
@@ -33,8 +34,9 @@ void Renderer::SetAllDefaults() {
 	LoadShaders();
 
 	this->skybox = std::make_unique<Skybox>();
+
 	this->skybox->Init(this->device.Get(), this->immediateContext.Get(),
-					   (FilepathHolder::GetAssetsDirectory() / "skybox" / "space.dds").string());
+					   (FilepathHolder::GetAssetsDirectory() / "skybox" / "asteroids.dds").string());
 
 	// Preload default UI font atlas so TextRenderer can render immediately
 	UI::TextRenderer::GetInstance().LoadFont("default", this->device.Get());
@@ -225,15 +227,11 @@ void Renderer::CreateRendererConstantBuffers() {
 	this->worldMatrixBuffer->Init(this->device.Get(), sizeof(Renderer::WorldMatrixBufferContainer), &worldMatrix,
 								  D3D11_USAGE_DYNAMIC, D3D11_CPU_ACCESS_WRITE);
 
-	SpotlightObject::SpotLightContainer defaultSpotlights[16]{};
-	this->spotlightBuffer = std::make_unique<StructuredBuffer>();
-	this->spotlightBuffer->Init(this->device.Get(), sizeof(SpotlightObject::SpotLightContainer),
-								this->maximumSpotlights, defaultSpotlights);
+	this->spotlightBuffer = std::make_unique<StructuredBuffer<SpotlightObject::SpotLightContainer>>();
+	this->spotlightBuffer->Init(this->device.Get(), this->maximumSpotlights, {});
 
-	PointLightObject::PointLightContainer defaultPointlights[16]{};
-	this->pointlightBuffer = std::make_unique<StructuredBuffer>();
-	this->pointlightBuffer->Init(this->device.Get(), sizeof(PointLightObject::PointLightContainer),
-								 this->maximumSpotlights, defaultPointlights);
+	this->pointlightBuffer = std::make_unique<StructuredBuffer<PointLightObject::PointLightContainer>>();
+	this->pointlightBuffer->Init(this->device.Get(), this->maximumSpotlights, {});
 
 	Renderer::LightCountBufferContainer lightCountContainer = {};
 	this->spotlightCountBuffer = std::make_unique<ConstantBuffer>();
@@ -306,6 +304,10 @@ void Renderer::ToggleVSync(bool enable) { this->isVSyncEnabled = enable; }
 void Renderer::ToggleWireframe(bool enable) {
 	Logger::Log("test");
 	this->renderAllWireframe = enable;
+}
+
+void Renderer::ChangeSkybox(std::string filepath) {
+	this->skybox->SwapCubemap(this->device.Get(), this->immediateContext.Get(), filepath);
 }
 
 ID3D11Device* Renderer::GetDevice() const { return this->device.Get(); }
@@ -660,7 +662,7 @@ void Renderer::BindMaterial(BaseMaterial* material) {
 	}
 
 	// FIX
-	this->immediateContext->PSSetShaderResources(1, 1 /*renderData.textures.size()*/, renderData.textures.data());
+	this->immediateContext->PSSetShaderResources(1, renderData.textures.size(), renderData.textures.data());
 
 	// Also bind constant buffers
 	for (size_t i = 0; i < renderData.pixelBuffers.size(); i++) {
@@ -703,7 +705,7 @@ void Renderer::BindLights() {
 			}
 
 			// Updates and binds buffer
-			this->spotlightBuffer->UpdateBuffer(this->immediateContext.Get(), spotlights.data());
+			this->spotlightBuffer->UpdateBuffer(this->immediateContext.Get(), spotlights);
 			ID3D11ShaderResourceView* lightSrv = this->spotlightBuffer->GetSRV();
 			this->immediateContext->PSSetShaderResources(0, 1, &lightSrv);
 		}
@@ -743,7 +745,7 @@ void Renderer::BindLights() {
 			}
 
 			// Updates and binds buffer
-			this->pointlightBuffer->UpdateBuffer(this->immediateContext.Get(), pointLights.data());
+			this->pointlightBuffer->UpdateBuffer(this->immediateContext.Get(), pointLights);
 			ID3D11ShaderResourceView* lightSrv = this->pointlightBuffer->GetSRV();
 			this->immediateContext->PSSetShaderResources(6, 1, &lightSrv);
 		}

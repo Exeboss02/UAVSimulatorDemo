@@ -28,6 +28,8 @@ namespace UI {
 class Widget;
 }
 
+#include <functional>
+
 class Renderer {
 public:
 	Renderer();
@@ -72,6 +74,8 @@ public:
 	/// </summary>
 	/// <param name="enable"></param>
 	void ToggleWireframe(bool enable);
+
+	void ChangeSkybox(std::string filepath);
 
 	ID3D11Device* GetDevice() const;
 	ID3D11DeviceContext* GetContext() const;
@@ -149,8 +153,8 @@ private:
 	std::unique_ptr<ConstantBuffer> worldMatrixBuffer;
 
 	std::unique_ptr<ConstantBuffer> spotlightCountBuffer;
-	std::unique_ptr<StructuredBuffer> spotlightBuffer;
-	std::unique_ptr<StructuredBuffer> pointlightBuffer;
+	std::unique_ptr<StructuredBuffer<SpotlightObject::SpotLightContainer>> spotlightBuffer;
+	std::unique_ptr<StructuredBuffer<PointLightObject::PointLightContainer>> pointlightBuffer;
 	std::unique_ptr<ConstantBuffer> pointlightCountBuffer;
 
 	// ImGui variables

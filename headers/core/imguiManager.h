@@ -29,6 +29,7 @@ public:
 	void SetSaveSceneChangeCallback(std::function<void(const std::string&)> callback);
 	void SetSaveSceneAsChangeCallback(std::function<void(const std::string&)> callback);
 	void SetLoadSceneChangeCallback(std::function<void(const std::string&)> callback);
+	void SetSkyboxPopupCallback(std::function<void()> callback);
 
 	// Edit
 	static bool showObjectHierarchy;
@@ -52,6 +53,7 @@ private:
 	bool pauseExecution = false;
 
 	// Edit
+	bool skyboxPopup = false;
 	bool showTransformWindow = false;
 	bool showSoundWindow = false;
 	bool showMusicWindow = false;
@@ -61,6 +63,7 @@ private:
 	std::function<void(bool)> vSyncChangeCallback;
 	std::function<void(bool)> wireframeChangeCallback;
 	std::function<void(bool)> pauseChangeCallback;
+	std::function<void()> skyboxMenuCallback;
 	std::function<void(const std::string&)> saveSceneChangeCallback;
 	std::function<void(const std::string&)> saveSceneAsChangeCallback;
 	std::function<void(const std::string&)> loadSceneChangeCallback;

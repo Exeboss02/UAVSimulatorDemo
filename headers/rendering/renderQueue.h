@@ -5,7 +5,9 @@
 #include <iostream>
 #include <memory>
 #include <vector>
+#include <functional>
 
+class Renderer;
 class MeshObject;
 class SpotlightObject;
 class GameObject;
@@ -60,9 +62,14 @@ public:
 	/// </summary>
 	static void ClearAllQueues();
 
+	static void ChangeSkybox(std::string filename);
+
 private:
 	static RenderQueue* instance;
 
+	std::function<void(std::string)> newSkyboxCallback;
+
+	friend Renderer;
 	std::vector<std::weak_ptr<MeshObject>>& meshRenderQueue;
 	std::vector<std::weak_ptr<SpotlightObject>>& lightRenderQueue;
 	std::vector<std::weak_ptr<PointLightObject>>& pointLightRenderQueue;

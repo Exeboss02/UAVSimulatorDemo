@@ -152,16 +152,6 @@ bool Collider::BoxSphereCollision(BoxCollider* box, SphereCollider* sphere, Dire
 {
 	using namespace DirectX;
 
-	if (GetAsyncKeyState('B'))
-	{
-		if(sphere->targetTag == 3)
-		{
-			int a = 0;
-		}
-	}
-
-	//CHECK MATRIX TRANSPOSE's!
-
 	XMVECTOR boxCenter = box->GetGlobalPosition();
 	XMVECTOR sphereCenter = sphere->GetGlobalPosition();
 	XMFLOAT3 fExtents = FLOAT3MULT1(box->GetExtents(), 1);
@@ -202,9 +192,25 @@ bool Collider::BoxSphereCollision(BoxCollider* box, SphereCollider* sphere, Dire
 			int a = 0;
 		}
 
+		std::shared_ptr<RigidBody> rigidBodyParent = this->rigidBodyParent.lock();
+
+		//sphere center is inside of box
 		if (distSq < 1e-8f)
 		{
-			//this edge case needs to be handled
+			//THIS IS NOT WORKING FOR SOME FUNNY REASON
+
+			XMVECTOR physicsPosition = {};
+			XMVECTOR previousPhysicsPosition = {};
+
+			if(rigidBodyParent)
+			{
+				physicsPosition = XMVectorAdd(rigidBodyParent->GetPhysicsPosition(), this->transform.GetPosition());
+				previousPhysicsPosition = XMVectorAdd(rigidBodyParent->GetPreviousPhysicsPosition(), this->transform.GetPosition());
+
+				XMVECTOR axisLocal = XMVectorSubtract(previousPhysicsPosition, physicsPosition);
+				penetration = XMVectorGetX(XMVector3Length(axisLocal));
+				axisLocal = XMVector3Normalize(axisLocal);
+			}
 		}
 		else
 		{
@@ -215,32 +221,22 @@ bool Collider::BoxSphereCollision(BoxCollider* box, SphereCollider* sphere, Dire
 		XMMATRIX scalingMatrix = XMMatrixScaling(XMVectorGetX(scale), XMVectorGetY(scale), XMVectorGetZ(scale));
 		XMMATRIX translationMatrix = XMMatrixTranslation(boxCenter.m128_f32[0], boxCenter.m128_f32[1], boxCenter.m128_f32[2]);
 		XMMATRIX localToWorldMatrix = scalingMatrix * rotationMatrix * translationMatrix;
-		XMVECTOR axisWorld = XMVector3TransformNormal(axisLocal, localToWorldMatrix);
+
+		XMVECTOR axisWorld = {};
+		if(!rigidBodyParent)
+		{
+			axisWorld = XMVector3TransformNormal(axisLocal, localToWorldMatrix);
+		}
+		else
+		{
+			axisWorld = axisLocal;
+		}
+
 		XMStoreFloat3(&resolveAxis, XMVector3Normalize(axisWorld));
 		resolveDistance = penetration;
 
-		//std::cout << "-------------------------------------------------" << std::endl;
-		//PrintFloat3(sphereCenter, "SphereCenter: ");
-		//std::cout << "SphereRadius: " << radius << std::endl;
-		//std::cout << "---" << std::endl;
-		//PrintFloat3(boxCenter, "BoxCenter: ");
-		//PrintFloat3(fExtents, "boxExtents(transform.scale)");
-
-		//XMFLOAT4X4 world = {};
-		//XMStoreFloat4x4(&world, boxWorldMatrix);
-		//std::cout << "worldMatrix: ";
-		//PrintMatrix(world);
-		//std::cout << "---" << std::endl;
-		//std::cout << "penetration: " << penetration << std::endl;
-		//PrintFloat3(resolveAxis, "resolveAxis: ");
-		//std::cout << "-------------------------------------------------" << std::endl;
-
-		//Logger::Log("BOXSPHERE COLLISION!");
-
 		return true;
 	}
-
-	//std::cout << "<<<<<not in collision>>>>>" << std::endl;
 
 	return false;
 }

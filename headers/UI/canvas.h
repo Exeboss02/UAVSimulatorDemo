@@ -12,6 +12,8 @@ class Canvas {
 public:
 	Canvas() = default;
 
+	enum class ScaleMode { Pixel = 0, Stretch = 1 };
+
 	// Size in screen space
 	void SetSize(Vec2 size);
 	Vec2 GetSize() const;
@@ -22,6 +24,9 @@ public:
 	void Clear();
 	const std::vector<std::shared_ptr<Widget>>& GetChildren() const;
 
+	void SetScaleMode(ScaleMode m) { this->scaleMode = m; }
+	ScaleMode GetScaleMode() const { return this->scaleMode; }
+
 	void Update(float dt);
 	void Draw();
 
@@ -30,6 +35,8 @@ public:
 private:
 	Vec2 size{};
 	std::vector<std::shared_ptr<Widget>> children;
+
+	ScaleMode scaleMode = ScaleMode::Pixel;
 
 	std::shared_ptr<Widget> HitTestRecursive(const std::shared_ptr<Widget>& node, Vec2 point) const;
 };

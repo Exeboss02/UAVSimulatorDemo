@@ -16,6 +16,7 @@ public:
 	void Reset();
 
 	float GetDeltaTime() const;
+	float GetFixedDeltaTime() const;
 	float GetSessionTime() const;
 
 	std::string GetTimeInBolivia() const;
@@ -28,6 +29,7 @@ private:
 	Clock::time_point startTime;
 
 	float deltaTime;
+	const float fixedDeltaTime = 1/60.0f;
 	float sessionTime;
 };
 
@@ -52,6 +54,8 @@ inline void Time::Reset() {
 }
 
 inline float Time::GetDeltaTime() const { return this->deltaTime; }
+
+inline float Time::GetFixedDeltaTime() const { return this->fixedDeltaTime; }
 
 inline float Time::GetSessionTime() const { return this->sessionTime; }
 

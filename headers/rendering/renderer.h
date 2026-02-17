@@ -5,8 +5,8 @@
 #include "d3d11.h"
 #include "gameObjects/cameraObject.h"
 #include "gameObjects/meshObject.h"
-#include "gameObjects/spotlightObject.h"
 #include "gameObjects/pointLightObject.h"
+#include "gameObjects/spotlightObject.h"
 #include "rendering/constantBuffer.h"
 #include "rendering/depthBuffer.h"
 #include "rendering/indexBuffer.h"
@@ -17,11 +17,16 @@
 #include "rendering/renderTarget.h"
 #include "rendering/sampler.h"
 #include "rendering/shader.h"
+#include "rendering/skybox.h"
 #include "rendering/structuredBuffer.h"
 #include "rendering/vertex.h"
 #include "rendering/vertexBuffer.h"
 #include "wrl/client.h"
 #include <algorithm>
+
+namespace UI {
+class Widget;
+}
 #include "rendering/skybox.h"
 #include "rendering/quadTree.h"
 
@@ -78,6 +83,11 @@ public:
 	ID3D11DeviceContext* GetContext() const;
 	IDXGISwapChain* GetSwapChain() const;
 
+	// Draw quads for text rendering (positions in screen space, using current UI camera)
+	void DrawTextQuads(const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices,
+					   ID3D11ShaderResourceView* srv, const DirectX::XMFLOAT4& color = {1.0f, 1.0f, 1.0f, 1.0f},
+					   bool useLinearFilter = true);
+
 private:
 	const size_t maximumSpotlights;
 
@@ -99,14 +109,19 @@ private:
 	Microsoft::WRL::ComPtr<ID3D11DeviceContext> immediateContext;
 	Microsoft::WRL::ComPtr<IDXGISwapChain> swapChain;
 
+	Microsoft::WRL::ComPtr<ID3D11BlendState> alphaBlendState;
+
 	std::unique_ptr<RenderTarget> renderTarget;
 	std::unique_ptr<DepthBuffer> depthBuffer;
 	std::unique_ptr<InputLayout> inputLayout;
 	std::unique_ptr<Sampler> sampler;
 	std::unique_ptr<Sampler> shadowSampler;
+	std::unique_ptr<Sampler> uiSampler;
+	std::unique_ptr<Sampler> uiLinearSampler;
 	std::unique_ptr<RasterizerState> standardRasterizerState;
 	std::unique_ptr<RasterizerState> wireframeRasterizerState;
 	std::unique_ptr<RasterizerState> skyboxRasterizerState;
+	std::unique_ptr<RasterizerState> uiRasterizerState;
 	RasterizerState* currentRasterizerState;
 
 	// Default stuff
@@ -130,6 +145,7 @@ private:
 	std::vector<std::weak_ptr<MeshObject>> meshRenderQueue;
 	std::vector<std::weak_ptr<SpotlightObject>> spotLightRenderQueue;
 	std::vector<std::weak_ptr<PointLightObject>> pointLightRenderQueue;
+	std::vector<std::weak_ptr<UI::Widget>> uiRenderQueue;
 
 	QuadTree staticObjectsTree;
 	std::vector<std::weak_ptr<MeshObject>> GetVisibleObjects(CameraObject& camera);
@@ -200,7 +216,6 @@ private:
 
 	void BindMaterial(BaseMaterial* material);
 	void BindLights();
-
 
 	void BindCameraMatrix();
 	void BindWorldMatrix(ID3D11Buffer* buffer);

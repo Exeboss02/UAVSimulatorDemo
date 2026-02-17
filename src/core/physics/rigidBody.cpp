@@ -17,26 +17,102 @@ void RigidBody::Start()
 	std::weak_ptr<RigidBody> rigidBody = std::static_pointer_cast<RigidBody>(this->GetPtr());
 	PhysicsQueue::GetInstance().AddRigidBody(rigidBody);
 	Logger::Log("Added Rigidbody to physics queue");
+
+	this->physicsPosition = this->transform.GetPosition();
+	this->previousPhysicsPosition = this->physicsPosition;
 }
 
 void RigidBody::Tick()
 {
 	this->GameObject3D::Tick();
 
-	if(this->gravity) this->linearVelocity.y -= 6.0f * Time::GetInstance().GetDeltaTime();
+	//Logger::Log("in update, transform position: " + std::to_string(this->transform.GetPosition().m128_f32[0]) + ", " + std::to_string(this->transform.GetPosition().m128_f32[1]) + ", " + std::to_string(this->transform.GetPosition().m128_f32[2]));
+}
+
+void RigidBody::PhysicsTick()
+{
+	this->GameObject3D::PhysicsTick();
+
+	if(this->gravity) this->linearVelocity.y -= 12.0f * Time::GetInstance().GetFixedDeltaTime();
+}
+
+void RigidBody::LatePhysicsTick()
+{
+	this->GameObject3D::LatePhysicsTick();
+
+	//the total move for this frame
+	DirectX::XMVECTOR moveVector = XMLoadFloat3(&this->linearVelocity);
+
+	DirectX::XMVECTOR collisionCheckPosition = DirectX::XMVectorAdd(this->transform.GetPosition(), moveVector);
+	this->transform.SetPosition(collisionCheckPosition); //all velocity has been added, it will first be moved here, 
+	//then do collision checks to determin the new valid physics position after collision. Then the new current position will be lerped between the last physics pos and this new valid physics pos
+
+	//collision checks should happen after this in sceneManager
+}
+
+DirectX::XMVECTOR RigidBody::GetPhysicsPosition()
+{
+	return this->physicsPosition;
+}
+
+DirectX::XMVECTOR RigidBody::GetPreviousPhysicsPosition()
+{ 
+	return this->previousPhysicsPosition; 
+}
+
+void RigidBody::SetPhysicsPosition(DirectX::XMVECTOR physicsPosition)
+{
+	this->physicsPosition = physicsPosition;
+}
+
+void RigidBody::SetPreviousPhysicsPosition(DirectX::XMVECTOR oldPosition)
+{
+	this->previousPhysicsPosition = oldPosition;
+}
+
+void RigidBody::LoadFromJson(const nlohmann::json& data)
+{
+	this->GameObject3D::LoadFromJson(data);
+
+	 if(data.contains("gravity"))
+	 {
+	 	this->gravity = static_cast<bool>(data.at("gravity").get<bool>());
+	 	Logger::Log("'gravity' was found in json: " + std::to_string(this->gravity));
+	 }
+	 else
+	 {
+	 	Logger::Log("didn't find 'gravity'");
+	 }
+}
+
+void RigidBody::SaveToJson(nlohmann::json& data)
+{
+	this->GameObject3D::SaveToJson(data);
+
+	data["gravity"] = this->gravity;
 }
 
 void RigidBody::LateTick()
 {
-	using namespace DirectX;
 	GameObject3D::LatePhysicsTick();
 
-	XMVECTOR moveVector = XMLoadFloat3(&this->linearVelocity);
-	this->transform.Move(moveVector, 1); //vector is already scaled
-}
+	DirectX::XMFLOAT3 previousPosition;
+	DirectX::XMFLOAT3 targetPosition;
+	DirectX::XMStoreFloat3(&previousPosition, this->previousPhysicsPosition);
+	DirectX::XMStoreFloat3(&targetPosition, this->physicsPosition);
 
-void RigidBody::PhysicsTick() {}
-void RigidBody::LatePhysicsTick() {}
+	float lerpProcent = PhysicsQueue::GetInstance().GetFixedDeltaTimeBuffer() / Time::GetInstance().GetFixedDeltaTime();
+	DirectX::XMFLOAT3 lerpedPosition = FLOAT3LERP(previousPosition, targetPosition, lerpProcent);
+	DirectX::XMVECTOR newPosition = DirectX::XMLoadFloat3(&lerpedPosition);
+
+	this->transform.SetPosition(newPosition);
+
+	// Logger::Log("\n----------------");
+	// Logger::Log("transform position: " + std::to_string(this->transform.GetPosition().m128_f32[0]) + ", " + std::to_string(this->transform.GetPosition().m128_f32[1]) + ", " + std::to_string(this->transform.GetPosition().m128_f32[2]));
+	// Logger::Log("PREVIOUS PHYS POSITION: " + std::to_string(this->previousPhysicsPosition.m128_f32[0]) + ", " + std::to_string(this->previousPhysicsPosition.m128_f32[1]) + ", " + std::to_string(this->previousPhysicsPosition.m128_f32[2]));
+	// Logger::Log("PHYS POSITION: " + std::to_string(this->physicsPosition.m128_f32[0]) + ", " + std::to_string(this->physicsPosition.m128_f32[1]) + ", " + std::to_string(this->physicsPosition.m128_f32[2]));
+	// Logger::Log("\n----------------");
+}
 
 void RigidBody::SetParent(std::weak_ptr<GameObject> parent) {
 	//do we need to add other things?

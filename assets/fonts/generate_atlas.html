@@ -1,0 +1,120 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Bitmap Font Atlas Generator</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    label { display:block; margin-top:10px }
+    canvas { image-rendering: pixelated; border:1px solid #ccc; margin-top:10px }
+    pre { background:#f6f6f6; padding:10px }
+  </style>
+</head>
+<body>
+  <h3>Bitmap Font Atlas Generator (ASCII 32..126)</h3>
+  <p>Choose a TTF/OTF file and click <b>Generate</b>. Produces a 256×96 PNG and JSON metadata compatible with the engine.</p>
+
+  <label>Font file (.ttf or .otf): <input id="fontFile" type="file" accept=".ttf,.otf"></label>
+  <label>Font size (px): <input id="fontSize" type="number" value="16" min="8" max="72"></label>
+  <label>Padding (px): <input id="padding" type="number" value="1" min="0" max="8"></label>
+  <button id="generate">Generate</button>
+  <button id="downloadPng" disabled>Download PNG</button>
+  <button id="downloadJson" disabled>Download JSON</button>
+
+  <div>
+    <canvas id="atlas" width="256" height="96"></canvas>
+  </div>
+
+  <script>
+    const FIRST = 32, LAST = 126;
+    const COLS = 16;
+    const CANVAS_W = 256, CANVAS_H = 96;
+
+    const fileInput = document.getElementById('fontFile');
+    const generateBtn = document.getElementById('generate');
+    const downloadPng = document.getElementById('downloadPng');
+    const downloadJson = document.getElementById('downloadJson');
+    const atlas = document.getElementById('atlas');
+    const ctx = atlas.getContext('2d');
+
+    function arrayBufferToDataURL(ab, mime) {
+      const blob = new Blob([ab], {type: mime});
+      return URL.createObjectURL(blob);
+    }
+
+    generateBtn.addEventListener('click', async () => {
+      const file = fileInput.files[0];
+      if (!file) { alert('Select a .ttf/.otf file'); return; }
+      const fontSize = parseInt(document.getElementById('fontSize').value) || 16;
+      const padding = parseInt(document.getElementById('padding').value) || 1;
+
+      const ab = await file.arrayBuffer();
+      const url = arrayBufferToDataURL(ab, file.type || 'font/ttf');
+      const fontName = 'userfont_' + Date.now();
+      try {
+        const f = new FontFace(fontName, `url(${url})`);
+        await f.load();
+        document.fonts.add(f);
+      } catch (e) {
+        alert('Failed to load font in browser: ' + e);
+        return;
+      }
+
+      ctx.clearRect(0,0, CANVAS_W, CANVAS_H);
+      ctx.fillStyle = 'rgba(0,0,0,0)';
+      ctx.fillRect(0,0,CANVAS_W,CANVAS_H);
+
+      ctx.fillStyle = 'white';
+      ctx.textBaseline = 'top';
+      ctx.imageSmoothingEnabled = true;
+      ctx.font = `${fontSize}px "${fontName}"`;
+
+      const cellW = Math.floor(CANVAS_W / COLS);
+      const rows = Math.ceil((LAST - FIRST + 1) / COLS);
+      const cellH = Math.floor(CANVAS_H / rows);
+
+      const glyphs = {};
+      let i = 0;
+      for (let code = FIRST; code <= LAST; ++code) {
+        const ch = String.fromCharCode(code);
+        const col = i % COLS;
+        const row = Math.floor(i / COLS);
+        const x = col * cellW + padding;
+        const y = row * cellH + padding;
+
+        const metrics = ctx.measureText(ch);
+        const w = Math.ceil(metrics.width);
+        const h = cellH - padding*2;
+
+        ctx.fillText(ch, x, y);
+
+        glyphs[String(code)] = { x: x, y: y, w: w, h: h, xadvance: w };
+        i++;
+      }
+
+      downloadPng.disabled = false;
+      downloadJson.disabled = false;
+
+      downloadPng.onclick = () => {
+        atlas.toBlob(function(blob) {
+          const a = document.createElement('a');
+          a.href = URL.createObjectURL(blob);
+          a.download = 'default_font.png';
+          a.click();
+        }, 'image/png');
+      };
+
+      downloadJson.onclick = () => {
+        const out = { baseSize: fontSize, atlasWidth: CANVAS_W, atlasHeight: CANVAS_H, glyphs: glyphs };
+        const a = document.createElement('a');
+        const blob = new Blob([JSON.stringify(out, null, 2)], {type: 'application/json'});
+        a.href = URL.createObjectURL(blob);
+        a.download = 'default_font.json';
+        a.click();
+      };
+
+      alert('Generated atlas preview. Click "Download PNG" and "Download JSON" to save files and then move them into assets/fonts/.');
+    });
+  </script>
+</body>
+</html>

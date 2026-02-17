@@ -44,11 +44,6 @@ void RenderQueue::AddMeshObject(std::weak_ptr<GameObject> newMeshObject) {
 			  [](std::weak_ptr<MeshObject> a, std::weak_ptr<MeshObject> b) {
 				  return a.lock()->GetMesh().GetMeshIdentifier() > b.lock()->GetMesh().GetMeshIdentifier();
 			  });
-
-	Logger::Log("New Render Queue");
-	for (auto& meshObject : RenderQueue::instance->meshRenderQueue) {
-		Logger::Log(meshObject.lock()->GetMesh().GetMeshIdentifier());
-	}
 }
 
 void RenderQueue::RemoveMeshObject() {

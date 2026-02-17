@@ -26,6 +26,8 @@
 #include "rendering/skybox.h"
 
 #include <functional>
+#include "rendering/renderMap.h"
+#include "rendering/instanceBuffer.h"
 
 class Renderer {
 public:
@@ -81,10 +83,10 @@ public:
 private:
 	const size_t maximumSpotlights;
 
-	struct WorldMatrixBufferContainer {
-		DirectX::XMFLOAT4X4 worldMatrix;
-		DirectX::XMFLOAT4X4 worldMatrixInversedTransposed;
-	};
+	//struct WorldMatrixBufferContainer {
+	//	DirectX::XMFLOAT4X4 worldMatrix;
+	//	DirectX::XMFLOAT4X4 worldMatrixInversedTransposed;
+	//};
 
 	struct LightCountBufferContainer {
 		uint32_t spotlightCount;
@@ -101,7 +103,11 @@ private:
 
 	std::unique_ptr<RenderTarget> renderTarget;
 	std::unique_ptr<DepthBuffer> depthBuffer;
-	std::unique_ptr<InputLayout> inputLayout;
+
+	std::unique_ptr<InputLayout> inputLayout; // Standard input layout
+
+	std::unique_ptr<InputLayout> instanceInputLayout;
+
 	std::unique_ptr<Sampler> sampler;
 	std::unique_ptr<Sampler> shadowSampler;
 	std::unique_ptr<RasterizerState> standardRasterizerState;
@@ -126,7 +132,7 @@ private:
 
 	BaseMaterial* currentMaterial;
 
-	Mesh* currentMesh;
+	//Mesh* currentMesh;
 
 	// Render Queue:
 
@@ -134,6 +140,8 @@ private:
 	std::vector<std::weak_ptr<MeshObject>> meshRenderQueue;
 	std::vector<std::weak_ptr<SpotlightObject>> spotLightRenderQueue;
 	std::vector<std::weak_ptr<PointLightObject>> pointLightRenderQueue;
+
+	RenderMap standardRenderMap;
 
 	// Constant buffers:
 	// The renderer keeps these constant buffers since only one is ever required
@@ -157,9 +165,11 @@ private:
 	void CreateDeviceAndSwapChain(const Window& window);
 	void CreateRenderTarget();
 	void CreateDepthBuffer(const Window& window);
-	void CreateInputLayout(const std::string& vShaderByteCode);
+	void CreateInputLayout();
 	void CreateSampler();
 	void CreateRasterizerStates();
+
+	void CreateRenderMap();
 
 	/// <summary>
 	/// Creates required constant buffers. The renderer needs a cameraBuffer and worldMatrixBuffer.
@@ -193,7 +203,7 @@ private:
 	void ResizeSwapChain(const Window& window);
 
 	void BindSampler();
-	void BindInputLayout();
+	void BindInputLayout(InputLayout* inputLayout);
 	void BindRenderTarget();
 	void BindViewport();
 	void BindRasterizerState(RasterizerState* rastState);
@@ -212,4 +222,6 @@ private:
 	/// </summary>
 	/// <param name="meshObject"></param>
 	void RenderMeshObject(MeshObject* meshObject, bool renderMaterial = true);
+
+	void RenderRenderMap(RenderMap& renderMap, bool renderMaterials = true);
 };

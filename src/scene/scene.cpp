@@ -41,8 +41,6 @@ void Scene::SceneTick(bool isPaused) {
 	}
 
 	this->DeleteDeleteQueue();
-
-	ShowHierarchy();
 }
 
 void Scene::SceneLateTick(bool isPaused) {

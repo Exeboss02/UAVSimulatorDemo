@@ -47,12 +47,6 @@ void SceneManager::SceneTick() {
 	this->mainScene->SceneTick(this->isPaused);
 	this->mainScene->SceneLateTick(this->isPaused);
 	PhysicsQueue::GetInstance().ResetPhysicsTickCounter();
-
-	//ImGui::Begin("SceneTest");
-	//if (ImGui::Button("Delete Scene")) {
-	//	DeleteScene(this->mainScene);
-	//}
-	//ImGui::End();
 }
 
 void SceneManager::LoadScene(Scenes scene) {
@@ -120,7 +114,7 @@ void SceneManager::CreateObjectsFromJsonRecursively(const nlohmann::json& data, 
 		GameObject* gameObjectPointer = static_cast<GameObject*>(objectFromString.Construct(objectData.at("type")));
 		auto obj = std::shared_ptr<GameObject>(gameObjectPointer);
 		this->mainScene->RegisterGameObject(obj);
-		obj->LoadFromJson(objectData);
+
 		if (!parent.expired()) {
 			obj->SetParent(parent);
 		}
@@ -128,6 +122,8 @@ void SceneManager::CreateObjectsFromJsonRecursively(const nlohmann::json& data, 
 		if (objectData.contains("children")) {
 			CreateObjectsFromJsonRecursively(objectData["children"], obj);
 		}
+
+		obj->LoadFromJson(objectData);
 	}
 }
 

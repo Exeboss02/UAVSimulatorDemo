@@ -1,4 +1,5 @@
 #include "rendering/depthBuffer.h"
+#include "utilities/logger.h"
 
 void DepthBuffer::Init(ID3D11Device* device, UINT width, UINT height)
 {

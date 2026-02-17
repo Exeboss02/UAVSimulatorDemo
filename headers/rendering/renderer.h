@@ -179,8 +179,6 @@ private:
 	/// </summary>
 	void CreateRendererConstantBuffers();
 
-	void CreateRenderQueue();
-
 	void LoadShaders();
 
 	/// <summary>

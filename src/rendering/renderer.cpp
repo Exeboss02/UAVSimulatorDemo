@@ -17,8 +17,6 @@ void Renderer::Init(const Window& window) {
 	CreateDeviceAndSwapChain(window);
 	CreateRenderTarget();
 	CreateDepthBuffer(window);
-
-	CreateRenderQueue();
 }
 
 void Renderer::SetAllDefaults() {
@@ -293,13 +291,6 @@ void Renderer::CreateRendererConstantBuffers() {
 	this->pointlightCountBuffer = std::make_unique<ConstantBuffer>();
 	this->pointlightCountBuffer->Init(this->device.Get(), sizeof(Renderer::LightCountBufferContainer),
 									 &lightCountContainer, D3D11_USAGE_DYNAMIC, D3D11_CPU_ACCESS_WRITE);
-}
-
-void Renderer::CreateRenderQueue() {
-	// this->meshRenderQueue = std::make_shared<std::vector<std::weak_ptr<MeshObject>>>();
-	// this->SpotLightRenderQueue = std::make_shared<std::vector<std::weak_ptr<SpotlightObject>>>();
-	// this->renderQueue = std::unique_ptr<RenderQueue>(new RenderQueue(this->meshRenderQueue,
-	// this->SpotLightRenderQueue));
 }
 
 void Renderer::LoadShaders() {
@@ -664,7 +655,7 @@ void Renderer::BindMaterial(BaseMaterial* material) {
 		}
 	}
 
-	// FIX
+	// Bind textures
 	this->immediateContext->PSSetShaderResources(1, renderData.textures.size(), renderData.textures.data());
 
 	// Also bind constant buffers
@@ -675,8 +666,8 @@ void Renderer::BindMaterial(BaseMaterial* material) {
 
 	for (size_t i = 0; i < renderData.vertexBuffers.size(); i++) {
 		ID3D11Buffer* buf = renderData.vertexBuffers[i]->GetBuffer();
-		this->immediateContext->VSSetConstantBuffers(i + 2, 1,
-													 &buf); // i + 2 because the first two slots are always occupied
+		this->immediateContext->VSSetConstantBuffers(i + 1, 1,
+													 &buf); // i + 1 because first slot is always occupied
 	}
 }
 
@@ -861,6 +852,9 @@ void Renderer::RenderRenderMap(RenderMap& renderMap, bool renderMaterials) {
 					}
 				}
 
+
+				// Get the instance buffer
+
 				size_t instanceCount = material.objects.size(); 
 
 				InstanceBuffer* newInstanceBuffer = nullptr;
@@ -880,6 +874,9 @@ void Renderer::RenderRenderMap(RenderMap& renderMap, bool renderMaterials) {
 					}
 				}
 
+
+				// Set vertex buffers
+
 				VertexBuffer vBuf = mesh.mesh->GetVertexBuffer();
 
 				unsigned int strides[2];
@@ -896,6 +893,8 @@ void Renderer::RenderRenderMap(RenderMap& renderMap, bool renderMaterials) {
 				bufferPointers[1] = newInstanceBuffer->GetBuffer();
 
 				this->immediateContext->IASetVertexBuffers(0, 2, bufferPointers, strides, offsets);
+
+
 
 				// Draw call
 				this->immediateContext->DrawIndexedInstanced(

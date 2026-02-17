@@ -62,9 +62,9 @@ void Room::Start() {
 
 		MeshObjData meshdata = AssetManager::GetInstance().GetMeshObjData(
 			this->wallMeshIdentifiers[static_cast<int>(Room::WallState::window)]);
-		meshobj->SetMesh(meshdata);
-
 		meshobj->transform.SetRotationRPY(0, 0, i * std::numbers::pi / 2);
+
+		meshobj->SetMesh(meshdata);
 		this->floor = meshobj;
 
 		this->walls[i] = meshobj;

@@ -5,6 +5,7 @@
 #include "gameObjects/mesh.h"
 #include "gameObjects/meshObjData.h"
 #include "rendering/renderQueue.h"
+#include <DirectXCollision.h>
 
 class MeshObject : public GameObject3D {
 public:
@@ -18,6 +19,7 @@ public:
 	void SetMesh(MeshObjData newMesh);
 
 	MeshObjData& GetMesh();
+	DirectX::BoundingBox GetBoundingBox();
 
 	virtual void Tick() override;
 

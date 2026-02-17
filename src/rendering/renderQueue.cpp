@@ -8,10 +8,11 @@ RenderQueue* RenderQueue::instance = nullptr;
 
 RenderQueue::RenderQueue(std::vector<std::weak_ptr<MeshObject>>& meshRenderQueue,
 						 std::vector<std::weak_ptr<SpotlightObject>>& lightRenderQueue,
-						 std::vector<std::weak_ptr<PointLightObject>>& pointLightRenderQueue
+						 std::vector<std::weak_ptr<PointLightObject>>& pointLightRenderQueue,
+						QuadTree& staticObjects
 )
 	: meshRenderQueue(meshRenderQueue), lightRenderQueue(lightRenderQueue),
-	  pointLightRenderQueue(pointLightRenderQueue) {
+	  pointLightRenderQueue(pointLightRenderQueue), staticObjects(staticObjects) {
 	Logger::Log("Initializing RenderQueue.");
 
 	if (instance) {
@@ -37,8 +38,9 @@ void RenderQueue::AddMeshObject(std::weak_ptr<GameObject> newMeshObject) {
 		Logger::Error("Tried to add object to queue, but RenderQueue is not initialized.");
 		throw std::runtime_error("Fatal error in RenderQueue.");
 	}
-
-	RenderQueue::instance->meshRenderQueue.push_back(std::static_pointer_cast<MeshObject>(newMeshObject.lock()));
+	
+	RenderQueue::instance->staticObjects.AddElement(static_pointer_cast<MeshObject>(newMeshObject.lock()));
+	// RenderQueue::instance->meshRenderQueue.push_back(std::static_pointer_cast<MeshObject>(newMeshObject.lock()));
 }
 
 void RenderQueue::RemoveMeshObject() {

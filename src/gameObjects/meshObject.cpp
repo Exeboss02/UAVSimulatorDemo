@@ -6,8 +6,7 @@ MeshObject::MeshObject() : mesh(), imguiNewMeshIdent("\0"), imguiNewMatIdent("\0
 	Logger::Log("Created a MeshObject.");
 }
 
-void MeshObject::SetMesh(MeshObjData newMesh)
-{
+void MeshObject::SetMesh(MeshObjData newMesh) {
 	this->mesh = newMesh;
 
 	// Should do a check to make sure it isn't already in render queue
@@ -15,31 +14,33 @@ void MeshObject::SetMesh(MeshObjData newMesh)
 	RenderQueue::AddMeshObject(this->GetPtr());
 }
 
-MeshObjData& MeshObject::GetMesh()
-{
-	return this->mesh;
+MeshObjData& MeshObject::GetMesh() { return this->mesh; }
+
+DirectX::BoundingBox MeshObject::GetBoundingBox() {
+	auto meshWeak = this->mesh.GetMesh();
+	if (meshWeak.expired()) {
+		std::string error = "Trying to get bounding box from a MeshObject without a mesh or with a dead mesh";
+		Logger::Error(error);
+		throw std::runtime_error(error);
+	}
+
+	auto box = meshWeak.lock()->GetBoundingBox();
+	DirectX::XMMATRIX matrix = this->GetGlobalWorldMatrix(false);
+	box.Transform(box, matrix);
+	return box;
 }
 
-void MeshObject::Tick()
-{
+void MeshObject::Tick() {
 	GameObject3D::Tick();
 
-	//static float rot = 0;
-	//this->transform.SetRotationRPY(0,0,rot += 0.0005f);
+	//Logger::Log("Mesh");
+	//Logger::Log(this->GetGlobalPosition().m128_f32[0], ":", this->GetBoundingBox().Center.x);
+	//Logger::Log(this->GetGlobalPosition().m128_f32[1], ":", this->GetBoundingBox().Center.y);
+	//Logger::Log(this->GetGlobalPosition().m128_f32[2], ":", this->GetBoundingBox().Center.z);
 
-	// Debug stuff to delete objects
-	//ImGui::Begin("Object" + this->tempId);
-	//if (ImGui::Button("Add")) {
-	//	auto newCam = this->factory->CreateGameObjectOfType<GameObject>();
-	//}
-	//if (ImGui::Button("Delete")) {
-	//	this->factory->QueueDeleteGameObject(this->GetPtr());
-	//}
-	//ImGui::End();
 }
 
-void MeshObject::LoadFromJson(const nlohmann::json& data)
-{
+void MeshObject::LoadFromJson(const nlohmann::json& data) {
 	this->GameObject3D::LoadFromJson(data);
 
 	if (data.contains("meshIdentifier")) {
@@ -47,8 +48,7 @@ void MeshObject::LoadFromJson(const nlohmann::json& data)
 	}
 }
 
-void MeshObject::SaveToJson(nlohmann::json& data)
-{
+void MeshObject::SaveToJson(nlohmann::json& data) {
 	this->GameObject3D::SaveToJson(data);
 
 	data["type"] = "MeshObject";
@@ -56,17 +56,16 @@ void MeshObject::SaveToJson(nlohmann::json& data)
 	data["meshIdentifier"] = GetMesh().GetMeshIdentifier();
 }
 
-void MeshObject::ShowInHierarchy() 
-{ 
+void MeshObject::ShowInHierarchy() {
 	this->GameObject3D::ShowInHierarchy();
 
-	ImGui::Text("MeshObject"); 
+	ImGui::Text("MeshObject");
 
 	ImGui::Checkbox("Hide", &this->hide);
 
 	if (!this->GetMesh().GetMesh().expired()) {
 		std::string meshText = std::format("Mesh: {}", this->GetMesh().GetMeshIdentifier());
-		ImGui::Text(meshText.c_str()); 
+		ImGui::Text(meshText.c_str());
 
 		ImGui::Text("Materials");
 		for (int i = 0; i < this->GetMesh().GetMesh().lock()->GetSubMeshes().size(); i++) {
@@ -79,14 +78,15 @@ void MeshObject::ShowInHierarchy()
 			shortMaterialName = std::to_string(i) + ". " + shortMaterialName;
 
 			if (ImGui::TreeNode(shortMaterialName.c_str())) {
-				ImGui::Text(("Identifier: " +  materialName).c_str());
+				ImGui::Text(("Identifier: " + materialName).c_str());
 
 				if (ImGui::Button("Change material")) ImGui::OpenPopup("change_mat");
 				if (ImGui::BeginPopup("change_mat")) {
 					ImGui::InputText("New Material", this->imguiNewMatIdent, sizeof(this->imguiNewMatIdent));
 					if (ImGui::Button("Apply")) {
 						Logger::Log("Tried to change material.");
-						this->GetMesh().SetMaterial(i, AssetManager::GetInstance().GetMaterialWeakPtr(this->imguiNewMatIdent).lock());
+						this->GetMesh().SetMaterial(
+							i, AssetManager::GetInstance().GetMaterialWeakPtr(this->imguiNewMatIdent).lock());
 						std::strncpy(this->imguiNewMatIdent, "", sizeof(this->imguiNewMatIdent));
 						ImGui::CloseCurrentPopup();
 					}

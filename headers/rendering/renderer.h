@@ -22,8 +22,8 @@
 #include "rendering/vertexBuffer.h"
 #include "wrl/client.h"
 #include <algorithm>
-#include "core/assetManager.h"
 #include "rendering/skybox.h"
+#include "rendering/quadTree.h"
 
 #include <functional>
 
@@ -130,6 +130,9 @@ private:
 	std::vector<std::weak_ptr<MeshObject>> meshRenderQueue;
 	std::vector<std::weak_ptr<SpotlightObject>> spotLightRenderQueue;
 	std::vector<std::weak_ptr<PointLightObject>> pointLightRenderQueue;
+
+	QuadTree staticObjectsTree;
+	std::vector<std::weak_ptr<MeshObject>> GetVisibleObjects(CameraObject& camera);
 
 	// Constant buffers:
 	// The renderer keeps these constant buffers since only one is ever required

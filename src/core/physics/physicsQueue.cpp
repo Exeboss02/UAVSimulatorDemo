@@ -41,7 +41,7 @@ float PhysicsQueue::GetFixedDeltaTimeBuffer()
     return this->fixedDeltaTimeBuffer;
 }
 
-void PhysicsQueue::Tick() 
+void PhysicsQueue::Tick()
 {
     this->fixedDeltaTimeBuffer += Time::GetInstance().GetDeltaTime();
     float fixedDeltaTime = Time::GetInstance().GetFixedDeltaTime();
@@ -57,6 +57,8 @@ void PhysicsQueue::Tick()
         this->physicsTickCounter = 6;
         this->fixedDeltaTimeBuffer = 0;
     }
+
+    //Logger::Log("Nr of phsyics ticks: " + std::to_string(this->physicsTickCounter));
 }
 
 void PhysicsQueue::AddRigidBody(std::weak_ptr<RigidBody> rigidBody) {

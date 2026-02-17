@@ -92,7 +92,8 @@ void RigidBody::SaveToJson(nlohmann::json& data)
 	data["gravity"] = this->gravity;
 }
 
-void RigidBody::LateTick() {
+void RigidBody::LateTick()
+{
 	GameObject3D::LatePhysicsTick();
 
 	DirectX::XMFLOAT3 previousPosition;

@@ -26,9 +26,11 @@ void Player::Tick()
 {
 	this->RigidBody::Tick();
 
-	this->UpdateCamera();
 	this->input[0] = this->keyBoardInput.GetMovementVector().data()[0];
 	this->input[1] = this->keyBoardInput.GetMovementVector().data()[1];
+	this->UpdateCamera();
+
+	//Logger::Log("linear velocity: " + std::to_string(this->linearVelocity.x) + ", " + std::to_string(this->linearVelocity.y) + ", " + std::to_string(this->linearVelocity.z));
 }
 
 void Player::PhysicsTick()
@@ -70,8 +72,6 @@ void Player::UpdateCamera()
 		this->showCursor = !this->showCursor;
 		ShowCursor(this->showCursor);
 	}
-
-	float speed = Time::GetInstance().GetDeltaTime() * 15;
 
 	if (this->showCursor) {
 		std::array<float, 2> lookVector = this->keyBoardInput.GetLookVector();

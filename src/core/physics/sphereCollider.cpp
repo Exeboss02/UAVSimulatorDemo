@@ -27,8 +27,6 @@ void SphereCollider::LoadFromJson(const nlohmann::json& data)
 {
 	this->GameObject3D::LoadFromJson(data);
 
-	Logger::Log("------------------BEFORE TAGS-----------------");
-
 	 if(data.contains("tag"))
 	 {
 	 	this->tag = static_cast<Tag>(data.at("tag").get<int>()); //write enum as integer in json

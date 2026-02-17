@@ -62,3 +62,19 @@ void SpaceShip::Tick() {
 		this->CreateRoom(pos[0], pos[1]);
 	}
 }
+
+void SpaceShip::CreateFloorColider() {
+	auto colliderobjWeak = this->factory->CreateGameObjectOfType<BoxCollider>();
+
+	auto colliderobj = colliderobjWeak.lock();
+	DirectX::XMFLOAT3 pos((this->SHIP_MAX_SIZE_X) * this->ROOM_SIZE, 0,
+						  (this->SHIP_MAX_SIZE_Y) * this->ROOM_SIZE);
+	colliderobj->transform.SetPosition(DirectX::XMLoadFloat3(&pos));
+	DirectX::XMFLOAT3 scale((this->SHIP_MAX_SIZE_Y) * this->ROOM_SIZE + this->ROOM_SIZE / 2, 0.5f,
+							(this->SHIP_MAX_SIZE_Y) * this->ROOM_SIZE + this->ROOM_SIZE/2);
+	colliderobj->transform.SetScale(DirectX::XMLoadFloat3(&scale));
+	colliderobj->SetParent(this->GetPtr());
+
+}
+
+void SpaceShip::Start() { this->CreateFloorColider(); }

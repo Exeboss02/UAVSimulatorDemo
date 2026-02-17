@@ -12,16 +12,21 @@ public:
 	~Player() = default;
 
 	float speed = 12;
-	bool showCursor = false;
+	float mouseSensitivity = 0.006f;
+
+	void LoadFromJson(const nlohmann::json& data) override;
+	void SaveToJson(nlohmann::json& data) override;
 
 	KeyboardInput keyBoardInput;
 	std::weak_ptr<CameraObject> camera;
 
+	void PhysicsTick() override;
 	void Tick() override;
 	void Start() override;
 	
 	void UpdateCamera();
 
 private:
-
+	float input[2] = {};
+	bool showCursor = false;
 };

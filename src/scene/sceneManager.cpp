@@ -42,7 +42,17 @@ void SceneManager::SceneTick() {
 		this->mainScene = this->emptyScene;
 	}
 
+	PhysicsQueue::GetInstance().Tick();
+
 	this->mainScene->SceneTick(this->isPaused);
+	this->mainScene->SceneLateTick(this->isPaused);
+	PhysicsQueue::GetInstance().ResetPhysicsTickCounter();
+
+	//ImGui::Begin("SceneTest");
+	//if (ImGui::Button("Delete Scene")) {
+	//	DeleteScene(this->mainScene);
+	//}
+	//ImGui::End();
 }
 
 void SceneManager::LoadScene(Scenes scene) {

@@ -1,4 +1,5 @@
 #include "rendering/depthBuffer.h"
+#include "utilities/logger.h"
 
 #include "utilities/logger.h"
 

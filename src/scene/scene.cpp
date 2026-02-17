@@ -1,6 +1,7 @@
 #include "scene/scene.h"
 #include "UI/canvasObject.h"
 #include "core/imguiManager.h"
+#include "core/physics/physicsQueue.h"
 
 Scene::Scene() : gameObjects(), finishedLoading(true), currentGameObjectId(0) {}
 
@@ -17,7 +18,68 @@ void Scene::SceneTick(bool isPaused) {
 			}
 		}
 
+		// update game objects
 		gameObject->Tick();
+	}
+
+	for (int i = 0; i < PhysicsQueue::GetInstance().GetPhysicsTickCounter(); i++) {
+		for (size_t i = 0; i < this->gameObjects.size(); i++) {
+			std::shared_ptr<GameObject> gameObject = this->gameObjects[i];
+
+			if (!gameObject->IsActive()) continue;
+
+			// If paused, only debug camera should run
+			if (isPaused) {
+				if (DebugCamera* cam = dynamic_cast<DebugCamera*>(gameObject.get()); cam == nullptr) {
+					continue;
+				}
+			}
+
+			// set linearVelocities and addForce on RigidBodies etc.
+			gameObject->PhysicsTick();
+		}
+	}
+
+	this->DeleteDeleteQueue();
+
+	ShowHierarchy();
+}
+
+void Scene::SceneLateTick(bool isPaused) {
+	for (int i = 0; i < PhysicsQueue::GetInstance().GetPhysicsTickCounter(); i++) {
+		for (size_t i = 0; i < this->gameObjects.size(); i++) {
+			std::shared_ptr<GameObject> gameObject = this->gameObjects[i];
+
+			if (!gameObject->IsActive()) continue;
+
+			// If paused, only debug camera should run
+			if (isPaused) {
+				if (DebugCamera* cam = dynamic_cast<DebugCamera*>(gameObject.get()); cam == nullptr) {
+					continue;
+				}
+			}
+
+			gameObject->LatePhysicsTick();
+		}
+
+		// Check and solve collisions
+		PhysicsQueue::GetInstance().SolveCollisions();
+		PhysicsQueue::GetInstance().UpdatePhysicsPositions();
+	}
+
+	for (size_t i = 0; i < this->gameObjects.size(); i++) {
+		std::shared_ptr<GameObject> gameObject = this->gameObjects[i];
+
+		if (!gameObject->IsActive()) continue;
+
+		// If paused, only debug camera should run
+		if (isPaused) {
+			if (DebugCamera* cam = dynamic_cast<DebugCamera*>(gameObject.get()); cam == nullptr) {
+				continue;
+			}
+		}
+
+		// Lerp actual positions
 		gameObject->LateTick();
 	}
 

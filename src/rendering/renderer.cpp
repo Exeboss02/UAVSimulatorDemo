@@ -9,10 +9,8 @@
 Renderer::Renderer()
 	: viewport(), currentPixelShader(nullptr), currentVertexShader(nullptr), currentRasterizerState(nullptr),
 	  currentMaterial(nullptr), maximumSpotlights(16),
-	  renderQueue(this->meshRenderQueue, this->spotLightRenderQueue, this->pointLightRenderQueue)
+	  renderQueue(this->meshRenderQueue, this->spotLightRenderQueue, this->pointLightRenderQueue, this->uiRenderQueue) 
 {
-	  maximumSpotlights(16),
-	  renderQueue(this->meshRenderQueue, this->spotLightRenderQueue, this->pointLightRenderQueue, this->uiRenderQueue) {
 	this->renderQueue.newSkyboxCallback = [this](std::string filename) { this->ChangeSkybox(filename); };
 }
 
@@ -460,9 +458,6 @@ void Renderer::RenderPass() {
 
 	RenderRenderMap(this->standardRenderMap);
 
-		RenderMeshObject(meshObject.lock().get());
-	}
-
 	// UI pass: render UI widgets in an orthographic projection on top of the scene
 
 	// Prepare an orthographic camera matching the render target (top-left origin)
@@ -504,7 +499,7 @@ void Renderer::RenderPass() {
 	const auto endColorPass{std::chrono::steady_clock::now()};
 	const std::chrono::duration<double> elapsedSeconds{endColorPass - startColorPass};
 	ImGui::Text(("Color pass: " + std::to_string(elapsedSeconds.count())).c_str());
-}
+
 
 	// Restore depth/stencil by rebinding render target (rebinds depth stencil)
 	BindRenderTarget();
@@ -959,7 +954,7 @@ void Renderer::DrawTextQuads(const std::vector<Vertex>& vertices, const std::vec
 	DirectX::XMStoreFloat4x4(&worldMatrix, DirectX::XMMatrixIdentity());
 	DirectX::XMFLOAT4X4 worldMatrixInvTrans;
 	DirectX::XMStoreFloat4x4(&worldMatrixInvTrans, DirectX::XMMatrixIdentity());
-	Renderer::WorldMatrixBufferContainer wm{worldMatrix, worldMatrixInvTrans};
+	RenderMap::WorldMatrixBufferContainer wm{worldMatrix, worldMatrixInvTrans};
 	this->worldMatrixBuffer->UpdateBuffer(this->immediateContext.Get(), &wm);
 	BindWorldMatrix(this->worldMatrixBuffer->GetBuffer());
 

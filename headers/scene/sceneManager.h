@@ -66,6 +66,7 @@ public:
 	void SetMainCameraInScene(std::shared_ptr<Scene>& scene);
 
 	void TogglePause(bool enable);
+	void SkyboxMenu();
 
 private:
 	std::shared_ptr<Scene> mainScene;

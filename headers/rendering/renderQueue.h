@@ -5,15 +5,21 @@
 #include <iostream>
 #include <memory>
 #include <vector>
+#include <functional>
 
+class Renderer;
 class MeshObject;
 class SpotlightObject;
 class GameObject;
+class PointLightObject;
 
 class RenderQueue {
 public:
-	RenderQueue(std::shared_ptr<std::vector<std::weak_ptr<MeshObject>>> meshRenderQueue,
-				std::shared_ptr<std::vector<std::weak_ptr<SpotlightObject>>> lightRenderQueue);
+	RenderQueue(std::vector<std::weak_ptr<MeshObject>>& meshRenderQueue,
+				std::vector<std::weak_ptr<SpotlightObject>>& lightRenderQueue,
+				std::vector<std::weak_ptr<PointLightObject>>& pointLightRenderQueue
+				
+	);
 	~RenderQueue() = default;
 
 	/// <summary>
@@ -34,13 +40,25 @@ public:
 	static void AddLightObject(std::weak_ptr<GameObject> newSpotlightObject);
 
 	/// <summary>
+	/// Add a pointlight object to the lightQueue
+	/// </summary>
+	/// <param name="newSpotlightObject"></param>
+	static void AddPointLight(std::weak_ptr<GameObject> newPointLight);
+
+	/// <summary>
 	/// Clears all render queues
 	/// </summary>
 	static void ClearAllQueues();
 
+	static void ChangeSkybox(std::string filename);
+
 private:
 	static RenderQueue* instance;
 
-	std::shared_ptr<std::vector<std::weak_ptr<MeshObject>>> meshRenderQueue;
-	std::shared_ptr<std::vector<std::weak_ptr<SpotlightObject>>> lightRenderQueue;
+	std::function<void(std::string)> newSkyboxCallback;
+
+	friend Renderer;
+	std::vector<std::weak_ptr<MeshObject>>& meshRenderQueue;
+	std::vector<std::weak_ptr<SpotlightObject>>& lightRenderQueue;
+	std::vector<std::weak_ptr<PointLightObject>>& pointLightRenderQueue;
 };

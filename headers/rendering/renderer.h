@@ -6,6 +6,7 @@
 #include "gameObjects/cameraObject.h"
 #include "gameObjects/meshObject.h"
 #include "gameObjects/spotlightObject.h"
+#include "gameObjects/pointLightObject.h"
 #include "rendering/constantBuffer.h"
 #include "rendering/depthBuffer.h"
 #include "rendering/indexBuffer.h"
@@ -23,6 +24,8 @@
 #include <algorithm>
 #include "core/assetManager.h"
 #include "rendering/skybox.h"
+
+#include <functional>
 
 class Renderer {
 public:
@@ -68,6 +71,8 @@ public:
 	/// </summary>
 	/// <param name="enable"></param>
 	void ToggleWireframe(bool enable);
+
+	void ChangeSkybox(std::string filepath);
 
 	ID3D11Device* GetDevice() const;
 	ID3D11DeviceContext* GetContext() const;
@@ -121,9 +126,10 @@ private:
 
 	// Render Queue:
 
-	std::unique_ptr<RenderQueue> renderQueue;
-	std::shared_ptr<std::vector<std::weak_ptr<MeshObject>>> meshRenderQueue;
-	std::shared_ptr<std::vector<std::weak_ptr<SpotlightObject>>> lightRenderQueue;
+	RenderQueue renderQueue;
+	std::vector<std::weak_ptr<MeshObject>> meshRenderQueue;
+	std::vector<std::weak_ptr<SpotlightObject>> spotLightRenderQueue;
+	std::vector<std::weak_ptr<PointLightObject>> pointLightRenderQueue;
 
 	// Constant buffers:
 	// The renderer keeps these constant buffers since only one is ever required
@@ -133,7 +139,9 @@ private:
 	std::unique_ptr<ConstantBuffer> worldMatrixBuffer;
 
 	std::unique_ptr<ConstantBuffer> spotlightCountBuffer;
-	std::unique_ptr<StructuredBuffer> spotlightBuffer;
+	std::unique_ptr<StructuredBuffer<SpotlightObject::SpotLightContainer>> spotlightBuffer;
+	std::unique_ptr<StructuredBuffer<PointLightObject::PointLightContainer>> pointlightBuffer;
+	std::unique_ptr<ConstantBuffer> pointlightCountBuffer;
 
 	// ImGui variables
 
@@ -163,7 +171,16 @@ private:
 	/// </summary>
 	void RenderPass();
 
-	std::vector<ID3D11ShaderResourceView*> ShadowPass();
+	struct ShadowResourceViews {
+		std::vector<ID3D11ShaderResourceView*> spotlightSRVs;
+		std::vector<ID3D11ShaderResourceView*> pointLightSRVs;
+	};
+
+	ShadowResourceViews ShadowPass();
+
+	std::vector<ID3D11ShaderResourceView*> SpotLightShadowPass();
+
+	std::vector<ID3D11ShaderResourceView*> PointLightShadowPass();
 
 	/// <summary>
 	/// Clears last frame with a clear color

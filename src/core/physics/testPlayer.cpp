@@ -43,6 +43,8 @@ void TestPlayer::PhysicsTick()
 	}
 
 	this->linearVelocity = moveVector;
+
+	this->transform.Rotate(0, Time::GetInstance().GetFixedDeltaTime());
 }
 
 void TestPlayer::Start() { this->RigidBody::Start(); }

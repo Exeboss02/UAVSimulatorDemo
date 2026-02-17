@@ -51,6 +51,12 @@ void PhysicsQueue::Tick()
 		this->fixedDeltaTimeBuffer -= fixedDeltaTime;
 		this->physicsTickCounter++;
 	}
+
+    if(this->physicsTickCounter > 5)
+    {
+        this->physicsTickCounter = 6;
+        this->fixedDeltaTimeBuffer = 0;
+    }
 }
 
 void PhysicsQueue::AddRigidBody(std::weak_ptr<RigidBody> rigidBody) {

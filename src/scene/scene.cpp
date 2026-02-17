@@ -93,7 +93,7 @@ void Scene::SceneLateTick(bool isPaused)
 			}
 		}
 
-		//Lerp graphics positions
+		//Lerp actual positions
 		gameObject->LateTick();
 	}
 

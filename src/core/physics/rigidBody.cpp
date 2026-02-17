@@ -26,14 +26,14 @@ void RigidBody::Tick()
 {
 	this->GameObject3D::Tick();
 
-		Logger::Log("in update, transform position: " + std::to_string(this->transform.GetPosition().m128_f32[0]) + ", " + std::to_string(this->transform.GetPosition().m128_f32[1]) + ", " + std::to_string(this->transform.GetPosition().m128_f32[2]));
+	//Logger::Log("in update, transform position: " + std::to_string(this->transform.GetPosition().m128_f32[0]) + ", " + std::to_string(this->transform.GetPosition().m128_f32[1]) + ", " + std::to_string(this->transform.GetPosition().m128_f32[2]));
 }
 
 void RigidBody::PhysicsTick()
 {
 	this->GameObject3D::PhysicsTick();
 
-	if(this->gravity) this->linearVelocity.y -= 6.0f * Time::GetInstance().GetDeltaTime();
+	if(this->gravity) this->linearVelocity.y -= 12.0f * Time::GetInstance().GetFixedDeltaTime();
 }
 
 void RigidBody::LatePhysicsTick()
@@ -55,18 +55,44 @@ DirectX::XMVECTOR RigidBody::GetPhysicsPosition()
 	return this->physicsPosition;
 }
 
+DirectX::XMVECTOR RigidBody::GetPreviousPhysicsPosition()
+{ 
+	return this->previousPhysicsPosition; 
+}
+
 void RigidBody::SetPhysicsPosition(DirectX::XMVECTOR physicsPosition)
 {
 	this->physicsPosition = physicsPosition;
 }
 
-void RigidBody::SetPreviousPhysicsPosition(DirectX::XMVECTOR oldPosition) 
+void RigidBody::SetPreviousPhysicsPosition(DirectX::XMVECTOR oldPosition)
 {
 	this->previousPhysicsPosition = oldPosition;
 }
 
-void RigidBody::LateTick()
+void RigidBody::LoadFromJson(const nlohmann::json& data)
 {
+	this->GameObject3D::LoadFromJson(data);
+
+	 if(data.contains("gravity"))
+	 {
+	 	this->gravity = static_cast<bool>(data.at("gravity").get<bool>());
+	 	Logger::Log("'gravity' was found in json: " + std::to_string(this->gravity));
+	 }
+	 else
+	 {
+	 	Logger::Log("didn't find 'gravity'");
+	 }
+}
+
+void RigidBody::SaveToJson(nlohmann::json& data)
+{
+	this->GameObject3D::SaveToJson(data);
+
+	data["gravity"] = this->gravity;
+}
+
+void RigidBody::LateTick() {
 	GameObject3D::LatePhysicsTick();
 
 	DirectX::XMFLOAT3 previousPosition;
@@ -80,11 +106,11 @@ void RigidBody::LateTick()
 
 	this->transform.SetPosition(newPosition);
 
-	Logger::Log("\n----------------");
-	Logger::Log("transform position: " + std::to_string(this->transform.GetPosition().m128_f32[0]) + ", " + std::to_string(this->transform.GetPosition().m128_f32[1]) + ", " + std::to_string(this->transform.GetPosition().m128_f32[2]));
-	Logger::Log("PREVIOUS PHYS POSITION: " + std::to_string(this->previousPhysicsPosition.m128_f32[0]) + ", " + std::to_string(this->previousPhysicsPosition.m128_f32[1]) + ", " + std::to_string(this->previousPhysicsPosition.m128_f32[2]));
-	Logger::Log("PHYS POSITION: " + std::to_string(this->physicsPosition.m128_f32[0]) + ", " + std::to_string(this->physicsPosition.m128_f32[1]) + ", " + std::to_string(this->physicsPosition.m128_f32[2]));
-	Logger::Log("\n----------------");
+	// Logger::Log("\n----------------");
+	// Logger::Log("transform position: " + std::to_string(this->transform.GetPosition().m128_f32[0]) + ", " + std::to_string(this->transform.GetPosition().m128_f32[1]) + ", " + std::to_string(this->transform.GetPosition().m128_f32[2]));
+	// Logger::Log("PREVIOUS PHYS POSITION: " + std::to_string(this->previousPhysicsPosition.m128_f32[0]) + ", " + std::to_string(this->previousPhysicsPosition.m128_f32[1]) + ", " + std::to_string(this->previousPhysicsPosition.m128_f32[2]));
+	// Logger::Log("PHYS POSITION: " + std::to_string(this->physicsPosition.m128_f32[0]) + ", " + std::to_string(this->physicsPosition.m128_f32[1]) + ", " + std::to_string(this->physicsPosition.m128_f32[2]));
+	// Logger::Log("\n----------------");
 }
 
 void RigidBody::SetParent(std::weak_ptr<GameObject> parent) {

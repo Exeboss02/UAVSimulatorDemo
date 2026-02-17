@@ -20,8 +20,12 @@ public:
 	void LatePhysicsTick() override;
 
 	DirectX::XMVECTOR GetPhysicsPosition();
+	DirectX::XMVECTOR GetPreviousPhysicsPosition();
 	void SetPhysicsPosition(DirectX::XMVECTOR physicsPosition);
 	void SetPreviousPhysicsPosition(DirectX::XMVECTOR oldPosition);
+
+	void LoadFromJson(const nlohmann::json& data) override;
+	void SaveToJson(nlohmann::json& data) override;
 
 	/// <summary>
 	/// Sets parent

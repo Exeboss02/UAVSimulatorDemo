@@ -1,26 +1,5 @@
 #include "game/player.h"
 
-void Player::Tick()
-{
-	this->UpdateCamera();
-
-	float* input = this->keyBoardInput.GetMovementVector().data(); //float2
-	float deltaTime = Time::GetInstance().GetDeltaTime();
-
-	std::shared_ptr<CameraObject> cam = this->camera.lock();
-	DirectX::XMVECTOR test = {};
-	test.m128_f32[0] = 1;
-
-	DirectX::XMVECTOR moveVector = {};
-	moveVector = DirectX::XMVectorAdd(moveVector, DirectX::XMVectorScale(cam->GetGlobalRight(), input[0] * this->speed * deltaTime)); //Add x-input
-	moveVector = DirectX::XMVectorAdd(moveVector, DirectX::XMVectorScale(cam->GetGlobalForward(), input[1] * this->speed * deltaTime)); //Add z-input
-
-	DirectX::XMStoreFloat3(&this->linearVelocity, moveVector);
-
-	PhysicsQueue::GetInstance().SolveCollisions(); //this is extremely temporary
-	this->RigidBody::Tick(); //Always call this at the end!
-}
-
 void Player::Start()
 {
 	this->RigidBody::Start();
@@ -41,6 +20,35 @@ void Player::Start()
 		Logger::Error("Player didn't have camera object!");
 		return;
 	}
+}
+
+void Player::Tick()
+{
+	this->RigidBody::Tick();
+
+	this->UpdateCamera();
+	this->input[0] = this->keyBoardInput.GetMovementVector().data()[0];
+	this->input[1] = this->keyBoardInput.GetMovementVector().data()[1];
+}
+
+void Player::PhysicsTick()
+{
+	float fixedDeltaTime = Time::GetInstance().GetFixedDeltaTime();
+
+	std::shared_ptr<CameraObject> cam = this->camera.lock();
+
+	if(!cam)
+	{
+		Logger::Error("Player couldn't find any camera!");
+		return;
+	}
+
+	DirectX::XMVECTOR moveVector = {};
+	moveVector = DirectX::XMVectorAdd(moveVector, DirectX::XMVectorScale(cam->GetGlobalRight(), this->input[0] * this->speed * fixedDeltaTime)); //Add x-input
+	moveVector = DirectX::XMVectorAdd(moveVector, DirectX::XMVectorScale(cam->GetGlobalForward(), this->input[1] * this->speed * fixedDeltaTime)); //Add z-input
+
+	DirectX::XMStoreFloat3(&this->linearVelocity, moveVector);
+	this->RigidBody::PhysicsTick(); //has to be last because of gravity
 }
 
 void Player::UpdateCamera()
@@ -70,8 +78,7 @@ void Player::UpdateCamera()
 
 		static float rot[3] = {0, 0, 0};
 
-		float sensitivity = 2.f;
-		float rotSpeed = sensitivity * Time::GetInstance().GetDeltaTime();
+		float rotSpeed = this->mouseSensitivity;
 
 		rot[0] += rotSpeed * lookVector[1];
 		rot[1] += rotSpeed * lookVector[0];
@@ -81,4 +88,33 @@ void Player::UpdateCamera()
 
 		cam->transform.SetRotationRPY(0.0f, rot[0], rot[1]);
 	}
+}
+
+void Player::LoadFromJson(const nlohmann::json& data)
+{
+	this->RigidBody::LoadFromJson(data);
+
+	if(data.contains("speed"))
+	{
+		this->speed = static_cast<float>(data.at("speed").get<float>());
+		Logger::Log("'speed' was found in json: " + std::to_string(this->speed));
+	}
+	else
+	{
+		Logger::Log("didn't find 'speed'!!!");
+	}
+
+	if(data.contains("mouseSensitivity"))
+	{
+		this->mouseSensitivity = (float)data.at("mouseSensitivity").get<float>();
+		Logger::Log("'mouseSensitivity' was found in json: " + std::to_string(this->mouseSensitivity));
+	}
+}
+
+void Player::SaveToJson(nlohmann::json& data)
+{
+	this->RigidBody::SaveToJson(data);
+
+	data["speed"] = this->speed;
+	data["mouseSensitivity"] = this->mouseSensitivity;
 }

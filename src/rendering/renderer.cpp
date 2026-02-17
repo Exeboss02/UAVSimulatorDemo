@@ -47,6 +47,7 @@ void Renderer::SetAllDefaults() {
 std::vector<std::weak_ptr<MeshObject>> Renderer::GetVisibleObjects(CameraObject& camera) {
 	std::vector<std::weak_ptr<MeshObject>> visible = this->staticObjectsTree.GetVisibleElements(camera);
 	visible.insert(visible.end(), this->meshRenderQueue.begin(), this->meshRenderQueue.end());
+	return visible;
 }
 
 void Renderer::SetViewport(const Window& window) {

@@ -5,6 +5,9 @@
 
 class GameObject;
 
+template <typename T>
+class StaticObject;
+
 class GameObjectFactory {
 public:
 	/// <summary>
@@ -17,7 +20,7 @@ public:
 	std::weak_ptr<T> CreateGameObjectOfType();
 
 	template <typename T>
-	void CreateStaticGameObject(std::shared_ptr<T> object);
+	StaticObject<T> CreateStaticGameObject();
 
 	/// <summary>
 	/// Delete the GameObject after all game logic is done, but before the game renders.
@@ -70,11 +73,14 @@ private:
 	/// <param name="gameObject"></param>
 	virtual void RegisterGameObject(std::shared_ptr<GameObject> gameObject) = 0;
 
+    // Allow StaticObject<T> to call RegisterGameObject
+    template <typename T>
+    friend class StaticObject;
+
 protected:
 	virtual const std::vector<std::shared_ptr<GameObject>>& GetGameObjects() const = 0;
 	std::weak_ptr<GameObject> selectedObject;
 };
-
 
 template <typename T>
 inline std::weak_ptr<T> GameObjectFactory::CreateGameObjectOfType() {
@@ -87,10 +93,42 @@ inline std::weak_ptr<T> GameObjectFactory::CreateGameObjectOfType() {
 }
 
 template <typename T>
-void GameObjectFactory::CreateStaticGameObject(std::shared_ptr<T> object) {
+class StaticObject {
+
+public:
+    T* operator->() { return object.get(); }
+    std::shared_ptr<T> Get() { return object; }
+
+	void Init() {
+		if (!started) {
+			std::static_pointer_cast<GameObject>(object)->SetIsStatic(true);
+			this->factory->RegisterGameObject(this->object);
+			started = true;
+		}
+	}
+
+	~StaticObject() { 
+		this->Init();
+	}
+	operator std::shared_ptr<T>() { return object; }
+	operator std::weak_ptr<T>() { return object; }
+
+private:
+	StaticObject(std::shared_ptr<T> object, GameObjectFactory* factory) : object(object), factory(factory) {
+		std::static_pointer_cast<GameObject>(object)->factory = factory;
+	}
+	std::shared_ptr<T> object;
+	GameObjectFactory* factory;
+	bool started = false;
+	friend class GameObjectFactory;
+	friend class GameObject;
+};
+
+template <typename T>
+StaticObject<T> GameObjectFactory::CreateStaticGameObject() {
 	static_assert(std::is_base_of_v<GameObject, T>, "T must derive from GameObject");
-	std::static_pointer_cast<GameObject>(object)->SetIsStatic(true);
-	RegisterGameObject(object);
+	std::shared_ptr<T> object = std::make_shared<T>();
+	return StaticObject<T>(object, this);
 }
 
 template <typename T>
@@ -104,8 +142,9 @@ inline std::weak_ptr<T> GameObjectFactory::FindObjectOfType() {
 			return casted;
 		}
 	}
-	Logger::Log("Could not find any object of type T");
-	return std::make_shared<T>();
+    Logger::Log("Could not find any object of type T");
+    // Return an expired weak_ptr when nothing is found
+    return std::weak_ptr<T>();
 }
 
 template <typename T>

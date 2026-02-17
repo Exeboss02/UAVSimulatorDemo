@@ -97,7 +97,7 @@ public:
 	/// DONT USE
 	/// </summary>
 	/// <param name="isStatic"></param>
-	void SetStatic(bool isStatic);
+	void SetIsStatic(bool isStatic);
 
 	bool GetIsStatic() const;
 
@@ -126,6 +126,9 @@ private:
 	// std::weak_ptr<GameObject> weakPtr;
 
 	friend Scene;
+
+	template <typename T>
+	friend class StaticObject;
 
 	std::weak_ptr<GameObject> myPtr;
 

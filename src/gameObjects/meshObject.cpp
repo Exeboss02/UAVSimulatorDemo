@@ -10,8 +10,6 @@ void MeshObject::SetMesh(MeshObjData newMesh) {
 	this->mesh = newMesh;
 
 	// Should do a check to make sure it isn't already in render queue
-
-	RenderQueue::AddMeshObject(this->GetPtr());
 }
 
 MeshObjData& MeshObject::GetMesh() { return this->mesh; }
@@ -38,6 +36,11 @@ void MeshObject::Tick() {
 	//Logger::Log(this->GetGlobalPosition().m128_f32[1], ":", this->GetBoundingBox().Center.y);
 	//Logger::Log(this->GetGlobalPosition().m128_f32[2], ":", this->GetBoundingBox().Center.z);
 
+}
+
+void MeshObject::Start() { 
+	this->GameObject3D::Start();
+	RenderQueue::AddMeshObject(this->GetPtr());
 }
 
 void MeshObject::LoadFromJson(const nlohmann::json& data) {

@@ -173,6 +173,6 @@ void GameObject::OnObserve() {}
 
 void GameObject::OnInteract() {}
 
-void GameObject::SetStatic(bool isStatic) { this->isStatic = isStatic; }
+void GameObject::SetIsStatic(bool isStatic) { this->isStatic = isStatic; }
 
 bool GameObject::GetIsStatic() const { return this->isStatic; }

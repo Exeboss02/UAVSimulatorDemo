@@ -37,17 +37,6 @@ DirectX::XMMATRIX GameObject3D::GetGlobalWorldMatrix(bool inverseTranspose) cons
 	}
 }
 
-DirectX::XMMATRIX GameObject3D::GetGlobalViewMatrix() const { 
-		DirectX::XMFLOAT4X4 localWorldXMFLOAT4X4 = this->transform.GetViewMatrix();
-	DirectX::XMMATRIX localWorldMatrix = DirectX::XMLoadFloat4x4(&localWorldXMFLOAT4X4);
-
-	if (this->GetParent().expired()) {
-		return localWorldMatrix;
-	} else {
-		return localWorldMatrix * this->GetParent().lock()->GetGlobalViewMatrix();
-	}
-}
-
 DirectX::XMVECTOR GameObject3D::GetGlobalForward() const
 {
 	return DirectX::XMVector3Rotate(DirectX::XMVectorSet(0, 0, 1, 0), GetGlobalRotation());

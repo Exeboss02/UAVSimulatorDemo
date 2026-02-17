@@ -46,6 +46,19 @@ void Renderer::SetAllDefaults() {
 
 std::vector<std::weak_ptr<MeshObject>> Renderer::GetVisibleObjects(CameraObject& camera) {
 	std::vector<std::weak_ptr<MeshObject>> visible = this->staticObjectsTree.GetVisibleElements(camera);
+
+	visible.reserve(this->meshRenderQueue.size());
+
+	for (size_t i = 0; i < this->meshRenderQueue.size(); i++) {
+		if (this->meshRenderQueue[i].expired()) {
+			// This should remove deleted lights
+			Logger::Log("The renderer deleted an object");
+			this->meshRenderQueue.erase(this->meshRenderQueue.begin() + i);
+			i--;
+			continue;
+		}
+		visible.emplace_back(this->meshRenderQueue[i]);
+	}
 	visible.insert(visible.end(), this->meshRenderQueue.begin(), this->meshRenderQueue.end());
 	return visible;
 }
@@ -359,11 +372,6 @@ void Renderer::RenderPass() {
 	// Bind meshes
 
 	auto renderQueue = this->GetVisibleObjects(CameraObject::GetMainCamera());
-
-	ImGui::Begin("Objects rendered");
-	ImGui::Text(std::to_string(renderQueue.size()).c_str());
-	ImGui::End();
-
 	for (size_t i = 0; i < renderQueue.size(); i++) {
 		std::weak_ptr<MeshObject> meshObject = renderQueue[i];
 

@@ -10,12 +10,6 @@
 void DebugCamera::Tick() {
 	this->CameraObject::Tick();
 
-	ImGui::Begin("Pos");
-	auto pos = this->GetGlobalPosition();
-	std::string poss = std::format("x: {}, y: {}, z: {}", pos.m128_f32[0], pos.m128_f32[1], pos.m128_f32[2]);
-	ImGui::Text(poss.c_str());
-	ImGui::End();
-
 	if (this->cameraId != CameraObject::GetMainCamera().GetCameraId()) return;
 	
 	if (keyboardInput.Quit()) {

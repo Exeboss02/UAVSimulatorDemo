@@ -64,7 +64,7 @@ void PointLightObject::Start() {
 	for (size_t i = 0; i < 6; i++) {
 		this->cameras[i] = this->factory->CreateGameObjectOfType<CameraObject>();
 		this->cameras[i].lock()->SetAspectRatio(1 / 1);
-		this->cameras[i].lock()->SetFarPlane(1000.);
+		this->cameras[i].lock()->SetFarPlane(20.);
 		this->cameras[i].lock()->SetFov(90);
 		this->cameras[i].lock()->SetParent(this->GetPtr());
 	}

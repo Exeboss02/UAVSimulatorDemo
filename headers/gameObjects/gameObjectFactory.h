@@ -133,6 +133,8 @@ public:
 private:
 	StaticObject(std::shared_ptr<T> object, GameObjectFactory* factory) : object(object), factory(factory) {
 		std::static_pointer_cast<GameObject>(object)->factory = factory;
+		std::static_pointer_cast<GameObject>(object)->myPtr = object;
+
 	}
 	std::shared_ptr<T> object;
 	GameObjectFactory* factory;

@@ -24,6 +24,7 @@
 #include <algorithm>
 #include "core/assetManager.h"
 #include "rendering/skybox.h"
+#include <unordered_map>
 
 #include <functional>
 #include "rendering/renderMap.h"
@@ -154,6 +155,8 @@ private:
 	std::unique_ptr<StructuredBuffer<SpotlightObject::SpotLightContainer>> spotlightBuffer;
 	std::unique_ptr<StructuredBuffer<PointLightObject::PointLightContainer>> pointlightBuffer;
 	std::unique_ptr<ConstantBuffer> pointlightCountBuffer;
+
+	std::unordered_map<size_t, std::unique_ptr<InstanceBuffer>> instanceBuffers;
 
 	// ImGui variables
 

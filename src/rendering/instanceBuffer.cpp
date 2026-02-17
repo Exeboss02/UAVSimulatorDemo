@@ -5,9 +5,9 @@
 void InstanceBuffer::Init(ID3D11Device* device, UINT sizeOfInstance, UINT nrOfInstances, void* instances) {
 	D3D11_BUFFER_DESC bufferDesc;
 	bufferDesc.ByteWidth = sizeOfInstance * nrOfInstances;
-	bufferDesc.Usage = D3D11_USAGE_DEFAULT;
+	bufferDesc.Usage = D3D11_USAGE_DYNAMIC;
 	bufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-	bufferDesc.CPUAccessFlags = 0;
+	bufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
 	bufferDesc.MiscFlags = 0;
 	bufferDesc.StructureByteStride = 0;
 
@@ -24,6 +24,24 @@ void InstanceBuffer::Init(ID3D11Device* device, UINT sizeOfInstance, UINT nrOfIn
 
 	this->nrOfInstances = nrOfInstances;
 	this->intanceSize = sizeOfInstance;
+}
+
+void InstanceBuffer::Update(ID3D11DeviceContext* context, UINT sizeOfInstance, UINT nrOfInstances, void* data) {
+	if (this->nrOfInstances * this->intanceSize < sizeOfInstance * nrOfInstances) {
+		std::string error = "Trying to write more data than buffer size.";
+		Logger::Error(error);
+		throw std::runtime_error(error);
+	}
+
+	D3D11_MAPPED_SUBRESOURCE mappedResource;
+
+	// Turn off GPU access
+	context->Map(this->buffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+
+	memcpy(mappedResource.pData, data, this->nrOfInstances * this->intanceSize);
+
+	context->Unmap(this->buffer.Get(), 0);
+	// Turn on GPU access
 }
 
 UINT InstanceBuffer::GetNrOfInstances() const { return this->nrOfInstances; }

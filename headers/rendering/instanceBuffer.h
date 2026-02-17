@@ -11,6 +11,8 @@ class InstanceBuffer {
 public:
 	void Init(ID3D11Device* device, UINT sizeOfInstance, UINT nrOfInstances, void* instances);
 
+	void Update(ID3D11DeviceContext* context, UINT sizeOfInstance, UINT nrOfInstances, void* data);
+
 	UINT GetNrOfInstances() const;
 	UINT GetInstanceSize() const;
 	ID3D11Buffer* GetBuffer() const;

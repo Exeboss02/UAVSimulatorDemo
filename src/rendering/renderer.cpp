@@ -218,13 +218,13 @@ void Renderer::CreateRenderMap() {
 	this->standardRenderMap.meshes.clear();
 	
 	for (size_t i = 0; i < this->meshRenderQueue.size(); i++) {
-		// if (this->meshRenderQueue[i].expired()) {
-		//	// This should get rid of empty objects
-		//	Logger::Log("The renderer deleted a meshObject");
-		//	this->meshRenderQueue.erase(this->meshRenderQueue.begin() + i);
-		//	i--;
-		//	continue;
-		// }
+		 if (this->meshRenderQueue[i].expired()) {
+			// This should get rid of empty objects
+			Logger::Log("The renderer deleted a meshObject");
+			this->meshRenderQueue.erase(this->meshRenderQueue.begin() + i);
+			i--;
+			continue;
+		 }
 
 		std::shared_ptr<MeshObject> meshObject = this->meshRenderQueue[i].lock();
 
@@ -673,8 +673,8 @@ void Renderer::BindMaterial(BaseMaterial* material) {
 		this->immediateContext->PSSetConstantBuffers(i + 1, 1, &buf); // i + 1 because first slot is always occupied
 	}
 
-	for (size_t i = 0; i < renderData.pixelBuffers.size(); i++) {
-		ID3D11Buffer* buf = renderData.pixelBuffers[i]->GetBuffer();
+	for (size_t i = 0; i < renderData.vertexBuffers.size(); i++) {
+		ID3D11Buffer* buf = renderData.vertexBuffers[i]->GetBuffer();
 		this->immediateContext->VSSetConstantBuffers(i + 2, 1,
 													 &buf); // i + 2 because the first two slots are always occupied
 	}
@@ -844,12 +844,16 @@ void Renderer::RenderMeshObject(MeshObject* meshObject, bool renderMaterial) {
 
 void Renderer::RenderRenderMap(RenderMap& renderMap, bool renderMaterials) {
 	for (auto& [meshName, mesh] : renderMap.meshes) {
+		// The indexbuffer is the same no matter which submesh or material
+		this->immediateContext->IASetIndexBuffer(mesh.mesh->GetIndexBuffer().GetBuffer(), DXGI_FORMAT_R32_UINT, 0);
+
 		for (size_t i = 0; i < mesh.submeshes.size(); i++) {
 			auto& submesh = mesh.submeshes[i];
 			auto& submeshData = mesh.mesh->GetSubMeshes();
 
 			for (auto& [materialName, material] : submesh.materials) {
 	
+				// Only set material if it's needed
 				if (!this->renderAllWireframe && renderMaterials) {
 					if (material.material.get() != this->currentMaterial) {
 						BindMaterial(material.material.get());
@@ -857,8 +861,24 @@ void Renderer::RenderRenderMap(RenderMap& renderMap, bool renderMaterials) {
 					}
 				}
 
-				InstanceBuffer newInstanceBuffer;
-				newInstanceBuffer.Init(this->device.Get(), sizeof(RenderMap::WorldMatrixBufferContainer), material.objects.size(), material.objects.data());
+				size_t instanceCount = material.objects.size(); 
+
+				InstanceBuffer* newInstanceBuffer = nullptr;
+				if (this->instanceBuffers.contains(instanceCount)) {
+					newInstanceBuffer = this->instanceBuffers[instanceCount].get();
+					newInstanceBuffer->Update(this->immediateContext.Get(),
+											  sizeof(RenderMap::WorldMatrixBufferContainer), instanceCount,
+											  material.objects.data());
+				} else {
+					this->instanceBuffers.emplace(instanceCount, std::make_unique<InstanceBuffer>());
+					newInstanceBuffer = this->instanceBuffers[instanceCount].get();
+					newInstanceBuffer->Init(this->device.Get(), sizeof(RenderMap::WorldMatrixBufferContainer),
+											instanceCount, material.objects.data());
+
+					if (this->instanceBuffers.size() > 100) {
+						Logger::Warn("A few too many instance buffers!!");
+					}
+				}
 
 				VertexBuffer vBuf = mesh.mesh->GetVertexBuffer();
 
@@ -867,20 +887,19 @@ void Renderer::RenderRenderMap(RenderMap& renderMap, bool renderMaterials) {
 				ID3D11Buffer* bufferPointers[2];
 
 				strides[0] = vBuf.GetVertexSize();
-				strides[1] = newInstanceBuffer.GetInstanceSize();
+				strides[1] = newInstanceBuffer->GetInstanceSize();
 
 				offsets[0] = 0;
 				offsets[1] = 0;
 
 				bufferPointers[0] = vBuf.GetBuffer();
-				bufferPointers[1] = newInstanceBuffer.GetBuffer();
+				bufferPointers[1] = newInstanceBuffer->GetBuffer();
 
 				this->immediateContext->IASetVertexBuffers(0, 2, bufferPointers, strides, offsets);
-				this->immediateContext->IASetIndexBuffer(mesh.mesh->GetIndexBuffer().GetBuffer(), DXGI_FORMAT_R32_UINT, 0);
 
 				// Draw call
 				this->immediateContext->DrawIndexedInstanced(
-					submeshData[i].GetNrOfIndices(), newInstanceBuffer.GetNrOfInstances(), submeshData[i].GetStartIndex(), 0, 0);
+					submeshData[i].GetNrOfIndices(), newInstanceBuffer->GetNrOfInstances(), submeshData[i].GetStartIndex(), 0, 0);
 			}
 		}
 

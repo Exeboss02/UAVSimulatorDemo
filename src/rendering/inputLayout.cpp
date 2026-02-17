@@ -30,7 +30,7 @@ void InputLayout::AddInputElement(const std::string& semanticName, DXGI_FORMAT f
 	D3D11_INPUT_ELEMENT_DESC input = {semanticName.c_str(),	 semanticIndex,	 format, inputSlot,
 									  (UINT) this->slotOffsets[inputSlot],
 									  inputSlotClass,
-									  inputSlotClass == D3D11_INPUT_PER_VERTEX_DATA ? 0 : 1};
+									  inputSlotClass == D3D11_INPUT_PER_VERTEX_DATA ? (UINT) 0 : (UINT) 1};
 	if (this->doNotOverwrite) {
 		this->elements[this->currentIndex] = input;
 	} else {

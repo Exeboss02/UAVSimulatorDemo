@@ -258,51 +258,55 @@ void Renderer::CreateRasterizerStates() {
 void Renderer::CreateRenderMap() {
 	const auto start{std::chrono::steady_clock::now()};
 
+	// Removes dead gameobjects
+	this->meshRenderQueue.erase(std::remove_if(this->meshRenderQueue.begin(), this->meshRenderQueue.end(),
+										 [](const std::weak_ptr<MeshObject>& w) { return w.expired(); }),
+								this->meshRenderQueue.end());
+
 	this->standardRenderMap.meshes.clear();
 	
 	for (size_t i = 0; i < this->meshRenderQueue.size(); i++) {
-		 if (this->meshRenderQueue[i].expired()) {
-			// This should get rid of empty objects
-			Logger::Log("The renderer deleted a meshObject");
-			this->meshRenderQueue.erase(this->meshRenderQueue.begin() + i);
-			i--;
-			continue;
-		 }
-
 		std::shared_ptr<MeshObject> meshObject = this->meshRenderQueue[i].lock();
 
 		if (!meshObject->IsActive() || meshObject->IsHidden()) continue;
 
-		std::string meshIdentifier = meshObject->GetMesh().GetMeshIdentifier();
-		if (!this->standardRenderMap.meshes.contains(meshIdentifier)) {
-			// Create mesh entry
+		auto& meshObjData = meshObject->GetMesh();
 
-			RenderMap::RenderMapMesh newMesh;
-			newMesh.mesh = meshObject->GetMesh().GetMesh().lock();
-			newMesh.submeshes = std::vector<RenderMap::RenderMapSubmesh>(newMesh.mesh->GetSubMeshes().size());
-			this->standardRenderMap.meshes.emplace(meshIdentifier, newMesh);
+		std::string meshIdentifier = meshObjData.GetMeshIdentifier();
+		auto [meshIterator, meshInserted] = this->standardRenderMap.meshes.try_emplace(meshIdentifier);
+
+		auto& mapMesh = meshIterator->second;
+
+		if (meshInserted) {
+			// Create mesh entry
+			mapMesh.mesh = meshObjData.GetMesh().lock();
+			mapMesh.submeshes = std::vector<RenderMap::RenderMapSubmesh>(mapMesh.mesh->GetSubMeshes().size());
 		}
 
-		for (size_t j = 0; j < this->standardRenderMap.meshes[meshIdentifier].submeshes.size(); j++) {
-			auto material = meshObject->GetMesh().GetMaterial(j).lock();
+
+		// Create the world matrices
+		DirectX::XMFLOAT4X4 worldMatrix;
+		DirectX::XMFLOAT4X4 worldMatrixInverseTransposed;
+
+		DirectX::XMStoreFloat4x4(&worldMatrix, meshObject->GetGlobalWorldMatrix(false));
+		DirectX::XMStoreFloat4x4(&worldMatrixInverseTransposed, meshObject->GetGlobalWorldMatrix(true));
+
+		RenderMap::WorldMatrixBufferContainer worldMatrixBufferContainer = {worldMatrix, worldMatrixInverseTransposed};
+
+
+		for (size_t j = 0; j < mapMesh.submeshes.size(); j++) {
+			auto material = meshObjData.GetMaterial(j).lock();
 			std::string materialIdentifier = material->GetIdentifier();
-			if (!this->standardRenderMap.meshes[meshIdentifier].submeshes[j].materials.contains(materialIdentifier)) {
-				auto newMaterial = RenderMap::RenderMapMaterial();
-				newMaterial.material = material;
-				this->standardRenderMap.meshes[meshIdentifier].submeshes[j].materials.emplace(materialIdentifier,
-																							  newMaterial);
+			auto [materialIterator, materialInserted] = mapMesh.submeshes[j].materials.try_emplace(materialIdentifier);
+
+			auto& mapMaterial = materialIterator->second;
+
+			if (materialInserted) {
+				// Create new material
+				mapMaterial.material = material;
 			}
 
-			// Craete the matrices
-			DirectX::XMFLOAT4X4 worldMatrix;
-			DirectX::XMStoreFloat4x4(&worldMatrix, meshObject->GetGlobalWorldMatrix(false));
-			DirectX::XMFLOAT4X4 worldMatrixInverseTransposed;
-			DirectX::XMStoreFloat4x4(&worldMatrixInverseTransposed, meshObject->GetGlobalWorldMatrix(true));
-
-			RenderMap::WorldMatrixBufferContainer worldMatrixBufferContainer = {worldMatrix, worldMatrixInverseTransposed};
-
-			this->standardRenderMap.meshes[meshIdentifier].submeshes[j].materials[materialIdentifier].objects.push_back(
-				worldMatrixBufferContainer);
+			mapMaterial.objects.push_back(worldMatrixBufferContainer);
 		}
 	}
 

@@ -225,21 +225,37 @@ private:
 	void BindViewport();
 	void BindRasterizerState(RasterizerState* rastState);
 
+	/// <summary>
+	/// Binds shaders and a material to constant buffer, along with all it's textures.
+	/// </summary>
 	void BindMaterial(BaseMaterial* material);
+
+	/// <summary>
+	/// Binds lights for use in the color pass.
+	/// </summary>
 	void BindLights();
 
 	void BindCameraMatrix();
 	void BindWorldMatrix(ID3D11Buffer* buffer);
 
+	/// <summary>
+	/// Draws the skybox
+	/// </summary>
 	void DrawSkybox();
 
 	/// <summary>
-	/// Renders a single MeshObject
+	/// Renders a single MeshObject. For optimal performance, don't use this.
 	/// </summary>
-	/// <param name="meshObject"></param>
 	void RenderMeshObject(MeshObject* meshObject, bool renderMaterial = true);
 
+	/// <summary>
+	/// Draws a full rendermap using instancing. This is the preferred way to render.
+	/// </summary>
 	void RenderRenderMap(RenderMap& renderMap, bool renderMaterials = true);
 
+	/// <summary>
+	/// Send world matrices into this and get an instance buffer filled with that data. 
+	/// All you have to do is bind it to a shader.
+	/// </summary>
 	InstanceBuffer* GetInstanceBuffer(size_t& instanceCount, void* data);
 };

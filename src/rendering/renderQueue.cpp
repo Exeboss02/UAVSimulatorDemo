@@ -85,6 +85,31 @@ void RenderQueue::AddUIWidget(std::weak_ptr<GameObject> newUIWidget) {
 	instance->uiRenderQueue.push_back(std::static_pointer_cast<UI::Widget>(newUIWidget.lock()));
 }
 
+void RenderQueue::RemoveUIWidget(std::weak_ptr<GameObject> uiWidget) {
+	if (uiWidget.expired()) return;
+
+	if (!instance) {
+		Logger::Error("Tried to remove UI widget from queue, but RenderQueue is not initialized.");
+		throw std::runtime_error("Fatal error in RenderQueue.");
+	}
+
+	GameObject* targetPtr = uiWidget.lock().get();
+
+	for (size_t i = 0; i < instance->uiRenderQueue.size(); ++i) {
+		if (instance->uiRenderQueue[i].expired()) {
+			instance->uiRenderQueue.erase(instance->uiRenderQueue.begin() + i);
+			i--;
+			continue;
+		}
+
+		auto w = instance->uiRenderQueue[i].lock();
+		if (w.get() == targetPtr) {
+			instance->uiRenderQueue.erase(instance->uiRenderQueue.begin() + i);
+			i--;
+		}
+	}
+}
+
 void RenderQueue::ClearUIQueue() {
 	if (!instance) {
 		Logger::Error("Tried to clear UI queue, but RenderQueue is not initialized.");

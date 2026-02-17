@@ -86,20 +86,34 @@ void UI::Widget::ShowInHierarchy() {
 }
 
 void UI::Widget::OnDestroy() {
+	Logger::Log("Widget: Trying to destroy object");
+
 	// If this widget's parent is a CanvasObject, remove it from the canvas children list
 	auto parent = this->GetParent();
 	if (!parent.expired()) {
 		auto p = parent.lock();
 		if (p) {
 			if (auto canvasObj = dynamic_cast<UI::CanvasObject*>(p.get())) {
+				// Ensure GameObject parent-child bookkeeping is updated first
+				this->SetParent(std::weak_ptr<GameObject>());
+
 				// Cast our shared ptr to Widget and remove from canvas
 				auto self = std::static_pointer_cast<UI::Widget>(this->GetPtr());
 				canvasObj->RemoveChild(self);
+				Logger::Log("Widget: Successfully removed itself from canvas");
+
+				// Also remove from renderer UI queue to avoid stale weak_ptrs
+				if (this->GetPtr()) {
+					Logger::Log("Widget: Adress -> ", this->GetPtr());
+					RenderQueue::RemoveUIWidget(this->GetPtr());
+					Logger::Log("Widget: Successfully removed own pointer");
+				}
 			}
 		}
+	} else {
+		Logger::Error("Widget: Expired parent when trying to remove object");
 	}
 
-	// Call base cleanup if any
 	GameObject::OnDestroy();
 }
 

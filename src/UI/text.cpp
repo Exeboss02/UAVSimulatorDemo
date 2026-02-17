@@ -93,7 +93,6 @@ void Text::Draw() {
 	UI::TextRenderer::GetInstance().SubmitText(
 		this->text, this->GetPosition(), this->GetSize().y,
 		DirectX::XMFLOAT4(this->color.x, this->color.y, this->color.z, this->color.w), this->font);
-	Logger::Log("Text::Draw: submitted text:", this->text, "font:", this->font, "widget:", this->GetName());
 
 	// Draw children (if any)
 	Widget::Draw();

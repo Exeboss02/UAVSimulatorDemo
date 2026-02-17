@@ -397,13 +397,11 @@ void Renderer::RenderPass() {
 		auto widget = widgetWeak.lock();
 		if (!widget->IsVisible() || !widget->isEnabled()) continue;
 
-		Logger::Log("Renderer::UI pass: invoking Widget::Draw() for:", widget->GetName());
-		// Call Draw() so widgets can submit UI-specific items (like Text submissions)
 		widget->Draw();
 
-		// Render the mesh for this widget so mesh-based UI (Button/Images) appears.
-		// Widget inherits from MeshObject so we can render it directly.
-		this->RenderMeshObject(widget.get(), true);
+		if (!widget->GetMesh().GetMesh().expired()) {
+			this->RenderMeshObject(widget.get(), true);
+		}
 	}
 
 	// Restore depth/stencil by rebinding render target (rebinds depth stencil)

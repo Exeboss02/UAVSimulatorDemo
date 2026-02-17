@@ -25,7 +25,6 @@ void TextRenderer::SubmitText(const std::string& text, Vec2 position, float font
 	s.color = color;
 	s.font = font;
 	submissions.push_back(std::move(s));
-	Logger::Log("TextRenderer::SubmitText: added submission for text:", text, "font:", font);
 }
 
 void TextRenderer::ClearSubmissions() { submissions.clear(); }
@@ -137,8 +136,6 @@ void TextRenderer::Render(void* context) {
 		}
 
 		if (!vertices.empty() && !indices.empty()) {
-			Logger::Log("TextRenderer: built", vertices.size(), "vertices", indices.size(),
-						"indices for text:", sub.text);
 			if (!atlas.atlasSrv) {
 				Logger::Log("TextRenderer: atlas SRV is null for font:", key);
 			}

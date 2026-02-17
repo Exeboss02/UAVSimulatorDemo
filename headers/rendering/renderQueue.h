@@ -41,6 +41,11 @@ public:
 	static void AddUIWidget(std::weak_ptr<GameObject> newUIWidget);
 
 	/// <summary>
+	/// Remove a specific UI widget from the UI render queue
+	/// </summary>
+	static void RemoveUIWidget(std::weak_ptr<GameObject> uiWidget);
+
+	/// <summary>
 	/// Remove UI widgets and clear
 	/// </summary>
 	static void ClearUIQueue();

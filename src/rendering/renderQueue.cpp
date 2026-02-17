@@ -39,8 +39,11 @@ void RenderQueue::AddMeshObject(std::weak_ptr<GameObject> newMeshObject) {
 		throw std::runtime_error("Fatal error in RenderQueue.");
 	}
 	
-	RenderQueue::instance->staticObjects.AddElement(static_pointer_cast<MeshObject>(newMeshObject.lock()));
-	// RenderQueue::instance->meshRenderQueue.push_back(std::static_pointer_cast<MeshObject>(newMeshObject.lock()));
+	if (newMeshObject.lock()->GetIsStatic()) {
+		RenderQueue::instance->staticObjects.AddElement(static_pointer_cast<MeshObject>(newMeshObject.lock()));
+	} else {
+		RenderQueue::instance->meshRenderQueue.push_back(std::static_pointer_cast<MeshObject>(newMeshObject.lock()));
+	}
 }
 
 void RenderQueue::RemoveMeshObject() {

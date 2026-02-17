@@ -1,4 +1,7 @@
 #include "rendering/renderer.h"
+#include "UI/text.h"
+#include "UI/textRenderer.h"
+#include "UI/widget.h"
 #include "core/filepathHolder.h"
 #include "gameObjects/objectLoader.h"
 #include <chrono>
@@ -8,6 +11,8 @@ Renderer::Renderer()
 	  currentMaterial(nullptr), maximumSpotlights(16),
 	  renderQueue(this->meshRenderQueue, this->spotLightRenderQueue, this->pointLightRenderQueue)
 {
+	  maximumSpotlights(16),
+	  renderQueue(this->meshRenderQueue, this->spotLightRenderQueue, this->pointLightRenderQueue, this->uiRenderQueue) {
 	this->renderQueue.newSkyboxCallback = [this](std::string filename) { this->ChangeSkybox(filename); };
 }
 
@@ -31,7 +36,12 @@ void Renderer::SetAllDefaults() {
 	LoadShaders();
 
 	this->skybox = std::make_unique<Skybox>();
-	this->skybox->Init(this->device.Get(), this->immediateContext.Get(), (FilepathHolder::GetAssetsDirectory() / "skybox" / "asteroids.dds").string());
+
+	this->skybox->Init(this->device.Get(), this->immediateContext.Get(),
+					   (FilepathHolder::GetAssetsDirectory() / "skybox" / "asteroids.dds").string());
+
+	// Preload default UI font atlas so TextRenderer can render immediately
+	UI::TextRenderer::GetInstance().LoadFont("default", this->device.Get());
 }
 
 void Renderer::SetViewport(const Window& window) {
@@ -178,6 +188,34 @@ void Renderer::CreateSampler() {
 	this->shadowSampler = std::unique_ptr<Sampler>(new Sampler());
 	this->shadowSampler->Init(this->device.Get(), D3D11_TEXTURE_ADDRESS_BORDER, D3D11_FILTER_ANISOTROPIC,
 							  D3D11_COMPARISON_LESS_EQUAL, {1, 1, 1, 1});
+
+	// Create a dedicated UI/font sampler using point filtering and clamp to avoid blurring and edge bleeding
+	this->uiSampler = std::make_unique<Sampler>();
+	this->uiSampler->Init(this->device.Get(), D3D11_TEXTURE_ADDRESS_CLAMP, D3D11_FILTER_MIN_MAG_MIP_POINT);
+
+	// Linear UI sampler for smooth upscaling when requested
+	this->uiLinearSampler = std::make_unique<Sampler>();
+	this->uiLinearSampler->Init(this->device.Get(), D3D11_TEXTURE_ADDRESS_CLAMP, D3D11_FILTER_MIN_MAG_MIP_LINEAR);
+
+	// Create an alpha blend state for UI (font) rendering
+	D3D11_BLEND_DESC blendDesc;
+	ZeroMemory(&blendDesc, sizeof(blendDesc));
+	blendDesc.RenderTarget[0].BlendEnable = TRUE;
+	blendDesc.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;
+	blendDesc.RenderTarget[0].DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
+	blendDesc.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
+	blendDesc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
+	blendDesc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ZERO;
+	blendDesc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
+	blendDesc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+
+	Microsoft::WRL::ComPtr<ID3D11BlendState> bs;
+	HRESULT hr = this->device->CreateBlendState(&blendDesc, bs.GetAddressOf());
+	if (SUCCEEDED(hr)) {
+		this->alphaBlendState = bs;
+	} else {
+		Logger::Log("Failed to create alpha blend state for UI text");
+	}
 }
 
 void Renderer::CreateRasterizerStates() {
@@ -197,6 +235,15 @@ void Renderer::CreateRasterizerStates() {
 	wireframeRastDesc.FillMode = D3D11_FILL_WIREFRAME; // Wireframe
 	this->wireframeRasterizerState = std::make_unique<RasterizerState>();
 	this->wireframeRasterizerState->Init(this->device.Get(), &wireframeRastDesc);
+
+	// UI rasterizer: no culling, solid fill
+	D3D11_RASTERIZER_DESC uiRastDesc;
+	ZeroMemory(&uiRastDesc, sizeof(uiRastDesc));
+	uiRastDesc.CullMode = D3D11_CULL_NONE;
+	uiRastDesc.DepthClipEnable = TRUE;
+	uiRastDesc.FillMode = D3D11_FILL_SOLID;
+	this->uiRasterizerState = std::make_unique<RasterizerState>();
+	this->uiRasterizerState->Init(this->device.Get(), &uiRastDesc);
 
 	// This ended up being the same as the normal rasterizerDesc,
 	// but I'm leaving it in case there was something wrong with skybox
@@ -278,7 +325,7 @@ void Renderer::CreateRendererConstantBuffers() {
 	//							  D3D11_USAGE_DYNAMIC, D3D11_CPU_ACCESS_WRITE);
 
 	this->spotlightBuffer = std::make_unique<StructuredBuffer<SpotlightObject::SpotLightContainer>>();
-	this->spotlightBuffer->Init(this->device.Get(),this->maximumSpotlights ,{});
+	this->spotlightBuffer->Init(this->device.Get(), this->maximumSpotlights, {});
 
 	this->pointlightBuffer = std::make_unique<StructuredBuffer<PointLightObject::PointLightContainer>>();
 	this->pointlightBuffer->Init(this->device.Get(), this->maximumSpotlights, {});
@@ -290,7 +337,7 @@ void Renderer::CreateRendererConstantBuffers() {
 
 	this->pointlightCountBuffer = std::make_unique<ConstantBuffer>();
 	this->pointlightCountBuffer->Init(this->device.Get(), sizeof(Renderer::LightCountBufferContainer),
-									 &lightCountContainer, D3D11_USAGE_DYNAMIC, D3D11_CPU_ACCESS_WRITE);
+									  &lightCountContainer, D3D11_USAGE_DYNAMIC, D3D11_CPU_ACCESS_WRITE);
 }
 
 void Renderer::LoadShaders() {
@@ -359,15 +406,11 @@ void Renderer::ToggleWireframe(bool enable) {
 	this->renderAllWireframe = enable;
 }
 
-void Renderer::ChangeSkybox(std::string filepath) 
-{
+void Renderer::ChangeSkybox(std::string filepath) {
 	this->skybox->SwapCubemap(this->device.Get(), this->immediateContext.Get(), filepath);
 }
 
-ID3D11Device* Renderer::GetDevice() const
-{
-	return this->device.Get();
-}
+ID3D11Device* Renderer::GetDevice() const { return this->device.Get(); }
 
 ID3D11DeviceContext* Renderer::GetContext() const { return this->immediateContext.Get(); }
 
@@ -417,9 +460,66 @@ void Renderer::RenderPass() {
 
 	RenderRenderMap(this->standardRenderMap);
 
+		RenderMeshObject(meshObject.lock().get());
+	}
+
+	// UI pass: render UI widgets in an orthographic projection on top of the scene
+
+	// Prepare an orthographic camera matching the render target (top-left origin)
+	CameraObject::CameraMatrixContainer uiCamera{};
+	DirectX::XMMATRIX view = DirectX::XMMatrixIdentity();
+	DirectX::XMMATRIX proj =
+		DirectX::XMMatrixOrthographicOffCenterLH(0.0f, this->viewport.Width, this->viewport.Height, 0.0f, 0.0f, 1.0f);
+	DirectX::XMMATRIX viewProj = view * proj;
+	DirectX::XMStoreFloat4x4(&uiCamera.viewProjectionMatrix, viewProj);
+	uiCamera.cameraPosition = DirectX::XMVectorZero();
+
+	// Update camera buffer for UI
+	this->cameraBuffer->UpdateBuffer(this->immediateContext.Get(), &uiCamera);
+	ID3D11Buffer* camBuf = this->cameraBuffer->GetBuffer();
+	this->immediateContext->VSSetConstantBuffers(0, 1, &camBuf);
+
+	// Disable depth testing so UI draws on top
+	this->immediateContext->OMSetDepthStencilState(nullptr, 0);
+
+	// Render only UI widgets from the dedicated UI render queue
+	for (size_t i = 0; i < this->uiRenderQueue.size(); i++) {
+		auto widgetWeak = this->uiRenderQueue[i];
+
+		if (widgetWeak.expired()) {
+			this->uiRenderQueue.erase(this->uiRenderQueue.begin() + i);
+			i--;
+			continue;
+		}
+
+		auto widget = widgetWeak.lock();
+		if (!widget->IsVisible() || !widget->isEnabled()) continue;
+
+		widget->Draw();
+
+		if (!widget->GetMesh().GetMesh().expired()) {
+			this->RenderMeshObject(widget.get(), true);
+		}
+	}
 	const auto endColorPass{std::chrono::steady_clock::now()};
 	const std::chrono::duration<double> elapsedSeconds{endColorPass - startColorPass};
 	ImGui::Text(("Color pass: " + std::to_string(elapsedSeconds.count())).c_str());
+}
+
+	// Restore depth/stencil by rebinding render target (rebinds depth stencil)
+	BindRenderTarget();
+
+	// Render submitted text via TextRenderer
+	// Enable alpha blending and UI rasterizer for text rendering
+	float blendFactor[4] = {0, 0, 0, 0};
+	this->immediateContext->OMSetBlendState(this->alphaBlendState.Get(), blendFactor, 0xffffffff);
+	this->BindRasterizerState(this->uiRasterizerState.get());
+
+	UI::TextRenderer::GetInstance().Render(this);
+
+	// Restore default rasterizer and blend state
+	this->immediateContext->OMSetBlendState(nullptr, nullptr, 0xffffffff);
+	this->BindRasterizerState(this->standardRasterizerState.get());
 }
 
 Renderer::ShadowResourceViews Renderer::ShadowPass() {
@@ -719,7 +819,7 @@ void Renderer::BindLights() {
 		}
 
 		uint32_t lightCount = std::min<uint32_t>(this->pointLightRenderQueue.size(), this->maximumSpotlights);
-		
+
 		if (lightCount > 0) {
 
 			// Inefficient, should be fixed
@@ -831,6 +931,66 @@ void Renderer::RenderMeshObject(MeshObject* meshObject, bool renderMaterial) {
 
 		index++;
 	}
+}
+
+void Renderer::DrawTextQuads(const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices,
+							 ID3D11ShaderResourceView* srv, const DirectX::XMFLOAT4& color, bool useLinearFilter) {
+	if (vertices.empty() || indices.empty()) {
+		Logger::Warn("Renderer::DrawTextQuads: no vertices or no indices");
+		return;
+	}
+
+	// Create transient vertex and index buffers
+	VertexBuffer vbuf;
+	vbuf.Init(this->device.Get(), sizeof(Vertex), static_cast<UINT>(vertices.size()), (void*) vertices.data());
+
+	IndexBuffer ibuf;
+	ibuf.Init(this->device.Get(), indices.size(), (uint32_t*) indices.data());
+
+	// Bind buffers
+	UINT stride = vbuf.GetVertexSize();
+	UINT offset = 0;
+	ID3D11Buffer* vBuff = vbuf.GetBuffer();
+	this->immediateContext->IASetVertexBuffers(0, 1, &vBuff, &stride, &offset);
+	this->immediateContext->IASetIndexBuffer(ibuf.GetBuffer(), DXGI_FORMAT_R32_UINT, 0);
+
+	// Set world matrix identity
+	DirectX::XMFLOAT4X4 worldMatrix;
+	DirectX::XMStoreFloat4x4(&worldMatrix, DirectX::XMMatrixIdentity());
+	DirectX::XMFLOAT4X4 worldMatrixInvTrans;
+	DirectX::XMStoreFloat4x4(&worldMatrixInvTrans, DirectX::XMMatrixIdentity());
+	Renderer::WorldMatrixBufferContainer wm{worldMatrix, worldMatrixInvTrans};
+	this->worldMatrixBuffer->UpdateBuffer(this->immediateContext.Get(), &wm);
+	BindWorldMatrix(this->worldMatrixBuffer->GetBuffer());
+
+	// Create a temporary unlit material using the provided SRV and apply tint color
+	UnlitMaterial tempMat(this->device.Get());
+	tempMat.unlitShader = AssetManager::GetInstance().GetShaderPtr("PSUnlit");
+	tempMat.diffuseTexture = std::make_shared<Texture>(srv, "__font_atlas");
+	tempMat.color[0] = color.x;
+	tempMat.color[1] = color.y;
+	tempMat.color[2] = color.z;
+	tempMat.color[3] = color.w;
+
+	// Use dedicated UI sampler for text rendering. Choose linear when requested (scaling up), otherwise point.
+	ID3D11SamplerState* fontSampler = nullptr;
+	if (useLinearFilter) {
+		if (this->uiLinearSampler) fontSampler = this->uiLinearSampler->GetSamplerState();
+	} else {
+		if (this->uiSampler) fontSampler = this->uiSampler->GetSamplerState();
+	}
+	// Save current sampler at slot 0
+	ID3D11SamplerState* prevSampler = nullptr;
+	this->immediateContext->PSGetSamplers(0, 1, &prevSampler);
+	if (fontSampler) this->immediateContext->PSSetSamplers(0, 1, &fontSampler);
+
+	// Bind material and draw
+	BindMaterial(&tempMat);
+	this->immediateContext->DrawIndexed(static_cast<UINT>(indices.size()), 0, 0);
+
+	// Restore previous sampler
+	if (prevSampler) this->immediateContext->PSSetSamplers(0, 1, &prevSampler);
+	if (prevSampler) prevSampler->Release();
 }
 
 void Renderer::RenderRenderMap(RenderMap& renderMap, bool renderMaterials) {

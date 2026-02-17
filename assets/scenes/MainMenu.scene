@@ -1,0 +1,1 @@
+{"gameObjects":[{"fov":80.0,"name":"Camera","transform":{"position":[0.0,0.0,0.0],"rotation":[0.0,0.0,0.0,1.0],"scale":[1.0,1.0,1.0]},"type":"CameraObject"},{"canvas":{"scaleMode":"pixel","size":[1920.0,1080.0]},"name":"Canvas","type":"UI::CanvasObject"}]}

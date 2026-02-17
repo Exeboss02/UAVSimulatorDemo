@@ -168,3 +168,7 @@ void GameObject::SetActiveOverride(bool isActive) {
 		child.lock()->SetActiveOverride(isActive);
 	}
 }
+
+void GameObject::OnObserve() {}
+
+void GameObject::OnInteract() {}

@@ -4,6 +4,18 @@ PhysicsQueue::~PhysicsQueue()
 {
 }
 
+void PhysicsQueue::UpdatePhysicsPositions()
+{
+    for(int i = 0; i < this->rigidBodies.size(); i++)
+    {
+        std::shared_ptr<RigidBody> rigidBody = this->rigidBodies[i].lock();
+        if(!rigidBody) continue;
+
+        rigidBody->SetPreviousPhysicsPosition(rigidBody->GetPhysicsPosition());
+        rigidBody->SetPhysicsPosition(rigidBody->transform.GetPosition());
+    }
+}
+
 PhysicsQueue::PhysicsQueue()
 {
 }
@@ -14,9 +26,43 @@ PhysicsQueue& PhysicsQueue::GetInstance()
 	return instance;
 }
 
-void PhysicsQueue::AddRigidBody(std::weak_ptr<RigidBody> rigidBody)
+int PhysicsQueue::GetPhysicsTickCounter() 
 {
-    rigidBody.lock()->SetId(this->rigidBodyIdCounter);
+    return this->physicsTickCounter; 
+}
+
+void PhysicsQueue::ResetPhysicsTickCounter()
+{
+    this->physicsTickCounter = 0;
+}
+
+float PhysicsQueue::GetFixedDeltaTimeBuffer() 
+{
+    return this->fixedDeltaTimeBuffer;
+}
+
+void PhysicsQueue::Tick()
+{
+    this->fixedDeltaTimeBuffer += Time::GetInstance().GetDeltaTime();
+    float fixedDeltaTime = Time::GetInstance().GetFixedDeltaTime();
+
+	while (this->fixedDeltaTimeBuffer >= fixedDeltaTime)
+	{
+		this->fixedDeltaTimeBuffer -= fixedDeltaTime;
+		this->physicsTickCounter++;
+	}
+
+    if(this->physicsTickCounter > 5)
+    {
+        this->physicsTickCounter = 6;
+        this->fixedDeltaTimeBuffer = 0;
+    }
+
+    //Logger::Log("Nr of phsyics ticks: " + std::to_string(this->physicsTickCounter));
+}
+
+void PhysicsQueue::AddRigidBody(std::weak_ptr<RigidBody> rigidBody) {
+	rigidBody.lock()->SetId(this->rigidBodyIdCounter);
     this->rigidBodies.push_back(rigidBody);
 
     this->rigidBodyIdCounter++;

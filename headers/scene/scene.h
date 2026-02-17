@@ -24,6 +24,7 @@ public:
 	/// </summary>
 	/// <param name="isPaused"></param>
 	void SceneTick(bool isPaused);
+	void SceneLateTick(bool isPaused);
 
 	virtual void RegisterGameObject(std::shared_ptr<GameObject> gameObject) override;
 

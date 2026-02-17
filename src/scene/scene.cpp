@@ -1,71 +1,58 @@
 #include "scene/scene.h"
+#include "UI/canvasObject.h"
 #include "core/imguiManager.h"
 #include "core/physics/physicsQueue.h"
 
-Scene::Scene() : gameObjects(), finishedLoading(true), currentGameObjectId(0) {
-}
+Scene::Scene() : gameObjects(), finishedLoading(true), currentGameObjectId(0) {}
 
-void Scene::SceneTick(bool isPaused)
-{
-	for (size_t i = 0; i < this->gameObjects.size(); i++)
-	{
+void Scene::SceneTick(bool isPaused) {
+	for (size_t i = 0; i < this->gameObjects.size(); i++) {
 		std::shared_ptr<GameObject> gameObject = this->gameObjects[i];
 
 		if (!gameObject->IsActive()) continue;
 
 		// If paused, only debug camera should run
-		if (isPaused) 
-		{
-			if (DebugCamera* cam = dynamic_cast<DebugCamera*>(gameObject.get()); cam == nullptr)
-			{
+		if (isPaused) {
+			if (DebugCamera* cam = dynamic_cast<DebugCamera*>(gameObject.get()); cam == nullptr) {
 				continue;
 			}
 		}
 
-		//update game objects
+		// update game objects
 		gameObject->Tick();
 	}
 
-	for (int i = 0; i < PhysicsQueue::GetInstance().GetPhysicsTickCounter(); i++)
-	{
-		for (size_t i = 0; i < this->gameObjects.size(); i++)
-		{
+	for (int i = 0; i < PhysicsQueue::GetInstance().GetPhysicsTickCounter(); i++) {
+		for (size_t i = 0; i < this->gameObjects.size(); i++) {
 			std::shared_ptr<GameObject> gameObject = this->gameObjects[i];
 
 			if (!gameObject->IsActive()) continue;
 
 			// If paused, only debug camera should run
 			if (isPaused) {
-				if (DebugCamera* cam = dynamic_cast<DebugCamera*>(gameObject.get()); cam == nullptr)
-				{
+				if (DebugCamera* cam = dynamic_cast<DebugCamera*>(gameObject.get()); cam == nullptr) {
 					continue;
 				}
 			}
 
-			//set linearVelocities and addForce on RigidBodies etc.
+			// set linearVelocities and addForce on RigidBodies etc.
 			gameObject->PhysicsTick();
 		}
 	}
 
 	this->DeleteDeleteQueue();
-
-	ShowHierarchy();
 }
 
-void Scene::SceneLateTick(bool isPaused)
-{
-	for(int i = 0; i < PhysicsQueue::GetInstance().GetPhysicsTickCounter(); i++)
-	{
-		for (size_t i = 0; i < this->gameObjects.size(); i++) 
-		{
+void Scene::SceneLateTick(bool isPaused) {
+	for (int i = 0; i < PhysicsQueue::GetInstance().GetPhysicsTickCounter(); i++) {
+		for (size_t i = 0; i < this->gameObjects.size(); i++) {
 			std::shared_ptr<GameObject> gameObject = this->gameObjects[i];
 
 			if (!gameObject->IsActive()) continue;
 
 			// If paused, only debug camera should run
 			if (isPaused) {
-				if (DebugCamera* cam = dynamic_cast<DebugCamera*>(gameObject.get()); cam == nullptr)
-				{
+				if (DebugCamera* cam = dynamic_cast<DebugCamera*>(gameObject.get()); cam == nullptr) {
 					continue;
 				}
 			}
@@ -73,27 +60,24 @@ void Scene::SceneLateTick(bool isPaused)
 			gameObject->LatePhysicsTick();
 		}
 
-		//Check and solve collisions
+		// Check and solve collisions
 		PhysicsQueue::GetInstance().SolveCollisions();
 		PhysicsQueue::GetInstance().UpdatePhysicsPositions();
 	}
 
-	for (size_t i = 0; i < this->gameObjects.size(); i++)
-	{
+	for (size_t i = 0; i < this->gameObjects.size(); i++) {
 		std::shared_ptr<GameObject> gameObject = this->gameObjects[i];
 
 		if (!gameObject->IsActive()) continue;
 
 		// If paused, only debug camera should run
-		if (isPaused) 
-		{
-			if (DebugCamera* cam = dynamic_cast<DebugCamera*>(gameObject.get()); cam == nullptr)
-			{
+		if (isPaused) {
+			if (DebugCamera* cam = dynamic_cast<DebugCamera*>(gameObject.get()); cam == nullptr) {
 				continue;
 			}
 		}
 
-		//Lerp actual positions
+		// Lerp actual positions
 		gameObject->LateTick();
 	}
 
@@ -102,8 +86,7 @@ void Scene::SceneLateTick(bool isPaused)
 	ShowHierarchy();
 }
 
-void Scene::RegisterGameObject(std::shared_ptr<GameObject> gameObject)
-{
+void Scene::RegisterGameObject(std::shared_ptr<GameObject> gameObject) {
 	this->gameObjects.push_back(gameObject);
 	gameObject->factory = this;
 	gameObject->myPtr = gameObject;
@@ -113,22 +96,13 @@ void Scene::RegisterGameObject(std::shared_ptr<GameObject> gameObject)
 	}
 }
 
-void Scene::QueueDeleteGameObject(std::weak_ptr<GameObject> gameObject)
-{
-	this->deleteQueue.push_back(gameObject);
-}
+void Scene::QueueDeleteGameObject(std::weak_ptr<GameObject> gameObject) { this->deleteQueue.push_back(gameObject); }
 
-size_t Scene::GetNumberOfGameObjects()
-{
-	return this->gameObjects.size(); }
+size_t Scene::GetNumberOfGameObjects() { return this->gameObjects.size(); }
 
-int Scene::GetNextID() 
-{ 
-	return this->currentGameObjectId++; 
-}
+int Scene::GetNextID() { return this->currentGameObjectId++; }
 
-void Scene::DeleteDeleteQueue()
-{
+void Scene::DeleteDeleteQueue() {
 	if (this->deleteQueue.empty()) {
 		return;
 	}
@@ -151,7 +125,7 @@ void Scene::DeleteDeleteQueue()
 			Logger::Warn("Tried to delete a GameObject that is not present in the scene.");
 			continue;
 		}
-		
+
 		if (gameObject->GetChildCount() > 0) {
 			for (auto child : gameObject->children) {
 				this->deleteQueue.push_back(child);
@@ -174,13 +148,12 @@ void Scene::CallStartOnAll() {
 	}
 }
 
-void Scene::ShowHierarchy() 
-{
+void Scene::ShowHierarchy() {
 	if (!ImguiManager::showObjectHierarchy) return;
 
 	ImGui::SetNextWindowSize(ImVec2(400.f, 500.f), ImGuiCond_FirstUseEver);
 	ImGui::Begin("Object Hierarchy", &ImguiManager::showObjectHierarchy, ImGuiWindowFlags_MenuBar);
-	
+
 	// Create GameObjects button
 	if (ImGui::Button("Create")) ImGui::OpenPopup("select_gameobject");
 	if (ImGui::BeginPopup("select_gameobject")) {
@@ -201,6 +174,9 @@ void Scene::ShowHierarchy()
 		}
 		if (ImGui::Selectable("SpotlightObject")) {
 			this->CreateGameObjectOfType<SpotlightObject>();
+		}
+		if (ImGui::Selectable("Canvas")) {
+			this->CreateGameObjectOfType<UI::CanvasObject>();
 		}
 
 		ImGui::EndPopup();

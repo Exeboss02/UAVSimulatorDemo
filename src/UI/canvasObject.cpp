@@ -3,6 +3,7 @@
 #include "UI/canvas.h"
 #include "UI/text.h"
 #include "gameObjects/cameraObject.h"
+#include "rendering/renderQueue.h"
 
 namespace UI {
 
@@ -62,8 +63,6 @@ void CanvasObject::Start() {
 		this->SetCanvas(std::make_shared<Canvas>());
 	}
 
-	// Default canvas size: if not set, attempt to use main camera aspect ratio
-	// (approximate viewport). Fallback to 1920x1080.
 	if (this->canvas) {
 		auto sz = this->canvas->GetSize();
 		if (sz.x == 0.0f || sz.y == 0.0f) {
@@ -79,10 +78,8 @@ void CanvasObject::Start() {
 		}
 	}
 
-	this->SetName("UI Canvas");
+	this->SetName("Canvas");
 
-	// If any child GameObjects were created by the scene loader, collect
-	// widgets and add them to the canvas now.
 	for (const auto& w : this->GetChildren()) {
 		if (w.expired()) continue;
 		auto child = w.lock();
@@ -145,9 +142,14 @@ void UI::CanvasObject::ShowInHierarchy() {
 				auto newWidgetWeak = this->factory->CreateGameObjectOfType<UI::Button>();
 				if (!newWidgetWeak.expired()) {
 					auto newWidget = newWidgetWeak.lock();
+					newWidget->SetName("Button");
+					newWidget->SetPosition({200, 200});
+					newWidget->SetSize({100, 20});
 					std::weak_ptr<GameObject> me = this->GetPtr();
 					newWidget->SetParent(me);
 					this->AddChild(std::static_pointer_cast<UI::Widget>(newWidget));
+
+					RenderQueue::AddUIWidget(newWidget);
 				}
 			}
 		}
@@ -157,9 +159,14 @@ void UI::CanvasObject::ShowInHierarchy() {
 				if (!newWidgetWeak.expired()) {
 					auto newWidget = newWidgetWeak.lock();
 					newWidget->SetName("Text");
+					newWidget->SetText("Text");
+					newWidget->SetPosition({50, 50});
+					newWidget->SetSize({100, 20});
 					std::weak_ptr<GameObject> me = this->GetPtr();
 					newWidget->SetParent(me);
 					this->AddChild(std::static_pointer_cast<UI::Widget>(newWidget));
+
+					RenderQueue::AddUIWidget(newWidget);
 				}
 			}
 		}
@@ -172,6 +179,8 @@ void UI::CanvasObject::ShowInHierarchy() {
 					std::weak_ptr<GameObject> me = this->GetPtr();
 					newWidget->SetParent(me);
 					this->AddChild(std::static_pointer_cast<UI::Widget>(newWidget));
+
+					RenderQueue::AddUIWidget(newWidget);
 				}
 			}
 		}
@@ -290,6 +299,8 @@ void UI::CanvasObject::LoadFromJson(const nlohmann::json& data) {
 
 				// Add to canvas
 				this->AddChild(widget);
+				// Register in UI queue so UI pass will visit this widget
+				RenderQueue::AddUIWidget(widget);
 			}
 		}
 	}

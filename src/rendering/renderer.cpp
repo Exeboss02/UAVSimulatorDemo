@@ -1,4 +1,6 @@
 #include "rendering/renderer.h"
+#include "UI/text.h"
+#include "UI/textRenderer.h"
 #include "UI/widget.h"
 #include "core/filepathHolder.h"
 #include "gameObjects/objectLoader.h"
@@ -6,7 +8,8 @@
 Renderer::Renderer()
 	: viewport(), currentPixelShader(nullptr), currentVertexShader(nullptr), currentRasterizerState(nullptr),
 	  maximumSpotlights(16),
-	  renderQueue(this->meshRenderQueue, this->spotLightRenderQueue, this->pointLightRenderQueue) {}
+	  renderQueue(this->meshRenderQueue, this->spotLightRenderQueue, this->pointLightRenderQueue, this->uiRenderQueue) {
+}
 
 void Renderer::Init(const Window& window) {
 	SetViewport(window);
@@ -32,6 +35,9 @@ void Renderer::SetAllDefaults() {
 	this->skybox = std::make_unique<Skybox>();
 	this->skybox->Init(this->device.Get(), this->immediateContext.Get(),
 					   (FilepathHolder::GetAssetsDirectory() / "skybox" / "space.dds").string());
+
+	// Preload default UI font atlas so TextRenderer can render immediately
+	UI::TextRenderer::GetInstance().LoadFont("default", this->device.Get());
 }
 
 void Renderer::SetViewport(const Window& window) {
@@ -139,6 +145,34 @@ void Renderer::CreateSampler() {
 	this->shadowSampler = std::unique_ptr<Sampler>(new Sampler());
 	this->shadowSampler->Init(this->device.Get(), D3D11_TEXTURE_ADDRESS_BORDER, D3D11_FILTER_ANISOTROPIC,
 							  D3D11_COMPARISON_LESS_EQUAL, {1, 1, 1, 1});
+
+	// Create a dedicated UI/font sampler using point filtering and clamp to avoid blurring and edge bleeding
+	this->uiSampler = std::make_unique<Sampler>();
+	this->uiSampler->Init(this->device.Get(), D3D11_TEXTURE_ADDRESS_CLAMP, D3D11_FILTER_MIN_MAG_MIP_POINT);
+
+	// Linear UI sampler for smooth upscaling when requested
+	this->uiLinearSampler = std::make_unique<Sampler>();
+	this->uiLinearSampler->Init(this->device.Get(), D3D11_TEXTURE_ADDRESS_CLAMP, D3D11_FILTER_MIN_MAG_MIP_LINEAR);
+
+	// Create an alpha blend state for UI (font) rendering
+	D3D11_BLEND_DESC blendDesc;
+	ZeroMemory(&blendDesc, sizeof(blendDesc));
+	blendDesc.RenderTarget[0].BlendEnable = TRUE;
+	blendDesc.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;
+	blendDesc.RenderTarget[0].DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
+	blendDesc.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
+	blendDesc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
+	blendDesc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ZERO;
+	blendDesc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
+	blendDesc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+
+	Microsoft::WRL::ComPtr<ID3D11BlendState> bs;
+	HRESULT hr = this->device->CreateBlendState(&blendDesc, bs.GetAddressOf());
+	if (SUCCEEDED(hr)) {
+		this->alphaBlendState = bs;
+	} else {
+		Logger::Log("Failed to create alpha blend state for UI text");
+	}
 }
 
 void Renderer::CreateRasterizerStates() {
@@ -158,6 +192,15 @@ void Renderer::CreateRasterizerStates() {
 	wireframeRastDesc.FillMode = D3D11_FILL_WIREFRAME; // Wireframe
 	this->wireframeRasterizerState = std::make_unique<RasterizerState>();
 	this->wireframeRasterizerState->Init(this->device.Get(), &wireframeRastDesc);
+
+	// UI rasterizer: no culling, solid fill
+	D3D11_RASTERIZER_DESC uiRastDesc;
+	ZeroMemory(&uiRastDesc, sizeof(uiRastDesc));
+	uiRastDesc.CullMode = D3D11_CULL_NONE;
+	uiRastDesc.DepthClipEnable = TRUE;
+	uiRastDesc.FillMode = D3D11_FILL_SOLID;
+	this->uiRasterizerState = std::make_unique<RasterizerState>();
+	this->uiRasterizerState->Init(this->device.Get(), &uiRastDesc);
 
 	// This ended up being the same as the normal rasterizerDesc,
 	// but I'm leaving it in case there was something wrong with skybox
@@ -339,27 +382,42 @@ void Renderer::RenderPass() {
 	// Disable depth testing so UI draws on top
 	this->immediateContext->OMSetDepthStencilState(nullptr, 0);
 
-	// Render only UI widgets from the mesh queue
-	for (size_t i = 0; i < this->meshRenderQueue.size(); i++) {
-		auto meshObject = (this->meshRenderQueue)[i];
+	// Render only UI widgets from the dedicated UI render queue
+	for (size_t i = 0; i < this->uiRenderQueue.size(); i++) {
+		auto widgetWeak = this->uiRenderQueue[i];
 
-		if (meshObject.expired()) {
-			// Remove expired entries
-			this->meshRenderQueue.erase(this->meshRenderQueue.begin() + i);
+		if (widgetWeak.expired()) {
+			this->uiRenderQueue.erase(this->uiRenderQueue.begin() + i);
 			i--;
 			continue;
 		}
 
-		if (!meshObject.lock()->IsActive() || meshObject.lock()->IsHidden()) continue;
+		auto widget = widgetWeak.lock();
+		if (!widget->IsVisible() || !widget->isEnabled()) continue;
 
-		// Only render UI widgets in this pass
-		if (dynamic_cast<UI::Widget*>(meshObject.lock().get()) == nullptr) continue;
+		Logger::Log("Renderer::UI pass: invoking Widget::Draw() for:", widget->GetName());
+		// Call Draw() so widgets can submit UI-specific items (like Text submissions)
+		widget->Draw();
 
-		RenderMeshObject(meshObject.lock().get());
+		// Render the mesh for this widget so mesh-based UI (Button/Images) appears.
+		// Widget inherits from MeshObject so we can render it directly.
+		this->RenderMeshObject(widget.get(), true);
 	}
 
 	// Restore depth/stencil by rebinding render target (rebinds depth stencil)
 	BindRenderTarget();
+
+	// Render submitted text via TextRenderer
+	// Enable alpha blending and UI rasterizer for text rendering
+	float blendFactor[4] = {0, 0, 0, 0};
+	this->immediateContext->OMSetBlendState(this->alphaBlendState.Get(), blendFactor, 0xffffffff);
+	this->BindRasterizerState(this->uiRasterizerState.get());
+
+	UI::TextRenderer::GetInstance().Render(this);
+
+	// Restore default rasterizer and blend state
+	this->immediateContext->OMSetBlendState(nullptr, nullptr, 0xffffffff);
+	this->BindRasterizerState(this->standardRasterizerState.get());
 }
 
 Renderer::ShadowResourceViews Renderer::ShadowPass() {
@@ -769,4 +827,64 @@ void Renderer::RenderMeshObject(MeshObject* meshObject, bool renderMaterial) {
 
 		index++;
 	}
+}
+
+void Renderer::DrawTextQuads(const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices,
+							 ID3D11ShaderResourceView* srv, const DirectX::XMFLOAT4& color, bool useLinearFilter) {
+	if (vertices.empty() || indices.empty()) {
+		Logger::Warn("Renderer::DrawTextQuads: no vertices or no indices");
+		return;
+	}
+
+	// Create transient vertex and index buffers
+	VertexBuffer vbuf;
+	vbuf.Init(this->device.Get(), sizeof(Vertex), static_cast<UINT>(vertices.size()), (void*) vertices.data());
+
+	IndexBuffer ibuf;
+	ibuf.Init(this->device.Get(), indices.size(), (uint32_t*) indices.data());
+
+	// Bind buffers
+	UINT stride = vbuf.GetVertexSize();
+	UINT offset = 0;
+	ID3D11Buffer* vBuff = vbuf.GetBuffer();
+	this->immediateContext->IASetVertexBuffers(0, 1, &vBuff, &stride, &offset);
+	this->immediateContext->IASetIndexBuffer(ibuf.GetBuffer(), DXGI_FORMAT_R32_UINT, 0);
+
+	// Set world matrix identity
+	DirectX::XMFLOAT4X4 worldMatrix;
+	DirectX::XMStoreFloat4x4(&worldMatrix, DirectX::XMMatrixIdentity());
+	DirectX::XMFLOAT4X4 worldMatrixInvTrans;
+	DirectX::XMStoreFloat4x4(&worldMatrixInvTrans, DirectX::XMMatrixIdentity());
+	Renderer::WorldMatrixBufferContainer wm{worldMatrix, worldMatrixInvTrans};
+	this->worldMatrixBuffer->UpdateBuffer(this->immediateContext.Get(), &wm);
+	BindWorldMatrix(this->worldMatrixBuffer->GetBuffer());
+
+	// Create a temporary unlit material using the provided SRV and apply tint color
+	UnlitMaterial tempMat(this->device.Get());
+	tempMat.unlitShader = AssetManager::GetInstance().GetShaderPtr("PSUnlit");
+	tempMat.diffuseTexture = std::make_shared<Texture>(srv, "__font_atlas");
+	tempMat.color[0] = color.x;
+	tempMat.color[1] = color.y;
+	tempMat.color[2] = color.z;
+	tempMat.color[3] = color.w;
+
+	// Use dedicated UI sampler for text rendering. Choose linear when requested (scaling up), otherwise point.
+	ID3D11SamplerState* fontSampler = nullptr;
+	if (useLinearFilter) {
+		if (this->uiLinearSampler) fontSampler = this->uiLinearSampler->GetSamplerState();
+	} else {
+		if (this->uiSampler) fontSampler = this->uiSampler->GetSamplerState();
+	}
+	// Save current sampler at slot 0
+	ID3D11SamplerState* prevSampler = nullptr;
+	this->immediateContext->PSGetSamplers(0, 1, &prevSampler);
+	if (fontSampler) this->immediateContext->PSSetSamplers(0, 1, &fontSampler);
+
+	// Bind material and draw
+	BindMaterial(&tempMat);
+	this->immediateContext->DrawIndexed(static_cast<UINT>(indices.size()), 0, 0);
+
+	// Restore previous sampler
+	if (prevSampler) this->immediateContext->PSSetSamplers(0, 1, &prevSampler);
+	if (prevSampler) prevSampler->Release();
 }

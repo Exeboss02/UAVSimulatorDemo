@@ -6,6 +6,8 @@
 // std
 #include <memory>
 #include <vector>
+// json
+#include <nlohmann/json.hpp>
 
 namespace UI {
 

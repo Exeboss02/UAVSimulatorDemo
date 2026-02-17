@@ -10,12 +10,14 @@ class MeshObject;
 class SpotlightObject;
 class GameObject;
 class PointLightObject;
+namespace UI { class Widget; }
 
 class RenderQueue {
 public:
 	RenderQueue(std::vector<std::weak_ptr<MeshObject>>& meshRenderQueue,
 				std::vector<std::weak_ptr<SpotlightObject>>& lightRenderQueue,
-				std::vector<std::weak_ptr<PointLightObject>>& pointLightRenderQueue
+				std::vector<std::weak_ptr<PointLightObject>>& pointLightRenderQueue,
+				std::vector<std::weak_ptr<UI::Widget>>& uiRenderQueue
 				
 	);
 	~RenderQueue() = default;
@@ -30,6 +32,16 @@ public:
 	/// Not implemented
 	/// </summary>
 	static void RemoveMeshObject();
+
+	/// <summary>
+	/// Add a UI Widget to the UI render queue
+	/// </summary>
+	static void AddUIWidget(std::weak_ptr<GameObject> newUIWidget);
+
+	/// <summary>
+	/// Remove UI widgets and clear
+	/// </summary>
+	static void ClearUIQueue();
 
 	/// <summary>
 	/// Add a light object to the lightQueue
@@ -54,4 +66,5 @@ private:
 	std::vector<std::weak_ptr<MeshObject>>& meshRenderQueue;
 	std::vector<std::weak_ptr<SpotlightObject>>& lightRenderQueue;
 	std::vector<std::weak_ptr<PointLightObject>>& pointLightRenderQueue;
+	std::vector<std::weak_ptr<UI::Widget>>& uiRenderQueue;
 };

@@ -115,9 +115,6 @@ void QuadTree::SubdivideNode(std::unique_ptr<Node>& node) {
 		DirectX::BoundingBox::CreateFromPoints(node->children[i]->boundingBox,
 											   DirectX::XMVectorSubtract(childCenter, halfExtents),
 											   DirectX::XMVectorAdd(childCenter, halfExtents));
-
-		Logger::Log(node->children[i]->boundingBox.Center.x, ":", node->children[i]->boundingBox.Center.y, ":",
-					node->children[i]->boundingBox.Center.z);
 	}
 }
 
@@ -125,9 +122,6 @@ void QuadTree::CheckNode(DirectX::BoundingFrustum& frustum, std::unique_ptr<Node
 						 std::vector<std::weak_ptr<MeshObject>>& out, std::unordered_set<MeshObject*>& found) {
 	bool collision = frustum.Intersects(node->boundingBox);
 	if (!collision) {
-		if (node == this->root) {
-			Logger::Error("Wtf");
-		}
 		return;
 	}
 

@@ -86,6 +86,8 @@ void CanvasObject::Start() {
 		if (!child) continue;
 		if (auto widget = std::dynamic_pointer_cast<UI::Widget>(child)) {
 			this->AddChild(widget);
+
+			RenderQueue::AddUIWidget(std::static_pointer_cast<GameObject>(widget));
 		}
 	}
 }

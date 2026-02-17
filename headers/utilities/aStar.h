@@ -38,9 +38,18 @@ struct AStarVertex : public GameObject3D {
 	std::vector<struct Edge> edges;
 	int gCost, hCost, fCost;
 	std::shared_ptr<AStarVertex> parent;
-	AStarVertex(DX::XMVECTOR position) : position(position), gCost(INT_MAX), hCost(0), fCost(0), parent(nullptr) {}
+	
+	AStarVertex() : position(DX::XMVectorZero()), gCost(INT_MAX), hCost(0), fCost(0), parent(nullptr) {}
+	
+	// Initialize the vertex with a position
+	void Initialize(DX::XMVECTOR pos) { 
+		this->position = pos; 
+	}
+	
 	inline bool operator<(const AStarVertex& other) const { return this->fCost < other.fCost; }
-	inline bool operator==(const AStarVertex& other) const { return DX::XMVector4NearEqual(this->position, other.position, DX::XMVectorSet(0.01f, 0.01f, 0.01f, 0.01f)); }
+	inline bool operator==(const AStarVertex& other) const { 
+		return DX::XMVector4NearEqual(this->position, other.position, DX::XMVectorSet(0.01f, 0.01f, 0.01f, 0.01f)); 
+	}
 };
 
 class AStar {
@@ -88,7 +97,7 @@ private:
 inline bool AStar::AddVertex(std::shared_ptr<AStarVertex> vertex) {
 	DX::XMVECTOR position = vertex->GetGlobalPosition();
 	if (this->GetVertex(position)) {
-		//Logger::Log("vertex already exists at position: (", position, ").");
+		Logger::Log("vertex already exists");
 		return false;
 	}
 
@@ -106,7 +115,7 @@ inline void AStar::RemoveVertex(std::shared_ptr<AStarVertex> vertexToRemove) {
 		for (auto& edge : vertex->edges) {
 			if (*edge.to == *vertexToRemove) {
 				vertex->edges.erase(std::remove_if(vertex->edges.begin(), vertex->edges.end(),
-												   [vertexToRemove](const Edge& edge) { return *edge.to == vertexToRemove->GetGlobalPosition(); }),
+												   [vertexToRemove](const Edge& edge) { return *edge.to == *vertexToRemove; }),
 									vertex->edges.end());
 			}
 		}
@@ -114,7 +123,7 @@ inline void AStar::RemoveVertex(std::shared_ptr<AStarVertex> vertexToRemove) {
 
 	// Remove the vertex itself
 	this->vertices.erase(std::remove_if(this->vertices.begin(), this->vertices.end(),
-							   [vertexToRemove](const std::shared_ptr<AStarVertex>& vertex) { return *vertex == vertexToRemove->position; }),
+							   [vertexToRemove](const std::shared_ptr<AStarVertex>& vertex) { return *vertex == *vertexToRemove; }),
 						 this->vertices.end());
 }
 

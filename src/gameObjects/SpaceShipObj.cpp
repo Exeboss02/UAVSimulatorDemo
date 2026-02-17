@@ -4,7 +4,10 @@
 #include "imgui.h"
 #include <array>
 
-SpaceShip::SpaceShip() : GameObject3D() { Room::SetSize(this->ROOM_SIZE); }
+SpaceShip::SpaceShip() : GameObject3D() { 
+	Room::SetSize(this->ROOM_SIZE);
+	pathfinder = std::make_unique<AStar>();
+}
 
 void SpaceShip::CreateRoom(size_t x, size_t y) {
 	if (x < SHIP_MAX_SIZE_X && y < SHIP_MAX_SIZE_Y && rooms[x][y].expired()) {
@@ -22,6 +25,8 @@ void SpaceShip::CreateRoom(size_t x, size_t y) {
 		roomMesh->SetParent(this->GetPtr());
 
 		roomMesh->SetPosition(x, y);
+
+		roomMesh->SetupPathfindingNodes(std::dynamic_pointer_cast<SpaceShip>(this->GetPtr()), roomMesh);
 
 		this->rooms[x][y] = room;
 

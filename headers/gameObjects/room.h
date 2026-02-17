@@ -72,6 +72,15 @@ public:
 	/// <param name="parent"></param>
 	void SetParent(std::weak_ptr<GameObject> parent) override;
 
+	/// <summary>
+	/// Sets up pathfinding nodes for a specified room.
+	/// </summary>
+	/// <param name="spaceShip"></param>
+	/// <param name="roomPtr"></param>
+	void SetupPathfindingNodes(std::shared_ptr<SpaceShip> spaceShip, std::shared_ptr<Room> roomPtr);
+
+	std::array<std::shared_ptr<AStarVertex>, 9>& GetPathfindingNodes() { return this->pathfindingNodes; }
+
 private:
 	std::array<size_t, 2> pos;
 	inline static float size;
@@ -81,5 +90,4 @@ private:
 
 	std::array<std::shared_ptr<AStarVertex>, 9> pathfindingNodes;
 
-	void SetupPathfindingNodes(std::shared_ptr<SpaceShip> parent);
 };

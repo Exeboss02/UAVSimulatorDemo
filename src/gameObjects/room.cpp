@@ -22,8 +22,6 @@ void Room::CreateRoom(WallIndex wallIndex) {
 
 	auto parent = std::static_pointer_cast<SpaceShip>(parentWeak.lock());
 
-	this->SetupPathfindingNodes(parent);
-
 	auto neighOffset = Room::GetNeighborOffset(wallIndex);
 	Logger::Log("Position: ", this->pos[0], " ", this->pos[1]);
 	parent->CreateRoom(this->pos[0] + neighOffset[0], this->pos[1] + neighOffset[1]);
@@ -97,33 +95,48 @@ void Room::SetParent(std::weak_ptr<GameObject> parentWeak) {
 	}
 }
 
-void Room::SetupPathfindingNodes(std::shared_ptr<SpaceShip> parent) { 
+void Room::SetupPathfindingNodes(std::shared_ptr<SpaceShip> spaceShip, std::shared_ptr<Room> roomPtr) {
+
+	size_t nodeCount = this->pathfindingNodes.size();
+
 	// 9 nodes in local room-space, 1 in the center, and 8 around the center in a circle, with radius size/4
-	std::array<DirectX::XMVECTOR, 9> nodesLocal;
+	std::array<DirectX::XMVECTOR, 9> nodesLocal = {};
 	nodesLocal[0] = DirectX::XMVectorSet(0, 0, 0, 1);
-	for (size_t i = 0; i < 8; i++) {
-		float angle = i * (DirectX::XM_PI / 4);
-		nodesLocal[i] = DirectX::XMVectorSet(std::cos(angle) * (this->size / 4), 0, std::sin(angle) * (this->size / 4), 1);
+	float distance = this->size / 4;
+	for (size_t i = 1; i < nodeCount; ++i) {
+		float angle = (i - 1) * (DirectX::XM_PI / 4);
+		nodesLocal[i] = DirectX::XMVectorSet(std::cos(angle) * distance, 0, std::sin(angle) * distance, 1);
 	}
 
-	// Create vertices for each node, translate to world space
-	for (size_t i = 0; i < this->pathfindingNodes.size(); ++i) {
-		this->pathfindingNodes[i]->SetParent(this->GetPtr());
-		this->pathfindingNodes[i] = std::make_shared<AStarVertex>(nodesLocal[i]);
+	// Create vertices for each node using the factory
+	for (size_t i = 0; i < nodeCount; ++i) {
+		// Create through factory so myPtr is initialized properly
+		auto vertexWeak = this->factory->CreateGameObjectOfType<AStarVertex>();
+		auto vertex = vertexWeak.lock();
+		
+		// Initialize the vertex with its position
+		vertex->Initialize(nodesLocal[i]);
+		vertex->transform.SetPosition(nodesLocal[i]);
 
-		parent->GetPathfinder()->AddVertex(this->pathfindingNodes[i]);
+		// Now SetParent will work because myPtr is initialized by the factory
+		vertex->SetParent(roomPtr);
+
+		this->pathfindingNodes[i] = vertex;
+		
+		spaceShip->GetPathfinder()->AddVertex(vertex);
 	}
 
 	// Create edges from all outside nodes to the center node
-	for (size_t i = 1; i < this->pathfindingNodes.size(); ++i) {
-		parent->GetPathfinder()->AddEdge(this->pathfindingNodes[0], this->pathfindingNodes[i],
-										 static_cast<unsigned int>(this->size / 3));
+	unsigned int edgeCost = static_cast<unsigned int>(this->size / 3);
+	for (size_t i = 1; i < nodeCount; ++i) {
+		spaceShip->GetPathfinder()->AddEdge(this->pathfindingNodes[0], this->pathfindingNodes[i], edgeCost);
 	}
 
+	edgeCost = static_cast<unsigned int>(this->size / 4);
 	// Create edges between adjacent outside nodes
-	for (size_t i = 1; i < this->pathfindingNodes.size(); ++i) {
+	for (size_t i = 1; i < nodeCount; ++i) {
 		size_t nextIndex = (i % 8) + 1;
-		parent->GetPathfinder()->AddEdge(this->pathfindingNodes[i], this->pathfindingNodes[nextIndex],
-										 static_cast<unsigned int>(this->size / 4));
+		spaceShip->GetPathfinder()->AddEdge(this->pathfindingNodes[i], this->pathfindingNodes[nextIndex], edgeCost);
 	}
+
 }

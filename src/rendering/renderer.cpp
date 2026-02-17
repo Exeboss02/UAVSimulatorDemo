@@ -885,10 +885,6 @@ void Renderer::RenderMeshObject(MeshObject* meshObject, bool renderMaterial) {
 
 	VertexBuffer vBuf = mesh->GetVertexBuffer();
 
-	UINT stride = vBuf.GetVertexSize();
-	UINT offset = 0;
-	ID3D11Buffer* vBuff = vBuf.GetBuffer();
-	this->immediateContext->IASetVertexBuffers(0, 1, &vBuff, &stride, &offset);
 	this->immediateContext->IASetIndexBuffer(mesh->GetIndexBuffer().GetBuffer(), DXGI_FORMAT_R32_UINT, 0);
 	// this->currentMesh = mesh.get();
 
@@ -899,7 +895,25 @@ void Renderer::RenderMeshObject(MeshObject* meshObject, bool renderMaterial) {
 	DirectX::XMFLOAT4X4 worldMatrixInverseTransposed;
 	DirectX::XMStoreFloat4x4(&worldMatrixInverseTransposed, meshObject->GetGlobalWorldMatrix(true));
 
-	//Renderer::WorldMatrixBufferContainer worldMatrixBufferContainer = {worldMatrix, worldMatrixInverseTransposed};
+	RenderMap::WorldMatrixBufferContainer worldMatrixBufferContainer = {worldMatrix, worldMatrixInverseTransposed};
+
+	size_t instanceCount(1);
+	InstanceBuffer* instanceBuffer = GetInstanceBuffer(instanceCount, &worldMatrixBufferContainer);
+
+	unsigned int strides[2];
+	unsigned int offsets[2];
+	ID3D11Buffer* bufferPointers[2];
+
+	strides[0] = vBuf.GetVertexSize();
+	strides[1] = instanceBuffer->GetInstanceSize();
+
+	offsets[0] = 0;
+	offsets[1] = 0;
+
+	bufferPointers[0] = vBuf.GetBuffer();
+	bufferPointers[1] = instanceBuffer->GetBuffer();
+
+	this->immediateContext->IASetVertexBuffers(0, 2, bufferPointers, strides, offsets);
 
 	//this->worldMatrixBuffer->UpdateBuffer(this->immediateContext.Get(), &worldMatrixBufferContainer);
 	//BindWorldMatrix(this->worldMatrixBuffer->GetBuffer());
@@ -921,7 +935,7 @@ void Renderer::RenderMeshObject(MeshObject* meshObject, bool renderMaterial) {
 			}
 
 			// Draw to screen
-			this->immediateContext->DrawIndexed(subMesh.GetNrOfIndices(), subMesh.GetStartIndex(), 0);
+			this->immediateContext->DrawIndexedInstanced(subMesh.GetNrOfIndices(), 1, subMesh.GetStartIndex(), 0, 0);
 		}
 
 		index++;
@@ -995,7 +1009,7 @@ void Renderer::DrawTextQuads(const std::vector<Vertex>& vertices, const std::vec
 
 	// Bind material and draw
 	BindMaterial(&tempMat);
-	this->immediateContext->DrawIndexed(static_cast<UINT>(indices.size()), 0, 0);
+	this->immediateContext->DrawIndexedInstanced(static_cast<UINT>(indices.size()), 1, 0, 0, 0);
 
 	// Restore previous sampler
 	if (prevSampler) this->immediateContext->PSSetSamplers(0, 1, &prevSampler);

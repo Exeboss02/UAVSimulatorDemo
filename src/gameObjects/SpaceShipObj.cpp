@@ -20,7 +20,7 @@ void SpaceShip::CreateRoom(size_t x, size_t y) {
 
 		auto roomMesh = room.lock();
 
-		roomMesh->transform.SetPosition(DirectX::XMVectorSet(x * ROOM_SIZE, 0, y * ROOM_SIZE, 0));
+		roomMesh->transform.SetPosition(DirectX::XMVectorSet(x * this->ROOM_SIZE, 0, y * this->ROOM_SIZE, 0));
 
 		roomMesh->SetParent(this->GetPtr());
 
@@ -41,6 +41,16 @@ void SpaceShip::CreateRoom(size_t x, size_t y) {
 				Room::WallIndex reversedWallIndex = (Room::WallIndex) ((i + 2) % 4);
 				roomMesh->SetWallState(wallIndex, Room::WallState::door);
 				neighbor->SetWallState(reversedWallIndex, Room::WallState::door);
+
+				// Connect pathfinding nodes between the two rooms
+				size_t currentRoomNodeIndex = wallIndex * 2 + 1;
+				size_t neighborRoomNodeIndex = reversedWallIndex * 2 + 1;
+
+				auto& currentRoomNodes = roomMesh->GetPathfindingNodes();
+				auto& neighborRoomNodes = neighbor->GetPathfindingNodes();
+
+				unsigned int edgeCost = static_cast<unsigned int>(this->ROOM_SIZE / 4);
+				this->pathfinder->AddEdge(currentRoomNodes[currentRoomNodeIndex], neighborRoomNodes[neighborRoomNodeIndex], edgeCost);
 			}
 		}
 
@@ -61,6 +71,14 @@ void SpaceShip::Tick() {
 	ImGui::Begin("Rooms");
 	ImGui::InputInt2("cords", pos);
 	bool roomCreator = ImGui::Button("Create Room");
+	ImGui::End();
+
+	ImGui::Begin("Spawn enemy");
+	if (ImGui::Button("Spawn")) {
+		auto enemy = this->factory->CreateGameObjectOfType<MeshObject>().lock();
+		enemy->SetMesh(AssetManager::GetInstance().GetMeshObjData("TexBox/TextureCube.glb:Mesh_0"));
+		//this->pathfinder->FindPath()
+	}
 	ImGui::End();
 
 	if (roomCreator) {

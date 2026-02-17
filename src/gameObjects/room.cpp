@@ -99,12 +99,12 @@ void Room::SetupPathfindingNodes(std::shared_ptr<SpaceShip> spaceShip, std::shar
 
 	size_t nodeCount = this->pathfindingNodes.size();
 
-	// 9 nodes in local room-space, 1 in the center, and 8 around the center in a circle, with radius size/4
+	// 9 nodes in local room-space, 1 in the center, and 8 around the center in a circle.
 	std::array<DirectX::XMVECTOR, 9> nodesLocal = {};
 	nodesLocal[0] = DirectX::XMVectorSet(0, 0, 0, 1);
 	float distance = this->size / 4;
 	for (size_t i = 1; i < nodeCount; ++i) {
-		float angle = (i - 1) * (DirectX::XM_PI / 4);
+		float angle = DirectX::XM_PIDIV2 - (i - 1) * (DirectX::XM_PI / 4); // Start at North (z+) and go clockwise
 		nodesLocal[i] = DirectX::XMVectorSet(std::cos(angle) * distance, 0, std::sin(angle) * distance, 1);
 	}
 

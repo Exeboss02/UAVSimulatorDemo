@@ -79,6 +79,10 @@ public:
 	/// <param name="roomPtr"></param>
 	void SetupPathfindingNodes(std::shared_ptr<SpaceShip> spaceShip, std::shared_ptr<Room> roomPtr);
 
+	/// <summary>
+	/// Get this room's pathfinding nodes, ordered in the following way:
+	/// Order: center, N, NE, E, SE, S, SW, W, NW
+	/// </summary>
 	std::array<std::shared_ptr<AStarVertex>, 9>& GetPathfindingNodes() { return this->pathfindingNodes; }
 
 private:

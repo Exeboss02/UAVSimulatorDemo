@@ -240,4 +240,6 @@ private:
 	void RenderMeshObject(MeshObject* meshObject, bool renderMaterial = true);
 
 	void RenderRenderMap(RenderMap& renderMap, bool renderMaterials = true);
+
+	InstanceBuffer* GetInstanceBuffer(size_t& instanceCount, void* data);
 };

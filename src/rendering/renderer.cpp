@@ -458,6 +458,10 @@ void Renderer::RenderPass() {
 
 	RenderRenderMap(this->standardRenderMap);
 
+	const auto endColorPass{std::chrono::steady_clock::now()};
+	const std::chrono::duration<double> elapsedSeconds{endColorPass - startColorPass};
+	ImGui::Text(("Color pass: " + std::to_string(elapsedSeconds.count())).c_str());
+
 	// UI pass: render UI widgets in an orthographic projection on top of the scene
 
 	// Prepare an orthographic camera matching the render target (top-left origin)
@@ -496,10 +500,6 @@ void Renderer::RenderPass() {
 			this->RenderMeshObject(widget.get(), true);
 		}
 	}
-	const auto endColorPass{std::chrono::steady_clock::now()};
-	const std::chrono::duration<double> elapsedSeconds{endColorPass - startColorPass};
-	ImGui::Text(("Color pass: " + std::to_string(elapsedSeconds.count())).c_str());
-
 
 	// Restore depth/stencil by rebinding render target (rebinds depth stencil)
 	BindRenderTarget();
@@ -943,10 +943,6 @@ void Renderer::DrawTextQuads(const std::vector<Vertex>& vertices, const std::vec
 	ibuf.Init(this->device.Get(), indices.size(), (uint32_t*) indices.data());
 
 	// Bind buffers
-	UINT stride = vbuf.GetVertexSize();
-	UINT offset = 0;
-	ID3D11Buffer* vBuff = vbuf.GetBuffer();
-	this->immediateContext->IASetVertexBuffers(0, 1, &vBuff, &stride, &offset);
 	this->immediateContext->IASetIndexBuffer(ibuf.GetBuffer(), DXGI_FORMAT_R32_UINT, 0);
 
 	// Set world matrix identity
@@ -955,8 +951,26 @@ void Renderer::DrawTextQuads(const std::vector<Vertex>& vertices, const std::vec
 	DirectX::XMFLOAT4X4 worldMatrixInvTrans;
 	DirectX::XMStoreFloat4x4(&worldMatrixInvTrans, DirectX::XMMatrixIdentity());
 	RenderMap::WorldMatrixBufferContainer wm{worldMatrix, worldMatrixInvTrans};
-	this->worldMatrixBuffer->UpdateBuffer(this->immediateContext.Get(), &wm);
-	BindWorldMatrix(this->worldMatrixBuffer->GetBuffer());
+
+	size_t instanceCount(1);
+	InstanceBuffer* instanceBuffer = GetInstanceBuffer(instanceCount, &wm);
+
+
+	unsigned int strides[2];
+	unsigned int offsets[2];
+	ID3D11Buffer* bufferPointers[2];
+
+	strides[0] = vbuf.GetVertexSize();
+	strides[1] = instanceBuffer->GetInstanceSize();
+
+	offsets[0] = 0;
+	offsets[1] = 0;
+
+	bufferPointers[0] = vbuf.GetBuffer();
+	bufferPointers[1] = instanceBuffer->GetBuffer();
+
+	this->immediateContext->IASetVertexBuffers(0, 2, bufferPointers, strides, offsets);
+
 
 	// Create a temporary unlit material using the provided SRV and apply tint color
 	UnlitMaterial tempMat(this->device.Get());
@@ -1009,25 +1023,8 @@ void Renderer::RenderRenderMap(RenderMap& renderMap, bool renderMaterials) {
 
 
 				// Get the instance buffer
-
 				size_t instanceCount = material.objects.size(); 
-
-				InstanceBuffer* newInstanceBuffer = nullptr;
-				if (this->instanceBuffers.contains(instanceCount)) {
-					newInstanceBuffer = this->instanceBuffers[instanceCount].get();
-					newInstanceBuffer->Update(this->immediateContext.Get(),
-											  sizeof(RenderMap::WorldMatrixBufferContainer), instanceCount,
-											  material.objects.data());
-				} else {
-					this->instanceBuffers.emplace(instanceCount, std::make_unique<InstanceBuffer>());
-					newInstanceBuffer = this->instanceBuffers[instanceCount].get();
-					newInstanceBuffer->Init(this->device.Get(), sizeof(RenderMap::WorldMatrixBufferContainer),
-											instanceCount, material.objects.data());
-
-					if (this->instanceBuffers.size() > 100) {
-						Logger::Warn("A few too many instance buffers!!");
-					}
-				}
+				InstanceBuffer* newInstanceBuffer = GetInstanceBuffer(instanceCount, material.objects.data());
 
 
 				// Set vertex buffers
@@ -1058,4 +1055,22 @@ void Renderer::RenderRenderMap(RenderMap& renderMap, bool renderMaterials) {
 		}
 
 	}
+}
+
+InstanceBuffer* Renderer::GetInstanceBuffer(size_t& instanceCount, void* data) {
+	InstanceBuffer* newInstanceBuffer = nullptr;
+	if (this->instanceBuffers.contains(instanceCount)) {
+		newInstanceBuffer = this->instanceBuffers[instanceCount].get();
+		newInstanceBuffer->Update(this->immediateContext.Get(), sizeof(RenderMap::WorldMatrixBufferContainer),
+								  instanceCount, data);
+	} else {
+		this->instanceBuffers.emplace(instanceCount, std::make_unique<InstanceBuffer>());
+		newInstanceBuffer = this->instanceBuffers[instanceCount].get();
+		newInstanceBuffer->Init(this->device.Get(), sizeof(RenderMap::WorldMatrixBufferContainer), instanceCount, data);
+
+		if (this->instanceBuffers.size() > 100) {
+			Logger::Warn("A few too many instance buffers!!");
+		}
+	}
+	return newInstanceBuffer;
 }

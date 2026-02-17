@@ -16,6 +16,9 @@ public:
 	template <typename T>
 	std::weak_ptr<T> CreateGameObjectOfType();
 
+	template <typename T>
+	void CreateStaticGameObject(std::shared_ptr<T> object);
+
 	/// <summary>
 	/// Delete the GameObject after all game logic is done, but before the game renders.
 	/// </summary>
@@ -72,6 +75,7 @@ protected:
 	std::weak_ptr<GameObject> selectedObject;
 };
 
+
 template <typename T>
 inline std::weak_ptr<T> GameObjectFactory::CreateGameObjectOfType() {
 	// Make sure it is a gameObject (compiler assert)
@@ -80,6 +84,13 @@ inline std::weak_ptr<T> GameObjectFactory::CreateGameObjectOfType() {
 	auto obj = std::make_shared<T>();
 	RegisterGameObject(obj);
 	return obj;
+}
+
+template <typename T>
+void GameObjectFactory::CreateStaticGameObject(std::shared_ptr<T> object) {
+	static_assert(std::is_base_of_v<GameObject, T>, "T must derive from GameObject");
+	std::static_pointer_cast<GameObject>(object)->SetIsStatic(true);
+	RegisterGameObject(object);
 }
 
 template <typename T>

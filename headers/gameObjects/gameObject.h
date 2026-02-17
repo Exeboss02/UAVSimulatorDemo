@@ -93,6 +93,14 @@ public:
 	/// </summary>
 	void SetActiveOverride(bool isActive);
 
+	/// <summary>
+	/// DONT USE
+	/// </summary>
+	/// <param name="isStatic"></param>
+	void SetStatic(bool isStatic);
+
+	bool GetIsStatic() const;
+
 private:
 	/// <summary>
 	/// WARNING: Engine only. Do not use for any in-game logic.
@@ -115,6 +123,7 @@ private:
 	std::weak_ptr<GameObject> myPtr;
 
 	char imguiName[64];
+	bool isStatic = false;
 
 protected:
 	// Any interaction with the scene is done through the factory.

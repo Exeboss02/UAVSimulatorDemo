@@ -168,3 +168,7 @@ void GameObject::SetActiveOverride(bool isActive) {
 		child.lock()->SetActiveOverride(isActive);
 	}
 }
+
+void GameObject::SetStatic(bool isStatic) { this->isStatic = isStatic; }
+
+bool GameObject::GetIsStatic() const { return this->isStatic; }

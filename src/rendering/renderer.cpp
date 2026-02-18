@@ -676,7 +676,11 @@ void Renderer::RenderUI() {
 
 	std::sort(widgets.begin(), widgets.end(),
 			  [](const std::shared_ptr<UI::Widget>& a, const std::shared_ptr<UI::Widget>& b) {
-				  return a->GetZIndex() < b->GetZIndex();
+				  int za = a->GetZIndex();
+				  int zb = b->GetZIndex();
+				  if (za != zb) return za < zb;
+
+				  return std::uintptr_t(a.get()) < std::uintptr_t(b.get());
 			  });
 
 	for (auto& widget : widgets) {
@@ -704,10 +708,14 @@ void Renderer::RenderUI() {
 					float x1 = x0 + img->GetSize().x;
 					float y1 = y0 + img->GetSize().y;
 
+					// Use widget global Z so image quads layer consistently with mesh widgets
+					DirectX::XMVECTOR globalPos = img->GetGlobalPosition();
+					float widgetZ = globalPos.m128_f32[2];
+
 					Vertex vTL{}; // top-left
 					vTL.pos[0] = x0;
 					vTL.pos[1] = y0;
-					vTL.pos[2] = 0.0f;
+					vTL.pos[2] = widgetZ;
 					vTL.normal[0] = vTL.normal[1] = vTL.normal[2] = 0.0f;
 					vTL.uv[0] = 0.0f;
 					vTL.uv[1] = 1.0f - 0.0f;
@@ -715,7 +723,7 @@ void Renderer::RenderUI() {
 					Vertex vTR{}; // top-right
 					vTR.pos[0] = x1;
 					vTR.pos[1] = y0;
-					vTR.pos[2] = 0.0f;
+					vTR.pos[2] = widgetZ;
 					vTR.normal[0] = vTR.normal[1] = vTR.normal[2] = 0.0f;
 					vTR.uv[0] = 1.0f;
 					vTR.uv[1] = 1.0f - 0.0f;
@@ -723,7 +731,7 @@ void Renderer::RenderUI() {
 					Vertex vBL{}; // bottom-left
 					vBL.pos[0] = x0;
 					vBL.pos[1] = y1;
-					vBL.pos[2] = 0.0f;
+					vBL.pos[2] = widgetZ;
 					vBL.normal[0] = vBL.normal[1] = vBL.normal[2] = 0.0f;
 					vBL.uv[0] = 0.0f;
 					vBL.uv[1] = 1.0f - 1.0f;
@@ -731,7 +739,7 @@ void Renderer::RenderUI() {
 					Vertex vBR{}; // bottom-right
 					vBR.pos[0] = x1;
 					vBR.pos[1] = y1;
-					vBR.pos[2] = 0.0f;
+					vBR.pos[2] = widgetZ;
 					vBR.normal[0] = vBR.normal[1] = vBR.normal[2] = 0.0f;
 					vBR.uv[0] = 1.0f;
 					vBR.uv[1] = 1.0f - 1.0f;

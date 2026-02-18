@@ -258,14 +258,15 @@ void Renderer::CreateRasterizerStates() {
 }
 
 void Renderer::CreateRenderMap() {
-	const auto start{std::chrono::steady_clock::now()};
-
 	#ifdef DEBUG_TIMER
+	const auto start{std::chrono::steady_clock::now()};
+	#endif // DEBUG_TIMER
+
+
 	// Removes dead gameobjects
 	this->meshRenderQueue.erase(std::remove_if(this->meshRenderQueue.begin(), this->meshRenderQueue.end(),
 										 [](const std::weak_ptr<MeshObject>& w) { return w.expired(); }),
 								this->meshRenderQueue.end());
-	#endif // DEBUG_TIMER
 
 	this->standardRenderMap.meshes.clear();
 	

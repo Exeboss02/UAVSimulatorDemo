@@ -1,7 +1,8 @@
 #include "gameObjects/testEnemy.h"
 #include <DirectXMath.h>
 
-#include "utilities/logger.h"
+#include "core/assetManager.h"
+#include "gameObjects/meshObject.h"
 
 void TestEnemy::Start() {
 	auto meshObjWeak = this->factory->CreateGameObjectOfType<MeshObject>();
@@ -11,8 +12,6 @@ void TestEnemy::Start() {
 
 	MeshObjData meshData = AssetManager::GetInstance().GetMeshObjData("TexBox/TextureCube.glb:Mesh_0");
 	meshObj->SetMesh(meshData);
-
-	//this->transform.SetPosition(DirectX::XMVectorSet(0, 0, 0, 1));
 }
 
 void TestEnemy::Tick() { 
@@ -34,7 +33,6 @@ void TestEnemy::Tick() {
 		DirectX::XMVECTOR direction = DirectX::XMVectorSubtract(this->path[this->currentPathIndex]->GetGlobalPosition(), this->GetGlobalPosition());
 		direction = DirectX::XMVector3Normalize(direction);
 		this->transform.Move(direction, this->movementSpeed * Time::GetInstance().GetDeltaTime());
-
 	}
 }
 
@@ -42,6 +40,4 @@ void TestEnemy::SetPath(const std::vector<std::shared_ptr<AStarVertex>>& newPath
 	this->path = newPath;
 	this->currentPathIndex = 0;
 	this->transform.SetPosition(this->path[0]->GetGlobalPosition());
-
-	Logger::Log("New path set");
 }

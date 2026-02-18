@@ -79,7 +79,6 @@ void SpaceShip::Tick() {
 		Logger::Log("Spawned Enemy");
 		if (auto enemyPtr = enemy.lock()) {
 			enemyPtr->SetPath(this->path);
-			//enemyPtr->Tick();
 		}
 	}
 	ImGui::End();

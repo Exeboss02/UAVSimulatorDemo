@@ -313,13 +313,5 @@ inline std::vector<std::shared_ptr<AStarVertex>>& AStar::ReconstructPath(std::sh
 	}
 
 	std::reverse(this->path.begin(), this->path.end());
-
-	Logger::Log("Path found with ", this->path.size(), " vertices.");
-	for (int i = 0; i < this->path.size(); ++i) {
-		Logger::Log("Vertex ", i, ": (", DX::XMVectorGetX(this->path[i]->GetGlobalPosition()), ", ", DX::XMVectorGetZ(this->path[i]->GetGlobalPosition()), ")");
-	}
-
-	//this->PrintAllEdges();
-
 	return this->path;
 }

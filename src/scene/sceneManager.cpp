@@ -26,6 +26,7 @@ SceneManager::SceneManager(Renderer* rend) : mainScene(nullptr), renderer(rend),
 	this->objectFromString.RegisterType<PointLightObject>(NAMEOF(PointLightObject));
 	this->objectFromString.RegisterType<TestPlayer>(NAMEOF(TestPlayer));
 	this->objectFromString.RegisterType<Turret>(NAMEOF(Turret));
+	this->objectFromString.RegisterType<TestEnemy>(NAMEOF(TestEnemy));
 
 	// UI widget types
 	this->objectFromString.RegisterType<UI::CanvasObject>(NAMEOF(UI::CanvasObject));

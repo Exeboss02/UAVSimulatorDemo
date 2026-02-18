@@ -69,7 +69,7 @@ float4 main(PixelShaderInput input) : SV_TARGET
     const float bias = 0.001f;
     float3 normal = normalize(input.normal);
     
-    float4 ambientColor = ambient;  
+    float4 ambientColor = ambient;
     float4 diffuseColor = 0;
     float4 specularColor = 0;
     float3 camToPixel = input.worldPosition.xyz - input.cameraPosition;
@@ -88,8 +88,7 @@ float4 main(PixelShaderInput input) : SV_TARGET
         
     // Seems structured buffer might be made larger than the number of lights, as such we do need to use ugly constant buffer
     for (int i = 0; i < spotlightCount; i++)
-    {
-        
+    {      
         Spotlight lightdata = spotlightBuffer[i];
                 
         float4 lightClip = mul(float4(input.worldPosition.xyz, 1), lightdata.vpMatrix);
@@ -140,11 +139,16 @@ float4 main(PixelShaderInput input) : SV_TARGET
         // that face. Cube face ordering: +X, -X, +Y, -Y, +Z, -Z -> 0..5
         int faceIndex = 0;
         float3 absDir = abs(sampleDir);
-        if (absDir.x >= absDir.y && absDir.x >= absDir.z) {
+        if (absDir.x >= absDir.y && absDir.x >= absDir.z)
+        {
             faceIndex = sampleDir.x > 0 ? 0 : 1;
-        } else if (absDir.y >= absDir.x && absDir.y >= absDir.z) {
+        }
+        else if (absDir.y >= absDir.x && absDir.y >= absDir.z)
+        {
             faceIndex = sampleDir.y > 0 ? 2 : 3;
-        } else {
+        }
+        else
+        {
             faceIndex = sampleDir.z > 0 ? 4 : 5;
         }
 

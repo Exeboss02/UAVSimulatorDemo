@@ -45,6 +45,15 @@ void RenderQueue::AddMeshObject(std::weak_ptr<GameObject> newMeshObject) {
 	if (newMeshObject.lock()->GetIsStatic()) {
 		RenderQueue::instance->staticObjects.AddElement(static_pointer_cast<MeshObject>(newMeshObject.lock()));
 	} else {
+		const auto found = std::find_if(
+			RenderQueue::instance->meshRenderQueue.begin(), RenderQueue::instance->meshRenderQueue.end(),
+			[&](std::weak_ptr<MeshObject> meshObj) { return meshObj.lock().get() == newMeshObject.lock().get(); });
+		if (found != RenderQueue::instance->meshRenderQueue.end()) {
+			// This shouldn't really be a warning
+			Logger::Warn("Tried to add object to queue, but it's already there.");
+			return;
+		}
+
 		RenderQueue::instance->meshRenderQueue.push_back(std::static_pointer_cast<MeshObject>(newMeshObject.lock()));
 	}
 }

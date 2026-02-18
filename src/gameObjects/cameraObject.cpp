@@ -15,7 +15,7 @@ CameraObject::CameraObject()
 }
 
 void CameraObject::Tick() {
-	//if (this->thisCameraId != CameraObject::mainCamera->thisCameraId) {
+	// if (this->thisCameraId != CameraObject::mainCamera->thisCameraId) {
 	//	ImGui::SetNextWindowSize(ImVec2(150, 120.f));
 	//	ImGui::Begin("MainCamera");
 	//	ImGui::Text("Switch camera");
@@ -24,20 +24,19 @@ void CameraObject::Tick() {
 	//		CameraObject::mainCamera = this;
 	//	}
 	//	ImGui::End();
-	//}
+	// }
 }
 
 void CameraObject::LateTick() { /*UpdateCameraMatrix();*/ }
 
-void CameraObject::Start() { }
+void CameraObject::Start() {}
 
 void CameraObject::SetAspectRatio(float aspectRatio) { this->aspectRatio = aspectRatio; }
 
-CameraObject::CameraMatrixContainer CameraObject::GetCameraMatrix(bool transposeViewProjMult) { 
+CameraObject::CameraMatrixContainer CameraObject::GetCameraMatrix(bool transposeViewProjMult) {
 	CameraMatrixContainer matrix{};
-	
-	matrix.cameraPosition = GetGlobalPosition();
 
+	matrix.cameraPosition = GetGlobalPosition();
 
 	// View Projection Matrix
 	DirectX::XMVECTOR globalRotation = GetGlobalRotation();
@@ -47,19 +46,59 @@ CameraObject::CameraMatrixContainer CameraObject::GetCameraMatrix(bool transpose
 	DirectX::XMVECTOR upDir = DirectX::XMVector3Rotate(DirectX::XMVectorSet(0, 1, 0, 0), globalRotation);
 	DirectX::XMMATRIX viewMatrix = DirectX::XMMatrixLookAtLH(matrix.cameraPosition, focusPos, upDir);
 
-	DirectX::XMMATRIX projMatrix = DirectX::XMMatrixPerspectiveFovLH(DirectX::XMConvertToRadians(this->fieldOfView),
-																	 this->aspectRatio, this->nearPlane, this->farPlane);
+	DirectX::XMMATRIX projMatrix = DirectX::XMMatrixPerspectiveFovLH(
+		DirectX::XMConvertToRadians(this->fieldOfView), this->aspectRatio, this->nearPlane, this->farPlane);
 	DirectX::XMMATRIX viewProjMatrix;
 	if (transposeViewProjMult) {
 		viewProjMatrix = DirectX::XMMatrixMultiplyTranspose(viewMatrix, projMatrix);
-	} 
-	else {
+	} else {
 		viewProjMatrix = viewMatrix * projMatrix;
 	}
 
 	DirectX::XMStoreFloat4x4(&matrix.viewProjectionMatrix, viewProjMatrix);
 
 	return matrix;
+}
+
+DirectX::XMMATRIX CameraObject::GetViewProjectionMatrix(bool transposeViewProjMult) {
+	// View Projection Matrix
+	DirectX::XMVECTOR globalRotation = GetGlobalRotation();
+
+	DirectX::XMVECTOR position = this->GetGlobalPosition();
+
+	DirectX::XMVECTOR focusPos =
+		DirectX::XMVectorAdd(position, DirectX::XMVector3Rotate(DirectX::XMVectorSet(0, 0, 1, 0), globalRotation));
+
+	DirectX::XMVECTOR upDir = DirectX::XMVector3Rotate(DirectX::XMVectorSet(0, 1, 0, 0), globalRotation);
+	DirectX::XMMATRIX viewMatrix = DirectX::XMMatrixLookAtLH(position, focusPos, upDir);
+
+	DirectX::XMMATRIX projMatrix = DirectX::XMMatrixPerspectiveFovLH(
+		DirectX::XMConvertToRadians(this->fieldOfView), this->aspectRatio, this->nearPlane, this->farPlane);
+	DirectX::XMMATRIX viewProjMatrix;
+	if (transposeViewProjMult) {
+		viewProjMatrix = DirectX::XMMatrixMultiplyTranspose(viewMatrix, projMatrix);
+	} else {
+		viewProjMatrix = viewMatrix * projMatrix;
+	}
+
+	return viewProjMatrix;
+}
+
+DirectX::XMMATRIX CameraObject::GetViewMatrix() const {
+	DirectX::XMVECTOR globalRotation = GetGlobalRotation();
+	DirectX::XMVECTOR position = this->GetGlobalPosition();
+
+	DirectX::XMVECTOR focusPos =
+		DirectX::XMVectorAdd(position, DirectX::XMVector3Rotate(DirectX::XMVectorSet(0, 0, 1, 0), globalRotation));
+	DirectX::XMVECTOR upDir = DirectX::XMVector3Rotate(DirectX::XMVectorSet(0, 1, 0, 0), globalRotation);
+	DirectX::XMMATRIX viewMatrix = DirectX::XMMatrixLookAtLH(position, focusPos, upDir);
+	return viewMatrix;
+}
+
+DirectX::XMMATRIX CameraObject::GetProjectionMatrix() const {
+	DirectX::XMMATRIX projMatrix = DirectX::XMMatrixPerspectiveFovLH(
+		DirectX::XMConvertToRadians(this->fieldOfView), this->aspectRatio, this->nearPlane, this->farPlane);
+	return projMatrix;
 }
 
 void CameraObject::SetMainCamera() { this->mainCamera = this; }
@@ -101,8 +140,7 @@ void CameraObject::SaveToJson(nlohmann::json& data) {
 	data["fov"] = this->fieldOfView;
 }
 
-void CameraObject::ShowInHierarchy() 
-{
+void CameraObject::ShowInHierarchy() {
 	this->GameObject3D::ShowInHierarchy();
 
 	ImGui::Text("CameraObject");
@@ -115,7 +153,7 @@ void CameraObject::ShowInHierarchy()
 
 size_t CameraObject::GetCameraId() { return this->cameraId; }
 
-//void CameraObject::UpdateCameraMatrix() {
+// void CameraObject::UpdateCameraMatrix() {
 //	// Position
 //
 //	this->cameraMatrix.cameraPosition = GetGlobalPosition();
@@ -136,4 +174,4 @@ size_t CameraObject::GetCameraId() { return this->cameraId; }
 //	DirectX::XMMATRIX viewProjMatrix = viewMatrix * projMatrix;
 //
 //	DirectX::XMStoreFloat4x4(&this->cameraMatrix.viewProjectionMatrix, viewProjMatrix);
-//}
+// }

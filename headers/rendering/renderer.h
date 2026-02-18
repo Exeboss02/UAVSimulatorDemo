@@ -27,6 +27,8 @@
 namespace UI {
 class Widget;
 }
+#include "rendering/skybox.h"
+#include "rendering/quadTree.h"
 
 #include <functional>
 
@@ -144,6 +146,9 @@ private:
 	std::vector<std::weak_ptr<SpotlightObject>> spotLightRenderQueue;
 	std::vector<std::weak_ptr<PointLightObject>> pointLightRenderQueue;
 	std::vector<std::weak_ptr<UI::Widget>> uiRenderQueue;
+
+	QuadTree staticObjectsTree;
+	std::vector<std::weak_ptr<MeshObject>> GetVisibleObjects(CameraObject& camera);
 
 	// Constant buffers:
 	// The renderer keeps these constant buffers since only one is ever required

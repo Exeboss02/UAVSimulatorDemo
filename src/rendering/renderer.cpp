@@ -7,8 +7,9 @@
 
 Renderer::Renderer()
 	: viewport(), currentPixelShader(nullptr), currentVertexShader(nullptr), currentRasterizerState(nullptr),
-	  maximumSpotlights(16),
-	  renderQueue(this->meshRenderQueue, this->spotLightRenderQueue, this->pointLightRenderQueue, this->uiRenderQueue) {
+	  maximumSpotlights(16), staticObjectsTree({-10, -10, -10}, {10 * 64, 20, 10 * 64}, 6, 4), 
+	  renderQueue(this->meshRenderQueue, this->spotLightRenderQueue, this->pointLightRenderQueue, this->staticObjectsTree, this->uiRenderQueue) 
+{
 	this->renderQueue.newSkyboxCallback = [this](std::string filename) { this->ChangeSkybox(filename); };
 }
 
@@ -40,6 +41,25 @@ void Renderer::SetAllDefaults() {
 
 	// Preload default UI font atlas so TextRenderer can render immediately
 	UI::TextRenderer::GetInstance().LoadFont("default", this->device.Get());
+}
+
+
+std::vector<std::weak_ptr<MeshObject>> Renderer::GetVisibleObjects(CameraObject& camera) {
+	std::vector<std::weak_ptr<MeshObject>> visible = this->staticObjectsTree.GetVisibleElements(camera);
+
+	visible.reserve(this->meshRenderQueue.size());
+
+	for (size_t i = 0; i < this->meshRenderQueue.size(); i++) {
+		if (this->meshRenderQueue[i].expired()) {
+			// This should remove deleted lights
+			Logger::Log("The renderer deleted an object");
+			this->meshRenderQueue.erase(this->meshRenderQueue.begin() + i);
+			i--;
+			continue;
+		}
+		visible.emplace_back(this->meshRenderQueue[i]);
+	}
+	return visible;
 }
 
 void Renderer::SetViewport(const Window& window) {
@@ -349,13 +369,14 @@ void Renderer::RenderPass() {
 	}
 
 	// Bind meshes
-	for (size_t i = 0; i < this->meshRenderQueue.size(); i++) {
-		std::weak_ptr<MeshObject> meshObject = this->meshRenderQueue[i];
+	auto renderQueue = this->GetVisibleObjects(CameraObject::GetMainCamera());
+	for (size_t i = 0; i < renderQueue.size(); i++) {
+		std::weak_ptr<MeshObject> meshObject = renderQueue[i];
 
 		if (meshObject.expired()) {
 			// This should get rid of empty objects
 			Logger::Log("The renderer deleted a meshObject");
-			this->meshRenderQueue.erase(this->meshRenderQueue.begin() + i);
+			renderQueue.erase(renderQueue.begin() + i);
 			i--;
 			continue;
 		}
@@ -475,7 +496,8 @@ std::vector<ID3D11ShaderResourceView*> Renderer::SpotLightShadowPass() {
 			Logger::Error("Lights shadow camera was dead");
 			continue;
 		}
-		auto matrixContainer = light->camera.lock()->GetCameraMatrix();
+		auto& camera = *light->camera.lock().get();
+		auto matrixContainer = camera.GetCameraMatrix();
 
 		const auto& viewPort = light->GetViewPort();
 		this->immediateContext->RSSetViewports(1, &viewPort);
@@ -485,7 +507,7 @@ std::vector<ID3D11ShaderResourceView*> Renderer::SpotLightShadowPass() {
 		this->immediateContext->VSSetConstantBuffers(0, 1, &buffer);
 
 		// Draw all objects to depthstencil
-		for (auto& mesh : this->meshRenderQueue) {
+		for (auto& mesh : this->GetVisibleObjects(camera)) {
 			if (mesh.expired()) continue;
 			this->RenderMeshObject(mesh.lock().get(), false);
 		}
@@ -527,7 +549,8 @@ std::vector<ID3D11ShaderResourceView*> Renderer::PointLightShadowPass() {
 				Logger::Error("Lights shadow camera was dead");
 				continue;
 			}
-			auto matrixContainer = light->cameras[j].lock()->GetCameraMatrix();
+			auto& camera = *light->cameras[i].lock().get();
+			auto matrixContainer = camera.GetCameraMatrix();
 
 			const auto& viewPort = light->GetViewPort();
 			this->immediateContext->RSSetViewports(1, &viewPort);
@@ -537,7 +560,7 @@ std::vector<ID3D11ShaderResourceView*> Renderer::PointLightShadowPass() {
 			this->immediateContext->VSSetConstantBuffers(0, 1, &buffer);
 
 			// Draw all objects to depthstencil
-			for (auto& mesh : this->meshRenderQueue) {
+			for (auto& mesh : this->GetVisibleObjects(camera)) {
 				if (mesh.expired()) continue;
 				this->RenderMeshObject(mesh.lock().get(), false);
 			}

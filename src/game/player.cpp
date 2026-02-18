@@ -46,8 +46,8 @@ void Player::PhysicsTick()
 	}
 
 	DirectX::XMVECTOR moveVector = {};
-	moveVector = DirectX::XMVectorAdd(moveVector, DirectX::XMVectorScale(cam->GetGlobalRight(), this->input[0] * this->speed * fixedDeltaTime)); //Add x-input
-	moveVector = DirectX::XMVectorAdd(moveVector, DirectX::XMVectorScale(cam->GetGlobalForward(), this->input[1] * this->speed * fixedDeltaTime)); //Add z-input
+	moveVector = DirectX::XMVectorAdd(moveVector, DirectX::XMVectorScale(this->GetGlobalRight(), this->input[0] * this->speed * fixedDeltaTime)); //Add x-input
+	moveVector = DirectX::XMVectorAdd(moveVector, DirectX::XMVectorScale(this->GetGlobalForward(), this->input[1] * this->speed * fixedDeltaTime)); //Add z-input
 
 	DirectX::XMStoreFloat3(&this->linearVelocity, moveVector);
 	this->RigidBody::PhysicsTick(); //has to be last because of gravity
@@ -86,7 +86,8 @@ void Player::UpdateCamera()
 		if (rot[0] > 1.5f) rot[0] = 1.5f;
 		if (rot[0] < -1.5f) rot[0] = -1.5f;
 
-		cam->transform.SetRotationRPY(0.0f, rot[0], rot[1]);
+		cam->transform.SetRotationRPY(0.0f, rot[0], 0);
+		this->transform.SetRotationRPY(0.0f, 0, rot[1]);
 	}
 }
 

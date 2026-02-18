@@ -3,7 +3,8 @@
 #include "gameObjects/meshObject.h"
 #include "core/physics/boxCollider.h"
 #include <vector>
-
+#include <array>
+#include <memory>
 
 class Wall : public MeshObject {
 public:
@@ -17,7 +18,7 @@ public:
 	void SetWallState(int wallState);
 
 private:
-	std::string wallMeshIdentifiers[3]{"SpaceShip/room.glb:Mesh_3", "SpaceShip/room.glb:Mesh_1",
+	inline static const std::array<std::string, 3> wallMeshIdentifiers{"SpaceShip/room.glb:Mesh_3", "SpaceShip/room.glb:Mesh_1",
 									   "SpaceShip/room.glb:Mesh_2"};
 
 	std::weak_ptr<BoxCollider> interactable;

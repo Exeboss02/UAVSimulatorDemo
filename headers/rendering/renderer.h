@@ -27,8 +27,14 @@
 namespace UI {
 class Widget;
 }
+#include "rendering/skybox.h"
+#include "rendering/quadTree.h"
+#include "core/assetManager.h"
+#include <unordered_map>
 
 #include <functional>
+#include "rendering/renderMap.h"
+#include "rendering/instanceBuffer.h"
 
 class Renderer {
 public:
@@ -89,10 +95,10 @@ public:
 private:
 	const size_t maximumSpotlights;
 
-	struct WorldMatrixBufferContainer {
-		DirectX::XMFLOAT4X4 worldMatrix;
-		DirectX::XMFLOAT4X4 worldMatrixInversedTransposed;
-	};
+	//struct WorldMatrixBufferContainer {
+	//	DirectX::XMFLOAT4X4 worldMatrix;
+	//	DirectX::XMFLOAT4X4 worldMatrixInversedTransposed;
+	//};
 
 	struct LightCountBufferContainer {
 		uint32_t spotlightCount;
@@ -111,7 +117,11 @@ private:
 
 	std::unique_ptr<RenderTarget> renderTarget;
 	std::unique_ptr<DepthBuffer> depthBuffer;
-	std::unique_ptr<InputLayout> inputLayout;
+
+	std::unique_ptr<InputLayout> inputLayout; // Standard input layout
+
+	std::unique_ptr<InputLayout> instanceInputLayout;
+
 	std::unique_ptr<Sampler> sampler;
 	std::unique_ptr<Sampler> shadowSampler;
 	std::unique_ptr<Sampler> uiSampler;
@@ -137,6 +147,10 @@ private:
 
 	std::unique_ptr<Skybox> skybox;
 
+	BaseMaterial* currentMaterial;
+
+	//Mesh* currentMesh;
+
 	// Render Queue:
 
 	RenderQueue renderQueue;
@@ -145,17 +159,23 @@ private:
 	std::vector<std::weak_ptr<PointLightObject>> pointLightRenderQueue;
 	std::vector<std::weak_ptr<UI::Widget>> uiRenderQueue;
 
+	RenderMap standardRenderMap;
+
+	QuadTree staticObjectsTree;
+	std::vector<std::weak_ptr<MeshObject>> GetVisibleObjects(CameraObject& camera);
+
 	// Constant buffers:
 	// The renderer keeps these constant buffers since only one is ever required
 	// So it just updates them with data for each object every frame
 
 	std::unique_ptr<ConstantBuffer> cameraBuffer;
-	std::unique_ptr<ConstantBuffer> worldMatrixBuffer;
 
 	std::unique_ptr<ConstantBuffer> spotlightCountBuffer;
 	std::unique_ptr<StructuredBuffer<SpotlightObject::SpotLightContainer>> spotlightBuffer;
 	std::unique_ptr<StructuredBuffer<PointLightObject::PointLightContainer>> pointlightBuffer;
 	std::unique_ptr<ConstantBuffer> pointlightCountBuffer;
+
+	std::unordered_map<size_t, std::unique_ptr<InstanceBuffer>> instanceBuffers;
 
 	// ImGui variables
 
@@ -167,16 +187,20 @@ private:
 	void CreateDeviceAndSwapChain(const Window& window);
 	void CreateRenderTarget();
 	void CreateDepthBuffer(const Window& window);
-	void CreateInputLayout(const std::string& vShaderByteCode);
+	void CreateInputLayout();
 	void CreateSampler();
 	void CreateRasterizerStates();
+
+	void CreateRenderMap(RenderMap& renderMap, CameraObject& camera);
+	void CreateCheapRenderMap(CheapRenderMap& renderMap, CameraObject& camera);
+
+	// Doesn't work
+	size_t FillRenderMap(RenderMap& renderMap, CameraObject& camera);
 
 	/// <summary>
 	/// Creates required constant buffers. The renderer needs a cameraBuffer and worldMatrixBuffer.
 	/// </summary>
 	void CreateRendererConstantBuffers();
-
-	void CreateRenderQueue();
 
 	void LoadShaders();
 
@@ -193,7 +217,6 @@ private:
 	ShadowResourceViews ShadowPass();
 
 	std::vector<ID3D11ShaderResourceView*> SpotLightShadowPass();
-
 	std::vector<ID3D11ShaderResourceView*> PointLightShadowPass();
 
 	/// <summary>
@@ -204,22 +227,44 @@ private:
 	void ResizeSwapChain(const Window& window);
 
 	void BindSampler();
-	void BindInputLayout();
+	void BindInputLayout(InputLayout* inputLayout);
 	void BindRenderTarget();
 	void BindViewport();
 	void BindRasterizerState(RasterizerState* rastState);
 
+	/// <summary>
+	/// Binds shaders and a material to constant buffer, along with all it's textures.
+	/// </summary>
 	void BindMaterial(BaseMaterial* material);
+
+	/// <summary>
+	/// Binds lights for use in the color pass.
+	/// </summary>
 	void BindLights();
 
 	void BindCameraMatrix();
 	void BindWorldMatrix(ID3D11Buffer* buffer);
 
+	/// <summary>
+	/// Draws the skybox
+	/// </summary>
 	void DrawSkybox();
 
 	/// <summary>
-	/// Renders a single MeshObject
+	/// Renders a single MeshObject. For optimal performance, don't use this.
 	/// </summary>
-	/// <param name="meshObject"></param>
 	void RenderMeshObject(MeshObject* meshObject, bool renderMaterial = true);
+
+	/// <summary>
+	/// Draws a full rendermap using instancing. This is the preferred way to render.
+	/// </summary>
+	void RenderRenderMap(RenderMap& renderMap, bool renderMaterials = true);
+
+	void RenderCheapRenderMap(CheapRenderMap& renderMap);
+
+	/// <summary>
+	/// Send world matrices into this and get an instance buffer filled with that data. 
+	/// All you have to do is bind it to a shader.
+	/// </summary>
+	InstanceBuffer* GetInstanceBuffer(size_t& instanceCount, void* data);
 };

@@ -32,20 +32,19 @@ void Room::SetPosition(size_t x, size_t y) { this->pos = {x, y}; }
 void Room::Start() {
 	Logger::Warn("room size ", this->size);
 	{
-		auto meshobjWeak = this->factory->CreateGameObjectOfType<MeshObject>();
+		auto meshobj = this->factory->CreateStaticGameObject<MeshObject>();
 
-		auto meshobj = meshobjWeak.lock();
 		meshobj->SetParent(this->GetPtr());
 
 		MeshObjData meshdata = AssetManager::GetInstance().GetMeshObjData("SpaceShip/room.glb:Mesh_0");
+
 		meshobj->SetMesh(meshdata);
 
 		this->roof = meshobj;
 	}
 	{
-		auto meshobjWeak = this->factory->CreateGameObjectOfType<MeshObject>();
+		auto meshobj = this->factory->CreateStaticGameObject<MeshObject>();
 
-		auto meshobj = meshobjWeak.lock();
 		meshobj->SetParent(this->GetPtr());
 
 		MeshObjData meshdata = AssetManager::GetInstance().GetMeshObjData("SpaceShip/room.glb:Mesh_4");
@@ -55,9 +54,8 @@ void Room::Start() {
 	}
 	for (size_t i = 0; i < 4; i++) {
 
-		auto meshobjWeak = this->factory->CreateGameObjectOfType<Wall>();
+		auto meshobj = this->factory->CreateStaticGameObject<Wall>();
 
-		auto meshobj = meshobjWeak.lock();
 		meshobj->SetParent(this->GetPtr());
 
 		meshobj->SetWallState(Room::WallState::window);
@@ -93,4 +91,52 @@ void Room::SetParent(std::weak_ptr<GameObject> parentWeak) {
 		Logger::Error("Trying to set parent when parent doesn't exist???");
 		return;
 	}
+}
+
+void Room::SetupPathfindingNodes(std::shared_ptr<SpaceShip> spaceShip, std::shared_ptr<Room> roomPtr) {
+
+	size_t nodeCount = this->pathfindingNodes.size();
+
+	const float nodeHeight = 2.0f;
+
+	// 9 nodes in local room-space, 1 in the center, and 8 around the center in a circle.
+	std::array<DirectX::XMVECTOR, 9> nodesLocal = {};
+	nodesLocal[0] = DirectX::XMVectorSet(0, nodeHeight, 0, 1);
+	float distance = this->size / 4;
+	for (size_t i = 1; i < nodeCount; ++i) {
+		float angle = DirectX::XM_PIDIV2 - (i - 1) * (DirectX::XM_PI / 4); // Start at North (z+) and go clockwise
+		nodesLocal[i] = DirectX::XMVectorSet(std::cos(angle) * distance, nodeHeight, std::sin(angle) * distance, 1);
+	}
+
+	// Create vertices for each node using the factory
+	for (size_t i = 0; i < nodeCount; ++i) {
+		// Create through factory so myPtr is initialized properly
+		auto vertexWeak = this->factory->CreateGameObjectOfType<AStarVertex>();
+		auto vertex = vertexWeak.lock();
+		
+		// Initialize the vertex with its position
+		vertex->Initialize(nodesLocal[i]);
+		vertex->transform.SetPosition(nodesLocal[i]);
+
+		// Now SetParent will work because myPtr is initialized by the factory
+		vertex->SetParent(roomPtr);
+
+		this->pathfindingNodes[i] = vertex;
+		
+		spaceShip->GetPathfinder()->AddVertex(vertex);
+	}
+
+	// Create edges from all outside nodes to the center node
+	unsigned int edgeCost = static_cast<unsigned int>(this->size / 3);
+	for (size_t i = 1; i < nodeCount; ++i) {
+		spaceShip->GetPathfinder()->AddEdge(this->pathfindingNodes[0], this->pathfindingNodes[i], edgeCost);
+	}
+
+	edgeCost = static_cast<unsigned int>(this->size / 4);
+	// Create edges between adjacent outside nodes
+	for (size_t i = 1; i < nodeCount; ++i) {
+		size_t nextIndex = (i % 8) + 1;
+		spaceShip->GetPathfinder()->AddEdge(this->pathfindingNodes[i], this->pathfindingNodes[nextIndex], edgeCost);
+	}
+
 }

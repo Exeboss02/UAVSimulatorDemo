@@ -13,12 +13,14 @@ class SpotlightObject;
 class GameObject;
 class PointLightObject;
 namespace UI { class Widget; }
+class QuadTree;
 
 class RenderQueue {
 public:
 	RenderQueue(std::vector<std::weak_ptr<MeshObject>>& meshRenderQueue,
 				std::vector<std::weak_ptr<SpotlightObject>>& lightRenderQueue,
 				std::vector<std::weak_ptr<PointLightObject>>& pointLightRenderQueue,
+				QuadTree& staticObjects,
 				std::vector<std::weak_ptr<UI::Widget>>& uiRenderQueue
 				
 	);
@@ -78,5 +80,6 @@ private:
 	std::vector<std::weak_ptr<MeshObject>>& meshRenderQueue;
 	std::vector<std::weak_ptr<SpotlightObject>>& lightRenderQueue;
 	std::vector<std::weak_ptr<PointLightObject>>& pointLightRenderQueue;
+	QuadTree& staticObjects;
 	std::vector<std::weak_ptr<UI::Widget>>& uiRenderQueue;
 };

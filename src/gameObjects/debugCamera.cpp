@@ -38,8 +38,8 @@ void DebugCamera::Tick() {
 	if (!showCursor) {
 		std::array<float, 2> lookVector = keyboardInput.GetLookVector();
 
-		float sensitivity = 2.f;
-		float rotSpeed = sensitivity * Time::GetInstance().GetDeltaTime();
+		float sensitivity = 0.003f;
+		float rotSpeed = sensitivity;
 
 		this->rot[0] += rotSpeed * lookVector[1];
 		this->rot[1] += rotSpeed * lookVector[0];

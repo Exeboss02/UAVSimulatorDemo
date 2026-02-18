@@ -11,9 +11,11 @@ RenderQueue* RenderQueue::instance = nullptr;
 RenderQueue::RenderQueue(std::vector<std::weak_ptr<MeshObject>>& meshRenderQueue,
 						 std::vector<std::weak_ptr<SpotlightObject>>& lightRenderQueue,
 						 std::vector<std::weak_ptr<PointLightObject>>& pointLightRenderQueue,
-						 std::vector<std::weak_ptr<UI::Widget>>& uiRenderQueue)
+						QuadTree& staticObjects,
+	std::vector<std::weak_ptr<UI::Widget>>& uiRenderQueue
+)
 	: meshRenderQueue(meshRenderQueue), lightRenderQueue(lightRenderQueue),
-	  pointLightRenderQueue(pointLightRenderQueue), uiRenderQueue(uiRenderQueue) {
+	  pointLightRenderQueue(pointLightRenderQueue), staticObjects(staticObjects), uiRenderQueue(uiRenderQueue) {
 	Logger::Log("Initializing RenderQueue.");
 
 	if (instance) {
@@ -39,8 +41,21 @@ void RenderQueue::AddMeshObject(std::weak_ptr<GameObject> newMeshObject) {
 		Logger::Error("Tried to add object to queue, but RenderQueue is not initialized.");
 		throw std::runtime_error("Fatal error in RenderQueue.");
 	}
+	
+	if (newMeshObject.lock()->GetIsStatic()) {
+		RenderQueue::instance->staticObjects.AddElement(static_pointer_cast<MeshObject>(newMeshObject.lock()));
+	} else {
+		const auto found = std::find_if(
+			RenderQueue::instance->meshRenderQueue.begin(), RenderQueue::instance->meshRenderQueue.end(),
+			[&](std::weak_ptr<MeshObject> meshObj) { return meshObj.lock().get() == newMeshObject.lock().get(); });
+		if (found != RenderQueue::instance->meshRenderQueue.end()) {
+			// This shouldn't really be a warning
+			Logger::Warn("Tried to add object to queue, but it's already there.");
+			return;
+		}
 
-	RenderQueue::instance->meshRenderQueue.push_back(std::static_pointer_cast<MeshObject>(newMeshObject.lock()));
+		RenderQueue::instance->meshRenderQueue.push_back(std::static_pointer_cast<MeshObject>(newMeshObject.lock()));
+	}
 }
 
 void RenderQueue::RemoveMeshObject() {

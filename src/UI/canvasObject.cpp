@@ -209,7 +209,7 @@ void UI::CanvasObject::ShowInHierarchy() {
 	}
 
 	if (ImGui::Button("Clear Canvas Children")) {
-		canvas->Clear();
+		this->Clear();
 	}
 }
 

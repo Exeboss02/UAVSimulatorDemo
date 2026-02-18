@@ -18,6 +18,7 @@ struct TextSubmission {
 	float fontSize;
 	DirectX::XMFLOAT4 color;
 	std::string font;
+	int zIndex = 0;
 };
 
 class TextRenderer {
@@ -25,7 +26,7 @@ public:
 	static TextRenderer& GetInstance();
 
 	void SubmitText(const std::string& text, Vec2 position, float fontSize, DirectX::XMFLOAT4 color,
-					const std::string& font = "");
+					const std::string& font = "", int zIndex = 0);
 
 	void ClearSubmissions();
 	void Render(void* context);

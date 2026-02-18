@@ -27,14 +27,14 @@
 namespace UI {
 class Widget;
 }
-#include "rendering/skybox.h"
-#include "rendering/quadTree.h"
 #include "core/assetManager.h"
+#include "rendering/quadTree.h"
+#include "rendering/skybox.h"
 #include <unordered_map>
 
-#include <functional>
-#include "rendering/renderMap.h"
 #include "rendering/instanceBuffer.h"
+#include "rendering/renderMap.h"
+#include <functional>
 
 class Renderer {
 public:
@@ -95,10 +95,10 @@ public:
 private:
 	const size_t maximumSpotlights;
 
-	//struct WorldMatrixBufferContainer {
+	// struct WorldMatrixBufferContainer {
 	//	DirectX::XMFLOAT4X4 worldMatrix;
 	//	DirectX::XMFLOAT4X4 worldMatrixInversedTransposed;
-	//};
+	// };
 
 	struct LightCountBufferContainer {
 		uint32_t spotlightCount;
@@ -149,7 +149,7 @@ private:
 
 	BaseMaterial* currentMaterial;
 
-	//Mesh* currentMesh;
+	// Mesh* currentMesh;
 
 	// Render Queue:
 
@@ -205,9 +205,14 @@ private:
 	void LoadShaders();
 
 	/// <summary>
-	/// This is where the actual rendering logic is done
+	/// This is where the actual rendering logic is done/
 	/// </summary>
 	void RenderPass();
+
+	/// <summary>
+	/// This gets called by the RenderPass() to render the UI logic.
+	/// </summary
+	void RenderUI();
 
 	struct ShadowResourceViews {
 		std::vector<ID3D11ShaderResourceView*> spotlightSRVs;
@@ -263,7 +268,7 @@ private:
 	void RenderCheapRenderMap(CheapRenderMap& renderMap);
 
 	/// <summary>
-	/// Send world matrices into this and get an instance buffer filled with that data. 
+	/// Send world matrices into this and get an instance buffer filled with that data.
 	/// All you have to do is bind it to a shader.
 	/// </summary>
 	InstanceBuffer* GetInstanceBuffer(size_t& instanceCount, void* data);

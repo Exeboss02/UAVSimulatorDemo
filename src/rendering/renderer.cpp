@@ -4,10 +4,14 @@
 #include "UI/widget.h"
 #include "core/filepathHolder.h"
 #include "gameObjects/objectLoader.h"
+#include <chrono>
+#include <cmath>
+
+#define DEBUG_TIMER
 
 Renderer::Renderer()
-	: viewport(), currentPixelShader(nullptr), currentVertexShader(nullptr), currentRasterizerState(nullptr),
-	  maximumSpotlights(16), staticObjectsTree({-10, -10, -10}, {10 * 64, 20, 10 * 64}, 6, 4), 
+	: viewport(), currentPixelShader(nullptr), currentVertexShader(nullptr), currentRasterizerState(nullptr), currentMaterial(nullptr),
+	  maximumSpotlights(16), staticObjectsTree({-10, -10, -10}, {10 * 64, 20, 10 * 64}, 4, 4), 
 	  renderQueue(this->meshRenderQueue, this->spotLightRenderQueue, this->pointLightRenderQueue, this->staticObjectsTree, this->uiRenderQueue) 
 {
 	this->renderQueue.newSkyboxCallback = [this](std::string filename) { this->ChangeSkybox(filename); };
@@ -19,14 +23,12 @@ void Renderer::Init(const Window& window) {
 	CreateDeviceAndSwapChain(window);
 	CreateRenderTarget();
 	CreateDepthBuffer(window);
-
-	CreateRenderQueue();
 }
 
 void Renderer::SetAllDefaults() {
 	CreateSampler();
 
-	CreateInputLayout(AssetManager::GetInstance().GetShaderPtr("VSStandard")->GetShaderByteCode());
+	CreateInputLayout();
 
 	CreateRasterizerStates();
 
@@ -49,6 +51,8 @@ std::vector<std::weak_ptr<MeshObject>> Renderer::GetVisibleObjects(CameraObject&
 
 	visible.reserve(this->meshRenderQueue.size());
 
+	DirectX::XMVECTOR cameraGlobalPos = camera.GetGlobalPosition();
+
 	for (size_t i = 0; i < this->meshRenderQueue.size(); i++) {
 		if (this->meshRenderQueue[i].expired()) {
 			// This should remove deleted lights
@@ -57,8 +61,19 @@ std::vector<std::weak_ptr<MeshObject>> Renderer::GetVisibleObjects(CameraObject&
 			i--;
 			continue;
 		}
+
+		// This should NOT be done every frame, very expensive matrix operations
+		float distance;
+		DirectX::XMStoreFloat(&distance, DirectX::XMVector3LengthSq(DirectX::XMVectorSubtract(
+											 cameraGlobalPos, this->meshRenderQueue[i].lock()->GetGlobalPosition())));
+		
+		if (distance > std::powf(camera.GetFarPlane(), 2.0f)) {
+			continue;
+		}
+
 		visible.emplace_back(this->meshRenderQueue[i]);
 	}
+
 	return visible;
 }
 
@@ -152,12 +167,51 @@ void Renderer::CreateDepthBuffer(const Window& window) {
 	this->depthBuffer->Init(this->device.Get(), clientWidth, clientHeight);
 }
 
-void Renderer::CreateInputLayout(const std::string& vShaderByteCode) {
+void Renderer::CreateInputLayout() {
+	// Input layout for non-instanced drawing
+
 	this->inputLayout = std::unique_ptr<InputLayout>(new InputLayout());
 	this->inputLayout->AddInputElement("POSITION", DXGI_FORMAT_R32G32B32_FLOAT);
 	this->inputLayout->AddInputElement("NORMAL", DXGI_FORMAT_R32G32B32_FLOAT);
 	this->inputLayout->AddInputElement("UV", DXGI_FORMAT_R32G32_FLOAT);
-	this->inputLayout->FinalizeInputLayout(this->device.Get(), vShaderByteCode.c_str(), vShaderByteCode.length());
+
+	auto vsShader1 = AssetManager::GetInstance().GetShaderPtr("VSSkybox")->GetShaderByteCode();
+	this->inputLayout->FinalizeInputLayout(
+		this->device.Get(), vsShader1.c_str(), vsShader1.length());
+
+
+	// Input layout for instanced drawing
+
+	this->instanceInputLayout = std::make_unique<InputLayout>();
+	this->instanceInputLayout->PrepareInputLayout(3 + 8);
+
+	// Standard stuff
+	this->instanceInputLayout->AddInputElement("POSITION", DXGI_FORMAT_R32G32B32_FLOAT);
+	this->instanceInputLayout->AddInputElement("NORMAL", DXGI_FORMAT_R32G32B32_FLOAT);
+	this->instanceInputLayout->AddInputElement("UV", DXGI_FORMAT_R32G32_FLOAT);
+
+	// World matrix
+	this->instanceInputLayout->AddInputElement("WORLD_MATRIX", DXGI_FORMAT_R32G32B32A32_FLOAT, 1,
+											   D3D11_INPUT_PER_INSTANCE_DATA);
+	this->instanceInputLayout->AddInputElement("WORLD_MATRIX", DXGI_FORMAT_R32G32B32A32_FLOAT, 1,
+											   D3D11_INPUT_PER_INSTANCE_DATA);
+	this->instanceInputLayout->AddInputElement("WORLD_MATRIX", DXGI_FORMAT_R32G32B32A32_FLOAT, 1,
+											   D3D11_INPUT_PER_INSTANCE_DATA);
+	this->instanceInputLayout->AddInputElement("WORLD_MATRIX", DXGI_FORMAT_R32G32B32A32_FLOAT, 1,
+											   D3D11_INPUT_PER_INSTANCE_DATA);
+
+	// Inversed transposed matrix for normals
+	this->instanceInputLayout->AddInputElement("INVERSED_TRANSPOSED_WORLD_MATRIX", DXGI_FORMAT_R32G32B32A32_FLOAT, 1,
+											   D3D11_INPUT_PER_INSTANCE_DATA);
+	this->instanceInputLayout->AddInputElement("INVERSED_TRANSPOSED_WORLD_MATRIX", DXGI_FORMAT_R32G32B32A32_FLOAT, 1,
+											   D3D11_INPUT_PER_INSTANCE_DATA);
+	this->instanceInputLayout->AddInputElement("INVERSED_TRANSPOSED_WORLD_MATRIX", DXGI_FORMAT_R32G32B32A32_FLOAT, 1,
+											   D3D11_INPUT_PER_INSTANCE_DATA);
+	this->instanceInputLayout->AddInputElement("INVERSED_TRANSPOSED_WORLD_MATRIX", DXGI_FORMAT_R32G32B32A32_FLOAT, 1,
+											   D3D11_INPUT_PER_INSTANCE_DATA);
+
+	auto vsShader2 = AssetManager::GetInstance().GetShaderPtr("VSStandard")->GetShaderByteCode();
+	this->instanceInputLayout->FinalizeInputLayout(this->device.Get(), vsShader2.c_str(), vsShader2.length());
 }
 
 void Renderer::CreateSampler() {
@@ -236,16 +290,193 @@ void Renderer::CreateRasterizerStates() {
 	this->skyboxRasterizerState->Init(this->device.Get(), &skyboxRastDesc);
 }
 
+void Renderer::CreateRenderMap(RenderMap& renderMap, CameraObject& camera) {
+	#ifdef DEBUG_TIMER
+	const auto start{std::chrono::steady_clock::now()};
+	#endif // DEBUG_TIMER
+
+
+	//// Removes dead gameobjects
+	//this->meshRenderQueue.erase(std::remove_if(this->meshRenderQueue.begin(), this->meshRenderQueue.end(),
+	//									 [](const std::weak_ptr<MeshObject>& w) { return w.expired(); }),
+	//							this->meshRenderQueue.end());
+
+	auto renderQueue = GetVisibleObjects(camera);
+
+	renderMap.meshes.clear();
+	
+	for (size_t i = 0; i < renderQueue.size(); i++) {
+		std::shared_ptr<MeshObject> meshObject = renderQueue[i].lock();
+
+		if (!meshObject->IsActive() || meshObject->IsHidden()) continue;
+
+		auto& meshObjData = meshObject->GetMesh();
+
+		std::string meshIdentifier = meshObjData.GetMeshIdentifier();
+		auto [meshIterator, meshInserted] = renderMap.meshes.try_emplace(meshIdentifier);
+
+		auto& mapMesh = meshIterator->second;
+
+		if (meshInserted) {
+			// Create mesh entry
+			mapMesh.mesh = meshObjData.GetMesh().lock();
+			mapMesh.submeshes = std::vector<RenderMap::RenderMapSubmesh>(mapMesh.mesh->GetSubMeshes().size());
+		}
+
+
+		// Create the world matrices
+		DirectX::XMFLOAT4X4 worldMatrix;
+		DirectX::XMFLOAT4X4 worldMatrixInverseTransposed;
+
+		DirectX::XMStoreFloat4x4(&worldMatrix, meshObject->GetGlobalWorldMatrix(false));
+		DirectX::XMStoreFloat4x4(&worldMatrixInverseTransposed, meshObject->GetGlobalWorldMatrix(true));
+
+		RenderMap::WorldMatrixBufferContainer worldMatrixBufferContainer = {worldMatrix, worldMatrixInverseTransposed};
+
+
+		for (size_t j = 0; j < mapMesh.submeshes.size(); j++) {
+			auto material = meshObjData.GetMaterial(j).lock();
+			std::string materialIdentifier = material->GetIdentifier();
+			auto [materialIterator, materialInserted] = mapMesh.submeshes[j].materials.try_emplace(materialIdentifier);
+
+			auto& mapMaterial = materialIterator->second;
+
+			if (materialInserted) {
+				// Create new material
+				mapMaterial.material = material;
+			}
+
+			mapMaterial.objects.push_back(worldMatrixBufferContainer);
+		}
+	}
+
+	#ifdef DEBUG_TIMER
+	const auto finsihedRenderMap{std::chrono::steady_clock::now()};
+	const std::chrono::duration<double> elapsedSeconds{finsihedRenderMap - start};
+	ImGui::Text(("Render map creation: " + std::to_string(elapsedSeconds.count()) + " : " +
+				std::to_string(renderQueue.size())).c_str());
+	#endif // DEBUG_TIMER
+}
+
+void Renderer::CreateCheapRenderMap(CheapRenderMap& renderMap, CameraObject& camera) {
+	#ifdef DEBUG_TIMER
+	const auto start{std::chrono::steady_clock::now()};
+	#endif // DEBUG_TIMER
+
+	auto renderQueue = GetVisibleObjects(camera);
+
+	renderMap.meshes.clear();
+
+	for (size_t i = 0; i < renderQueue.size(); i++) {
+		std::shared_ptr<MeshObject> meshObject = renderQueue[i].lock();
+
+		if (!meshObject->IsActive() || meshObject->IsHidden()) continue;
+
+		auto& meshObjData = meshObject->GetMesh();
+
+		std::string meshIdentifier = meshObjData.GetMeshIdentifier();
+		auto [meshIterator, meshInserted] = renderMap.meshes.try_emplace(meshIdentifier);
+
+		auto& mapMesh = meshIterator->second;
+
+		if (meshInserted) {
+			// Create mesh entry
+			mapMesh.mesh = meshObjData.GetMesh().lock();
+		}
+
+		// Create the world matrices
+		DirectX::XMFLOAT4X4 worldMatrix;
+		DirectX::XMFLOAT4X4 worldMatrixInverseTransposed;
+
+		DirectX::XMStoreFloat4x4(&worldMatrix, meshObject->GetGlobalWorldMatrix(false));
+		DirectX::XMStoreFloat4x4(&worldMatrixInverseTransposed, meshObject->GetGlobalWorldMatrix(true));
+
+		RenderMap::WorldMatrixBufferContainer worldMatrixBufferContainer = {worldMatrix, worldMatrixInverseTransposed};
+
+		mapMesh.objects.push_back(worldMatrixBufferContainer);
+	}
+
+	#ifdef DEBUG_TIMER
+	const auto finsihedRenderMap{std::chrono::steady_clock::now()};
+	const std::chrono::duration<double> elapsedSeconds{finsihedRenderMap - start};
+	ImGui::Text(
+		("Cheap Render map: " + std::to_string(elapsedSeconds.count()) + " : " + std::to_string(renderQueue.size()))
+			.c_str());
+	#endif // DEBUG_TIMER
+}
+
+size_t Renderer::FillRenderMap(RenderMap& renderMap, CameraObject& camera) { 
+	#ifdef DEBUG_TIMER
+	const auto start{std::chrono::steady_clock::now()};
+	#endif // DEBUG_TIMER
+
+
+	auto renderQueue = GetVisibleObjects(camera);
+
+	if (renderQueue.size() <= 0) {
+		return 0;
+	}
+
+	for (auto& mesh : renderMap.meshes) {
+		for (auto& submesh : mesh.second.submeshes) {
+			for (auto& material : submesh.materials) {
+				material.second.objects.clear();
+			}
+		}
+	}
+
+	for (auto& meshObjectWeak : renderQueue) {
+		std::shared_ptr<MeshObject> meshObject = meshObjectWeak.lock();
+
+		if (!meshObject->IsActive() || meshObject->IsHidden()) continue;
+
+		auto& meshObjData = meshObject->GetMesh();
+
+		std::string meshIdentifier = meshObjData.GetMeshIdentifier();
+
+		auto& mapMesh = renderMap.meshes[meshIdentifier];
+
+		// Create the world matrices
+		DirectX::XMFLOAT4X4 worldMatrix;
+		DirectX::XMFLOAT4X4 worldMatrixInverseTransposed;
+
+		DirectX::XMStoreFloat4x4(&worldMatrix, meshObject->GetGlobalWorldMatrix(false));
+		DirectX::XMStoreFloat4x4(&worldMatrixInverseTransposed, meshObject->GetGlobalWorldMatrix(true));
+
+		RenderMap::WorldMatrixBufferContainer worldMatrixBufferContainer = {worldMatrix, worldMatrixInverseTransposed};
+
+		for (size_t j = 0; j < mapMesh.submeshes.size(); j++) {
+			auto material = meshObjData.GetMaterial(j).lock();
+			std::string materialIdentifier = material->GetIdentifier();
+
+			auto& mapMaterial = mapMesh.submeshes[j].materials[materialIdentifier];
+
+			mapMaterial.objects.push_back(worldMatrixBufferContainer);
+		}
+	}
+
+	#ifdef DEBUG_TIMER
+	const auto finsihedRenderMap{std::chrono::steady_clock::now()};
+	const std::chrono::duration<double> elapsedSeconds{finsihedRenderMap - start};
+	ImGui::Text(
+		("Render map fill: " + std::to_string(elapsedSeconds.count()) + " : " + std::to_string(renderQueue.size()))
+			.c_str());
+	#endif // DEBUG_TIMER
+
+
+	return renderQueue.size();
+}
+
 void Renderer::CreateRendererConstantBuffers() {
 	CameraObject::CameraMatrixContainer camMatrix = {};
 	this->cameraBuffer = std::make_unique<ConstantBuffer>();
 	this->cameraBuffer->Init(this->device.Get(), sizeof(CameraObject::CameraMatrixContainer), &camMatrix,
 							 D3D11_USAGE_DYNAMIC, D3D11_CPU_ACCESS_WRITE);
 
-	Renderer::WorldMatrixBufferContainer worldMatrix = {};
-	this->worldMatrixBuffer = std::make_unique<ConstantBuffer>();
-	this->worldMatrixBuffer->Init(this->device.Get(), sizeof(Renderer::WorldMatrixBufferContainer), &worldMatrix,
-								  D3D11_USAGE_DYNAMIC, D3D11_CPU_ACCESS_WRITE);
+	//Renderer::WorldMatrixBufferContainer worldMatrix = {};
+	//this->worldMatrixBuffer = std::make_unique<ConstantBuffer>();
+	//this->worldMatrixBuffer->Init(this->device.Get(), sizeof(Renderer::WorldMatrixBufferContainer), &worldMatrix,
+	//							  D3D11_USAGE_DYNAMIC, D3D11_CPU_ACCESS_WRITE);
 
 	this->spotlightBuffer = std::make_unique<StructuredBuffer<SpotlightObject::SpotLightContainer>>();
 	this->spotlightBuffer->Init(this->device.Get(), this->maximumSpotlights, {});
@@ -263,13 +494,6 @@ void Renderer::CreateRendererConstantBuffers() {
 									  &lightCountContainer, D3D11_USAGE_DYNAMIC, D3D11_CPU_ACCESS_WRITE);
 }
 
-void Renderer::CreateRenderQueue() {
-	// this->meshRenderQueue = std::make_shared<std::vector<std::weak_ptr<MeshObject>>>();
-	// this->SpotLightRenderQueue = std::make_shared<std::vector<std::weak_ptr<SpotlightObject>>>();
-	// this->renderQueue = std::unique_ptr<RenderQueue>(new RenderQueue(this->meshRenderQueue,
-	// this->SpotLightRenderQueue));
-}
-
 void Renderer::LoadShaders() {
 	this->vertexShader = AssetManager::GetInstance().GetShaderPtr("VSStandard");
 	this->pixelShaderLit = AssetManager::GetInstance().GetShaderPtr("PSLit");
@@ -280,11 +504,35 @@ void Renderer::LoadShaders() {
 }
 
 void Renderer::Render() {
-	BindInputLayout();
+#ifdef DEBUG_TIMER
+	ImGui::Begin("Timer");
+	const auto start{std::chrono::steady_clock::now()};
+#endif // DEBUG_TIMER
+
+	CreateRenderMap(this->standardRenderMap, CameraObject::GetMainCamera());
+
+	#ifdef DEBUG_TIMER
+	const auto beforeShadow{std::chrono::steady_clock::now()};
+	#endif // DEBUG_TIMER
+
+	BindInputLayout(this->instanceInputLayout.get());
 	auto shadowmaps = this->ShadowPass();
 	this->GetContext()->PSSetShaderResources(5, shadowmaps.spotlightSRVs.size(), shadowmaps.spotlightSRVs.data());
 	this->GetContext()->PSSetShaderResources(7, shadowmaps.pointLightSRVs.size(), shadowmaps.pointLightSRVs.data());
+
+	#ifdef DEBUG_TIMER
+	const auto afterShadow{std::chrono::steady_clock::now()};
+	const std::chrono::duration<double> elapsed_seconds{afterShadow - beforeShadow};
+	ImGui::Text(("Shadow pass: " + std::to_string(elapsed_seconds.count())).c_str());
+	#endif // DEBUG_TIMER
+
 	RenderPass();
+
+	#ifdef DEBUG_TIMER
+	const auto afterRenderPass{std::chrono::steady_clock::now()};
+	const std::chrono::duration<double> elapsed_seconds2{afterRenderPass - afterShadow};
+	ImGui::Text(("Entire renderpass function: " + std::to_string(elapsed_seconds2.count())).c_str());
+	#endif // DEBUG_TIMER
 
 	// Unbinding shadowmaps to allow input on them again
 	for (auto& spotLightShadowMaps : shadowmaps.spotlightSRVs) {
@@ -302,12 +550,12 @@ void Renderer::Render() {
 	}
 	this->GetContext()->PSSetShaderResources(7, shadowmaps.pointLightSRVs.size(), shadowmaps.pointLightSRVs.data());
 
-	// ImGui::Begin("Change Skybox");
-	// if (ImGui::Button("Change")) {
-	//	this->skybox->SwapCubemap(this->device.Get(), this->immediateContext.Get(),
-	//"../../../../assets/skybox/space.dds");
-	// }
-	// ImGui::End();
+	#ifdef DEBUG_TIMER
+	const auto afterRender{std::chrono::steady_clock::now()};
+	const std::chrono::duration<double> elapsed_seconds3{afterRender - start};
+	ImGui::Text(("Entire Render function: " + std::to_string(elapsed_seconds3.count())).c_str());
+	ImGui::End();
+	#endif // DEBUG_TIMER
 }
 
 void Renderer::Present() { this->swapChain->Present(this->isVSyncEnabled ? 1 : 0, 0); }
@@ -338,10 +586,13 @@ IDXGISwapChain* Renderer::GetSwapChain() const { return this->swapChain.Get(); }
 
 void Renderer::RenderPass() {
 
+	#ifdef DEBUG_TIMER
+	const auto start{std::chrono::steady_clock::now()};
+	#endif // DEBUG_TIMER
+
 	// Bind basic stuff (it probably doesn't need to be set every frame)
 	if (!this->hasBoundStatic) {
 		BindSampler();
-		BindInputLayout();
 		BindRenderTarget();
 		BindViewport();
 
@@ -356,9 +607,10 @@ void Renderer::RenderPass() {
 	BindLights();
 
 	// Bind skybox
-	// The skybox needs to not be wireframe and also correct culling
-	BindRasterizerState(this->skyboxRasterizerState.get());
 	DrawSkybox();
+
+	// Fix input layout after skybox changed it
+	BindInputLayout(this->instanceInputLayout.get());
 
 	// Bind rasterizerState
 	if (!this->renderAllWireframe) {
@@ -368,23 +620,24 @@ void Renderer::RenderPass() {
 		BindRasterizerState(this->wireframeRasterizerState.get());
 	}
 
-	// Bind meshes
-	auto renderQueue = this->GetVisibleObjects(CameraObject::GetMainCamera());
-	for (size_t i = 0; i < renderQueue.size(); i++) {
-		std::weak_ptr<MeshObject> meshObject = renderQueue[i];
+	// World Matrix Buffer only needs to be bound once per frame
+	//BindWorldMatrix(this->worldMatrixBuffer->GetBuffer());
 
-		if (meshObject.expired()) {
-			// This should get rid of empty objects
-			Logger::Log("The renderer deleted a meshObject");
-			renderQueue.erase(renderQueue.begin() + i);
-			i--;
-			continue;
-		}
+	#ifdef DEBUG_TIMER
+	const auto afterBinds{std::chrono::steady_clock::now()};
+	const std::chrono::duration<double> elapsed_seconds{afterBinds - start};
+	ImGui::Text(("Render pass setup: " + std::to_string(elapsed_seconds.count())).c_str());
 
-		if (!meshObject.lock()->IsActive() || meshObject.lock()->IsHidden()) continue;
+	const auto startColorPass{std::chrono::steady_clock::now()};
+	#endif // DEBUG_TIMER
 
-		RenderMeshObject(meshObject.lock().get());
-	}
+	RenderRenderMap(this->standardRenderMap);
+
+	#ifdef DEBUG_TIMER
+	const auto endColorPass{std::chrono::steady_clock::now()};
+	const std::chrono::duration<double> elapsedSeconds{endColorPass - startColorPass};
+	ImGui::Text(("Color pass: " + std::to_string(elapsedSeconds.count())).c_str());
+	#endif // DEBUG_TIMER
 
 	// UI pass: render UI widgets in an orthographic projection on top of the scene
 
@@ -439,6 +692,12 @@ void Renderer::RenderPass() {
 	// Restore default rasterizer and blend state
 	this->immediateContext->OMSetBlendState(nullptr, nullptr, 0xffffffff);
 	this->BindRasterizerState(this->standardRasterizerState.get());
+
+	#ifdef DEBUG_TIMER
+	const auto endUIPass{std::chrono::steady_clock::now()};
+	const std::chrono::duration<double> elapsedSeconds2{endUIPass - endColorPass};
+	ImGui::Text(("UI pass: " + std::to_string(elapsedSeconds2.count())).c_str());
+	#endif // DEBUG_TIMER
 }
 
 Renderer::ShadowResourceViews Renderer::ShadowPass() {
@@ -507,10 +766,9 @@ std::vector<ID3D11ShaderResourceView*> Renderer::SpotLightShadowPass() {
 		this->immediateContext->VSSetConstantBuffers(0, 1, &buffer);
 
 		// Draw all objects to depthstencil
-		for (auto& mesh : this->GetVisibleObjects(camera)) {
-			if (mesh.expired()) continue;
-			this->RenderMeshObject(mesh.lock().get(), false);
-		}
+		CheapRenderMap thisCameraRenderMap;
+		this->CreateCheapRenderMap(thisCameraRenderMap, camera);
+		this->RenderCheapRenderMap(thisCameraRenderMap);
 		depthStencilViews.push_back(light->GetSRV());
 	}
 	return depthStencilViews;
@@ -560,10 +818,9 @@ std::vector<ID3D11ShaderResourceView*> Renderer::PointLightShadowPass() {
 			this->immediateContext->VSSetConstantBuffers(0, 1, &buffer);
 
 			// Draw all objects to depthstencil
-			for (auto& mesh : this->GetVisibleObjects(camera)) {
-				if (mesh.expired()) continue;
-				this->RenderMeshObject(mesh.lock().get(), false);
-			}
+			CheapRenderMap thisCameraRenderMap;
+			this->CreateCheapRenderMap(thisCameraRenderMap, camera);
+			this->RenderCheapRenderMap(thisCameraRenderMap);
 		}
 		depthStencilViews.push_back(srv);
 	}
@@ -617,9 +874,9 @@ void Renderer::BindSampler() {
 	immediateContext->PSSetSamplers(1, 1, &shadowSampler);
 }
 
-void Renderer::BindInputLayout() {
+void Renderer::BindInputLayout(InputLayout* inputLayout) {
 	// Set up inputs
-	this->immediateContext->IASetInputLayout(this->inputLayout->GetInputLayout());
+	this->immediateContext->IASetInputLayout(inputLayout->GetInputLayout());
 	this->immediateContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 }
 
@@ -633,6 +890,8 @@ void Renderer::BindRenderTarget() {
 void Renderer::BindViewport() { this->immediateContext->RSSetViewports(1, &this->viewport); }
 
 void Renderer::BindRasterizerState(RasterizerState* rastState) {
+	if (this->currentRasterizerState == rastState) return;
+	
 	if (rastState == nullptr) {
 		Logger::Error("RasterizerState is nullptr");
 	}
@@ -643,6 +902,8 @@ void Renderer::BindRasterizerState(RasterizerState* rastState) {
 }
 
 void Renderer::BindMaterial(BaseMaterial* material) {
+	if (this->currentMaterial == material) return;
+
 	RenderData renderData = material->GetRenderData(this->immediateContext.Get());
 
 	if (material->wireframe) {
@@ -682,7 +943,7 @@ void Renderer::BindMaterial(BaseMaterial* material) {
 		}
 	}
 
-	// FIX
+	// Bind textures
 	this->immediateContext->PSSetShaderResources(1, renderData.textures.size(), renderData.textures.data());
 
 	// Also bind constant buffers
@@ -691,11 +952,13 @@ void Renderer::BindMaterial(BaseMaterial* material) {
 		this->immediateContext->PSSetConstantBuffers(i + 1, 1, &buf); // i + 1 because first slot is always occupied
 	}
 
-	for (size_t i = 0; i < renderData.pixelBuffers.size(); i++) {
-		ID3D11Buffer* buf = renderData.pixelBuffers[i]->GetBuffer();
-		this->immediateContext->VSSetConstantBuffers(i + 2, 1,
-													 &buf); // i + 2 because the first two slots are always occupied
+	for (size_t i = 0; i < renderData.vertexBuffers.size(); i++) {
+		ID3D11Buffer* buf = renderData.vertexBuffers[i]->GetBuffer();
+		this->immediateContext->VSSetConstantBuffers(i + 1, 1,
+													 &buf); // i + 1 because first slot is always occupied
 	}
+
+	this->currentMaterial = material;
 }
 
 void Renderer::BindLights() {
@@ -791,6 +1054,9 @@ void Renderer::BindCameraMatrix() {
 void Renderer::BindWorldMatrix(ID3D11Buffer* buffer) { this->immediateContext->VSSetConstantBuffers(1, 1, &buffer); }
 
 void Renderer::DrawSkybox() {
+	BindInputLayout(this->inputLayout.get());
+	BindRasterizerState(this->skyboxRasterizerState.get());
+
 	this->skybox->Draw(this->immediateContext.Get());
 
 	// Since the skybox sets shaders
@@ -814,11 +1080,9 @@ void Renderer::RenderMeshObject(MeshObject* meshObject, bool renderMaterial) {
 
 	VertexBuffer vBuf = mesh->GetVertexBuffer();
 
-	UINT stride = vBuf.GetVertexSize();
-	UINT offset = 0;
-	ID3D11Buffer* vBuff = vBuf.GetBuffer();
-	this->immediateContext->IASetVertexBuffers(0, 1, &vBuff, &stride, &offset);
 	this->immediateContext->IASetIndexBuffer(mesh->GetIndexBuffer().GetBuffer(), DXGI_FORMAT_R32_UINT, 0);
+	// this->currentMesh = mesh.get();
+
 
 	// Bind worldmatrix
 	DirectX::XMFLOAT4X4 worldMatrix;
@@ -826,10 +1090,28 @@ void Renderer::RenderMeshObject(MeshObject* meshObject, bool renderMaterial) {
 	DirectX::XMFLOAT4X4 worldMatrixInverseTransposed;
 	DirectX::XMStoreFloat4x4(&worldMatrixInverseTransposed, meshObject->GetGlobalWorldMatrix(true));
 
-	Renderer::WorldMatrixBufferContainer worldMatrixBufferContainer = {worldMatrix, worldMatrixInverseTransposed};
+	RenderMap::WorldMatrixBufferContainer worldMatrixBufferContainer = {worldMatrix, worldMatrixInverseTransposed};
 
-	this->worldMatrixBuffer->UpdateBuffer(this->immediateContext.Get(), &worldMatrixBufferContainer);
-	BindWorldMatrix(this->worldMatrixBuffer->GetBuffer());
+	size_t instanceCount(1);
+	InstanceBuffer* instanceBuffer = GetInstanceBuffer(instanceCount, &worldMatrixBufferContainer);
+
+	unsigned int strides[2];
+	unsigned int offsets[2];
+	ID3D11Buffer* bufferPointers[2];
+
+	strides[0] = vBuf.GetVertexSize();
+	strides[1] = instanceBuffer->GetInstanceSize();
+
+	offsets[0] = 0;
+	offsets[1] = 0;
+
+	bufferPointers[0] = vBuf.GetBuffer();
+	bufferPointers[1] = instanceBuffer->GetBuffer();
+
+	this->immediateContext->IASetVertexBuffers(0, 2, bufferPointers, strides, offsets);
+
+	//this->worldMatrixBuffer->UpdateBuffer(this->immediateContext.Get(), &worldMatrixBufferContainer);
+	//BindWorldMatrix(this->worldMatrixBuffer->GetBuffer());
 
 	// Draw submeshes
 	size_t index = 0;
@@ -840,12 +1122,14 @@ void Renderer::RenderMeshObject(MeshObject* meshObject, bool renderMaterial) {
 			Logger::Error("Trying to render expired material, trying to continue...");
 		} else {
 			if (!this->renderAllWireframe && renderMaterial) {
-
-				BindMaterial(weak_material.lock().get());
+				std::shared_ptr<BaseMaterial> sharedMaterial = weak_material.lock();
+				if (sharedMaterial.get() != this->currentMaterial) {
+					BindMaterial(sharedMaterial.get());
+				}
 			}
 
 			// Draw to screen
-			this->immediateContext->DrawIndexed(subMesh.GetNrOfIndices(), subMesh.GetStartIndex(), 0);
+			this->immediateContext->DrawIndexedInstanced(subMesh.GetNrOfIndices(), 1, subMesh.GetStartIndex(), 0, 0);
 		}
 
 		index++;
@@ -867,10 +1151,6 @@ void Renderer::DrawTextQuads(const std::vector<Vertex>& vertices, const std::vec
 	ibuf.Init(this->device.Get(), indices.size(), (uint32_t*) indices.data());
 
 	// Bind buffers
-	UINT stride = vbuf.GetVertexSize();
-	UINT offset = 0;
-	ID3D11Buffer* vBuff = vbuf.GetBuffer();
-	this->immediateContext->IASetVertexBuffers(0, 1, &vBuff, &stride, &offset);
 	this->immediateContext->IASetIndexBuffer(ibuf.GetBuffer(), DXGI_FORMAT_R32_UINT, 0);
 
 	// Set world matrix identity
@@ -878,9 +1158,27 @@ void Renderer::DrawTextQuads(const std::vector<Vertex>& vertices, const std::vec
 	DirectX::XMStoreFloat4x4(&worldMatrix, DirectX::XMMatrixIdentity());
 	DirectX::XMFLOAT4X4 worldMatrixInvTrans;
 	DirectX::XMStoreFloat4x4(&worldMatrixInvTrans, DirectX::XMMatrixIdentity());
-	Renderer::WorldMatrixBufferContainer wm{worldMatrix, worldMatrixInvTrans};
-	this->worldMatrixBuffer->UpdateBuffer(this->immediateContext.Get(), &wm);
-	BindWorldMatrix(this->worldMatrixBuffer->GetBuffer());
+	RenderMap::WorldMatrixBufferContainer wm{worldMatrix, worldMatrixInvTrans};
+
+	size_t instanceCount(1);
+	InstanceBuffer* instanceBuffer = GetInstanceBuffer(instanceCount, &wm);
+
+
+	unsigned int strides[2];
+	unsigned int offsets[2];
+	ID3D11Buffer* bufferPointers[2];
+
+	strides[0] = vbuf.GetVertexSize();
+	strides[1] = instanceBuffer->GetInstanceSize();
+
+	offsets[0] = 0;
+	offsets[1] = 0;
+
+	bufferPointers[0] = vbuf.GetBuffer();
+	bufferPointers[1] = instanceBuffer->GetBuffer();
+
+	this->immediateContext->IASetVertexBuffers(0, 2, bufferPointers, strides, offsets);
+
 
 	// Create a temporary unlit material using the provided SRV and apply tint color
 	UnlitMaterial tempMat(this->device.Get());
@@ -905,9 +1203,122 @@ void Renderer::DrawTextQuads(const std::vector<Vertex>& vertices, const std::vec
 
 	// Bind material and draw
 	BindMaterial(&tempMat);
-	this->immediateContext->DrawIndexed(static_cast<UINT>(indices.size()), 0, 0);
+	this->immediateContext->DrawIndexedInstanced(static_cast<UINT>(indices.size()), 1, 0, 0, 0);
 
 	// Restore previous sampler
 	if (prevSampler) this->immediateContext->PSSetSamplers(0, 1, &prevSampler);
 	if (prevSampler) prevSampler->Release();
+}
+
+void Renderer::RenderRenderMap(RenderMap& renderMap, bool renderMaterials) {
+	for (auto& [meshName, mesh] : renderMap.meshes) {
+		// The indexbuffer is the same no matter which submesh or material
+		this->immediateContext->IASetIndexBuffer(mesh.mesh->GetIndexBuffer().GetBuffer(), DXGI_FORMAT_R32_UINT, 0);
+
+		for (size_t i = 0; i < mesh.submeshes.size(); i++) {
+			auto& submesh = mesh.submeshes[i];
+			auto& submeshData = mesh.mesh->GetSubMeshes();
+
+			for (auto& [materialName, material] : submesh.materials) {
+	
+				size_t instanceCount = material.objects.size(); 
+				if (instanceCount <= 0) continue;
+
+				// Only set material if it's needed
+				if (!this->renderAllWireframe && renderMaterials) {
+					BindMaterial(material.material.get());
+				}
+
+
+				// Get the instance buffer
+				InstanceBuffer* newInstanceBuffer = GetInstanceBuffer(instanceCount, material.objects.data());
+
+
+				// Set vertex buffers
+
+				VertexBuffer vBuf = mesh.mesh->GetVertexBuffer();
+
+				unsigned int strides[2];
+				unsigned int offsets[2];
+				ID3D11Buffer* bufferPointers[2];
+
+				strides[0] = vBuf.GetVertexSize();
+				strides[1] = newInstanceBuffer->GetInstanceSize();
+
+				offsets[0] = 0;
+				offsets[1] = 0;
+
+				bufferPointers[0] = vBuf.GetBuffer();
+				bufferPointers[1] = newInstanceBuffer->GetBuffer();
+
+				this->immediateContext->IASetVertexBuffers(0, 2, bufferPointers, strides, offsets);
+
+
+
+				// Draw call
+				this->immediateContext->DrawIndexedInstanced(
+					submeshData[i].GetNrOfIndices(), newInstanceBuffer->GetNrOfInstances(), submeshData[i].GetStartIndex(), 0, 0);
+			}
+		}
+
+	}
+}
+
+void Renderer::RenderCheapRenderMap(CheapRenderMap& renderMap) {
+	for (auto& [meshName, mesh] : renderMap.meshes) {
+		this->immediateContext->IASetIndexBuffer(mesh.mesh->GetIndexBuffer().GetBuffer(), DXGI_FORMAT_R32_UINT, 0);
+
+		size_t instanceCount = mesh.objects.size();
+		if (instanceCount <= 0) continue;
+
+		// Get the instance buffer
+		InstanceBuffer* newInstanceBuffer = GetInstanceBuffer(instanceCount, mesh.objects.data());
+
+		// Set vertex buffers
+
+		VertexBuffer vBuf = mesh.mesh->GetVertexBuffer();
+
+		unsigned int strides[2];
+		unsigned int offsets[2];
+		ID3D11Buffer* bufferPointers[2];
+
+		strides[0] = vBuf.GetVertexSize();
+		strides[1] = newInstanceBuffer->GetInstanceSize();
+
+		offsets[0] = 0;
+		offsets[1] = 0;
+
+		bufferPointers[0] = vBuf.GetBuffer();
+		bufferPointers[1] = newInstanceBuffer->GetBuffer();
+
+		this->immediateContext->IASetVertexBuffers(0, 2, bufferPointers, strides, offsets);
+
+		// Submesh Test
+		for (auto& subMesh : mesh.mesh->GetSubMeshes()) {
+			// Draw to screen
+			this->immediateContext->DrawIndexedInstanced(subMesh.GetNrOfIndices(), instanceCount,
+														 subMesh.GetStartIndex(), 0, 0);
+		}
+
+		// Draw call
+		//this->immediateContext->DrawInstanced(vBuf.GetNrOfVertices(), newInstanceBuffer->GetNrOfInstances(), 0, 0);
+	}
+}
+
+InstanceBuffer* Renderer::GetInstanceBuffer(size_t& instanceCount, void* data) {
+	InstanceBuffer* newInstanceBuffer = nullptr;
+	if (this->instanceBuffers.contains(instanceCount)) {
+		newInstanceBuffer = this->instanceBuffers[instanceCount].get();
+		newInstanceBuffer->Update(this->immediateContext.Get(), sizeof(RenderMap::WorldMatrixBufferContainer),
+								  instanceCount, data);
+	} else {
+		this->instanceBuffers.emplace(instanceCount, std::make_unique<InstanceBuffer>());
+		newInstanceBuffer = this->instanceBuffers[instanceCount].get();
+		newInstanceBuffer->Init(this->device.Get(), sizeof(RenderMap::WorldMatrixBufferContainer), instanceCount, data);
+
+		if (this->instanceBuffers.size() > 100) {
+			Logger::Warn("A few too many instance buffers!!");
+		}
+	}
+	return newInstanceBuffer;
 }

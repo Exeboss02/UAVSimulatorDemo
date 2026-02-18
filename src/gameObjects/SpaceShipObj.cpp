@@ -4,7 +4,9 @@
 #include "imgui.h"
 #include <array>
 
-SpaceShip::SpaceShip() : GameObject3D() { Room::SetSize(this->ROOM_SIZE); }
+SpaceShip::SpaceShip() : GameObject3D() {
+	Room::SetSize(this->ROOM_SIZE); 
+}
 
 void SpaceShip::CreateRoom(size_t x, size_t y) {
 	if (x < SHIP_MAX_SIZE_X && y < SHIP_MAX_SIZE_Y && rooms[x][y].expired()) {

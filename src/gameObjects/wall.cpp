@@ -20,10 +20,7 @@ void Wall::OnInteract() {
 }
 
 void Wall::Start(){ 
-	
-	GameObject::Start();
-
-
+	this->MeshObject::Start();
 }
 
 void Wall::SetWAllIndex(int wallIndex) { this->wallIndex = wallIndex; }
@@ -93,9 +90,9 @@ void Wall::SpawnWallColliders(int wallStateIndex) {
 }
 
 void Wall::SetWallState(int wallState) {
-	
+
 	MeshObjData meshdata = AssetManager::GetInstance().GetMeshObjData(
-	this->wallMeshIdentifiers[wallState]);
+	Wall::wallMeshIdentifiers[wallState]);
 	this->SetMesh(meshdata);
 	this->SpawnWallColliders(wallState);
 	Room::WallState wallStateEnum = static_cast<Room::WallState>(wallState);

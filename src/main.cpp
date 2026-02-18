@@ -19,11 +19,11 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 	std::unique_ptr<Game> game = std::unique_ptr<Game>(new Game());
 
 	Logger::Log("Starting game...");
-	try {
+	//try {
 		game->Run(hInstance, nCmdShow);
-	} catch (const std::exception& e) {
-		Logger::Error(e.what());
-	}
+	//} catch (const std::exception& e) {
+		//Logger::Error(e.what());
+	//}
 	int x = 5;
 	Logger::Log("Exiting game...", x, game.get());
 }

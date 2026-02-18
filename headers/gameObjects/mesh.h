@@ -37,7 +37,6 @@ public:
 
 	void Init(VertexBuffer vertexbuffer, IndexBuffer indexbuffer, std::vector<SubMesh>&& submeshes,
 			  DirectX::BoundingBox boundingBox);
-	void Init(VertexBuffer vertexbuffer, IndexBuffer indexbuffer, std::vector<SubMesh>&& submeshes);
 
 	std::vector<SubMesh>& GetSubMeshes();
 	VertexBuffer& GetVertexBuffer();

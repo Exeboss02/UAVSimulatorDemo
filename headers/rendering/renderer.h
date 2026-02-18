@@ -191,7 +191,11 @@ private:
 	void CreateSampler();
 	void CreateRasterizerStates();
 
-	void CreateRenderMap();
+	void CreateRenderMap(RenderMap& renderMap, CameraObject& camera);
+	void CreateCheapRenderMap(CheapRenderMap& renderMap, CameraObject& camera);
+
+	// Doesn't work
+	size_t FillRenderMap(RenderMap& renderMap, CameraObject& camera);
 
 	/// <summary>
 	/// Creates required constant buffers. The renderer needs a cameraBuffer and worldMatrixBuffer.
@@ -255,6 +259,8 @@ private:
 	/// Draws a full rendermap using instancing. This is the preferred way to render.
 	/// </summary>
 	void RenderRenderMap(RenderMap& renderMap, bool renderMaterials = true);
+
+	void RenderCheapRenderMap(CheapRenderMap& renderMap);
 
 	/// <summary>
 	/// Send world matrices into this and get an instance buffer filled with that data. 

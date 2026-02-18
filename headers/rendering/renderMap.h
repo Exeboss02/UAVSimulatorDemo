@@ -39,3 +39,13 @@ public:
 
 	std::unordered_map<std::string, RenderMap::RenderMapMesh> meshes;
 };
+
+struct CheapRenderMap {
+	struct CheapRenderMapMesh {
+		std::vector<RenderMap::WorldMatrixBufferContainer> objects;
+
+		std::shared_ptr<Mesh> mesh;
+	};
+
+	std::unordered_map<std::string, CheapRenderMap::CheapRenderMapMesh> meshes;
+};

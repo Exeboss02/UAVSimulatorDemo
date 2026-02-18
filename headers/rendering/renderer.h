@@ -181,9 +181,14 @@ private:
 	void LoadShaders();
 
 	/// <summary>
-	/// This is where the actual rendering logic is done
+	/// This is where the actual rendering logic is done/
 	/// </summary>
 	void RenderPass();
+
+	/// <summary>
+	/// This gets called by the RenderPass() to render the UI logic.
+	/// </summary
+	void RenderUI();
 
 	struct ShadowResourceViews {
 		std::vector<ID3D11ShaderResourceView*> spotlightSRVs;

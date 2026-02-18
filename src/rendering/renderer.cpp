@@ -1,4 +1,6 @@
 #include "rendering/renderer.h"
+#include "UI/image.h"
+#include "UI/button.h"
 #include "UI/text.h"
 #include "UI/textRenderer.h"
 #include "UI/widget.h"
@@ -365,8 +367,11 @@ void Renderer::RenderPass() {
 		RenderMeshObject(meshObject.lock().get());
 	}
 
-	// UI pass: render UI widgets in an orthographic projection on top of the scene
+	// Render UI in a separate pass
+	RenderUI();
+}
 
+void Renderer::RenderUI() {
 	// Prepare an orthographic camera matching the render target (top-left origin)
 	CameraObject::CameraMatrixContainer uiCamera{};
 	DirectX::XMMATRIX view = DirectX::XMMatrixIdentity();
@@ -402,13 +407,86 @@ void Renderer::RenderPass() {
 		if (!widget->GetMesh().GetMesh().expired()) {
 			this->RenderMeshObject(widget.get(), true);
 		}
+
+		if (auto img = dynamic_cast<UI::Image*>(widget.get())) {
+			const std::string ident = img->GetImage();
+			if (!ident.empty()) {
+				// Ensure texture is loaded (AssetManager::GetTexture may attempt to load it)
+				AssetManager::GetInstance().GetTexture(ident);
+				auto texWeak = AssetManager::GetInstance().GetTextureWeakPtr(ident);
+				if (!texWeak.expired()) {
+					auto tex = texWeak.lock();
+					ID3D11ShaderResourceView* srv = tex->GetSrv();
+
+					// Build quad vertices matching widget position/size (top-left origin)
+					std::vector<Vertex> vertices;
+					std::vector<uint32_t> indices;
+					float x0 = img->GetPosition().x;
+					float y0 = img->GetPosition().y;
+					float x1 = x0 + img->GetSize().x;
+					float y1 = y0 + img->GetSize().y;
+
+					Vertex vTL{}; // top-left
+					vTL.pos[0] = x0;
+					vTL.pos[1] = y0;
+					vTL.pos[2] = 0.0f;
+					vTL.normal[0] = vTL.normal[1] = vTL.normal[2] = 0.0f;
+					vTL.uv[0] = 0.0f;
+					vTL.uv[1] = 1.0f - 0.0f;
+
+					Vertex vTR{}; // top-right
+					vTR.pos[0] = x1;
+					vTR.pos[1] = y0;
+					vTR.pos[2] = 0.0f;
+					vTR.normal[0] = vTR.normal[1] = vTR.normal[2] = 0.0f;
+					vTR.uv[0] = 1.0f;
+					vTR.uv[1] = 1.0f - 0.0f;
+
+					Vertex vBL{}; // bottom-left
+					vBL.pos[0] = x0;
+					vBL.pos[1] = y1;
+					vBL.pos[2] = 0.0f;
+					vBL.normal[0] = vBL.normal[1] = vBL.normal[2] = 0.0f;
+					vBL.uv[0] = 0.0f;
+					vBL.uv[1] = 1.0f - 1.0f;
+
+					Vertex vBR{}; // bottom-right
+					vBR.pos[0] = x1;
+					vBR.pos[1] = y1;
+					vBR.pos[2] = 0.0f;
+					vBR.normal[0] = vBR.normal[1] = vBR.normal[2] = 0.0f;
+					vBR.uv[0] = 1.0f;
+					vBR.uv[1] = 1.0f - 1.0f;
+
+					vertices.push_back(vTL);
+					vertices.push_back(vTR);
+					vertices.push_back(vBL);
+					vertices.push_back(vBR);
+
+					indices.push_back(0);
+					indices.push_back(2);
+					indices.push_back(3);
+
+					indices.push_back(0);
+					indices.push_back(3);
+					indices.push_back(1);
+
+					// Use image tint
+					DirectX::XMFLOAT4 color = img->GetTint();
+
+					// Ensure UI blend and rasterizer states are set for proper UI drawing
+					float blendFactor[4] = {0, 0, 0, 0};
+					this->immediateContext->OMSetBlendState(this->alphaBlendState.Get(), blendFactor, 0xffffffff);
+					this->BindRasterizerState(this->uiRasterizerState.get());
+
+					this->DrawTextQuads(vertices, indices, srv, color, false);
+				}
+			}
+		}
 	}
 
-	// Restore depth/stencil by rebinding render target (rebinds depth stencil)
 	BindRenderTarget();
 
-	// Render submitted text via TextRenderer
-	// Enable alpha blending and UI rasterizer for text rendering
 	float blendFactor[4] = {0, 0, 0, 0};
 	this->immediateContext->OMSetBlendState(this->alphaBlendState.Get(), blendFactor, 0xffffffff);
 	this->BindRasterizerState(this->uiRasterizerState.get());
@@ -867,6 +945,8 @@ void Renderer::DrawTextQuads(const std::vector<Vertex>& vertices, const std::vec
 	tempMat.color[1] = color.y;
 	tempMat.color[2] = color.z;
 	tempMat.color[3] = color.w;
+	// Honor global wireframe toggle so UI quads reflect renderAllWireframe
+	tempMat.wireframe = this->renderAllWireframe;
 
 	// Use dedicated UI sampler for text rendering. Choose linear when requested (scaling up), otherwise point.
 	ID3D11SamplerState* fontSampler = nullptr;

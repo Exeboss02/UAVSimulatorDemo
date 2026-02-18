@@ -1,10 +1,10 @@
 #include "rendering/renderQueue.h"
 #include "UI/widget.h"
+#include "core/filepathHolder.h"
 #include "gameObjects/gameObject.h"
 #include "gameObjects/meshObject.h"
 #include "gameObjects/pointLightObject.h"
 #include "gameObjects/spotlightObject.h"
-#include "core/filepathHolder.h"
 
 RenderQueue* RenderQueue::instance = nullptr;
 
@@ -82,6 +82,12 @@ void RenderQueue::AddUIWidget(std::weak_ptr<GameObject> newUIWidget) {
 		throw std::runtime_error("Fatal error in RenderQueue.");
 	}
 
+	// Prevent pushing the same widget multiple times
+	UI::Widget* newPtr = std::static_pointer_cast<UI::Widget>(newUIWidget.lock()).get();
+	for (const auto& w : instance->uiRenderQueue) {
+		if (w.expired()) continue;
+		if (w.lock().get() == newPtr) return;
+	}
 	instance->uiRenderQueue.push_back(std::static_pointer_cast<UI::Widget>(newUIWidget.lock()));
 }
 
@@ -151,8 +157,7 @@ void RenderQueue::ClearAllQueues() {
 	Logger::Log("Clearing render queue successful.");
 }
 
-void RenderQueue::ChangeSkybox(std::string filename) 
-{ 
+void RenderQueue::ChangeSkybox(std::string filename) {
 	if (!instance) {
 		Logger::Error("Tried to change skybox, but RenderQueue is not initialized.");
 		throw std::runtime_error("Fatal error in RenderQueue.");

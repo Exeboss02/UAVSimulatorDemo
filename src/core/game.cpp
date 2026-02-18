@@ -5,6 +5,7 @@
 #include "scene/sceneManager.h"
 #include "utilities/time.h"
 #include <memory>
+#include <chrono>
 
 // Game Loop
 void Game::Run(HINSTANCE hInstance, int nCmdShow) {

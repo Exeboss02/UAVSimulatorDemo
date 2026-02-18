@@ -4,6 +4,8 @@
 #include "core/physics/rigidBody.h"
 #include "core/physics/physicsQueue.h" //are here to prevent circular dependecies
 
+#define SHOW_COLLIDER
+
 Collider::Collider()
 {
 }
@@ -59,6 +61,7 @@ void Collider::Start()
 {
 	GameObject3D::Start();
 
+	#ifdef SHOW_COLLIDER
 	MeshObjData meshData = {};
 	DirectX::XMVECTOR scale;
 	scale.m128_f32[0] = 1;
@@ -87,12 +90,15 @@ void Collider::Start()
 	visualMeshObject->SetMesh(meshData);
 	visualMeshObject->transform.SetScale(scale);
 	visualMeshObject->SetParent(std::static_pointer_cast<Collider>(this->GetPtr()));
+	#endif
 }
 
 bool Collider::Collision(Collider* otherCollider)
 {
 	DirectX::XMFLOAT3 mtvAxis = {};
 	float mtvDistance = 0;
+
+	if(!this->dynamic && !otherCollider->dynamic) return false;
 
 	return this->CollisionHandling(otherCollider, mtvAxis, mtvDistance);
 }
@@ -159,13 +165,18 @@ bool Collider::BoxSphereCollision(BoxCollider* box, SphereCollider* sphere, Dire
 
 	//inverse transpose?
 	//XMMATRIX boxWorldMatrix = XMMatrixTranspose(box->GetGlobalWorldMatrix(false)); //worldMatrix is pre-transposed, so needs to get un-transposed again here
-	//XMMATRIX boxWorldMatrix = box->GetGlobalWorldMatrix(false);
-	XMFLOAT4X4 matrix = box->transform.GetWorldMatrix(false);
-	XMMATRIX boxWorldMatrix = XMLoadFloat4x4(&matrix);
+	XMMATRIX boxWorldMatrix = box->GetGlobalWorldMatrix(false);
+	//XMFLOAT4X4 matrix = box->GetWorldMatrix(false);
+	//XMMATRIX boxWorldMatrix = XMLoadFloat4x4(&matrix);
 
 	//we get the inverse of the rotation and translation matrices, scale should not be included
 	XMVECTOR scale, rotation, translation;
 	XMMatrixDecompose(&scale, &rotation, &translation, boxWorldMatrix);
+
+	Logger::Log("scale: ", scale.m128_f32[0], ", ", scale.m128_f32[1], ", ", scale.m128_f32[2]);
+	Logger::Log("rotation: ", rotation.m128_f32[0], ", ", rotation.m128_f32[1], ", ", rotation.m128_f32[2]);
+	Logger::Log("translation: ", translation.m128_f32[0], ", ", translation.m128_f32[1], ", ", translation.m128_f32[2]);
+
 
 	XMMATRIX rotationMatrix = DirectX::XMMatrixRotationX(rotation.m128_f32[0]) * DirectX::XMMatrixRotationY(rotation.m128_f32[1]) * DirectX::XMMatrixRotationZ(rotation.m128_f32[2]);
 	//XMMATRIX rotationMatrix = DirectX::XMMatrixRotationRollPitchYaw(rotation.m128_f32[0], rotation.m128_f32[1], rotation.m128_f32[2]);

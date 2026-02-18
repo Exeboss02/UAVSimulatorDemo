@@ -1,11 +1,16 @@
 #include "UI/button.h"
 
+#include "UI/canvasObject.h"
 #include "core/assetManager.h"
 #include "core/input/inputManager.h"
 #include "rendering/texture.h"
 #include "rendering/unlitMaterial.h"
 #include "utilities/logger.h"
+
+// json
 #include <nlohmann/json.hpp>
+
+// std
 #include <string>
 
 void UI::Button::Start() {
@@ -65,23 +70,54 @@ void UI::Button::Update(float dt) {
 	Vec2 point{static_cast<float>(mx), static_cast<float>(my)};
 	const bool hit = this->HitTest(point);
 
-	if (hit && !this->hovered) {
+	// Determine top-most widget at this point via the parent CanvasObject (if any).
+	std::shared_ptr<UI::Widget> topMost = nullptr;
+	auto parent = this->GetParent();
+	if (!parent.expired()) {
+		auto p = parent.lock();
+		// Walk up until we find a CanvasObject
+		GameObject* current = p.get();
+		while (current) {
+			if (auto canvasObj = dynamic_cast<UI::CanvasObject*>(current)) {
+				topMost = canvasObj->HitTest(point);
+				break;
+			}
+			auto nextParent = current->GetParent();
+			if (nextParent.expired()) break;
+			current = nextParent.lock().get();
+		}
+	}
+
+	bool isTop = false;
+	if (topMost) {
+		if (this->GetPtr()) {
+			auto self = std::static_pointer_cast<UI::Widget>(this->GetPtr());
+			isTop = (topMost == self);
+		}
+	} else {
+		// No canvas found; fallback to per-widget hit behaviour
+		isTop = true;
+	}
+
+	bool effectiveHit = hit && isTop;
+
+	if (effectiveHit && !this->hovered) {
 		this->hovered = true;
 		if (this->onHover) this->onHover();
-	} else if (!hit && this->hovered) {
+	} else if (!effectiveHit && this->hovered) {
 		this->hovered = false;
 		if (this->onUnhover) this->onUnhover();
 	}
 
-	if (hit && InputManager::GetInstance().WasLMPressed()) {
+	if (effectiveHit && InputManager::GetInstance().WasLMPressed()) {
 		this->pressed = true;
 		if (this->onPressed) this->onPressed();
 	}
 
-	if (hit && InputManager::GetInstance().WasLMReleased()) {
+	if (effectiveHit && InputManager::GetInstance().WasLMReleased()) {
 		this->pressed = false;
 		if (this->onReleased) this->onReleased();
-		if (hit && this->onClick) this->onClick();
+		if (effectiveHit && this->onClick) this->onClick();
 	}
 
 	Widget::Update(dt);

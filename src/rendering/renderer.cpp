@@ -660,19 +660,26 @@ void Renderer::RenderUI() {
 	// Disable depth testing so UI draws on top
 	this->immediateContext->OMSetDepthStencilState(nullptr, 0);
 
-	// Render only UI widgets from the dedicated UI render queue
+	// Build a list of live widgets, remove expired entries and sort by zIndex
+	std::vector<std::shared_ptr<UI::Widget>> widgets;
 	for (size_t i = 0; i < this->uiRenderQueue.size(); i++) {
-		auto widgetWeak = this->uiRenderQueue[i];
-
-		if (widgetWeak.expired()) {
+		if (this->uiRenderQueue[i].expired()) {
 			this->uiRenderQueue.erase(this->uiRenderQueue.begin() + i);
 			i--;
 			continue;
 		}
+		auto w = this->uiRenderQueue[i].lock();
+		if (!w) continue;
+		if (!w->IsVisible() || !w->isEnabled()) continue;
+		widgets.push_back(w);
+	}
 
-		auto widget = widgetWeak.lock();
-		if (!widget->IsVisible() || !widget->isEnabled()) continue;
+	std::sort(widgets.begin(), widgets.end(),
+			  [](const std::shared_ptr<UI::Widget>& a, const std::shared_ptr<UI::Widget>& b) {
+				  return a->GetZIndex() < b->GetZIndex();
+			  });
 
+	for (auto& widget : widgets) {
 		widget->Draw();
 
 		if (!widget->GetMesh().GetMesh().expired()) {
@@ -754,6 +761,8 @@ void Renderer::RenderUI() {
 				}
 			}
 		}
+
+		// No per-widget text flush; text will be rendered once after the UI pass
 	}
 
 	BindRenderTarget();
@@ -762,8 +771,10 @@ void Renderer::RenderUI() {
 	this->immediateContext->OMSetBlendState(this->alphaBlendState.Get(), blendFactor, 0xffffffff);
 	this->BindRasterizerState(this->uiRasterizerState.get());
 
+	// Ensure depth test is disabled for UI text (BindRenderTarget rebinds depth state)
+	this->immediateContext->OMSetDepthStencilState(nullptr, 0);
+	// Render all text submissions now (TextRenderer sorts by zIndex)
 	UI::TextRenderer::GetInstance().Render(this);
-
 	// Restore default rasterizer and blend state
 	this->immediateContext->OMSetBlendState(nullptr, nullptr, 0xffffffff);
 	this->BindRasterizerState(this->standardRasterizerState.get());

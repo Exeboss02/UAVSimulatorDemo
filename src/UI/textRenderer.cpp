@@ -17,13 +17,14 @@ TextRenderer& TextRenderer::GetInstance() {
 }
 
 void TextRenderer::SubmitText(const std::string& text, Vec2 position, float fontSize, DirectX::XMFLOAT4 color,
-							  const std::string& font) {
+							  const std::string& font, int zIndex) {
 	TextSubmission s;
 	s.text = text;
 	s.position = position;
 	s.fontSize = fontSize;
 	s.color = color;
 	s.font = font;
+	s.zIndex = zIndex;
 	submissions.push_back(std::move(s));
 }
 
@@ -33,7 +34,12 @@ void TextRenderer::Render(void* context) {
 	if (context == nullptr) return;
 	Renderer* renderer = reinterpret_cast<Renderer*>(context);
 
-	// Group submissions by font so we draw each atlas once
+	// Sort submissions by zIndex so higher zIndex draws later (on top)
+	std::sort(submissions.begin(), submissions.end(), [](const TextSubmission& a, const TextSubmission& b) {
+		return a.zIndex < b.zIndex;
+	});
+
+	// Render submissions in z order (low → high)
 	for (const auto& sub : submissions) {
 		std::string key = sub.font.empty() ? "default" : sub.font;
 

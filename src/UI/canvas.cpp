@@ -32,9 +32,20 @@ void UI::Canvas::Draw() {
 }
 
 std::shared_ptr<UI::Widget> UI::Canvas::HitTest(Vec2 point) const {
-	for (auto it = this->children.rbegin(); it != this->children.rend(); ++it) {
-		if (!*it || !(*it)->IsVisible() || !(*it)->isEnabled()) continue;
-		auto hit = HitTestRecursive(*it, point);
+	// Consider z-index: test top-most first (higher z drawn on top)
+	std::vector<std::shared_ptr<Widget>> live;
+	live.reserve(this->children.size());
+	for (const auto& c : this->children) {
+		if (!c || !c->IsVisible() || !c->isEnabled()) continue;
+		live.push_back(c);
+	}
+
+	std::sort(live.begin(), live.end(), [](const std::shared_ptr<Widget>& a, const std::shared_ptr<Widget>& b) {
+		return a->GetZIndex() > b->GetZIndex();
+	});
+
+	for (const auto& c : live) {
+		auto hit = HitTestRecursive(c, point);
 		if (hit) return hit;
 	}
 

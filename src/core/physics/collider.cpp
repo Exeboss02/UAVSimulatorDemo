@@ -4,6 +4,8 @@
 #include "core/physics/rigidBody.h"
 #include "core/physics/physicsQueue.h" //are here to prevent circular dependecies
 
+#define SHOW_COLLIDER
+
 Collider::Collider()
 {
 }
@@ -59,34 +61,36 @@ void Collider::Start()
 {
 	GameObject3D::Start();
 
-	//MeshObjData meshData = {};
-	//DirectX::XMVECTOR scale;
-	//scale.m128_f32[0] = 1;
-	//scale.m128_f32[1] = 1;
-	//scale.m128_f32[2] = 1;
+	#ifdef SHOW_COLLIDER
+	MeshObjData meshData = {};
+	DirectX::XMVECTOR scale;
+	scale.m128_f32[0] = 1;
+	scale.m128_f32[1] = 1;
+	scale.m128_f32[2] = 1;
 
-	//if(this->type == ColliderType::SPHERE)
-	//{
-	//	scale = DirectX::XMVectorScale(scale, 0.5f);
-	//	meshData = AssetManager::GetInstance().GetMeshObjData("meshes/indicatorSphere05.glb:Mesh_0");
-	//}
-	//else
-	//{
-	//	meshData = AssetManager::GetInstance().GetMeshObjData("TexBox/TextureCube.glb:Mesh_0");
-	//}
+	if(this->type == ColliderType::SPHERE)
+	{
+		scale = DirectX::XMVectorScale(scale, 0.5f);
+		meshData = AssetManager::GetInstance().GetMeshObjData("meshes/indicatorSphere05.glb:Mesh_0");
+	}
+	else
+	{
+		meshData = AssetManager::GetInstance().GetMeshObjData("TexBox/TextureCube.glb:Mesh_0");
+	}
 
-	//auto material = AssetManager::GetInstance().GetMaterialWeakPtr("wireframeWhite");
-	//if(material.expired())
-	//{
-	//	Logger::Error("Collider mesh material was expired");
-	//	return;
-	//}
+	auto material = AssetManager::GetInstance().GetMaterialWeakPtr("wireframeWhite");
+	if(material.expired())
+	{
+		Logger::Error("Collider mesh material was expired");
+		return;
+	}
 
-	//meshData.SetMaterial(0, material.lock());
-	//auto visualMeshObject = this->factory->CreateGameObjectOfType<MeshObject>().lock();
-	//visualMeshObject->SetMesh(meshData);
-	//visualMeshObject->transform.SetScale(scale);
-	//visualMeshObject->SetParent(std::static_pointer_cast<Collider>(this->GetPtr()));
+	meshData.SetMaterial(0, material.lock());
+	auto visualMeshObject = this->factory->CreateGameObjectOfType<MeshObject>().lock();
+	visualMeshObject->SetMesh(meshData);
+	visualMeshObject->transform.SetScale(scale);
+	visualMeshObject->SetParent(std::static_pointer_cast<Collider>(this->GetPtr()));
+	#endif
 }
 
 bool Collider::Collision(Collider* otherCollider)

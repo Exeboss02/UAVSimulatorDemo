@@ -32,20 +32,19 @@ void Room::SetPosition(size_t x, size_t y) { this->pos = {x, y}; }
 void Room::Start() {
 	Logger::Warn("room size ", this->size);
 	{
-		auto meshobjWeak = this->factory->CreateGameObjectOfType<MeshObject>();
+		auto meshobj = this->factory->CreateStaticGameObject<MeshObject>();
 
-		auto meshobj = meshobjWeak.lock();
 		meshobj->SetParent(this->GetPtr());
 
 		MeshObjData meshdata = AssetManager::GetInstance().GetMeshObjData("SpaceShip/room.glb:Mesh_0");
+
 		meshobj->SetMesh(meshdata);
 
 		this->roof = meshobj;
 	}
 	{
-		auto meshobjWeak = this->factory->CreateGameObjectOfType<MeshObject>();
+		auto meshobj = this->factory->CreateStaticGameObject<MeshObject>();
 
-		auto meshobj = meshobjWeak.lock();
 		meshobj->SetParent(this->GetPtr());
 
 		MeshObjData meshdata = AssetManager::GetInstance().GetMeshObjData("SpaceShip/room.glb:Mesh_4");
@@ -55,17 +54,16 @@ void Room::Start() {
 	}
 	for (size_t i = 0; i < 4; i++) {
 
-		auto meshobjWeak = this->factory->CreateGameObjectOfType<MeshObject>();
+		auto meshobj = this->factory->CreateStaticGameObject<Wall>();
 
-		auto meshobj = meshobjWeak.lock();
 		meshobj->SetParent(this->GetPtr());
 
-		MeshObjData meshdata = AssetManager::GetInstance().GetMeshObjData(
-			this->wallMeshIdentifiers[static_cast<int>(Room::WallState::window)]);
-		meshobj->SetMesh(meshdata);
+		meshobj->SetWallState(Room::WallState::window);
+
+		
 
 		meshobj->transform.SetRotationRPY(0, 0, i * std::numbers::pi / 2);
-		this->floor = meshobj;
+		meshobj->SetWAllIndex(i);
 
 		this->walls[i] = meshobj;
 	}
@@ -77,8 +75,8 @@ void Room::SetSize(float size) { Room::size = size; }
 
 void Room::SetWallState(Room::WallIndex wallindex, Room::WallState wallState) {
 
-	std::shared_ptr<MeshObject> wall = this->walls[wallindex].lock();
-	wall->SetMesh(AssetManager::GetInstance().GetMeshObjData(this->wallMeshIdentifiers[static_cast<int>(wallState)]));
+	std::shared_ptr<Wall> wall = this->walls[wallindex].lock();
+	wall->SetWallState(wallState);
 }
 
 void Room::SetParent(std::weak_ptr<GameObject> parentWeak) {

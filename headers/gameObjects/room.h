@@ -5,6 +5,8 @@
 class SpaceShip;
 #include "gameObjects/spaceShipObj.h"
 #include "utilities/aStar.h"
+#include "gameObjects/wall.h"
+
 
 
 class Room : public GameObject3D {
@@ -90,8 +92,8 @@ private:
 	inline static float size;
 	std::weak_ptr<MeshObject> roof;
 	std::weak_ptr<MeshObject> floor;
-	std::array<std::weak_ptr<MeshObject>, 4> walls;
 
 	std::array<std::shared_ptr<AStarVertex>, 9> pathfindingNodes;
 
+	std::array<std::weak_ptr<Wall>, 4> walls;
 };

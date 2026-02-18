@@ -3,6 +3,16 @@ struct VertexShaderInput
     float3 position : POSITION;
     float3 normal : NORMAL;
     float2 uv : UV;
+    
+    float4 world0 : WORLD_MATRIX0;
+    float4 world1 : WORLD_MATRIX1;
+    float4 world2 : WORLD_MATRIX2;
+    float4 world3 : WORLD_MATRIX3;
+
+    float4 worldIT0 : INVERSED_TRANSPOSED_WORLD_MATRIX0;
+    float4 worldIT1 : INVERSED_TRANSPOSED_WORLD_MATRIX1;
+    float4 worldIT2 : INVERSED_TRANSPOSED_WORLD_MATRIX2;
+    float4 worldIT3 : INVERSED_TRANSPOSED_WORLD_MATRIX3;
 };
 
 struct VertexShaderOutput
@@ -20,14 +30,22 @@ cbuffer ViewProjMatrixBuffer : register(b0)
     float4 cameraPos;
 };
 
-cbuffer WorldMatrixBuffer : register(b1)
-{
-    row_major float4x4 worldMatrix;
-    row_major float4x4 worldMatrixInversedTransposed;
-};
-
 VertexShaderOutput main(VertexShaderInput input)
 {    
+    float4x4 worldMatrix = float4x4(
+    input.world0,
+    input.world1,
+    input.world2,
+    input.world3);
+
+    float4x4 worldMatrixInversedTransposed = float4x4(
+    input.worldIT0,
+    input.worldIT1,
+    input.worldIT2,
+    input.worldIT3);
+    
+    
+    
     VertexShaderOutput output;
     
     float4 pos = float4(input.position, 1.0f);

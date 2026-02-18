@@ -10,7 +10,10 @@ public:
 	~TestPlayer();
 
 	void Tick() override;
+	void PhysicsTick() override;
 	void Start() override;
+
+	DirectX::XMFLOAT3 moveVector = {};
 
 private:
 

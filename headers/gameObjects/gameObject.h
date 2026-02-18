@@ -93,6 +93,21 @@ public:
 	/// </summary>
 	void SetActiveOverride(bool isActive);
 
+	/// <summary>
+	/// DONT USE
+	/// </summary>
+	/// <param name="isStatic"></param>
+	void SetIsStatic(bool isStatic);
+
+	bool GetIsStatic() const;
+
+	/// <summary>
+	/// can be called to indicate that object is being observed by player
+	/// </summary>
+	virtual void OnObserve();
+
+	virtual void OnInteract();
+
 private:
 	/// <summary>
 	/// WARNING: Engine only. Do not use for any in-game logic.
@@ -112,9 +127,13 @@ private:
 
 	friend Scene;
 
+	template <typename T>
+	friend class StaticObject;
+
 	std::weak_ptr<GameObject> myPtr;
 
 	char imguiName[64];
+	bool isStatic = false;
 
 protected:
 	// Any interaction with the scene is done through the factory.

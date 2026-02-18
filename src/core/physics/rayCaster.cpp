@@ -18,7 +18,7 @@ bool RayCaster::castRay(Ray& ray, RayCastData& rayCastData,
 
 			closestDistance = distance;
 			currentClosest = i;
-			Logger::Log("hit against object nr: ", i, "distance: ", distance);
+			//Logger::Log("hit against object nr: ", i, "distance: ", distance);
 
 		}
 	}

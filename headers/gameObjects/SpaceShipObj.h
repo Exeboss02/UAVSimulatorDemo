@@ -46,4 +46,5 @@ private:
 
 	std::unique_ptr<AStar> pathfinder;
 	std::vector<std::shared_ptr<AStarVertex>> path;
+	void CreateFloorColider();
 };

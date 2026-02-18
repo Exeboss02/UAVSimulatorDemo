@@ -16,13 +16,7 @@ SpaceShip::SpaceShip() : GameObject3D() {
 void SpaceShip::CreateRoom(size_t x, size_t y) {
 	if (x < SHIP_MAX_SIZE_X && y < SHIP_MAX_SIZE_Y && rooms[x][y].expired()) {
 
-		std::weak_ptr<Room> room = this->factory->CreateGameObjectOfType<Room>();
-
-		if (room.expired()) {
-			Logger::Error("What just happend??");
-		}
-
-		auto roomMesh = room.lock();
+		auto roomMesh = this->factory->CreateStaticGameObject<Room>();
 
 		roomMesh->transform.SetPosition(DirectX::XMVectorSet(x * this->ROOM_SIZE, 0, y * this->ROOM_SIZE, 0));
 
@@ -32,7 +26,9 @@ void SpaceShip::CreateRoom(size_t x, size_t y) {
 
 		roomMesh->SetupPathfindingNodes(std::dynamic_pointer_cast<SpaceShip>(this->GetPtr()), roomMesh);
 
-		this->rooms[x][y] = room;
+		this->rooms[x][y] = roomMesh;
+		
+		roomMesh.Init();
 
 		for (size_t i = 0; i < 4; i++) {
 			Room::WallIndex wallIndex = (Room::WallIndex) i;
@@ -96,7 +92,8 @@ void SpaceShip::Tick() {
 }
 
 void SpaceShip::Start() {
-	this->GameObject3D::Start(); 
+	this->GameObject3D::Start();
+	this->CreateFloorColider();
 	
 	CreateRoom(2, 0);
 	auto room0 = this->GetRoom(2, 0);
@@ -112,5 +109,18 @@ void SpaceShip::Start() {
 	auto nodes2 = room2.lock()->GetPathfindingNodes();
 	this->path = this->pathfinder->FindPath(nodes2[6]);
 
-	Logger::Log("Path size: ", this->path.size());
+}
+
+void SpaceShip::CreateFloorColider() {
+	auto colliderobjWeak = this->factory->CreateGameObjectOfType<BoxCollider>();
+
+	auto colliderobj = colliderobjWeak.lock();
+	DirectX::XMFLOAT3 pos((this->SHIP_MAX_SIZE_X) * this->ROOM_SIZE, 0,
+						  (this->SHIP_MAX_SIZE_Y) * this->ROOM_SIZE);
+	colliderobj->transform.SetPosition(DirectX::XMLoadFloat3(&pos));
+	DirectX::XMFLOAT3 scale((this->SHIP_MAX_SIZE_Y) * this->ROOM_SIZE + this->ROOM_SIZE / 2, 0.5f,
+							(this->SHIP_MAX_SIZE_Y) * this->ROOM_SIZE + this->ROOM_SIZE/2);
+	colliderobj->transform.SetScale(DirectX::XMLoadFloat3(&scale));
+	colliderobj->SetParent(this->GetPtr());
+
 }

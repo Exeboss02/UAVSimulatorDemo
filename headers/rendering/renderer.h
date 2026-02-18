@@ -5,8 +5,8 @@
 #include "d3d11.h"
 #include "gameObjects/cameraObject.h"
 #include "gameObjects/meshObject.h"
-#include "gameObjects/spotlightObject.h"
 #include "gameObjects/pointLightObject.h"
+#include "gameObjects/spotlightObject.h"
 #include "rendering/constantBuffer.h"
 #include "rendering/depthBuffer.h"
 #include "rendering/indexBuffer.h"
@@ -17,15 +17,24 @@
 #include "rendering/renderTarget.h"
 #include "rendering/sampler.h"
 #include "rendering/shader.h"
+#include "rendering/skybox.h"
 #include "rendering/structuredBuffer.h"
 #include "rendering/vertex.h"
 #include "rendering/vertexBuffer.h"
 #include "wrl/client.h"
 #include <algorithm>
-#include "core/assetManager.h"
+
+namespace UI {
+class Widget;
+}
 #include "rendering/skybox.h"
+#include "rendering/quadTree.h"
+#include "core/assetManager.h"
+#include <unordered_map>
 
 #include <functional>
+#include "rendering/renderMap.h"
+#include "rendering/instanceBuffer.h"
 
 class Renderer {
 public:
@@ -78,13 +87,18 @@ public:
 	ID3D11DeviceContext* GetContext() const;
 	IDXGISwapChain* GetSwapChain() const;
 
+	// Draw quads for text rendering (positions in screen space, using current UI camera)
+	void DrawTextQuads(const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices,
+					   ID3D11ShaderResourceView* srv, const DirectX::XMFLOAT4& color = {1.0f, 1.0f, 1.0f, 1.0f},
+					   bool useLinearFilter = true);
+
 private:
 	const size_t maximumSpotlights;
 
-	struct WorldMatrixBufferContainer {
-		DirectX::XMFLOAT4X4 worldMatrix;
-		DirectX::XMFLOAT4X4 worldMatrixInversedTransposed;
-	};
+	//struct WorldMatrixBufferContainer {
+	//	DirectX::XMFLOAT4X4 worldMatrix;
+	//	DirectX::XMFLOAT4X4 worldMatrixInversedTransposed;
+	//};
 
 	struct LightCountBufferContainer {
 		uint32_t spotlightCount;
@@ -99,14 +113,23 @@ private:
 	Microsoft::WRL::ComPtr<ID3D11DeviceContext> immediateContext;
 	Microsoft::WRL::ComPtr<IDXGISwapChain> swapChain;
 
+	Microsoft::WRL::ComPtr<ID3D11BlendState> alphaBlendState;
+
 	std::unique_ptr<RenderTarget> renderTarget;
 	std::unique_ptr<DepthBuffer> depthBuffer;
-	std::unique_ptr<InputLayout> inputLayout;
+
+	std::unique_ptr<InputLayout> inputLayout; // Standard input layout
+
+	std::unique_ptr<InputLayout> instanceInputLayout;
+
 	std::unique_ptr<Sampler> sampler;
 	std::unique_ptr<Sampler> shadowSampler;
+	std::unique_ptr<Sampler> uiSampler;
+	std::unique_ptr<Sampler> uiLinearSampler;
 	std::unique_ptr<RasterizerState> standardRasterizerState;
 	std::unique_ptr<RasterizerState> wireframeRasterizerState;
 	std::unique_ptr<RasterizerState> skyboxRasterizerState;
+	std::unique_ptr<RasterizerState> uiRasterizerState;
 	RasterizerState* currentRasterizerState;
 
 	// Default stuff
@@ -124,24 +147,35 @@ private:
 
 	std::unique_ptr<Skybox> skybox;
 
+	BaseMaterial* currentMaterial;
+
+	//Mesh* currentMesh;
+
 	// Render Queue:
 
 	RenderQueue renderQueue;
 	std::vector<std::weak_ptr<MeshObject>> meshRenderQueue;
 	std::vector<std::weak_ptr<SpotlightObject>> spotLightRenderQueue;
 	std::vector<std::weak_ptr<PointLightObject>> pointLightRenderQueue;
+	std::vector<std::weak_ptr<UI::Widget>> uiRenderQueue;
+
+	RenderMap standardRenderMap;
+
+	QuadTree staticObjectsTree;
+	std::vector<std::weak_ptr<MeshObject>> GetVisibleObjects(CameraObject& camera);
 
 	// Constant buffers:
 	// The renderer keeps these constant buffers since only one is ever required
 	// So it just updates them with data for each object every frame
 
 	std::unique_ptr<ConstantBuffer> cameraBuffer;
-	std::unique_ptr<ConstantBuffer> worldMatrixBuffer;
 
 	std::unique_ptr<ConstantBuffer> spotlightCountBuffer;
 	std::unique_ptr<StructuredBuffer<SpotlightObject::SpotLightContainer>> spotlightBuffer;
 	std::unique_ptr<StructuredBuffer<PointLightObject::PointLightContainer>> pointlightBuffer;
 	std::unique_ptr<ConstantBuffer> pointlightCountBuffer;
+
+	std::unordered_map<size_t, std::unique_ptr<InstanceBuffer>> instanceBuffers;
 
 	// ImGui variables
 
@@ -153,16 +187,20 @@ private:
 	void CreateDeviceAndSwapChain(const Window& window);
 	void CreateRenderTarget();
 	void CreateDepthBuffer(const Window& window);
-	void CreateInputLayout(const std::string& vShaderByteCode);
+	void CreateInputLayout();
 	void CreateSampler();
 	void CreateRasterizerStates();
+
+	void CreateRenderMap(RenderMap& renderMap, CameraObject& camera);
+	void CreateCheapRenderMap(CheapRenderMap& renderMap, CameraObject& camera);
+
+	// Doesn't work
+	size_t FillRenderMap(RenderMap& renderMap, CameraObject& camera);
 
 	/// <summary>
 	/// Creates required constant buffers. The renderer needs a cameraBuffer and worldMatrixBuffer.
 	/// </summary>
 	void CreateRendererConstantBuffers();
-
-	void CreateRenderQueue();
 
 	void LoadShaders();
 
@@ -179,7 +217,6 @@ private:
 	ShadowResourceViews ShadowPass();
 
 	std::vector<ID3D11ShaderResourceView*> SpotLightShadowPass();
-
 	std::vector<ID3D11ShaderResourceView*> PointLightShadowPass();
 
 	/// <summary>
@@ -190,23 +227,44 @@ private:
 	void ResizeSwapChain(const Window& window);
 
 	void BindSampler();
-	void BindInputLayout();
+	void BindInputLayout(InputLayout* inputLayout);
 	void BindRenderTarget();
 	void BindViewport();
 	void BindRasterizerState(RasterizerState* rastState);
 
+	/// <summary>
+	/// Binds shaders and a material to constant buffer, along with all it's textures.
+	/// </summary>
 	void BindMaterial(BaseMaterial* material);
-	void BindLights();
 
+	/// <summary>
+	/// Binds lights for use in the color pass.
+	/// </summary>
+	void BindLights();
 
 	void BindCameraMatrix();
 	void BindWorldMatrix(ID3D11Buffer* buffer);
 
+	/// <summary>
+	/// Draws the skybox
+	/// </summary>
 	void DrawSkybox();
 
 	/// <summary>
-	/// Renders a single MeshObject
+	/// Renders a single MeshObject. For optimal performance, don't use this.
 	/// </summary>
-	/// <param name="meshObject"></param>
 	void RenderMeshObject(MeshObject* meshObject, bool renderMaterial = true);
+
+	/// <summary>
+	/// Draws a full rendermap using instancing. This is the preferred way to render.
+	/// </summary>
+	void RenderRenderMap(RenderMap& renderMap, bool renderMaterials = true);
+
+	void RenderCheapRenderMap(CheapRenderMap& renderMap);
+
+	/// <summary>
+	/// Send world matrices into this and get an instance buffer filled with that data. 
+	/// All you have to do is bind it to a shader.
+	/// </summary>
+	InstanceBuffer* GetInstanceBuffer(size_t& instanceCount, void* data);
 };

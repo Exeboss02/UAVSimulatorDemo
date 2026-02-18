@@ -47,8 +47,6 @@ void BoxCollider::LoadFromJson(const nlohmann::json& data)
 	DirectX::XMStoreFloat3(&this->satData.center, this->GetGlobalPosition()); //check positions later
 	this->BuildCornersArray(this->satData.positionData);
 
-	Logger::Log("------------------BEFORE TAGS-----------------");
-
 	 if(data.contains("tag"))
 	 {
 	 	this->tag = static_cast<Tag>(data.at("tag").get<int>()); //write enum as integer in json

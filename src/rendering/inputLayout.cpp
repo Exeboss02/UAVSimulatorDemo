@@ -1,17 +1,41 @@
 #include "rendering/inputLayout.h"
 #include "string"
 
-void InputLayout::AddInputElement(const std::string& semanticName, DXGI_FORMAT format)
+void InputLayout::PrepareInputLayout(size_t elementCount) 
 {
-	for (size_t i = 0; i < this->semanticNames.size(); i++)
-	{
+	this->elements = std::vector<D3D11_INPUT_ELEMENT_DESC>(elementCount);
+	this->semanticNames = std::vector <std::string> (elementCount);
+	this->doNotOverwrite = true;
+}
+
+void InputLayout::AddInputElement(const std::string& semanticName, DXGI_FORMAT format, UINT inputSlot,
+								  D3D11_INPUT_CLASSIFICATION inputSlotClass) {
+	
+	UINT semanticIndex = 0;
+	// Some exceptions for matrices which should have the same name
+	for (size_t i = 0; i < this->semanticNames.size(); i++) {
 		if (this->semanticNames[i] == semanticName) {
-			throw std::exception("Failed to add InputElement: Semantic already exist.");
+			if (semanticName != "WORLD_MATRIX" && semanticName != "INVERSED_TRANSPOSED_WORLD_MATRIX") {
+				throw std::exception("Failed to add InputElement: Semantic already exist.");
+			} else {
+				semanticIndex++;
+			}
 		}
 	}
 
-	D3D11_INPUT_ELEMENT_DESC input = { semanticName.c_str(), 0, format, 0, (UINT)this->next_pos, D3D11_INPUT_PER_VERTEX_DATA, 0 };
-	this->elements.push_back(input);
+	if (!this->slotOffsets.contains(inputSlot)) {
+		this->slotOffsets.emplace(inputSlot, 0);
+	}
+
+	D3D11_INPUT_ELEMENT_DESC input = {semanticName.c_str(),	 semanticIndex,	 format, inputSlot,
+									  (UINT) this->slotOffsets[inputSlot],
+									  inputSlotClass,
+									  inputSlotClass == D3D11_INPUT_PER_VERTEX_DATA ? (UINT) 0 : (UINT) 1};
+	if (this->doNotOverwrite) {
+		this->elements[this->currentIndex] = input;
+	} else {
+		this->elements.push_back(input);
+	}
 
 	size_t size = 0;
 	switch (format) {
@@ -21,10 +45,23 @@ void InputLayout::AddInputElement(const std::string& semanticName, DXGI_FORMAT f
 	case DXGI_FORMAT_R32G32_FLOAT:
 		size = 8;
 		break;
+	case DXGI_FORMAT_R32G32B32A32_FLOAT:
+		size = 16;
+		break;
+	default:
+		Logger::Error("Unknown input");
+		throw std::exception("Input layout fatal error.");
 	}
 
-	this->next_pos += size;
-	semanticNames.push_back(semanticName);
+	this->slotOffsets[inputSlot] += size;
+
+	if (this->doNotOverwrite) {
+		this->semanticNames[this->currentIndex] = semanticName;
+	} else {
+		this->semanticNames.push_back(semanticName);
+	}
+
+	this->currentIndex++;
 }
 
 void InputLayout::FinalizeInputLayout(ID3D11Device* device, const void* vsDataPtr, size_t vsDataSize)

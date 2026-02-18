@@ -6,43 +6,45 @@ TestPlayer::~TestPlayer() {}
 
 void TestPlayer::Tick()
 { 
-	this->GameObject3D::Tick();
-	DirectX::XMFLOAT3 oldPos;
-	DirectX::XMStoreFloat3(&oldPos, this->transform.GetPosition());
-	float deltaTime = Time::GetInstance().GetDeltaTime();
+	this->RigidBody::Tick();
+	this->gravity = false;
 
-	DirectX::XMFLOAT3 moveVector = DirectX::XMFLOAT3(0, 0, 0);
+	// this->transform.Rotate(0, deltaTime, 0);
+
+	//PhysicsQueue::GetInstance().SolveCollisions(); //this is extremely temporary
+}
+
+void TestPlayer::PhysicsTick()
+{
+	RigidBody::PhysicsTick();
+
+	float fixedDeltaTime = Time::GetInstance().GetFixedDeltaTime();
+	this->moveVector = DirectX::XMFLOAT3(0, 0, 0);
 	float speed = 18;
 
 	if (GetAsyncKeyState('I'))
 	{
-		moveVector = FLOAT3ADD(moveVector, DirectX::XMFLOAT3(0, 0, speed));
+		this->moveVector = FLOAT3ADD(this->moveVector, DirectX::XMFLOAT3(0, 0, speed * fixedDeltaTime));
 	}
 
 	if (GetAsyncKeyState('J'))
 	{
-		moveVector = FLOAT3ADD(moveVector, DirectX::XMFLOAT3(-speed, 0, 0));
+		this->moveVector = FLOAT3ADD(this->moveVector, DirectX::XMFLOAT3(-speed * fixedDeltaTime, 0, 0));
 	}
 
 	if (GetAsyncKeyState('K'))
 	{
-		moveVector = FLOAT3ADD(moveVector, DirectX::XMFLOAT3(0, 0, -speed));
+		this->moveVector = FLOAT3ADD(this->moveVector, DirectX::XMFLOAT3(0, 0, -speed * fixedDeltaTime));
 	}
 
 	if (GetAsyncKeyState('L'))
 	{
-		moveVector = FLOAT3ADD(moveVector, DirectX::XMFLOAT3(speed, 0, 0));
+		this->moveVector = FLOAT3ADD(this->moveVector, DirectX::XMFLOAT3(speed * fixedDeltaTime, 0, 0));
 	}
 
-	DirectX::XMFLOAT3 newPos = FLOAT3ADD(oldPos, FLOAT3MULT1(moveVector, deltaTime));
-	this->transform.SetPosition(DirectX::XMLoadFloat3(&newPos));
+	this->linearVelocity = moveVector;
 
-	this->transform.Rotate(0, deltaTime, 0);
-
-	PhysicsQueue::GetInstance().SolveCollisions(); //this is extremely temporary
+	this->transform.Rotate(0, Time::GetInstance().GetFixedDeltaTime());
 }
 
-void TestPlayer::Start()
-{
-	this->RigidBody::Start();
-}
+void TestPlayer::Start() { this->RigidBody::Start(); }

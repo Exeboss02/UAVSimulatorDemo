@@ -47,7 +47,7 @@ void SpotlightObject::Start() {
 	this->camera.lock()->SetParent(this->GetPtr());
 	this->camera.lock()->SetFov(90);
 	this->camera.lock()->SetAspectRatio(1 / 1);
-	this->camera.lock()->SetFarPlane(1000.);
+	this->camera.lock()->SetFarPlane(10.);
 }
 
 void SpotlightObject::Tick() {

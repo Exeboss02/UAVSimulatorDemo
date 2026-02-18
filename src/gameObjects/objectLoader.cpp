@@ -1,19 +1,19 @@
 #include "gameObjects/objectLoader.h"
 #include "utilities/logger.h"
+#include <DirectXCollision.h>
+#include <WICTextureLoader.h>
 #include <fastgltf/core.hpp>
 #include <fastgltf/tools.hpp>
 #include <fastgltf/util.hpp>
-#include <unordered_map>
 #include <rendering/texture.h>
-#include <WICTextureLoader.h>
+#include <unordered_map>
 #include <unordered_set>
+#include <algorithm>
+#include <filesystem>
 
+ObjectLoader::ObjectLoader(std::filesystem::path basePath) : basePath(std::move(basePath)) {}
 
-ObjectLoader::ObjectLoader(std::filesystem::path basePath): basePath(std::move(basePath)) {
-}
-
-ObjectLoader::~ObjectLoader() {
-}
+ObjectLoader::~ObjectLoader() {}
 
 bool ObjectLoader::LoadGltf(std::filesystem::path localpath, MeshLoadData& meshLoadData, ID3D11Device* device) {
 	std::filesystem::path path = basePath / localpath;
@@ -24,29 +24,24 @@ bool ObjectLoader::LoadGltf(std::filesystem::path localpath, MeshLoadData& meshL
 		Logger::Error("Failed to load gltf file, error: ");
 		return false;
 	}
-	
 
-	constexpr auto gltfOptions =
-		fastgltf::Options::DontRequireValidAssetMember |
-		fastgltf::Options::AllowDouble |
-		fastgltf::Options::LoadExternalBuffers |
-		fastgltf::Options::LoadExternalImages |
-		fastgltf::Options::GenerateMeshIndices;
+	constexpr auto gltfOptions = fastgltf::Options::DontRequireValidAssetMember | fastgltf::Options::AllowDouble |
+								 fastgltf::Options::LoadExternalBuffers | fastgltf::Options::LoadExternalImages |
+								 fastgltf::Options::GenerateMeshIndices;
 
 	auto data = parser.loadGltf(gltfFile.get(), path.parent_path(), gltfOptions);
 
-	
 	if (data.error() != fastgltf::Error::None) {
 		Logger::Error("Failed to load glTF file, error: ");
 		return false;
 	}
-	
+
 	auto& asset = data.get();
 
 	std::unordered_map<uint32_t, std::shared_ptr<Texture>> loadedTextures;
 	std::unordered_map<std::string, std::shared_ptr<GenericMaterial>> materials;
 	size_t meshIndex = 0;
-	
+
 	for (auto& gltfmesh : asset.meshes) {
 
 		std::vector<Vertex> verticies;
@@ -66,16 +61,15 @@ bool ObjectLoader::LoadGltf(std::filesystem::path localpath, MeshLoadData& meshL
 			auto* positionIt = it->findAttribute("POSITION");
 			assert(positionIt != it->attributes.end());
 			assert(it->indicesAccessor.has_value());
-			
+
 			Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> textureView(nullptr);
 
-			
 			// If we haven't processed these vertexes yet, do so.
 			if (bufferOffsets.find(positionIt->accessorIndex) == bufferOffsets.end()) {
-				bufferOffsets.emplace((uint32_t)positionIt->accessorIndex, totalOffset);
-				
+				bufferOffsets.emplace((uint32_t) positionIt->accessorIndex, totalOffset);
+
 				size_t loadedVertices = this->LoadVerticiesAndNormals(asset, *it, verticies, totalOffset);
-				
+
 				bool success = this->LoadUV(asset, *it, verticies, totalOffset);
 				if (!success) {
 					Logger::Error("Failed to load UV");
@@ -83,8 +77,6 @@ bool ObjectLoader::LoadGltf(std::filesystem::path localpath, MeshLoadData& meshL
 				}
 
 				totalOffset += loadedVertices;
-
-
 			}
 
 			size_t vertexOffset = bufferOffsets.at(positionIt->accessorIndex);
@@ -96,8 +88,6 @@ bool ObjectLoader::LoadGltf(std::filesystem::path localpath, MeshLoadData& meshL
 			}
 
 			submeshes.emplace_back(indexStart, indexOffset - indexStart);
-			
-
 
 			std::shared_ptr<GenericMaterial> materialOut = std::make_shared<GenericMaterial>(device);
 
@@ -185,7 +175,6 @@ bool ObjectLoader::LoadGltf(std::filesystem::path localpath, MeshLoadData& meshL
 						Logger::Warn("Specular texture failed to load");
 					}
 				}
-
 			}
 
 			std::string materialIdent = path.generic_string() + ":Mat_" + std::to_string(materials.size());
@@ -195,14 +184,34 @@ bool ObjectLoader::LoadGltf(std::filesystem::path localpath, MeshLoadData& meshL
 			materials.emplace(materialIdent, std::move(materialOut));
 		}
 
+		std::array<float, 3> maxPoint{std::numeric_limits<float>::lowest(), std::numeric_limits<float>::lowest(),
+										std::numeric_limits<float>::lowest()};
+		std::array<float, 3> minPoint{std::numeric_limits<float>::max(), std::numeric_limits<float>::max(),
+										std::numeric_limits<float>::max()};
+		for (const auto& vertex : verticies) {
+			maxPoint[0] = std::max(maxPoint[0], vertex.pos[0]);
+			maxPoint[1] = std::max(maxPoint[1], vertex.pos[1]);
+			maxPoint[2] = std::max(maxPoint[2], vertex.pos[2]);
+
+			minPoint[0] = std::min(minPoint[0], vertex.pos[0]);
+			minPoint[1] = std::min(minPoint[1], vertex.pos[1]);
+			minPoint[2] = std::min(minPoint[2], vertex.pos[2]);
+		}
+
+		DirectX::XMVECTOR min = DirectX::XMVectorSet(minPoint[0], minPoint[1], minPoint[2], 0);
+		DirectX::XMVECTOR max = DirectX::XMVectorSet(maxPoint[0], maxPoint[1], maxPoint[2], 0);
+		DirectX::BoundingBox boundingBox;
+		DirectX::BoundingBox::CreateFromPoints(boundingBox, max, min);
+
 		VertexBuffer vertexBuffer;
+
 		vertexBuffer.Init(device, sizeof(Vertex), static_cast<UINT>(verticies.size()), verticies.data());
 
 		IndexBuffer indexBuffer;
 		indexBuffer.Init(device, indices.size(), indices.data());
 
 		mesh->SetIdentifier(localpath.generic_string() + ":Mesh_" + std::to_string(meshIndex));
-		mesh->Init(std::move(vertexBuffer), std::move(indexBuffer), std::move(submeshes));
+		mesh->Init(std::move(vertexBuffer), std::move(indexBuffer), std::move(submeshes), std::move(boundingBox));
 		data.SetMesh(mesh);
 
 		size_t index = 0;
@@ -223,11 +232,10 @@ bool ObjectLoader::LoadGltf(std::filesystem::path localpath, MeshLoadData& meshL
 	}
 
 	return true;
-	
 }
 
-size_t ObjectLoader::LoadVerticiesAndNormals(const fastgltf::Asset& asset, const fastgltf::Primitive& primitive, std::vector<Vertex>& dest, uint32_t offset)
-{
+size_t ObjectLoader::LoadVerticiesAndNormals(const fastgltf::Asset& asset, const fastgltf::Primitive& primitive,
+											 std::vector<Vertex>& dest, uint32_t offset) {
 	auto* positionIt = primitive.findAttribute("POSITION");
 	assert(positionIt != primitive.attributes.end());
 	assert(primitive.indicesAccessor.has_value());
@@ -237,38 +245,37 @@ size_t ObjectLoader::LoadVerticiesAndNormals(const fastgltf::Asset& asset, const
 	dest.reserve(dest.size() + positionAccessor.count);
 
 	// Wacky for loop
-	fastgltf::iterateAccessorWithIndex<fastgltf::math::fvec3>(asset, positionAccessor, [&](fastgltf::math::fvec3 pos, std::size_t idx) {
+	fastgltf::iterateAccessorWithIndex<fastgltf::math::fvec3>(asset, positionAccessor,
+															  [&](fastgltf::math::fvec3 pos, std::size_t idx) {
+																  dest.push_back(Vertex{});
 
-		dest.push_back(Vertex{});
+																  dest[offset + idx].pos[0] = pos.x();
+																  dest[offset + idx].pos[1] = pos.y();
+																  dest[offset + idx].pos[2] = pos.z();
 
-		dest[offset + idx].pos[0] = pos.x();
-		dest[offset + idx].pos[1] = pos.y();
-		dest[offset + idx].pos[2] = pos.z();
-
-		dest[offset + idx].uv[0] = 0;
-		dest[offset + idx].uv[1] = 0;
-	});
-
+																  dest[offset + idx].uv[0] = 0;
+																  dest[offset + idx].uv[1] = 0;
+															  });
 
 	auto* normalIt = primitive.findAttribute("NORMAL");
 	if (normalIt != primitive.attributes.end()) {
 		auto& normalAccessor = asset.accessors[normalIt->accessorIndex];
 		// Wacky for loop
-		fastgltf::iterateAccessorWithIndex<fastgltf::math::fvec3>(asset, normalAccessor, [&](fastgltf::math::fvec3 normal, std::size_t idx) {
-			dest[offset + idx].normal[0] = normal.x();
-			dest[offset + idx].normal[1] = normal.y();
-			dest[offset + idx].normal[2] = normal.z();
-			});
-	}
-	else {
+		fastgltf::iterateAccessorWithIndex<fastgltf::math::fvec3>(asset, normalAccessor,
+																  [&](fastgltf::math::fvec3 normal, std::size_t idx) {
+																	  dest[offset + idx].normal[0] = normal.x();
+																	  dest[offset + idx].normal[1] = normal.y();
+																	  dest[offset + idx].normal[2] = normal.z();
+																  });
+	} else {
 		// Implement normal generation later maybe
 		Logger::Warn("No normals found for mesh primitive!");
 	}
 	return static_cast<uint32_t>(positionAccessor.count);
 }
 
-bool ObjectLoader::LoadIndices(fastgltf::Asset& asset, const fastgltf::Primitive& primitive, std::vector<uint32_t>& dest, uint32_t& offset, size_t vertexOffset)
-{
+bool ObjectLoader::LoadIndices(fastgltf::Asset& asset, const fastgltf::Primitive& primitive,
+							   std::vector<uint32_t>& dest, uint32_t& offset, size_t vertexOffset) {
 	Logger::Log("Loading indices");
 	// Parse Indicies
 	fastgltf::Accessor& indexAccessor = asset.accessors[primitive.indicesAccessor.value()];
@@ -279,20 +286,19 @@ bool ObjectLoader::LoadIndices(fastgltf::Asset& asset, const fastgltf::Primitive
 		return false;
 	}
 
-
 	// reserve memory
 	dest.reserve(dest.size() + indexAccessor.count);
 
 	// initialize memory
 	dest.insert(dest.end(), indexAccessor.count, 0);
-	if (indexAccessor.componentType == fastgltf::ComponentType::UnsignedByte || indexAccessor.componentType == fastgltf::ComponentType::UnsignedShort) {
+	if (indexAccessor.componentType == fastgltf::ComponentType::UnsignedByte ||
+		indexAccessor.componentType == fastgltf::ComponentType::UnsignedShort) {
 		std::vector<uint16_t> temp(indexAccessor.count);
 		fastgltf::copyFromAccessor<std::uint16_t>(asset, indexAccessor, temp.data());
 		for (size_t index = 0; index < temp.size(); index++) {
 			dest[offset + index] = temp[index] + vertexOffset;
 		}
-	}
-	else {
+	} else {
 		fastgltf::copyFromAccessor<std::uint32_t>(asset, indexAccessor, dest.data() + offset);
 	}
 	offset += static_cast<uint32_t>(indexAccessor.count);
@@ -300,8 +306,8 @@ bool ObjectLoader::LoadIndices(fastgltf::Asset& asset, const fastgltf::Primitive
 	return true;
 }
 
-bool ObjectLoader::LoadUV(const fastgltf::Asset& asset, const fastgltf::Primitive& primitive, std::vector<Vertex>& dest, size_t offset)
-{
+bool ObjectLoader::LoadUV(const fastgltf::Asset& asset, const fastgltf::Primitive& primitive, std::vector<Vertex>& dest,
+						  size_t offset) {
 	size_t baseColorTextureCordIndex = 0;
 	if (!primitive.materialIndex.has_value()) {
 		return true;
@@ -315,11 +321,10 @@ bool ObjectLoader::LoadUV(const fastgltf::Asset& asset, const fastgltf::Primitiv
 			Logger::Error("Texture has no image index!");
 			return false;
 		}
-		
+
 		if (baseColorTexture->transform && baseColorTexture->transform->texCoordIndex.has_value()) {
 			baseColorTextureCordIndex = baseColorTexture->transform->texCoordIndex.value();
-		}
-		else {
+		} else {
 			baseColorTextureCordIndex = material.pbrData.baseColorTexture->texCoordIndex;
 		}
 	}
@@ -328,19 +333,19 @@ bool ObjectLoader::LoadUV(const fastgltf::Asset& asset, const fastgltf::Primitiv
 	if (const auto* texcoord = primitive.findAttribute(texCordAttrName); texcoord != primitive.attributes.end()) {
 		// Get texcord accessor
 		auto& texCoordAccessor = asset.accessors[texcoord->accessorIndex];
-		if (!texCoordAccessor.bufferViewIndex.has_value())
-			return true;
+		if (!texCoordAccessor.bufferViewIndex.has_value()) return true;
 
-		fastgltf::iterateAccessorWithIndex<fastgltf::math::fvec2>(asset, texCoordAccessor, [&](fastgltf::math::fvec2 uv, std::size_t idx) {
-			dest[offset + idx].uv[0] = uv.x();
-			dest[offset + idx].uv[1] = 1 - uv.y();
-		});
+		fastgltf::iterateAccessorWithIndex<fastgltf::math::fvec2>(asset, texCoordAccessor,
+																  [&](fastgltf::math::fvec2 uv, std::size_t idx) {
+																	  dest[offset + idx].uv[0] = uv.x();
+																	  dest[offset + idx].uv[1] = 1 - uv.y();
+																  });
 	}
 	return true;
 }
 
-ID3D11ShaderResourceView* ObjectLoader::LoadTexture(fastgltf::Asset& asset, fastgltf::TextureInfo& textureInfo, ID3D11Device* device)
-{
+ID3D11ShaderResourceView* ObjectLoader::LoadTexture(fastgltf::Asset& asset, fastgltf::TextureInfo& textureInfo,
+													ID3D11Device* device) {
 	Logger::Log("Loading textures");
 	ID3D11ShaderResourceView* textureView = nullptr;
 	size_t baseColorTextureCordIndex = 0;
@@ -354,39 +359,36 @@ ID3D11ShaderResourceView* ObjectLoader::LoadTexture(fastgltf::Asset& asset, fast
 	auto& textureImage = asset.images[texture.imageIndex.value()];
 
 	std::visit(fastgltf::visitor{
-		[](auto& arg) {
-			Logger::Error("What did you load bruh?, Wont be implemented (Doesn't exist)");
-		},
-		[&](fastgltf::sources::URI& filePath) {
-			Logger::Error("Loading texture from filePath, Not yet implemented");
-		},
-		[&](fastgltf::sources::Array& vector) {
-			Logger::Error("Loading texture from vector, Not yet implemented");
-			// maybe implement?
-		},
-		[&](fastgltf::sources::BufferView& view) {
-			auto& bufferView = asset.bufferViews[view.bufferViewIndex];
-			auto& buffer = asset.buffers[bufferView.bufferIndex];
+				   [](auto& arg) { Logger::Error("What did you load bruh?, Wont be implemented (Doesn't exist)"); },
+				   [&](fastgltf::sources::URI& filePath) {
+					   Logger::Error("Loading texture from filePath, Not yet implemented");
+				   },
+				   [&](fastgltf::sources::Array& vector) {
+					   Logger::Error("Loading texture from vector, Not yet implemented");
+					   // maybe implement?
+				   },
+				   [&](fastgltf::sources::BufferView& view) {
+					   auto& bufferView = asset.bufferViews[view.bufferViewIndex];
+					   auto& buffer = asset.buffers[bufferView.bufferIndex];
 
-			std::visit(fastgltf::visitor {
+					   std::visit(
+						   fastgltf::visitor{
 
-				[](auto& arg) {},
-				[&](fastgltf::sources::Array& vector) {
-					int width, height, nrChannels;
-					HRESULT hr = DirectX::CreateWICTextureFromMemory(
-						device,
-						reinterpret_cast<const uint8_t*>(vector.bytes.data() + bufferView.byteOffset),
-						static_cast<size_t>(bufferView.byteLength),
-						nullptr,
-						&textureView
-					);
-					if (FAILED(hr)) {
-						Logger::Error("WICLoader failed to load texture");
-					}
-				}
-			}, buffer.data);
-		},
-	}, textureImage.data);
+							   [](auto& arg) {},
+							   [&](fastgltf::sources::Array& vector) {
+								   int width, height, nrChannels;
+								   HRESULT hr = DirectX::CreateWICTextureFromMemory(
+									   device,
+									   reinterpret_cast<const uint8_t*>(vector.bytes.data() + bufferView.byteOffset),
+									   static_cast<size_t>(bufferView.byteLength), nullptr, &textureView);
+								   if (FAILED(hr)) {
+									   Logger::Error("WICLoader failed to load texture");
+								   }
+							   }},
+						   buffer.data);
+				   },
+			   },
+			   textureImage.data);
 	Logger::Log("Loaded texture");
 	return textureView;
 }

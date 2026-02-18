@@ -7,7 +7,7 @@
 #include <chrono>
 #include <cmath>
 
-#define DEBUG_TIMER
+//#define DEBUG_TIMER
 
 Renderer::Renderer()
 	: viewport(), currentPixelShader(nullptr), currentVertexShader(nullptr), currentRasterizerState(nullptr), currentMaterial(nullptr),
@@ -623,9 +623,6 @@ void Renderer::RenderPass() {
 		BindMaterial(this->defaultUnlitMat.lock().get());
 		BindRasterizerState(this->wireframeRasterizerState.get());
 	}
-
-	// World Matrix Buffer only needs to be bound once per frame
-	//BindWorldMatrix(this->worldMatrixBuffer->GetBuffer());
 
 	#ifdef DEBUG_TIMER
 	const auto afterBinds{std::chrono::steady_clock::now()};

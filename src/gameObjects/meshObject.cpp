@@ -38,6 +38,12 @@ void MeshObject::Tick() {
 
 }
 
+void MeshObject::LateTick() { 
+	this->cachedGlobalPosition = this->GetGlobalPosition();
+	this->cachedGlobalMatrix = this->GetGlobalWorldMatrix(false);
+	this->cachedGlobalMatrixIT = this->GetGlobalWorldMatrix(true);
+}
+
 void MeshObject::Start() { 
 	this->GameObject3D::Start();
 	RenderQueue::AddMeshObject(this->GetPtr());
@@ -119,3 +125,15 @@ void MeshObject::ShowInHierarchy() {
 }
 
 bool MeshObject::IsHidden() { return this->hide; }
+
+DirectX::XMVECTOR& MeshObject::GetCachedGlobalPosition() { return this->cachedGlobalPosition; }
+
+DirectX::XMMATRIX& MeshObject::GetCachedGlobalMatrix(bool inverseTransposed) { 
+	if (inverseTransposed) {
+		return this->cachedGlobalMatrixIT; 
+	}
+	else
+	{
+		return this->cachedGlobalMatrix;
+	}
+}

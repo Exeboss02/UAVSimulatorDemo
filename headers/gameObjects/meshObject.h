@@ -22,6 +22,7 @@ public:
 	DirectX::BoundingBox GetBoundingBox();
 
 	virtual void Tick() override;
+	virtual void LateTick() override;
 	virtual void Start() override;
 
 	virtual void LoadFromJson(const nlohmann::json& data) override;
@@ -30,6 +31,9 @@ public:
 	virtual void ShowInHierarchy() override;
 
 	bool IsHidden();
+
+	virtual DirectX::XMVECTOR& GetCachedGlobalPosition();
+	virtual DirectX::XMMATRIX& GetCachedGlobalMatrix(bool inverseTransposed);
 
 private:
 	MeshObjData mesh;
@@ -40,4 +44,8 @@ private:
 	int tempId;
 
 	bool hide;
+
+	DirectX::XMVECTOR cachedGlobalPosition;
+	DirectX::XMMATRIX cachedGlobalMatrix;
+	DirectX::XMMATRIX cachedGlobalMatrixIT;
 };

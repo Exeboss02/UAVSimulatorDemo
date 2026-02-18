@@ -4,10 +4,10 @@
 #include "rendering/texture.h"
 #include "rendering/vertex.h"
 #include "rendering/vertexBuffer.h"
+#include <DirectXCollision.h>
 #include <array>
 #include <string>
 #include <vector>
-#include <DirectXCollision.h>
 
 class SubMesh {
 public:
@@ -25,7 +25,6 @@ private:
 	size_t startIndex;
 	size_t nrOfIndices;
 };
-
 
 class Mesh {
 public:

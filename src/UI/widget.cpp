@@ -27,8 +27,14 @@ void UI::Widget::Update(float dt) {
 	// Map widget screen-space position/size into the GameObject3D transform
 	// so the renderer can draw it with an orthographic camera.
 	using namespace DirectX;
+	// Compute a stable depth value so overlapping widgets don't get the exact same Z
+	// Base Z is 0.5; each zIndex step moves forward by 0.001f.
+	// Add a tiny epsilon derived from the widget pointer to ensure unique depths when zIndex matches.
+	uintptr_t addr = reinterpret_cast<uintptr_t>(this);
+	float epsilon = static_cast<float>(addr % 1000u) * 1e-6f; // range ~0..0.000999
+	float z = 0.5f + static_cast<float>(this->GetZIndex()) * 0.001f + epsilon;
 	XMVECTOR posVec =
-		XMVectorSet(this->position.x + this->size.x * 0.5f, this->position.y + this->size.y * 0.5f, 0.5f, 1.0f);
+		XMVectorSet(this->position.x + this->size.x * 0.5f, this->position.y + this->size.y * 0.5f, z, 1.0f);
 	XMVECTOR scaleVec = XMVectorSet(this->size.x, this->size.y, 1.0f, 0.0f);
 	this->transform.SetPosition(posVec);
 	this->transform.SetScale(scaleVec);
@@ -51,6 +57,10 @@ bool UI::Widget::HitTest(Vec2 point) const {
 }
 
 void UI::Widget::SetWidgetMesh(MeshObjData& mesh) { SetMesh(mesh); }
+
+int UI::Widget::GetZIndex() const { return this->zIndex; }
+
+void UI::Widget::SetZIndex(int z) { this->zIndex = z; }
 
 void UI::Widget::ShowInHierarchy() {
 	// First display common GameObject inspector
@@ -80,6 +90,12 @@ void UI::Widget::ShowInHierarchy() {
 	bool en = this->isEnabled();
 	if (ImGui::Checkbox("Enabled", &en)) {
 		this->SetEnabled(en);
+	}
+
+	// Z-index
+	int z = this->GetZIndex();
+	if (ImGui::InputInt("Z Index", &z)) {
+		this->SetZIndex(z);
 	}
 
 	ImGui::Separator();
@@ -134,6 +150,11 @@ void UI::Widget::LoadFromJson(const nlohmann::json& data) {
 			this->SetSize(s);
 		}
 	}
+
+	// zIndex
+	if (data.contains("zIndex")) {
+		this->SetZIndex(data.at("zIndex").get<int>());
+	}
 }
 
 void UI::Widget::SaveToJson(nlohmann::json& data) {
@@ -149,4 +170,7 @@ void UI::Widget::SaveToJson(nlohmann::json& data) {
 	auto sz = this->GetSize();
 	data["transform"]["position"] = {pos.x, pos.y};
 	data["transform"]["size"] = {sz.x, sz.y};
+
+	// zIndex
+	data["zIndex"] = this->GetZIndex();
 }

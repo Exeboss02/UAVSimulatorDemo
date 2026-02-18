@@ -9,12 +9,12 @@
 
 class TestEnemy : public GameObject3D {
 public:
-	TestEnemy() : GameObject3D(), movementSpeed(2.f), currentPathIndex(0), path({}) {}
+	TestEnemy() : GameObject3D(), movementSpeed(1.5f), currentPathIndex(0), path({}) {}
 	~TestEnemy() = default;
 	void Start() override;
 	void Tick() override;
 
-	void SetPath(const std::vector<std::shared_ptr<AStarVertex>>& newPath) { this->path = newPath; }
+	void SetPath(const std::vector<std::shared_ptr<AStarVertex>>& newPath);
 
 private:
 	const float movementSpeed;

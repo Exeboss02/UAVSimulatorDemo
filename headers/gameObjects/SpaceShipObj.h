@@ -34,6 +34,8 @@ public:
 	/// </summary>
 	void Tick() override;
 
+	void Start() override;
+
 	std::unique_ptr<AStar>& GetPathfinder() { return this->pathfinder; }
 
 private:
@@ -43,4 +45,5 @@ private:
 	std::array<std::array<std::weak_ptr<Room>, SHIP_MAX_SIZE_Y>, SHIP_MAX_SIZE_X> rooms{};
 
 	std::unique_ptr<AStar> pathfinder;
+	std::vector<std::shared_ptr<AStarVertex>> path;
 };

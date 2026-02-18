@@ -165,9 +165,9 @@ bool Collider::BoxSphereCollision(BoxCollider* box, SphereCollider* sphere, Dire
 	XMVECTOR scale, rotation, translation;
 	XMMatrixDecompose(&scale, &rotation, &translation, boxWorldMatrix);
 
-	Logger::Log("scale: ", scale.m128_f32[0], ", ", scale.m128_f32[1], ", ", scale.m128_f32[2]);
-	Logger::Log("rotation: ", rotation.m128_f32[0], ", ", rotation.m128_f32[1], ", ", rotation.m128_f32[2]);
-	Logger::Log("translation: ", translation.m128_f32[0], ", ", translation.m128_f32[1], ", ", translation.m128_f32[2]);
+	// Logger::Log("scale: ", scale.m128_f32[0], ", ", scale.m128_f32[1], ", ", scale.m128_f32[2]);
+	// Logger::Log("rotation: ", rotation.m128_f32[0], ", ", rotation.m128_f32[1], ", ", rotation.m128_f32[2]);
+	// Logger::Log("translation: ", translation.m128_f32[0], ", ", translation.m128_f32[1], ", ", translation.m128_f32[2]);
 
 
 	XMMATRIX rotationMatrix = XMMatrixRotationQuaternion(rotation);

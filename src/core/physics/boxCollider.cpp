@@ -30,6 +30,8 @@ void BoxCollider::Tick()
 {
 	this->Collider::Tick();
 
+	if(!this->dynamic) return;
+
 	//update normals
 	DirectX::XMStoreFloat3(&this->axis[0], this->GetGlobalRight());
 	DirectX::XMStoreFloat3(&this->axis[1], this->GetGlobalUp());

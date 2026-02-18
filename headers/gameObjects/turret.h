@@ -4,8 +4,8 @@
 
 class Turret : public MeshObject {
 public:
-	virtual Start() override;
-	virtual Tick() override;
+	virtual void Start() override;
+	virtual void Tick() override;
 
 
 private:

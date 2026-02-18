@@ -70,7 +70,7 @@ public:
 	void SetParent(std::weak_ptr<GameObject> parent) override;
 
 private:
-
+	std::weak_ptr<GameObject3D> builtObject;
 	std::weak_ptr<BoxCollider> buildSlot;
 	std::array<size_t, 2> pos;
 	inline static float size;

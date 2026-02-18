@@ -4,6 +4,8 @@
 #include "core/physics/rigidBody.h"
 #include "core/physics/physicsQueue.h" //are here to prevent circular dependecies
 
+#define SHOW_COLLIDER
+
 Collider::Collider()
 {
 }
@@ -59,6 +61,7 @@ void Collider::Start()
 {
 	GameObject3D::Start();
 
+	#ifdef SHOW_COLLIDER
 	MeshObjData meshData = {};
 	DirectX::XMVECTOR scale;
 	scale.m128_f32[0] = 1;
@@ -87,6 +90,7 @@ void Collider::Start()
 	visualMeshObject->SetMesh(meshData);
 	visualMeshObject->transform.SetScale(scale);
 	visualMeshObject->SetParent(std::static_pointer_cast<Collider>(this->GetPtr()));
+	#endif
 }
 
 bool Collider::Collision(Collider* otherCollider)

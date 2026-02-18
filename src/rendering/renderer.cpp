@@ -7,7 +7,7 @@
 #include <chrono>
 #include <cmath>
 
-#define DEBUG_TIMER
+//#define DEBUG_TIMER
 
 Renderer::Renderer()
 	: viewport(), currentPixelShader(nullptr), currentVertexShader(nullptr), currentRasterizerState(nullptr), currentMaterial(nullptr),
@@ -65,7 +65,7 @@ std::vector<std::weak_ptr<MeshObject>> Renderer::GetVisibleObjects(CameraObject&
 		// This should NOT be done every frame, very expensive matrix operations
 		float distance;
 		DirectX::XMStoreFloat(&distance, DirectX::XMVector3LengthSq(DirectX::XMVectorSubtract(
-											 cameraGlobalPos, this->meshRenderQueue[i].lock()->GetGlobalPosition())));
+											 cameraGlobalPos, this->meshRenderQueue[i].lock()->GetCachedGlobalPosition())));
 		
 		if (distance > std::powf(camera.GetFarPlane(), 2.0f)) {
 			continue;
@@ -328,8 +328,8 @@ void Renderer::CreateRenderMap(RenderMap& renderMap, CameraObject& camera) {
 		DirectX::XMFLOAT4X4 worldMatrix;
 		DirectX::XMFLOAT4X4 worldMatrixInverseTransposed;
 
-		DirectX::XMStoreFloat4x4(&worldMatrix, meshObject->GetGlobalWorldMatrix(false));
-		DirectX::XMStoreFloat4x4(&worldMatrixInverseTransposed, meshObject->GetGlobalWorldMatrix(true));
+		DirectX::XMStoreFloat4x4(&worldMatrix, meshObject->GetCachedGlobalMatrix(false));
+		DirectX::XMStoreFloat4x4(&worldMatrixInverseTransposed, meshObject->GetCachedGlobalMatrix(true));
 
 		RenderMap::WorldMatrixBufferContainer worldMatrixBufferContainer = {worldMatrix, worldMatrixInverseTransposed};
 
@@ -363,9 +363,11 @@ void Renderer::CreateCheapRenderMap(CheapRenderMap& renderMap, CameraObject& cam
 	const auto start{std::chrono::steady_clock::now()};
 	#endif // DEBUG_TIMER
 
-	auto renderQueue = GetVisibleObjects(camera);
-
 	renderMap.meshes.clear();
+
+	if (this->renderAllWireframe) return;
+	
+	auto renderQueue = GetVisibleObjects(camera);
 
 	for (size_t i = 0; i < renderQueue.size(); i++) {
 		std::shared_ptr<MeshObject> meshObject = renderQueue[i].lock();
@@ -373,6 +375,8 @@ void Renderer::CreateCheapRenderMap(CheapRenderMap& renderMap, CameraObject& cam
 		if (!meshObject->IsActive() || meshObject->IsHidden()) continue;
 
 		auto& meshObjData = meshObject->GetMesh();
+
+		if (meshObjData.GetMaterial(0).lock()->wireframe) continue;
 
 		std::string meshIdentifier = meshObjData.GetMeshIdentifier();
 		auto [meshIterator, meshInserted] = renderMap.meshes.try_emplace(meshIdentifier);
@@ -388,8 +392,8 @@ void Renderer::CreateCheapRenderMap(CheapRenderMap& renderMap, CameraObject& cam
 		DirectX::XMFLOAT4X4 worldMatrix;
 		DirectX::XMFLOAT4X4 worldMatrixInverseTransposed;
 
-		DirectX::XMStoreFloat4x4(&worldMatrix, meshObject->GetGlobalWorldMatrix(false));
-		DirectX::XMStoreFloat4x4(&worldMatrixInverseTransposed, meshObject->GetGlobalWorldMatrix(true));
+		DirectX::XMStoreFloat4x4(&worldMatrix, meshObject->GetCachedGlobalMatrix(false));
+		DirectX::XMStoreFloat4x4(&worldMatrixInverseTransposed, meshObject->GetCachedGlobalMatrix(true));
 
 		RenderMap::WorldMatrixBufferContainer worldMatrixBufferContainer = {worldMatrix, worldMatrixInverseTransposed};
 
@@ -619,9 +623,6 @@ void Renderer::RenderPass() {
 		BindMaterial(this->defaultUnlitMat.lock().get());
 		BindRasterizerState(this->wireframeRasterizerState.get());
 	}
-
-	// World Matrix Buffer only needs to be bound once per frame
-	//BindWorldMatrix(this->worldMatrixBuffer->GetBuffer());
 
 	#ifdef DEBUG_TIMER
 	const auto afterBinds{std::chrono::steady_clock::now()};

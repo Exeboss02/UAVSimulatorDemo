@@ -59,7 +59,6 @@ std::vector<std::weak_ptr<MeshObject>> Renderer::GetVisibleObjects(CameraObject&
 		}
 		visible.emplace_back(this->meshRenderQueue[i]);
 	}
-	visible.insert(visible.end(), this->meshRenderQueue.begin(), this->meshRenderQueue.end());
 	return visible;
 }
 
@@ -370,7 +369,6 @@ void Renderer::RenderPass() {
 	}
 
 	// Bind meshes
-
 	auto renderQueue = this->GetVisibleObjects(CameraObject::GetMainCamera());
 	for (size_t i = 0; i < renderQueue.size(); i++) {
 		std::weak_ptr<MeshObject> meshObject = renderQueue[i];

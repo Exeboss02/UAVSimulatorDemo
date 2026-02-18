@@ -38,6 +38,9 @@ SceneManager::SceneManager(Renderer* rend) : mainScene(nullptr), renderer(rend),
 }
 
 void SceneManager::SceneTick() {
+	ImGui::Begin("Frame time");
+	const auto start{std::chrono::steady_clock::now()};
+
 	if (!this->mainScene.get()) {
 		this->mainScene = this->emptyScene;
 	}
@@ -47,6 +50,11 @@ void SceneManager::SceneTick() {
 	this->mainScene->SceneTick(this->isPaused);
 	this->mainScene->SceneLateTick(this->isPaused);
 	PhysicsQueue::GetInstance().ResetPhysicsTickCounter();
+
+	const auto end{std::chrono::steady_clock::now()};
+	const std::chrono::duration<double> elapsedSeconds{end - start};
+	ImGui::Text(("Frame time: " + std::to_string(elapsedSeconds.count())).c_str());
+	ImGui::End();
 }
 
 void SceneManager::LoadScene(Scenes scene) {

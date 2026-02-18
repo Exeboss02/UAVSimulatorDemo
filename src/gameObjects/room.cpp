@@ -67,6 +67,14 @@ void Room::Start() {
 
 		this->walls[i] = meshobj;
 	}
+	auto buildCollider = this->factory->CreateStaticGameObject<BoxCollider>();
+	buildCollider->SetExtents({2, 1, 2});
+	buildCollider->SetParent(this->GetPtr());
+	// Maybe tweak position
+	this->buildSlot = buildCollider;
+	buildCollider->SetOnInteract([]() { Logger::Log("I would build a turret ;)");
+		});
+
 }
 
 void Room::Tick() { this->GameObject3D::Tick(); }

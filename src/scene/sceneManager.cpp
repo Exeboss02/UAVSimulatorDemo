@@ -5,6 +5,7 @@
 #include "core/filepathHolder.h"
 #include "gameObjects/pointLightObject.h"
 #include "gameObjects/room.h"
+#include "gameObjects/turret.h"
 
 // Very good macro, please don't remove
 #define NAMEOF(x) #x
@@ -24,6 +25,7 @@ SceneManager::SceneManager(Renderer* rend) : mainScene(nullptr), renderer(rend),
 	this->objectFromString.RegisterType<SoundSourceObject>(NAMEOF(SoundSourceObject));
 	this->objectFromString.RegisterType<PointLightObject>(NAMEOF(PointLightObject));
 	this->objectFromString.RegisterType<TestPlayer>(NAMEOF(TestPlayer));
+	this->objectFromString.RegisterType<Turret>(NAMEOF(Turret));
 
 	// UI widget types
 	this->objectFromString.RegisterType<UI::CanvasObject>(NAMEOF(UI::CanvasObject));

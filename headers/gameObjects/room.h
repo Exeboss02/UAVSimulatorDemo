@@ -71,7 +71,7 @@ public:
 
 private:
 
-
+	std::weak_ptr<BoxCollider> buildSlot;
 	std::array<size_t, 2> pos;
 	inline static float size;
 	std::weak_ptr<MeshObject> roof;

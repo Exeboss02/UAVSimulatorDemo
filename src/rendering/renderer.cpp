@@ -1293,8 +1293,15 @@ void Renderer::RenderCheapRenderMap(CheapRenderMap& renderMap) {
 
 		this->immediateContext->IASetVertexBuffers(0, 2, bufferPointers, strides, offsets);
 
+		// Submesh Test
+		for (auto& subMesh : mesh.mesh->GetSubMeshes()) {
+			// Draw to screen
+			this->immediateContext->DrawIndexedInstanced(subMesh.GetNrOfIndices(), instanceCount,
+														 subMesh.GetStartIndex(), 0, 0);
+		}
+
 		// Draw call
-		this->immediateContext->DrawInstanced(vBuf.GetNrOfVertices(), newInstanceBuffer->GetNrOfInstances(), 0, 0);
+		//this->immediateContext->DrawInstanced(vBuf.GetNrOfVertices(), newInstanceBuffer->GetNrOfInstances(), 0, 0);
 	}
 }
 

@@ -161,7 +161,7 @@
         "scale": [
           2.0,
           2.0,
-          20.0
+          40.0
         ]
       },
       "type": "GameObject3D",
@@ -246,7 +246,7 @@
       "transform": {
         "position": [
           0.0,
-          2.0,
+          4.0,
           0.0
         ],
         "rotation": [
@@ -277,12 +277,12 @@
           1.0
         ],
         "scale": [
-          0.5,
-          1.5,
-          0.5
+          2.0,
+          2.0,
+          2.0
         ]
       },
-      "type": "BoxCollider",
+      "type": "SphereCollider",
       "tag": 1,
       "targetTag": 0,
       "solid": true,
@@ -292,13 +292,38 @@
       "transform": {
         "position": [
           0.0,
-          -2.0,
+          1.0,
           0.0
         ],
         "rotation": [
           0.0,
           0.0,
-          1.1,
+          0.0,
+          1.0
+        ],
+        "scale": [
+          2.0,
+          2.0,
+          2.0
+        ]
+      },
+      "type": "SphereCollider",
+      "tag": 1,
+      "targetTag": 3,
+      "solid": true,
+      "dynamic": true
+    },
+    {
+      "transform": {
+        "position": [
+          0.0,
+          2.0,
+          0.0
+        ],
+        "rotation": [
+          0.0,
+          0.0,
+          0.0,
           1.0
         ],
         "scale": [

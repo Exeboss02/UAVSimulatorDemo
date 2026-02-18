@@ -66,6 +66,7 @@ float3 ComputeNormal(float3 fragmentpos, float2 fragmentUV, float3 camPos, float
 
 float4 main(PixelShaderInput input) : SV_TARGET
 {    
+    const float bias = 0.001f;
     float3 normal = normalize(input.normal);
     
     float4 ambientColor = ambient;  
@@ -99,7 +100,6 @@ float4 main(PixelShaderInput input) : SV_TARGET
         float sceneDepth = ndc.z;
         float mapDepth = shadowMaps.SampleLevel(shadowSampler, float3(uv, i), 0.f).r;
         
-        const float bias = 0.01f;
         bool islit = (mapDepth + bias) >= sceneDepth;
         
         
@@ -109,14 +109,20 @@ float4 main(PixelShaderInput input) : SV_TARGET
         
         if (lightCosAngle > lightdata.spotCosAngle && islit)
         {
-            float intensity = (1 / dot(LightToHit, LightToHit)) * max(0.0f, dot(-lightDir, normal)) * lightdata.intensity;
-    
-            float3 halfWayVector = normalize(lightDir + normalize(camToPixel));
-            float specularDot = max(dot(normal, -halfWayVector), 0);
-            float4 lighting = lit(intensity, specularDot, shininess);
+            float3 L = normalize(-LightToHit);
+            float3 V = normalize(-camToPixel);
+            float3 halfwayVector = normalize(L + V);
             
-            diffuseColor += lighting.y * lightdata.color;
-            specularColor += lighting.z * lightdata.color;
+            float distSq = max(dot(LightToHit, LightToHit), 1e-6f);
+          
+            float intensity = (1.0f / distSq) * lightdata.intensity;
+
+            float nDotL = dot(normal, L);
+            float nDotHalf = dot(normal, halfwayVector);
+            float4 lighting = lit(nDotL, nDotHalf, shininess);
+
+            diffuseColor += lighting.y * lightdata.color * intensity;
+            specularColor += lighting.z * lightdata.color * intensity;
         }
     }
     for (i = 0; i < pointLightCount; i++)
@@ -146,25 +152,27 @@ float4 main(PixelShaderInput input) : SV_TARGET
         // that was used to render the corresponding cubemap face and compare
         // the resulting depth (z/w) with the sampled depth from the cubemap.
         float4 lightClip = mul(float4(input.worldPosition.xyz, 1), lightdata.vpMatrix[faceIndex]);
-        float sceneDepth = lightClip.z / lightClip.w;
-
-        const float bias = 0.01f;
-        
+        float sceneDepth = lightClip.z / lightClip.w;        
         
         float mapDepth = pointLightShadowMaps.SampleLevel(shadowSampler, sampleDir, 0).r;
         bool islit = (mapDepth + bias) >= sceneDepth;
 
         if (islit)
         {
+            float3 L = normalize(-LightToHit);
+            float3 V = normalize(-camToPixel);
+            float3 halfwayVector = normalize(L + V);
+            
             float distSq = max(dot(LightToHit, LightToHit), 1e-6f);
-            float intensity = (1.0f / distSq) * max(0.0f, dot(-lightDir, normal)) * lightdata.intensity;
+          
+            float intensity = (1.0f / distSq) * lightdata.intensity;
 
-            float3 halfWayVector = normalize(lightDir + normalize(camToPixel));
-            float specularDot = max(dot(normal, -halfWayVector), 0);
-            float4 lighting = lit(intensity, specularDot, shininess);
+            float nDotL = dot(normal, L);
+            float nDotHalf = dot(normal, halfwayVector);
+            float4 lighting = lit(nDotL, nDotHalf, shininess);
 
-            diffuseColor += lighting.y * lightdata.color;
-            specularColor += lighting.z * lightdata.color;
+            diffuseColor += lighting.y * lightdata.color * intensity;
+            specularColor += lighting.z * lightdata.color * intensity;
         }
     }
     

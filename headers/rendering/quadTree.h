@@ -14,6 +14,7 @@ public:
 
 	void AddElement(std::weak_ptr<MeshObject> object);
 
+
 	std::vector<std::weak_ptr<MeshObject>> GetVisibleElements(CameraObject& camera);
 
 private:

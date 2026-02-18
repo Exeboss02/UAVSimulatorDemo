@@ -165,7 +165,6 @@ private:
 	// So it just updates them with data for each object every frame
 
 	std::unique_ptr<ConstantBuffer> cameraBuffer;
-	std::unique_ptr<ConstantBuffer> worldMatrixBuffer;
 
 	std::unique_ptr<ConstantBuffer> spotlightCountBuffer;
 	std::unique_ptr<StructuredBuffer<SpotlightObject::SpotLightContainer>> spotlightBuffer;

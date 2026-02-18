@@ -6,6 +6,8 @@
 #include "gameObjects/objectLoader.h"
 #include <chrono>
 
+#define DEBUG_TIMER
+
 Renderer::Renderer()
 	: viewport(), currentPixelShader(nullptr), currentVertexShader(nullptr), currentRasterizerState(nullptr),
 	  currentMaterial(nullptr), maximumSpotlights(16),
@@ -258,10 +260,12 @@ void Renderer::CreateRasterizerStates() {
 void Renderer::CreateRenderMap() {
 	const auto start{std::chrono::steady_clock::now()};
 
+	#ifdef DEBUG_TIMER
 	// Removes dead gameobjects
 	this->meshRenderQueue.erase(std::remove_if(this->meshRenderQueue.begin(), this->meshRenderQueue.end(),
 										 [](const std::weak_ptr<MeshObject>& w) { return w.expired(); }),
 								this->meshRenderQueue.end());
+	#endif // DEBUG_TIMER
 
 	this->standardRenderMap.meshes.clear();
 	
@@ -310,9 +314,11 @@ void Renderer::CreateRenderMap() {
 		}
 	}
 
+	#ifdef DEBUG_TIMER
 	const auto finsihedRenderMap{std::chrono::steady_clock::now()};
 	const std::chrono::duration<double> elapsedSeconds{finsihedRenderMap - start};
 	ImGui::Text(("Render map creation: " + std::to_string(elapsedSeconds.count())).c_str());
+	#endif // DEBUG_TIMER
 }
 
 void Renderer::CreateRendererConstantBuffers() {
@@ -352,26 +358,35 @@ void Renderer::LoadShaders() {
 }
 
 void Renderer::Render() {
+#ifdef DEBUG_TIMER
 	ImGui::Begin("Timer");
-
 	const auto start{std::chrono::steady_clock::now()};
+#endif // DEBUG_TIMER
 
 	CreateRenderMap();
+
+	#ifdef DEBUG_TIMER
+	const auto beforeShadow{std::chrono::steady_clock::now()};
+	#endif // DEBUG_TIMER
 
 	BindInputLayout(this->instanceInputLayout.get());
 	auto shadowmaps = this->ShadowPass();
 	this->GetContext()->PSSetShaderResources(5, shadowmaps.spotlightSRVs.size(), shadowmaps.spotlightSRVs.data());
 	this->GetContext()->PSSetShaderResources(7, shadowmaps.pointLightSRVs.size(), shadowmaps.pointLightSRVs.data());
 
+	#ifdef DEBUG_TIMER
 	const auto afterShadow{std::chrono::steady_clock::now()};
-	const std::chrono::duration<double> elapsed_seconds{afterShadow - start};
+	const std::chrono::duration<double> elapsed_seconds{afterShadow - beforeShadow};
 	ImGui::Text(("Shadow pass: " + std::to_string(elapsed_seconds.count())).c_str());
-
+	#endif // DEBUG_TIMER
 
 	RenderPass();
-	const auto afterRender{std::chrono::steady_clock::now()};
-	const std::chrono::duration<double> elapsed_seconds2{afterRender - afterShadow};
-	ImGui::Text(("Entire renderpass: " + std::to_string(elapsed_seconds2.count())).c_str());
+
+	#ifdef DEBUG_TIMER
+	const auto afterRenderPass{std::chrono::steady_clock::now()};
+	const std::chrono::duration<double> elapsed_seconds2{afterRenderPass - afterShadow};
+	ImGui::Text(("Entire renderpass function: " + std::to_string(elapsed_seconds2.count())).c_str());
+	#endif // DEBUG_TIMER
 
 	// Unbinding shadowmaps to allow input on them again
 	for (auto& spotLightShadowMaps : shadowmaps.spotlightSRVs) {
@@ -389,7 +404,12 @@ void Renderer::Render() {
 	}
 	this->GetContext()->PSSetShaderResources(7, shadowmaps.pointLightSRVs.size(), shadowmaps.pointLightSRVs.data());
 
+	#ifdef DEBUG_TIMER
+	const auto afterRender{std::chrono::steady_clock::now()};
+	const std::chrono::duration<double> elapsed_seconds3{afterRender - start};
+	ImGui::Text(("Entire Render function: " + std::to_string(elapsed_seconds3.count())).c_str());
 	ImGui::End();
+	#endif // DEBUG_TIMER
 }
 
 void Renderer::Present() { this->swapChain->Present(this->isVSyncEnabled ? 1 : 0, 0); }
@@ -419,7 +439,10 @@ ID3D11DeviceContext* Renderer::GetContext() const { return this->immediateContex
 IDXGISwapChain* Renderer::GetSwapChain() const { return this->swapChain.Get(); }
 
 void Renderer::RenderPass() {
+
+	#ifdef DEBUG_TIMER
 	const auto start{std::chrono::steady_clock::now()};
+	#endif // DEBUG_TIMER
 
 	// Bind basic stuff (it probably doesn't need to be set every frame)
 	if (!this->hasBoundStatic) {
@@ -454,17 +477,21 @@ void Renderer::RenderPass() {
 	// World Matrix Buffer only needs to be bound once per frame
 	//BindWorldMatrix(this->worldMatrixBuffer->GetBuffer());
 
+	#ifdef DEBUG_TIMER
 	const auto afterBinds{std::chrono::steady_clock::now()};
 	const std::chrono::duration<double> elapsed_seconds{afterBinds - start};
 	ImGui::Text(("Render pass setup: " + std::to_string(elapsed_seconds.count())).c_str());
 
 	const auto startColorPass{std::chrono::steady_clock::now()};
+	#endif // DEBUG_TIMER
 
 	RenderRenderMap(this->standardRenderMap);
 
+	#ifdef DEBUG_TIMER
 	const auto endColorPass{std::chrono::steady_clock::now()};
 	const std::chrono::duration<double> elapsedSeconds{endColorPass - startColorPass};
 	ImGui::Text(("Color pass: " + std::to_string(elapsedSeconds.count())).c_str());
+	#endif // DEBUG_TIMER
 
 	// UI pass: render UI widgets in an orthographic projection on top of the scene
 
@@ -519,6 +546,12 @@ void Renderer::RenderPass() {
 	// Restore default rasterizer and blend state
 	this->immediateContext->OMSetBlendState(nullptr, nullptr, 0xffffffff);
 	this->BindRasterizerState(this->standardRasterizerState.get());
+
+	#ifdef DEBUG_TIMER
+	const auto endUIPass{std::chrono::steady_clock::now()};
+	const std::chrono::duration<double> elapsedSeconds2{endUIPass - endColorPass};
+	ImGui::Text(("UI pass: " + std::to_string(elapsedSeconds2.count())).c_str());
+	#endif // DEBUG_TIMER
 }
 
 Renderer::ShadowResourceViews Renderer::ShadowPass() {
@@ -705,6 +738,8 @@ void Renderer::BindRenderTarget() {
 void Renderer::BindViewport() { this->immediateContext->RSSetViewports(1, &this->viewport); }
 
 void Renderer::BindRasterizerState(RasterizerState* rastState) {
+	if (this->currentRasterizerState == rastState) return;
+	
 	if (rastState == nullptr) {
 		Logger::Error("RasterizerState is nullptr");
 	}
@@ -715,6 +750,8 @@ void Renderer::BindRasterizerState(RasterizerState* rastState) {
 }
 
 void Renderer::BindMaterial(BaseMaterial* material) {
+	if (this->currentMaterial == material) return;
+
 	RenderData renderData = material->GetRenderData(this->immediateContext.Get());
 
 	if (material->wireframe) {
@@ -768,6 +805,8 @@ void Renderer::BindMaterial(BaseMaterial* material) {
 		this->immediateContext->VSSetConstantBuffers(i + 1, 1,
 													 &buf); // i + 1 because first slot is always occupied
 	}
+
+	this->currentMaterial = material;
 }
 
 void Renderer::BindLights() {
@@ -934,7 +973,6 @@ void Renderer::RenderMeshObject(MeshObject* meshObject, bool renderMaterial) {
 				std::shared_ptr<BaseMaterial> sharedMaterial = weak_material.lock();
 				if (sharedMaterial.get() != this->currentMaterial) {
 					BindMaterial(sharedMaterial.get());
-					this->currentMaterial = sharedMaterial.get();
 				}
 			}
 
@@ -1033,10 +1071,7 @@ void Renderer::RenderRenderMap(RenderMap& renderMap, bool renderMaterials) {
 	
 				// Only set material if it's needed
 				if (!this->renderAllWireframe && renderMaterials) {
-					if (material.material.get() != this->currentMaterial) {
-						BindMaterial(material.material.get());
-						this->currentMaterial = material.material.get();
-					}
+					BindMaterial(material.material.get());
 				}
 
 

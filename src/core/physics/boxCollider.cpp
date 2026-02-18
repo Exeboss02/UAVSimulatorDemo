@@ -42,6 +42,18 @@ void BoxCollider::Tick()
 	DirectX::XMStoreFloat3(&this->satData.center, this->GetGlobalPosition());
 }
 
+void BoxCollider::Start()
+{
+	//update normals
+	DirectX::XMStoreFloat3(&this->axis[0], this->GetGlobalRight());
+	DirectX::XMStoreFloat3(&this->axis[1], this->GetGlobalUp());
+	DirectX::XMStoreFloat3(&this->axis[2], this->GetGlobalForward());
+	this->satData.normalData = this->axis;
+
+	this->BuildCornersArray(this->satData.positionData);
+	DirectX::XMStoreFloat3(&this->satData.center, this->GetGlobalPosition());
+}
+
 void BoxCollider::LoadFromJson(const nlohmann::json& data)
 {
 	this->GameObject3D::LoadFromJson(data);

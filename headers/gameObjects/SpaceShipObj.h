@@ -1,7 +1,11 @@
 #pragma once
 
+// Add this forward declaration before any use of Room
+class Room;
+
 #include "gameObjects/gameObject3D.h"
 #include "gameObjects/room.h"
+#include "utilities/aStar.h"
 
 class SpaceShip : public GameObject3D {
 public:
@@ -32,12 +36,15 @@ public:
 
 	void Start() override;
 
-	
+	std::unique_ptr<AStar>& GetPathfinder() { return this->pathfinder; }
 
 private:
 	inline static const float ROOM_SIZE = 10.0f;
 	static const size_t SHIP_MAX_SIZE_X = 63;
 	static const size_t SHIP_MAX_SIZE_Y = 63;
 	std::array<std::array<std::weak_ptr<Room>, SHIP_MAX_SIZE_Y>, SHIP_MAX_SIZE_X> rooms{};
+
+	std::unique_ptr<AStar> pathfinder;
+	std::vector<std::shared_ptr<AStarVertex>> path;
 	void CreateFloorColider();
 };

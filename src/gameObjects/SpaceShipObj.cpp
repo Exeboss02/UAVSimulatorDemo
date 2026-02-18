@@ -1,11 +1,16 @@
 #include "gameObjects/SpaceShipObj.h"
 #include "core/assetManager.h"
 #include "gameObjects/meshObject.h"
+#include "gameObjects/testEnemy.h"
 #include "imgui.h"
 #include <array>
 
-SpaceShip::SpaceShip() : GameObject3D() {
-	Room::SetSize(this->ROOM_SIZE); 
+#include "utilities/logger.h"
+
+
+SpaceShip::SpaceShip() : GameObject3D() { 
+	Room::SetSize(this->ROOM_SIZE);
+	pathfinder = std::make_unique<AStar>();
 }
 
 void SpaceShip::CreateRoom(size_t x, size_t y) {
@@ -13,11 +18,13 @@ void SpaceShip::CreateRoom(size_t x, size_t y) {
 
 		auto roomMesh = this->factory->CreateStaticGameObject<Room>();
 
-		roomMesh->transform.SetPosition(DirectX::XMVectorSet(x * ROOM_SIZE, 0, y * ROOM_SIZE, 0));
+		roomMesh->transform.SetPosition(DirectX::XMVectorSet(x * this->ROOM_SIZE, 0, y * this->ROOM_SIZE, 0));
 
 		roomMesh->SetParent(this->GetPtr());
 
 		roomMesh->SetPosition(x, y);
+
+		roomMesh->SetupPathfindingNodes(std::dynamic_pointer_cast<SpaceShip>(this->GetPtr()), roomMesh);
 
 		this->rooms[x][y] = roomMesh;
 		
@@ -34,6 +41,16 @@ void SpaceShip::CreateRoom(size_t x, size_t y) {
 				Room::WallIndex reversedWallIndex = (Room::WallIndex) ((i + 2) % 4);
 				roomMesh->SetWallState(wallIndex, Room::WallState::door);
 				neighbor->SetWallState(reversedWallIndex, Room::WallState::door);
+
+				// Connect pathfinding nodes between the two rooms
+				size_t currentRoomNodeIndex = wallIndex * 2 + 1;
+				size_t neighborRoomNodeIndex = reversedWallIndex * 2 + 1;
+
+				auto& currentRoomNodes = roomMesh->GetPathfindingNodes();
+				auto& neighborRoomNodes = neighbor->GetPathfindingNodes();
+
+				unsigned int edgeCost = static_cast<unsigned int>(this->ROOM_SIZE / 4);
+				this->pathfinder->AddEdge(currentRoomNodes[currentRoomNodeIndex], neighborRoomNodes[neighborRoomNodeIndex], edgeCost);
 			}
 		}
 
@@ -56,9 +73,41 @@ void SpaceShip::Tick() {
 	bool roomCreator = ImGui::Button("Create Room");
 	ImGui::End();
 
+	ImGui::Begin("Spawn enemy");
+	if (ImGui::Button("Spawn")) {
+		auto enemy = this->factory->CreateGameObjectOfType<TestEnemy>();
+		Logger::Log("Spawned Enemy");
+		if (auto enemyPtr = enemy.lock()) {
+			enemyPtr->SetPath(this->path);
+		}
+	}
+	ImGui::End();
+
+	
+
 	if (roomCreator) {
 		this->CreateRoom(pos[0], pos[1]);
 	}
+}
+
+void SpaceShip::Start() {
+	this->GameObject3D::Start();
+	this->CreateFloorColider();
+	
+	CreateRoom(2, 0);
+	auto room0 = this->GetRoom(2, 0);
+	auto nodes0 = room0.lock()->GetPathfindingNodes();
+	this->pathfinder->SetGoal(nodes0[4]);
+
+	CreateRoom(1, 0);
+	//auto room1 = this->GetRoom(1, 0);
+	//auto nodes1 = room1.lock()->GetPathfindingNodes();
+
+	CreateRoom(1, 1);
+	auto room2 = this->GetRoom(1, 1);
+	auto nodes2 = room2.lock()->GetPathfindingNodes();
+	this->path = this->pathfinder->FindPath(nodes2[6]);
+
 }
 
 void SpaceShip::CreateFloorColider() {
@@ -74,5 +123,3 @@ void SpaceShip::CreateFloorColider() {
 	colliderobj->SetParent(this->GetPtr());
 
 }
-
-void SpaceShip::Start() { this->CreateFloorColider(); }

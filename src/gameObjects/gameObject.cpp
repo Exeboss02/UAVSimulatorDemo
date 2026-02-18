@@ -172,3 +172,7 @@ void GameObject::SetActiveOverride(bool isActive) {
 void GameObject::OnObserve() {}
 
 void GameObject::OnInteract() {}
+
+void GameObject::SetIsStatic(bool isStatic) { this->isStatic = isStatic; }
+
+bool GameObject::GetIsStatic() const { return this->isStatic; }

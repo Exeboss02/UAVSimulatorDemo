@@ -27,8 +27,9 @@
 namespace UI {
 class Widget;
 }
-#include "core/assetManager.h"
 #include "rendering/skybox.h"
+#include "rendering/quadTree.h"
+#include "core/assetManager.h"
 #include <unordered_map>
 
 #include <functional>
@@ -159,6 +160,9 @@ private:
 	std::vector<std::weak_ptr<UI::Widget>> uiRenderQueue;
 
 	RenderMap standardRenderMap;
+
+	QuadTree staticObjectsTree;
+	std::vector<std::weak_ptr<MeshObject>> GetVisibleObjects(CameraObject& camera);
 
 	// Constant buffers:
 	// The renderer keeps these constant buffers since only one is ever required

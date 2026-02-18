@@ -807,7 +807,7 @@ std::vector<ID3D11ShaderResourceView*> Renderer::PointLightShadowPass() {
 				Logger::Error("Lights shadow camera was dead");
 				continue;
 			}
-			auto& camera = *light->cameras[i].lock().get();
+			auto& camera = *light->cameras[j].lock().get();
 			auto matrixContainer = camera.GetCameraMatrix();
 
 			const auto& viewPort = light->GetViewPort();

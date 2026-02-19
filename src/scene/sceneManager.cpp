@@ -4,6 +4,7 @@
 #include "UI/image.h"
 #include "UI/text.h"
 #include "core/filepathHolder.h"
+#include "game/crosshair.h"
 #include "gameObjects/pointLightObject.h"
 #include "gameObjects/room.h"
 #include "gameObjects/turret.h"
@@ -34,6 +35,7 @@ SceneManager::SceneManager(Renderer* rend) : mainScene(nullptr), renderer(rend),
 	this->objectFromString.RegisterType<UI::Widget>(NAMEOF(UI::Widget));
 	this->objectFromString.RegisterType<UI::Button>(NAMEOF(UI::Button));
 	this->objectFromString.RegisterType<UI::Text>(NAMEOF(UI::Text));
+	this->objectFromString.RegisterType<Crosshair>(NAMEOF(Crosshair));
 	this->objectFromString.RegisterType<UI::Image>(NAMEOF(UI::Image));
 
 	this->objectFromString.RegisterType<Player>(NAMEOF(Player)); // Game specific
@@ -43,10 +45,10 @@ SceneManager::SceneManager(Renderer* rend) : mainScene(nullptr), renderer(rend),
 }
 
 void SceneManager::SceneTick() {
-	#ifdef TIMER_DEBUG
+#ifdef TIMER_DEBUG
 	ImGui::Begin("Scen tick");
 	const auto start{std::chrono::steady_clock::now()};
-	#endif
+#endif
 
 	if (!this->mainScene.get()) {
 		this->mainScene = this->emptyScene;
@@ -58,12 +60,12 @@ void SceneManager::SceneTick() {
 	this->mainScene->SceneLateTick(this->isPaused);
 	PhysicsQueue::GetInstance().ResetPhysicsTickCounter();
 
-	#ifdef TIMER_DEBUG
+#ifdef TIMER_DEBUG
 	const auto end{std::chrono::steady_clock::now()};
 	const std::chrono::duration<double> elapsedSeconds{end - start};
 	ImGui::Text(("Scene tick time: " + std::to_string(elapsedSeconds.count())).c_str());
 	ImGui::End();
-	#endif
+#endif
 }
 
 void SceneManager::LoadScene(Scenes scene) {

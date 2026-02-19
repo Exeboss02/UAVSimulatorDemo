@@ -1,25 +1,55 @@
 #include "game/player.h"
+#include "core/physics/sphereCollider.h"
 
 void Player::Start()
 {
 	this->RigidBody::Start();
+	 //adding camera
+	auto cameraWeak = this->factory->CreateGameObjectOfType<CameraObject>();
+	auto cameraShared = cameraWeak.lock();
+	DirectX::XMFLOAT3 pos(0.0f, 2.0f, 0.0f);
+	cameraShared->transform.SetPosition(DirectX::XMLoadFloat3(&pos));
+	cameraShared->SetParent(this->GetPtr());
 
-	std::vector<std::weak_ptr<GameObject>> children = this->GetChildren();
-	for (int i = 0; i < children.size(); i++)
+	this->camera = cameraShared;
+
+	//adding body colliders
 	{
-		if(!children[i].expired())
-		{
-			this->camera = std::dynamic_pointer_cast<CameraObject>(children[i].lock());
-
-			if(!this->camera.expired()) break;
-		}
+	auto colliderobjWeak = this->factory->CreateGameObjectOfType<SphereCollider>();
+	auto colliderobj = colliderobjWeak.lock();
+	colliderobj->dynamic = true;
+	colliderobj->solid = true;
+	DirectX::XMFLOAT3 pos(0.0f, 0.0f, 0.0f);
+	colliderobj->transform.SetPosition(DirectX::XMLoadFloat3(&pos));
+	DirectX::XMFLOAT3 scale(1.0f, 1.0f, 1.0f);
+	colliderobj->transform.SetScale(DirectX::XMLoadFloat3(&scale));
+	colliderobj->SetParent(this->GetPtr());
 	}
 
-	if(this->camera.expired())
 	{
-		Logger::Error("Player didn't have camera object!");
-		return;
+		auto colliderobjWeak = this->factory->CreateGameObjectOfType<SphereCollider>();
+		auto colliderobj = colliderobjWeak.lock();
+		colliderobj->dynamic = true;
+		colliderobj->solid = true;
+		DirectX::XMFLOAT3 pos(0.0f, 0.5f, 0.0f);
+		colliderobj->transform.SetPosition(DirectX::XMLoadFloat3(&pos));
+		DirectX::XMFLOAT3 scale(1.0f, 1.0f, 1.0f);
+		colliderobj->transform.SetScale(DirectX::XMLoadFloat3(&scale));
+		colliderobj->SetParent(this->GetPtr());
 	}
+
+	{
+		auto colliderobjWeak = this->factory->CreateGameObjectOfType<SphereCollider>();
+		auto colliderobj = colliderobjWeak.lock();
+		colliderobj->dynamic = true;
+		colliderobj->solid = true;
+		DirectX::XMFLOAT3 pos(0.0f, 1.0f, 0.0f);
+		colliderobj->transform.SetPosition(DirectX::XMLoadFloat3(&pos));
+		DirectX::XMFLOAT3 scale(1.0f, 1.0f, 1.0f);
+		colliderobj->transform.SetScale(DirectX::XMLoadFloat3(&scale));
+		colliderobj->SetParent(this->GetPtr());
+	}
+
 
 	this->musicTimer.Initialize(2);
 	this->sfxTimer.Initialize(0.5f);
@@ -55,6 +85,7 @@ void Player::Tick()
 	this->input[0] = this->keyBoardInput.GetMovementVector().data()[0];
 	this->input[1] = this->keyBoardInput.GetMovementVector().data()[1];
 	this->UpdateCamera();
+	this->shootRay();
 
 	float deltaTime = Time::GetInstance().GetDeltaTime();
 	if(deltaTime < 1) //to prevent tick spam when loading scene
@@ -171,4 +202,30 @@ void Player::SaveToJson(nlohmann::json& data)
 
 	data["speed"] = this->speed;
 	data["mouseSensitivity"] = this->mouseSensitivity;
+}
+
+void Player::shootRay() {
+
+	const DirectX::XMVECTOR lookVec = this->camera.lock()->GetGlobalForward();
+	const DirectX::XMVECTOR posVec = this->camera.lock()->GetGlobalPosition();
+	
+	if (this->keyBoardInput.LeftClick()) {
+
+		Ray ray{Vector3D{posVec}, Vector3D{lookVec}};
+		RayCastData rayCastData;
+		Logger::Log("shooting ray");
+		
+
+		bool didHit = PhysicsQueue::GetInstance().castRay(ray, rayCastData);
+		std::string hitString;
+		if (didHit) {
+
+			rayCastData.hitColider.lock()->Interact();
+			hitString = "hit";
+		} else {
+			hitString = "miss";
+		}
+
+		Logger::Log(hitString, " at distance: ", std::to_string(rayCastData.distance));
+	}
 }

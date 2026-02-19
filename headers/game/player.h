@@ -4,6 +4,8 @@
 #include "core/physics/physicsQueue.h"
 #include "core/input/keyboardInput.h"
 #include "gameObjects/cameraObject.h"
+#include "core/input/inputManager.h"
+#include "core/input/controllerInput.h"
 #include "core/audio/audioManager.h"
 #include "core/assetManager.h"
 #include "core/tools.h"
@@ -19,6 +21,7 @@ public:
 
 	float speed = 12;
 	float mouseSensitivity = 0.006f;
+	float cameraFov = 80.0f;
 
 	DirectX::XMVECTOR moveVector = {};
 
@@ -42,4 +45,6 @@ public:
 private:
 	float input[2] = {};
 	bool showCursor = false;
+
+	void shootRay();
 };

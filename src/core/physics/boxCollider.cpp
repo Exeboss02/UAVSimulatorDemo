@@ -44,6 +44,7 @@ void BoxCollider::Tick()
 
 void BoxCollider::Start()
 {
+	this->Collider::Start();
 	//update normals
 	DirectX::XMStoreFloat3(&this->axis[0], this->GetGlobalRight());
 	DirectX::XMStoreFloat3(&this->axis[1], this->GetGlobalUp());

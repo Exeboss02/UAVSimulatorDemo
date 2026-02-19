@@ -1039,8 +1039,28 @@ void Renderer::BindMaterial(BaseMaterial* material) {
 		}
 	}
 
-	// Bind textures
-	this->immediateContext->PSSetShaderResources(1, renderData.textures.size(), renderData.textures.data());
+	// Bind textures: only bind contiguous runs of non-null SRVs to avoid binding nulls
+	const UINT baseSlot = 1; // materials use pixel shader slots starting at 1
+	if (!renderData.textures.empty()) {
+		size_t start = 0;
+		while (start < renderData.textures.size()) {
+			// skip nulls
+			while (start < renderData.textures.size() && renderData.textures[start] == nullptr)
+				start++;
+			if (start >= renderData.textures.size()) break;
+
+			// find end of contiguous non-null run
+			size_t end = start;
+			while (end < renderData.textures.size() && renderData.textures[end] != nullptr)
+				end++;
+
+			UINT slot = static_cast<UINT>(baseSlot + start);
+			UINT count = static_cast<UINT>(end - start);
+			this->immediateContext->PSSetShaderResources(slot, count, &renderData.textures[start]);
+
+			start = end;
+		}
+	}
 
 	// Also bind constant buffers
 	for (size_t i = 0; i < renderData.pixelBuffers.size(); i++) {

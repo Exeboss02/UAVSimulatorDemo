@@ -24,12 +24,8 @@ void UI::Widget::SetEnabled(bool enabled) { this->enabled = enabled; }
 bool UI::Widget::isEnabled() const { return this->enabled; }
 
 void UI::Widget::Update(float dt) {
-	// Map widget screen-space position/size into the GameObject3D transform
-	// so the renderer can draw it with an orthographic camera.
 	using namespace DirectX;
-	// Compute a stable depth value so overlapping widgets don't get the exact same Z
-	// Base Z is 0.5; each zIndex step moves forward by 0.001f.
-	// Add a tiny epsilon derived from the widget pointer to ensure unique depths when zIndex matches.
+
 	uintptr_t addr = reinterpret_cast<uintptr_t>(this);
 	float epsilon = static_cast<float>(addr % 1000u) * 1e-6f; // range ~0..0.000999
 	float z = 0.5f + static_cast<float>(this->GetZIndex()) * 0.001f + epsilon;

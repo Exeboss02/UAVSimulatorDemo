@@ -4,22 +4,13 @@ void Player::Start()
 {
 	this->RigidBody::Start();
 
-	std::vector<std::weak_ptr<GameObject>> children = this->GetChildren();
-	for (int i = 0; i < children.size(); i++)
-	{
-		if(!children[i].expired())
-		{
-			this->camera = std::dynamic_pointer_cast<CameraObject>(children[i].lock());
+	auto cameraWeak = this->factory->CreateGameObjectOfType<CameraObject>();
+	auto cameraShared = cameraWeak.lock();
+	DirectX::XMFLOAT3 pos(0.0f, 4.0f, 0.0f);
+	cameraShared->transform.SetPosition(DirectX::XMLoadFloat3(&pos));
+	cameraShared->SetParent(this->GetPtr());
 
-			if(!this->camera.expired()) break;
-		}
-	}
-
-	if(this->camera.expired())
-	{
-		Logger::Error("Player didn't have camera object!");
-		return;
-	}
+	this->camera = cameraShared;
 }
 
 void Player::Tick()

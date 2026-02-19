@@ -38,6 +38,10 @@ SceneManager::SceneManager(Renderer* rend) : mainScene(nullptr), renderer(rend),
 
 	CreateNewScene(this->emptyScene);
 	this->emptyScene->CreateGameObjectOfType<CameraObject>();
+
+	//Initialize musicTrackManager and soundBank
+	AudioManager::GetInstance().InitializeMusicTrackManager("../../assets/audio/music/");
+	AssetManager::GetInstance().InitializeSoundBank("../../assets/audio/soundeffects/");
 }
 
 void SceneManager::SceneTick() {

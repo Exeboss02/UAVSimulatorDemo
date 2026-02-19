@@ -14,8 +14,13 @@ public:
 	Player() = default;
 	~Player() = default;
 
+	std::vector<SoundClip*> soundClips;
+	std::weak_ptr<SoundSourceObject> speaker;
+
 	float speed = 12;
 	float mouseSensitivity = 0.006f;
+
+	DirectX::XMVECTOR moveVector = {};
 
 	void LoadFromJson(const nlohmann::json& data) override;
 	void SaveToJson(nlohmann::json& data) override;

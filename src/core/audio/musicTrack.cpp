@@ -41,6 +41,8 @@ void MusicTrack::Play()
 
 	//this->playTime = 0; ???
 
+	alSourcef(this->source, AL_GAIN, this->currentGain * AudioManager::GetInstance().GetMasterMusicVolume());
+
 	for (int i = 0; i < NUM_BUFFERS; i++)
 	{
 		sf_count_t slen = sf_readf_short(this->sndfile, this->membuf, BUFFER_SAMPLES);

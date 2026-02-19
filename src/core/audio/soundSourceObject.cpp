@@ -48,6 +48,12 @@ void SoundSourceObject::Tick()
 
 void SoundSourceObject::Play(SoundClip* soundClip) //pointer referece?
 {
+	if(!soundClip)
+	{
+		Logger::Error("SoundSourceObject tried to play nullptr SoundClip");
+		return;
+	}
+
 	for (int i = 0; i < this->nrOfSources; i++)
 	{
 		int index = (this->sourceIndex + i) % this->nrOfSources;

@@ -147,6 +147,8 @@ void SpotlightObject::SetAngle(float angle) {
 	this->camera.lock()->SetFov(angle);
 }
 
+void SpotlightObject::SetIntensity(float intensity) { this->data.intensity = intensity; }
+
 void SpotlightObject::ShowInHierarchy() 
 {
 	this->GameObject3D::ShowInHierarchy();

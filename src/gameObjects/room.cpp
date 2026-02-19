@@ -3,6 +3,7 @@
 #include "gameObjects/spaceShipObj.h"
 #include <numbers>
 #include "gameObjects/turret.h"
+#include "gameObjects/spotlightObject.h"
 
 static const std::array<std::array<int, 2>, 4> wallpositions = {
 	std::array<int, 2>({0, 1}),
@@ -85,6 +86,13 @@ void Room::Start() {
 		}
 		this->factory->QueueDeleteGameObject(this->buildSlot);
 		});
+
+	auto spotLight = this->factory->CreateStaticGameObject<SpotlightObject>();
+	spotLight->SetParent(this->GetPtr());
+	spotLight->transform.SetPosition({0, 4.5, 0});
+	spotLight->transform.SetRotationRPY(std::numbers::pi / 2, 0, 0);
+	spotLight->SetAngle(120.);
+	spotLight->SetIntensity(20.);
 
 }
 

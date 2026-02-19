@@ -25,6 +25,8 @@ void Renderer::Init(const Window& window) {
 	CreateDeviceAndSwapChain(window);
 	CreateRenderTarget();
 	CreateDepthBuffer(window);
+
+	this->spotLightShadows.Init(this->device.Get(), 256, 256, this->maximumSpotlights);
 }
 
 void Renderer::SetAllDefaults() {
@@ -65,9 +67,10 @@ std::vector<std::weak_ptr<MeshObject>> Renderer::GetVisibleObjects(CameraObject&
 
 		// This should NOT be done every frame, very expensive matrix operations
 		float distance;
-		DirectX::XMStoreFloat(&distance, DirectX::XMVector3LengthSq(DirectX::XMVectorSubtract(
-											 cameraGlobalPos, this->meshRenderQueue[i].lock()->transform.GetGlobalPosition())));
-		
+		DirectX::XMStoreFloat(&distance,
+							  DirectX::XMVector3LengthSq(DirectX::XMVectorSubtract(
+								  cameraGlobalPos, this->meshRenderQueue[i].lock()->transform.GetGlobalPosition())));
+
 		if (distance > std::powf(camera.GetFarPlane(), 2.0f)) {
 			continue;
 		}
@@ -516,7 +519,8 @@ void Renderer::Render() {
 
 	BindInputLayout(this->instanceInputLayout.get());
 	auto shadowmaps = this->ShadowPass();
-	this->GetContext()->PSSetShaderResources(5, shadowmaps.spotlightSRVs.size(), shadowmaps.spotlightSRVs.data());
+	ID3D11ShaderResourceView* slsrv = this->spotLightShadows.GetShaderResourceView();
+	this->GetContext()->PSSetShaderResources(5, 1, &slsrv);
 	this->GetContext()->PSSetShaderResources(7, shadowmaps.pointLightSRVs.size(), shadowmaps.pointLightSRVs.data());
 
 #ifdef DEBUG_TIMER
@@ -843,7 +847,8 @@ std::vector<ID3D11ShaderResourceView*> Renderer::SpotLightShadowPass() {
 			light->SetDepthBuffer(this->GetDevice());
 		}
 
-		this->immediateContext->ClearDepthStencilView(light->GetDepthStencilView(), D3D11_CLEAR_DEPTH, 1, 0);
+		this->immediateContext->ClearDepthStencilView(this->spotLightShadows.GetDepthStencilView(i), D3D11_CLEAR_DEPTH,
+													  1, 0);
 		this->immediateContext->OMSetRenderTargets(0, nullptr, light->GetDepthStencilView());
 
 		if (light->camera.expired()) {

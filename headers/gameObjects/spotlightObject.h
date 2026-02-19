@@ -55,6 +55,8 @@ public:
 	/// <param name="angle"></param>
 	void SetAngle(float angle);
 
+	void SetIntensity(float intensity);
+
 
 	virtual void ShowInHierarchy() override;
 

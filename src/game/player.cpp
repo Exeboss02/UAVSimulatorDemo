@@ -7,7 +7,7 @@ void Player::Start()
 	 //adding camera
 	auto cameraWeak = this->factory->CreateGameObjectOfType<CameraObject>();
 	auto cameraShared = cameraWeak.lock();
-	DirectX::XMFLOAT3 pos(0.0f, 2.0f, 0.0f);
+	DirectX::XMFLOAT3 pos(0.0f, 1.5f, 0.0f);
 	cameraShared->transform.SetPosition(DirectX::XMLoadFloat3(&pos));
 	cameraShared->SetParent(this->GetPtr());
 
@@ -31,7 +31,7 @@ void Player::Start()
 		auto colliderobj = colliderobjWeak.lock();
 		colliderobj->dynamic = true;
 		colliderobj->solid = true;
-		DirectX::XMFLOAT3 pos(0.0f, 0.5f, 0.0f);
+		DirectX::XMFLOAT3 pos(0.0f, 0.4f, 0.0f);
 		colliderobj->transform.SetPosition(DirectX::XMLoadFloat3(&pos));
 		DirectX::XMFLOAT3 scale(1.0f, 1.0f, 1.0f);
 		colliderobj->transform.SetScale(DirectX::XMLoadFloat3(&scale));
@@ -43,13 +43,12 @@ void Player::Start()
 		auto colliderobj = colliderobjWeak.lock();
 		colliderobj->dynamic = true;
 		colliderobj->solid = true;
-		DirectX::XMFLOAT3 pos(0.0f, 1.0f, 0.0f);
+		DirectX::XMFLOAT3 pos(0.0f, 0.8f, 0.0f);
 		colliderobj->transform.SetPosition(DirectX::XMLoadFloat3(&pos));
 		DirectX::XMFLOAT3 scale(1.0f, 1.0f, 1.0f);
 		colliderobj->transform.SetScale(DirectX::XMLoadFloat3(&scale));
 		colliderobj->SetParent(this->GetPtr());
 	}
-
 
 	this->musicTimer.Initialize(2);
 	this->sfxTimer.Initialize(0.5f);

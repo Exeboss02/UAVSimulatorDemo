@@ -1,11 +1,10 @@
 {
   "gameObjects": [
     {
-      "fov": 80.0,
       "transform": {
         "position": [
           0.0,
-          0.0,
+          45.0,
           0.0
         ],
         "rotation": [
@@ -20,38 +19,10 @@
           1.0
         ]
       },
-      "type": "DebugCamera",
-      "children": [
-        {
-      "angleRadians": 6.2831854820251465,
-      "color": [
-        1.0,
-        1.0,
-        1.0,
-        1.0
-      ],
-      "intensity": 20.0,
-      "transform": {
-        "position": [
-          0.0,
-          0.0,
-          5.0
-        ],
-        "rotation": [
-          0.0,
-          0.0,
-          0.0,
-          1.0
-        ],
-        "scale": [
-          1.0,
-          1.0,
-          1.0
-        ]
-      },
-      "type": "SpotlightObject"
-    }
-      ]
+      "type": "Player",
+      "gravity": true,
+      "speed": 18,
+      "mouseSensitivity": 0.004
     },
     {
       "fov": 80.0,

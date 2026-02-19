@@ -1,6 +1,6 @@
 #include "game/player.h"
 #include "core/physics/sphereCollider.h"
-
+#include "gameObjects/meshObject.h"
 void Player::Start()
 {
 	this->RigidBody::Start();
@@ -161,7 +161,18 @@ void Player::shootRay() {
 		Ray ray{Vector3D{posVec}, Vector3D{lookVec}};
 		RayCastData rayCastData;
 		Logger::Log("shooting ray");
-		
+
+		//rayVis
+		MeshObjData meshdata = AssetManager::GetInstance().GetMeshObjData("TexBox/TextureCube.glb:Mesh_0");
+		auto colliderobjWeak = this->factory->CreateGameObjectOfType<MeshObject>();
+		auto colliderobj = colliderobjWeak.lock();
+		colliderobj->SetMesh(meshdata);
+		DirectX::XMFLOAT3 pos(0.0f, 0.5f, 0.0f);
+		colliderobj->transform.SetPosition(DirectX::XMLoadFloat3(&pos));
+		DirectX::XMFLOAT3 scale(1.0f, 1.0f, 1.0f);
+		colliderobj->transform.SetScale(DirectX::XMLoadFloat3(&scale));
+		colliderobj->SetParent(this->GetPtr());
+		//end of rayVis
 
 		bool didHit = PhysicsQueue::GetInstance().castRay(ray, rayCastData);
 		std::string hitString;

@@ -26,7 +26,21 @@ void Renderer::Init(const Window& window) {
 	CreateRenderTarget();
 	CreateDepthBuffer(window);
 
-	this->spotLightShadows.Init(this->device.Get(), 256, 256, this->maximumSpotlights);
+	this->spotLightShadows.Init(this->device.Get(), 256, this->maximumSpotlights);
+
+	this->spotLightViewPort = {
+		.TopLeftX = 0,
+		.TopLeftY = 0,
+		.Width = static_cast<FLOAT>(256),
+		.Height = static_cast<FLOAT>(256),
+		.MinDepth = 0.0f,
+		.MaxDepth = 1.0f,
+	};
+
+	this->pointLightShadows.Init(this->device.Get(), 256, this->maximumSpotlights);
+
+	this->pointLightViewPort = this->spotLightViewPort;
+
 }
 
 void Renderer::SetAllDefaults() {
@@ -518,10 +532,11 @@ void Renderer::Render() {
 #endif // DEBUG_TIMER
 
 	BindInputLayout(this->instanceInputLayout.get());
-	auto shadowmaps = this->ShadowPass();
-	ID3D11ShaderResourceView* slsrv = this->spotLightShadows.GetShaderResourceView();
-	this->GetContext()->PSSetShaderResources(5, 1, &slsrv);
-	this->GetContext()->PSSetShaderResources(7, shadowmaps.pointLightSRVs.size(), shadowmaps.pointLightSRVs.data());
+	this->ShadowPass();
+	ID3D11ShaderResourceView* spotLightShaderResourceView = this->spotLightShadows.GetShaderResourceView();
+	ID3D11ShaderResourceView* pointLightShaderResourceView = this->pointLightShadows.GetSrv();
+	this->GetContext()->PSSetShaderResources(5, 1, &spotLightShaderResourceView);
+	this->GetContext()->PSSetShaderResources(7, 1, &pointLightShaderResourceView);
 
 #ifdef DEBUG_TIMER
 	const auto afterShadow{std::chrono::steady_clock::now()};
@@ -538,20 +553,11 @@ void Renderer::Render() {
 #endif // DEBUG_TIMER
 
 	// Unbinding shadowmaps to allow input on them again
-	for (auto& spotLightShadowMaps : shadowmaps.spotlightSRVs) {
-		// Since shadowmaps vector is just a non owning clone of all views, it is safe to just set them to nullptr
-		// for unbinding the shadowmaps
-		spotLightShadowMaps = nullptr;
-	}
-	this->GetContext()->PSSetShaderResources(5, shadowmaps.spotlightSRVs.size(), shadowmaps.spotlightSRVs.data());
+	ID3D11ShaderResourceView* nullview = nullptr;
+	this->GetContext()->PSSetShaderResources(5, 1, &nullview);
 
 	// Unbinding shadowmaps to allow input on them again
-	for (auto& pointLightShadowMaps : shadowmaps.pointLightSRVs) {
-		// Since shadowmaps vector is just a non owning clone of all views, it is safe to just set them to nullptr
-		// for unbinding the shadowmaps
-		pointLightShadowMaps = nullptr;
-	}
-	this->GetContext()->PSSetShaderResources(7, shadowmaps.pointLightSRVs.size(), shadowmaps.pointLightSRVs.data());
+	this->GetContext()->PSSetShaderResources(7, 1, &nullview);
 
 #ifdef DEBUG_TIMER
 	const auto afterRender{std::chrono::steady_clock::now()};
@@ -799,9 +805,7 @@ void Renderer::RenderUI() {
 #endif // DEBUG_TIMER
 }
 
-Renderer::ShadowResourceViews Renderer::ShadowPass() {
-
-	ShadowResourceViews shadowSRVs{};
+void Renderer::ShadowPass() {
 
 	this->hasBoundStatic = false;
 	if (this->currentVertexShader != this->vertexShader.get()) {
@@ -810,8 +814,8 @@ Renderer::ShadowResourceViews Renderer::ShadowPass() {
 	}
 	this->GetContext()->PSSetShader(nullptr, nullptr, 0);
 
-	shadowSRVs.spotlightSRVs = this->SpotLightShadowPass();
-	shadowSRVs.pointLightSRVs = this->PointLightShadowPass();
+	this->SpotLightShadowPass();
+	this->PointLightShadowPass();
 
 	// Rebind default pixel shader
 	this->pixelShaderLit->BindShader(this->immediateContext.Get());
@@ -822,16 +826,11 @@ Renderer::ShadowResourceViews Renderer::ShadowPass() {
 
 	// Reset ViewPort
 	this->BindViewport();
-
-	return shadowSRVs;
 }
 
-std::vector<ID3D11ShaderResourceView*> Renderer::SpotLightShadowPass() {
+void Renderer::SpotLightShadowPass() {
 
 	const uint32_t lightCount = std::min<uint32_t>(this->spotLightRenderQueue.size(), this->maximumSpotlights);
-
-	std::vector<ID3D11ShaderResourceView*> depthStencilViews;
-	depthStencilViews.reserve(lightCount);
 
 	for (uint32_t i = 0; i < lightCount; i++) {
 		if ((this->spotLightRenderQueue)[i].expired()) {
@@ -843,13 +842,10 @@ std::vector<ID3D11ShaderResourceView*> Renderer::SpotLightShadowPass() {
 		}
 
 		auto light = (this->spotLightRenderQueue)[i].lock();
-		if (light->GetResolutionChanged()) {
-			light->SetDepthBuffer(this->GetDevice());
-		}
 
 		this->immediateContext->ClearDepthStencilView(this->spotLightShadows.GetDepthStencilView(i), D3D11_CLEAR_DEPTH,
 													  1, 0);
-		this->immediateContext->OMSetRenderTargets(0, nullptr, light->GetDepthStencilView());
+		this->immediateContext->OMSetRenderTargets(0, nullptr, this->spotLightShadows.GetDepthStencilView(i));
 
 		if (light->camera.expired()) {
 			Logger::Error("Lights shadow camera was dead");
@@ -858,8 +854,7 @@ std::vector<ID3D11ShaderResourceView*> Renderer::SpotLightShadowPass() {
 		auto& camera = *light->camera.lock().get();
 		auto matrixContainer = camera.GetCameraMatrix();
 
-		const auto& viewPort = light->GetViewPort();
-		this->immediateContext->RSSetViewports(1, &viewPort);
+		this->immediateContext->RSSetViewports(1, &this->spotLightViewPort);
 		this->cameraBuffer->UpdateBuffer(this->GetContext(), &matrixContainer);
 
 		ID3D11Buffer* buffer = this->cameraBuffer->GetBuffer();
@@ -869,16 +864,11 @@ std::vector<ID3D11ShaderResourceView*> Renderer::SpotLightShadowPass() {
 		CheapRenderMap thisCameraRenderMap;
 		this->CreateCheapRenderMap(thisCameraRenderMap, camera);
 		this->RenderCheapRenderMap(thisCameraRenderMap);
-		depthStencilViews.push_back(light->GetSRV());
 	}
-	return depthStencilViews;
 }
 
-std::vector<ID3D11ShaderResourceView*> Renderer::PointLightShadowPass() {
+void Renderer::PointLightShadowPass() {
 	uint32_t lightCount = std::min<uint32_t>(this->pointLightRenderQueue.size(), this->maximumSpotlights);
-
-	std::vector<ID3D11ShaderResourceView*> depthStencilViews;
-	depthStencilViews.reserve(lightCount);
 
 	for (uint32_t i = 0; i < lightCount; i++) {
 		if (this->pointLightRenderQueue[i].expired()) {
@@ -891,17 +881,11 @@ std::vector<ID3D11ShaderResourceView*> Renderer::PointLightShadowPass() {
 		}
 
 		auto light = this->pointLightRenderQueue[i].lock();
-		if (light->GetResolutionChanged()) {
-			light->SetDepthBuffers(this->GetDevice());
-		}
-
-		auto DSViews = light->GetDepthStencilViews();
-		auto srv = light->GetSRV();
 
 		for (size_t j = 0; j < 6; j++) {
 
-			this->immediateContext->ClearDepthStencilView(DSViews[j], D3D11_CLEAR_DEPTH, 1, 0);
-			this->immediateContext->OMSetRenderTargets(0, nullptr, DSViews[j]);
+			this->immediateContext->ClearDepthStencilView(this->pointLightShadows.GetDsv(i, j), D3D11_CLEAR_DEPTH, 1, 0);
+			this->immediateContext->OMSetRenderTargets(0, nullptr, this->pointLightShadows.GetDsv(i, j));
 
 			if (light->cameras[j].expired()) {
 				Logger::Error("Lights shadow camera was dead");
@@ -910,8 +894,7 @@ std::vector<ID3D11ShaderResourceView*> Renderer::PointLightShadowPass() {
 			auto& camera = *light->cameras[j].lock().get();
 			auto matrixContainer = camera.GetCameraMatrix();
 
-			const auto& viewPort = light->GetViewPort();
-			this->immediateContext->RSSetViewports(1, &viewPort);
+			this->immediateContext->RSSetViewports(1, &this->pointLightViewPort);
 			this->cameraBuffer->UpdateBuffer(this->GetContext(), &matrixContainer);
 
 			ID3D11Buffer* buffer = this->cameraBuffer->GetBuffer();
@@ -922,10 +905,7 @@ std::vector<ID3D11ShaderResourceView*> Renderer::PointLightShadowPass() {
 			this->CreateCheapRenderMap(thisCameraRenderMap, camera);
 			this->RenderCheapRenderMap(thisCameraRenderMap);
 		}
-		depthStencilViews.push_back(srv);
 	}
-
-	return depthStencilViews;
 }
 
 void Renderer::ClearRenderTargetViewAndDepthStencilView() {

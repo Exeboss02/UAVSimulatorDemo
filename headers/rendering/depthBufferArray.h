@@ -15,9 +15,8 @@ public:
 	DepthBufferArray() = default;
 	~DepthBufferArray() = default;
 
-	void Init(ID3D11Device* device, UINT width, UINT height, UINT maxViews);
+	void Init(ID3D11Device* device, UINT width, UINT maxViews);
 
 	ID3D11DepthStencilView* GetDepthStencilView(UINT arrayIndex) const;
 	ID3D11ShaderResourceView* GetShaderResourceView() const;
-	ID3D11DepthStencilState* GetDepthStencilState() const;
 };

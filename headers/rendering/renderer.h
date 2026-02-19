@@ -175,6 +175,10 @@ private:
 	std::unique_ptr<ConstantBuffer> pointlightCountBuffer;
 
 	DepthBufferArray spotLightShadows;
+	D3D11_VIEWPORT spotLightViewPort;
+
+	ShadowCube pointLightShadows;
+	D3D11_VIEWPORT pointLightViewPort;
 
 	std::unordered_map<size_t, std::unique_ptr<InstanceBuffer>> instanceBuffers;
 
@@ -215,15 +219,11 @@ private:
 	/// </summary
 	void RenderUI();
 
-	struct ShadowResourceViews {
-		std::vector<ID3D11ShaderResourceView*> spotlightSRVs;
-		std::vector<ID3D11ShaderResourceView*> pointLightSRVs;
-	};
 
-	ShadowResourceViews ShadowPass();
+	void ShadowPass();
 
-	std::vector<ID3D11ShaderResourceView*> SpotLightShadowPass();
-	std::vector<ID3D11ShaderResourceView*> PointLightShadowPass();
+	void SpotLightShadowPass();
+	void PointLightShadowPass();
 
 	/// <summary>
 	/// Clears last frame with a clear color

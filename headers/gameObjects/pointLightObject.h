@@ -21,10 +21,6 @@ public:
 	~PointLightObject() = default;
 
 	PointLightContainer GetPointLightData();
-	std::array<ID3D11DepthStencilView*, 6> GetDepthStencilViews() const;
-	const D3D11_VIEWPORT& GetViewPort() const;
-	bool GetResolutionChanged() const;
-	ID3D11ShaderResourceView* GetSRV() const;
 
 	virtual void Start() override;
 	virtual void Tick() override;
@@ -33,15 +29,10 @@ public:
 	virtual void SaveToJson(nlohmann::json& data) override;
 
 	std::array<std::weak_ptr<CameraObject>, 6> cameras;
-	void SetShadowResolution(size_t res);
-	void SetDepthBuffers(ID3D11Device* device);
 
 	virtual void ShowInHierarchy() override;
 
 private:
-	bool resolutionChanged = true;
 
-	D3D11_VIEWPORT shadowViewPort;
 	PointLightContainer data;
-	ShadowCube shadowCubeMap;
 };

@@ -1,7 +1,7 @@
 #include "rendering/depthBufferArray.h"
 #include "utilities/logger.h"
 
-void DepthBufferArray::Init(ID3D11Device* device, UINT width, UINT height, UINT maxViews) {
+void DepthBufferArray::Init(ID3D11Device* device, UINT resolution, UINT maxViews) {
 
 	if (this->texture.Get()) this->texture.Reset();
 	if (this->shaderResourceView.Get()) this->shaderResourceView.Reset();
@@ -11,12 +11,10 @@ void DepthBufferArray::Init(ID3D11Device* device, UINT width, UINT height, UINT 
 	this->depthStencilViews.resize(maxViews);
 
 	D3D11_TEXTURE2D_DESC textureDesc{};
-	textureDesc.Width = width;
-	textureDesc.Height = height;
+	textureDesc.Width = resolution;
+	textureDesc.Height = resolution;
 	textureDesc.MipLevels = 1;
 	textureDesc.ArraySize = maxViews;
-	// Use a typeless 32-bit float format so we can create a DSV with D32_FLOAT
-	// and an SRV with R32_FLOAT for sampling in the pixel shader.
 	textureDesc.Format = DXGI_FORMAT_R32_TYPELESS;
 	textureDesc.SampleDesc.Count = 1;
 	textureDesc.SampleDesc.Quality = 0;

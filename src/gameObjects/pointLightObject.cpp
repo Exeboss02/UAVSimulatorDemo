@@ -5,17 +5,7 @@ PointLightObject::PointLightObject() {
 	DirectX::XMStoreFloat3(&this->data.position, DirectX::XMVectorSet(0, 0, 0, 0));
 	DirectX::XMStoreFloat4(&this->data.color, DirectX::XMVectorSet(1, 1, 1, 1));
 
-	this->shadowViewPort = {
-		.TopLeftX = 0,
-		.TopLeftY = 0,
-		.Width = static_cast<FLOAT>(128),
-		.Height = static_cast<FLOAT>(128),
-		.MinDepth = 0.0f,
-		.MaxDepth = 1.0f,
-	};
-
 	Logger::Log("Created a pointLight.");
-	this->resolutionChanged = true;
 }
 
 PointLightObject::PointLightContainer PointLightObject::GetPointLightData() {
@@ -31,29 +21,6 @@ PointLightObject::PointLightContainer PointLightObject::GetPointLightData() {
 
 	return this->data;
 }
-
-std::array<ID3D11DepthStencilView*, 6> PointLightObject::GetDepthStencilViews() const {
-	return {
-		this->shadowCubeMap.GetDsv(0),
-		this->shadowCubeMap.GetDsv(1),
-		this->shadowCubeMap.GetDsv(2),
-		this->shadowCubeMap.GetDsv(3),
-		this->shadowCubeMap.GetDsv(4),
-		this->shadowCubeMap.GetDsv(5),
-	};
-}
-
-const D3D11_VIEWPORT& PointLightObject::GetViewPort() const {
-	if (this->resolutionChanged) {
-		Logger::Warn("Note that shadow resolution has changed But buffer has not"
-					 ", Do not use this viewport for rendering shadow before calling SetDepthBuffer");
-	}
-	return this->shadowViewPort;
-}
-
-bool PointLightObject::GetResolutionChanged() const { return this->resolutionChanged; }
-
-ID3D11ShaderResourceView* PointLightObject::GetSRV() const { return this->shadowCubeMap.GetSrv(); }
 
 void SetCameraOrientation(CameraObject* cam, DirectX::XMFLOAT3 forwardF, DirectX::XMFLOAT3 upF);
 
@@ -120,24 +87,6 @@ void PointLightObject::SaveToJson(nlohmann::json& data) {
 					 currentColor.m128_f32[3]};
 
 	data["intensity"] = this->data.intensity;
-}
-
-void PointLightObject::SetShadowResolution(size_t res) {
-	this->shadowViewPort = {
-		.TopLeftX = 0,
-		.TopLeftY = 0,
-		.Width = static_cast<FLOAT>(res),
-		.Height = static_cast<FLOAT>(res),
-		.MinDepth = 0.0f,
-		.MaxDepth = 1.0f,
-	};
-
-	this->resolutionChanged = true;
-}
-
-void PointLightObject::SetDepthBuffers(ID3D11Device* device) {
-	this->shadowCubeMap.Init(device, this->shadowViewPort.Width);
-	this->resolutionChanged = false;
 }
 
 void PointLightObject::ShowInHierarchy() {

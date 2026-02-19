@@ -57,7 +57,7 @@ StructuredBuffer<Spotlight> spotlightBuffer : register(t0);
 Texture2DArray<unorm float> shadowMaps : register(t5);
 
 StructuredBuffer<PointLight> pointLightBuffer : register(t6);
-TextureCube pointLightShadowMaps : register(t7);
+TextureCubeArray<unorm float> pointLightShadowMaps : register(t7);
 
 SamplerState mainSampler : register(s0);
 SamplerState shadowSampler : register(s1);
@@ -158,7 +158,7 @@ float4 main(PixelShaderInput input) : SV_TARGET
         float4 lightClip = mul(float4(input.worldPosition.xyz, 1), lightdata.vpMatrix[faceIndex]);
         float sceneDepth = lightClip.z / lightClip.w;        
         
-        float mapDepth = pointLightShadowMaps.SampleLevel(shadowSampler, sampleDir, 0).r;
+        float mapDepth = pointLightShadowMaps.SampleLevel(shadowSampler, float4(sampleDir, i), 0).r;
         bool islit = (mapDepth + bias) >= sceneDepth;
 
         if (islit)

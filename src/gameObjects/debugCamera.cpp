@@ -101,12 +101,13 @@ void DebugCamera::shootRay() {
 		std::string hitString;
 		if (didHit) {
 
-			std::shared_ptr<GameObject> hitCollider = rayCastData.hitColider.lock();
-			std::weak_ptr<GameObject> weakParent = hitCollider->GetParent(); 
-			if (!weakParent.expired()) {
-				std::shared_ptr<GameObject> strongParent = weakParent.lock();
-				strongParent->OnInteract();
-			}
+			//std::shared_ptr<GameObject> hitCollider = 
+			rayCastData.hitColider.lock()->Interact();
+			//std::weak_ptr<GameObject> weakParent = hitCollider->GetParent(); 
+			//if (!weakParent.expired()) {
+			//	std::shared_ptr<GameObject> strongParent = weakParent.lock();
+			//	strongParent->OnInteract();
+			//}
 			hitString = "hit";
 		} 
 		else {

@@ -101,13 +101,6 @@ public:
 
 	bool GetIsStatic() const;
 
-	/// <summary>
-	/// can be called to indicate that object is being observed by player
-	/// </summary>
-	virtual void OnObserve();
-
-	virtual void OnInteract();
-
 private:
 	/// <summary>
 	/// WARNING: Engine only. Do not use for any in-game logic.

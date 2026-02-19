@@ -21,6 +21,10 @@ void Wall::OnInteract() {
 
 void Wall::Start(){ 
 	this->MeshObject::Start();
+	Logger::Log("Wall started");
+	this->interactable.lock()->SetOnInteract([&]() { 
+		this->OnInteract(); 
+		});
 }
 
 void Wall::SetWAllIndex(int wallIndex) { this->wallIndex = wallIndex; }

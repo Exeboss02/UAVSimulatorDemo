@@ -117,8 +117,8 @@ void DebugCamera::shootRay() {
 			auto colliderobjWeak = this->factory->CreateGameObjectOfType<MeshObject>();
 			auto colliderobj = colliderobjWeak.lock();
 			colliderobj->SetMesh(meshdata);
-			colliderobj->transform.SetPosition(this->GetGlobalPosition());
-			colliderobj->transform.SetRotationQuaternion(this->GetGlobalRotation());
+			colliderobj->transform.SetPosition(this->transform.GetGlobalPosition());
+			colliderobj->transform.SetRotationQuaternion(this->transform.GetGlobalRotation());
 			DirectX::XMFLOAT3 scale(0.01f, 0.01f, rayCastData.distance);
 			colliderobj->transform.SetScale(DirectX::XMLoadFloat3(&scale));
 			// end of rayVis

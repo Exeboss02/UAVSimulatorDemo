@@ -1,4 +1,5 @@
 #include "core/audio/soundSourceObject.h"
+#include "core/audio/audioManager.h"
 
 SoundSourceObject::SoundSourceObject()
 {
@@ -17,7 +18,7 @@ SoundSourceObject::SoundSourceObject()
 	for (int i = 0; i < this->nrOfSources; i++)
 	{
 		alSourcef(this->sources[i], AL_PITCH, this->pitch);
-		alSourcef(this->sources[i], AL_GAIN, this->gain * MasterVolume::GetInstance().GetSoundEffectsGain());
+		alSourcef(this->sources[i], AL_GAIN, this->gain * AudioManager::GetInstance().GetMasterSoundEffectsVolume());
 		alSource3f(this->sources[i], AL_POSITION, (ALfloat)pos.m128_f32[0], (ALfloat)pos.m128_f32[1], (ALfloat)pos.m128_f32[2]);
 		alSource3f(this->sources[i], AL_VELOCITY, this->velocity[0], this->velocity[1], this->velocity[2]);
 		alSourcei(this->sources[i], AL_LOOPING, this->currentInstructionSet.loopSound);
@@ -47,6 +48,12 @@ void SoundSourceObject::Tick()
 
 void SoundSourceObject::Play(SoundClip* soundClip) //pointer referece?
 {
+	if(!soundClip)
+	{
+		Logger::Error("SoundSourceObject tried to play nullptr SoundClip");
+		return;
+	}
+
 	for (int i = 0; i < this->nrOfSources; i++)
 	{
 		int index = (this->sourceIndex + i) % this->nrOfSources;
@@ -98,6 +105,21 @@ void SoundSourceObject::GetCurrentSourcePosition(ALfloat* position)
 	alGetSource3f(sources[this->sourceIndex], AL_POSITION, &position[0], &position[1], &position[2]);
 }
 
+void SoundSourceObject::SetSourcePosition(float x, float y, float z)
+{
+	DirectX::XMVECTOR position = {};
+	position.m128_f32[0] = x;
+	position.m128_f32[1] = y;
+	position.m128_f32[2] = z;
+	
+	this->transform.SetPosition(position);
+
+	for (int i = 0; i < this->nrOfSources; i++)
+	{
+		alSource3f(this->sources[i], AL_POSITION, x, y, z);
+	}
+}
+
 void SoundSourceObject::SetRandomPitch(float minPitch, float maxPitch)
 {
 	srand(time(0)); //this seed sucks, we need to fix this
@@ -116,7 +138,7 @@ void SoundSourceObject::SetGain(float gain)
 
 	for (int i = 0; i < this->nrOfSources; i++)
 	{
-		alSourcef(this->sources[i], AL_GAIN, this->gain * MasterVolume::GetInstance().GetSoundEffectsGain());
+		alSourcef(this->sources[i], AL_GAIN, this->gain * AudioManager::GetInstance().GetMasterSoundEffectsVolume());
 	}
 }
 
@@ -146,7 +168,7 @@ void SoundSourceObject::ChangeGain(float gainChange)
 
 	for (int i = 0; i < this->nrOfSources; i++)
 	{
-		alSourcef(this->sources[i], AL_GAIN, this->gain * MasterVolume::GetInstance().GetSoundEffectsGain());
+		alSourcef(this->sources[i], AL_GAIN, this->gain * AudioManager::GetInstance().GetMasterSoundEffectsVolume());
 	}
 }
 

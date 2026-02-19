@@ -42,6 +42,10 @@ SceneManager::SceneManager(Renderer* rend) : mainScene(nullptr), renderer(rend),
 
 	CreateNewScene(this->emptyScene);
 	this->emptyScene->CreateGameObjectOfType<CameraObject>();
+
+	//Initialize musicTrackManager and soundBank
+	AudioManager::GetInstance().InitializeMusicTrackManager("../../assets/audio/music/");
+	AssetManager::GetInstance().InitializeSoundBank("../../assets/audio/soundeffects/");
 }
 
 void SceneManager::SceneTick() {
@@ -55,6 +59,7 @@ void SceneManager::SceneTick() {
 	}
 
 	PhysicsQueue::GetInstance().Tick();
+	AudioManager::GetInstance().Tick();
 
 	this->mainScene->SceneTick(this->isPaused);
 	this->mainScene->SceneLateTick(this->isPaused);
@@ -199,49 +204,3 @@ void SceneManager::SaveSceneToCurrentFile() {
 	}
 	SaveSceneToFile(this->currentScenePath);
 }
-
-void SceneManager::InitializeSoundBank(std::string pathToSoundFolder) {
-	AssetManager::GetInstance().InitializeSoundBank(pathToSoundFolder);
-}
-
-void SceneManager::AddSoundClipStandardFolder(std::string filename, std::string id) {
-	AssetManager::GetInstance().AddSoundClipStandardFolder(filename, id);
-}
-
-void SceneManager::AddSoundClip(std::string path, std::string id) {
-	AssetManager::GetInstance().AddSoundClip(path, id);
-}
-
-std::string SceneManager::GetPathToSoundFolder() { return AssetManager::GetInstance().GetPathToSoundFolder(); }
-
-SoundClip* SceneManager::GetSoundClip(std::string id) { return AssetManager::GetInstance().GetSoundClip(id); }
-
-void SceneManager::AudioManagerTick() { this->audioManager.Tick(); }
-
-void SceneManager::InitializeMusicTrackManager(std::string pathToMusicFolder) {
-	this->audioManager.InitializeMusicTrackManager(pathToMusicFolder);
-}
-
-void SceneManager::AddMusicTrackStandardFolder(std::string filename, std::string id) {
-	this->audioManager.AddMusicTrackStandardFolder(filename, id);
-}
-
-void SceneManager::AddMusicTrack(std::string path, std::string id) { this->audioManager.AddMusicTrack(path, id); }
-
-void SceneManager::PlayMusicTrack(std::string id) { this->audioManager.Play(id); }
-
-void SceneManager::StopMusicTrack(std::string id) { this->audioManager.Stop(id); }
-
-void SceneManager::FadeInPlayMusicTrack(std::string id, float startGain, float seconds) {
-	this->audioManager.FadeInPlay(id, startGain, seconds);
-}
-
-void SceneManager::FadeOutStopMusicTrack(std::string id, float seconds) { this->audioManager.FadeOutStop(id, seconds); }
-
-void SceneManager::GetMusicTrackSourceState(std::string id, ALint& sourceState) {
-	this->audioManager.GetMusicTrackSourceState(id, sourceState);
-}
-
-void SceneManager::SetMusicTrackGain(std::string id, float gain) { this->audioManager.SetGain(id, gain); }
-
-MusicTrack* SceneManager::GetMusicTrack(std::string id) { return this->audioManager.GetMusicTrack(id); }

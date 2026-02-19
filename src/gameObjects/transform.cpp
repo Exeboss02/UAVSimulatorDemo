@@ -1,42 +1,63 @@
 #include "gameObjects/transform.h"
 
-Transform::Transform() : position({}), quaternion(DirectX::XMQuaternionIdentity()), scale({1, 1, 1}) {}
+Transform::Transform(GameObject3D* gameObject)
+	: position({}), quaternion(DirectX::XMQuaternionIdentity()), scale({1, 1, 1}), myGameObject(gameObject) {}
 
-Transform::Transform(DirectX::XMVECTOR position, DirectX::XMVECTOR quaternion, DirectX::XMVECTOR scale)
-	: position(position), quaternion(DirectX::XMQuaternionNormalize(quaternion)), scale(scale) {}
+Transform::Transform(GameObject3D* gameObject, DirectX::XMVECTOR position, DirectX::XMVECTOR quaternion,
+					 DirectX::XMVECTOR scale)
+	: position(position), quaternion(DirectX::XMQuaternionNormalize(quaternion)), scale(scale),
+	  myGameObject(gameObject) {}
 
-Transform::Transform(DirectX::XMVECTOR position, float roll, float pitch, float yaw, DirectX::XMVECTOR scale)
+Transform::Transform(GameObject3D* gameObject, DirectX::XMVECTOR position, float roll, float pitch, float yaw,
+					 DirectX::XMVECTOR scale)
 	: position(position),
 	  quaternion(DirectX::XMQuaternionRotationRollPitchYawFromVector(
 		  {DirectX::XMConvertToRadians(roll), DirectX::XMConvertToRadians(pitch), DirectX::XMConvertToRadians(yaw)})),
-	  scale(scale) {}
+	  scale(scale), myGameObject(gameObject) {}
 
-void Transform::SetPosition(DirectX::XMVECTOR position) { this->position = position; }
+void Transform::SetPosition(DirectX::XMVECTOR position) { 
+	this->position = position; 
+	this->myGameObject->SetHasMovedRecursive();
+}
 
 void Transform::SetRotationRPY(float roll, float pitch, float yaw) {
 	this->quaternion = DirectX::XMQuaternionRotationRollPitchYaw(pitch, yaw, roll);
+	this->myGameObject->SetHasMovedRecursive();
 }
 
 void Transform::SetRotationRPY(DirectX::XMVECTOR rollPitchYaw) {
 	this->quaternion = DirectX::XMQuaternionRotationRollPitchYawFromVector(rollPitchYaw);
+	this->myGameObject->SetHasMovedRecursive();
 }
 
 void Transform::SetRotationQuaternion(DirectX::XMVECTOR quaternion) {
 	this->quaternion = DirectX::XMQuaternionNormalize(quaternion);
+	this->myGameObject->SetHasMovedRecursive();
 }
 
-void Transform::SetScale(DirectX::XMVECTOR scale) { this->scale = scale; }
+void Transform::SetScale(DirectX::XMVECTOR scale) { 
+	this->scale = scale; 
+	this->myGameObject->SetHasMovedRecursive();
+}
 
-void Transform::Move(DirectX::XMVECTOR move) { this->position = DirectX::XMVectorAdd(this->position, move); }
+void Transform::Move(DirectX::XMVECTOR move) { 
+	this->position = DirectX::XMVectorAdd(this->position, move); 
+	this->myGameObject->SetHasMovedRecursive();
+}
 
-void Transform::Move(DirectX::XMVECTOR direction, float speed) { this->Move(DirectX::XMVectorScale(direction, speed)); }
+void Transform::Move(DirectX::XMVECTOR direction, float speed) { 
+	this->Move(DirectX::XMVectorScale(direction, speed)); 
+	this->myGameObject->SetHasMovedRecursive();
+}
 
 void Transform::Rotate(float x, float y, float z) {
 	this->RotateQuaternion(DirectX::XMQuaternionRotationRollPitchYaw(x, y, z));
+	this->myGameObject->SetHasMovedRecursive();
 }
 
 void Transform::RotateQuaternion(DirectX::XMVECTOR quaternion) {
 	this->quaternion = DirectX::XMQuaternionMultiply(this->quaternion, quaternion);
+	this->myGameObject->SetHasMovedRecursive();
 }
 
 DirectX::XMVECTOR Transform::GetPosition() const { return this->position; }
@@ -119,4 +140,87 @@ DirectX::XMVECTOR Transform::GetCameraRotationQuaternion(float yawDegrees, float
 
 	// Normalize for safety.
 	return DirectX::XMQuaternionNormalize(qResult);
+}
+
+DirectX::XMVECTOR Transform::GetGlobalPosition() {
+	if (this->recalculateGlobalPosition) {
+		this->globalPosition = GetDecomposedWorldMatrix(TransformComponent::TRANSLATAION);
+		this->recalculateGlobalPosition = false;
+	}
+
+	return this->globalPosition;
+}
+
+DirectX::XMVECTOR Transform::GetGlobalRotation() {
+	if (this->recalculateGlobalRotation) {
+		this->globalRotation = GetDecomposedWorldMatrix(TransformComponent::ROTATION);
+		this->recalculateGlobalRotation = false;
+	}
+
+	return this->globalRotation;
+}
+
+DirectX::XMVECTOR Transform::GetGlobalScale() {
+	if (this->recalculateGlobalScale) {
+		this->globalScale = GetDecomposedWorldMatrix(TransformComponent::SCALE);
+		this->recalculateGlobalScale = false;
+	}
+
+	return this->globalScale;
+}
+
+DirectX::XMVECTOR Transform::GetGlobalForward() {
+	return DirectX::XMVector3Rotate(DirectX::XMVectorSet(0, 0, 1, 0), GetGlobalRotation());
+}
+
+DirectX::XMVECTOR Transform::GetGlobalRight() {
+	return DirectX::XMVector3Rotate(DirectX::XMVectorSet(1, 0, 0, 0), GetGlobalRotation());
+}
+
+DirectX::XMVECTOR Transform::GetGlobalUp() {
+	return DirectX::XMVector3Rotate(DirectX::XMVectorSet(0, 1, 0, 0), GetGlobalRotation());
+}
+
+void Transform::HasMoved() { 
+	this->recalculateGlobalWorldMatrix = true; 
+	this->recalculateGlobalPosition = true; 
+	this->recalculateGlobalRotation = true; 
+	this->recalculateGlobalScale = true; 
+}
+
+DirectX::XMMATRIX Transform::GetGlobalWorldMatrix(bool inverseTranspose) {
+	if (inverseTranspose) {
+		if (this->recalculateGlobalWorldMatrixInverseTransposed) {
+			this->globalWorldMatrixInverseTransposed = this->myGameObject->GetGlobalWorldMatrixRecursive(true);
+			this->recalculateGlobalWorldMatrixInverseTransposed = false;
+		}
+
+		return this->globalWorldMatrixInverseTransposed;
+	} else {
+		if (this->recalculateGlobalWorldMatrix) {
+			this->globalWorldMatrix = this->myGameObject->GetGlobalWorldMatrixRecursive(false);
+			this->recalculateGlobalWorldMatrix = false;
+		}
+
+		return this->globalWorldMatrix;
+	}
+}
+
+DirectX::XMVECTOR Transform::GetDecomposedWorldMatrix(const TransformComponent& component) {
+	DirectX::XMVECTOR scale;
+	DirectX::XMVECTOR rotationQuaternion;
+	DirectX::XMVECTOR translation;
+
+	DirectX::XMMatrixDecompose(&scale, &rotationQuaternion, &translation, GetGlobalWorldMatrix(false));
+
+	switch (component) {
+	case TransformComponent::SCALE:
+		return scale;
+	case TransformComponent::ROTATION:
+		return rotationQuaternion;
+	case TransformComponent::TRANSLATAION:
+		return translation;
+	default:
+		throw std::runtime_error("Failed Transform::GetDecomposedWorldMatrix()");
+	}
 }

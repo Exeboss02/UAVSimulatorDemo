@@ -158,14 +158,14 @@ bool Collider::BoxSphereCollision(BoxCollider* box, SphereCollider* sphere, Dire
 {
 	using namespace DirectX;
 
-	XMVECTOR boxCenter = box->GetGlobalPosition();
-	XMVECTOR sphereCenter = sphere->GetGlobalPosition();
+	XMVECTOR boxCenter = box->transform.GetGlobalPosition();
+	XMVECTOR sphereCenter = sphere->transform.GetGlobalPosition();
 	XMFLOAT3 fExtents = FLOAT3MULT1(box->GetExtents(), 1);
 	XMVECTOR vExtents = XMLoadFloat3(&fExtents);
 
 	//inverse transpose?
 	//XMMATRIX boxWorldMatrix = XMMatrixTranspose(box->GetGlobalWorldMatrix(false)); //worldMatrix is pre-transposed, so needs to get un-transposed again here
-	XMMATRIX boxWorldMatrix = box->GetGlobalWorldMatrix(false);
+	XMMATRIX boxWorldMatrix = box->transform.GetGlobalWorldMatrix(false);
 	//XMFLOAT4X4 matrix = box->GetWorldMatrix(false);
 	//XMMATRIX boxWorldMatrix = XMLoadFloat4x4(&matrix);
 

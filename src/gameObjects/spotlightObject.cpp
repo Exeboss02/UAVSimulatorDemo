@@ -52,8 +52,8 @@ void SpotlightObject::Start() {
 
 void SpotlightObject::Tick() {
 	// feels bad doing this every frame
-	DirectX::XMStoreFloat3(&this->data.position, GetGlobalPosition());
-	DirectX::XMStoreFloat3(&this->data.direction, GetGlobalForward());
+	DirectX::XMStoreFloat3(&this->data.position, this->transform.GetGlobalPosition());
+	DirectX::XMStoreFloat3(&this->data.direction, this->transform.GetGlobalForward());
 
 	if (this->camera.expired()) {
 		std::string error = "Spotlight shadowcamera has been killed";

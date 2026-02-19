@@ -87,7 +87,7 @@ void SphereCollider::SetDiameter(float diameter)
 
 float SphereCollider::GetDiameter()
 {
-	return this->GetGlobalScale().m128_f32[0];
+	return this->transform.GetGlobalScale().m128_f32[0];
 }
 
 bool SphereCollider::CollidesWithBox(BoxCollider* box, DirectX::XMFLOAT3& resolveAxis, float& resolveDistance)
@@ -97,8 +97,8 @@ bool SphereCollider::CollidesWithBox(BoxCollider* box, DirectX::XMFLOAT3& resolv
 
 bool SphereCollider::CollidesWithSphere(SphereCollider* sphere, DirectX::XMFLOAT3& resolveAxis, float& resolveDistance)
 {
-	DirectX::XMVECTOR positionA = this->GetGlobalPosition();
-	DirectX::XMVECTOR positionB = sphere->GetGlobalPosition();
+	DirectX::XMVECTOR positionA = this->transform.GetGlobalPosition();
+	DirectX::XMVECTOR positionB = sphere->transform.GetGlobalPosition();
 
 	DirectX::XMVECTOR distanceVector = DirectX::XMVectorSubtract(positionB, positionA);
 	float squaredDistance = DirectX::XMVectorGetX(DirectX::XMVector3LengthSq(distanceVector));
@@ -136,7 +136,7 @@ bool SphereCollider::CollidesWithSphere(SphereCollider* sphere, DirectX::XMFLOAT
 bool SphereCollider::IntersectWithRay(const Ray& ray, float& distance, float maxDistance) {
 	
 
-	Vector3D originToCenter = Vector3D(this->GetGlobalPosition()) - ray.origin;
+	Vector3D originToCenter = Vector3D(this->transform.GetGlobalPosition()) - ray.origin;
 	
 	float radius = this->GetDiameter() / 2.0f;
 	if (originToCenter.Length() - radius > maxDistance) {

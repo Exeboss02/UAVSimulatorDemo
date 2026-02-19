@@ -11,6 +11,7 @@
 
 class Scene;
 class GameObjectFactory;
+class Transform;
 
 class GameObject {
 public:
@@ -55,7 +56,13 @@ public:
 	virtual void OnDestroy();
 
 	// This should be in Transform but that doesn't work because GameObjects doesn't have transforms, only GameObject3D
-	virtual DirectX::XMMATRIX GetGlobalWorldMatrix(bool inverseTranspose) const;
+	virtual DirectX::XMMATRIX GetGlobalWorldMatrixRecursive(bool inverseTranspose) const;
+
+	/// <summary>
+	/// Engine only. Tells children that they have moved.
+	/// </summary>
+	void SetHasMovedRecursive();
+
 
 	virtual DirectX::XMMATRIX GetGlobalViewMatrix() const;
 

@@ -43,7 +43,7 @@ struct AStarVertex : public GameObject3D {
 	void Initialize(DX::XMVECTOR pos) { this->transform.SetPosition(pos); }
 	
 	inline bool operator<(const AStarVertex& other) const { return this->fCost < other.fCost; }
-	inline bool operator==(const AStarVertex& other) const { return DX::XMVector4NearEqual(this->GetGlobalPosition(), other.GetGlobalPosition(), DX::XMVectorSet(0.1f, 0.1f, 0.1f, 0.1f)); }
+	inline bool operator==(AStarVertex& other) { return DX::XMVector4NearEqual(this->transform.GetGlobalPosition(), other.transform.GetGlobalPosition(), DX::XMVectorSet(0.1f, 0.1f, 0.1f, 0.1f)); }
 };
 
 class AStar {
@@ -91,7 +91,7 @@ private:
 /// <param name="position">Integer pair representing the coordinates of the vertex.</param>
 /// <returns>Returns true: Successfully added vertex. Returns false: vertex already exsist</returns>
 inline bool AStar::AddVertex(std::shared_ptr<AStarVertex> vertex) {
-	DX::XMVECTOR position = vertex->GetGlobalPosition();
+	DX::XMVECTOR position = vertex->transform.GetGlobalPosition();
 	if (this->GetVertex(position)) {
 		Logger::Log("vertex already exists");
 		return false;
@@ -168,7 +168,7 @@ inline std::vector<std::shared_ptr<AStarVertex>> AStar::FindPath(std::shared_ptr
 	}
 	
 	// Get the actual start vertex from the vertices vector
-	std::shared_ptr<AStarVertex> startVertex = this->GetVertex(start->GetGlobalPosition());
+	std::shared_ptr<AStarVertex> startVertex = this->GetVertex(start->transform.GetGlobalPosition());
 	if (!startVertex) {
 		Logger::Log("Start vertex not found in graph!");
 		return {};
@@ -183,13 +183,13 @@ inline std::vector<std::shared_ptr<AStarVertex>> AStar::FindPath(std::shared_ptr
 		AStarVertex* current = this->openList.Dequeue();
 
 		if (*current == *this->goal.get()) { // If goal is reached, reconstruct path
-			std::shared_ptr<AStarVertex> goalVertex = this->GetVertex(current->GetGlobalPosition());
+			std::shared_ptr<AStarVertex> goalVertex = this->GetVertex(current->transform.GetGlobalPosition());
 			return this->ReconstructPath(goalVertex);
 		}
 
 		this->closedList.push_back(current); // Mark current vertex as visited by adding it to the closed list
 		
-		std::shared_ptr<AStarVertex> currentSharedPtr = this->GetVertex(current->GetGlobalPosition());
+		std::shared_ptr<AStarVertex> currentSharedPtr = this->GetVertex(current->transform.GetGlobalPosition());
 		
 		for (auto& neighbor : this->GetNeighbors(current)) {
 			if (std::find(closedList.begin(), closedList.end(), neighbor) != closedList.end()) {
@@ -216,8 +216,8 @@ inline std::vector<std::shared_ptr<AStarVertex>> AStar::FindPath(std::shared_ptr
 inline void AStar::PrintAllEdges() {
 	for (const auto& vertex : this->vertices) {
 		for (const auto& edge : vertex->edges) {
-			Logger::Log("Edge from (", DX::XMVectorGetX(vertex->GetGlobalPosition()), ", ", DX::XMVectorGetZ(vertex->GetGlobalPosition()), ") to (",
-						DX::XMVectorGetX(edge.to->GetGlobalPosition()), ", ", DX::XMVectorGetZ(edge.to->GetGlobalPosition()), ") with cost ", edge.cost);
+			Logger::Log("Edge from (", DX::XMVectorGetX(vertex->transform.GetGlobalPosition()), ", ", DX::XMVectorGetZ(vertex->transform.GetGlobalPosition()), ") to (",
+						DX::XMVectorGetX(edge.to->transform.GetGlobalPosition()), ", ", DX::XMVectorGetZ(edge.to->transform.GetGlobalPosition()), ") with cost ", edge.cost);
 		}
 	}
 }
@@ -230,8 +230,8 @@ inline void AStar::PrintAllEdges() {
 /// <returns>The heuristic value in form of an integer.</returns>
 inline const int AStar::CalculateHeuristic(AStarVertex* vertex) {
 
-	DX::XMVECTOR goalPos = this->goal->GetGlobalPosition();
-	DX::XMVECTOR vertexPos = vertex->GetGlobalPosition();
+	DX::XMVECTOR goalPos = this->goal->transform.GetGlobalPosition();
+	DX::XMVECTOR vertexPos = vertex->transform.GetGlobalPosition();
 
 	DX::XMVECTOR delta = DX::XMVectorSubtract(vertexPos, goalPos);
 	float distance = DX::XMVectorGetX(DX::XMVector3Length(delta));
@@ -263,7 +263,7 @@ inline void AStar::ClearPathfindingData() {
 /// <returns>A shared pointer to the vertex, or nullptr if no matching vertex is found.</returns>
 inline std::shared_ptr<AStarVertex> AStar::GetVertex(DX::XMVECTOR position) {
 	for (auto& vertex : this->vertices) {
-		if (DX::XMVector4NearEqual(vertex->GetGlobalPosition(), position, DX::XMVectorSet(0.1f, 0.1f, 0.1f, 0.1f))) {
+		if (DX::XMVector4NearEqual(vertex->transform.GetGlobalPosition(), position, DX::XMVectorSet(0.1f, 0.1f, 0.1f, 0.1f))) {
 			return vertex;
 		}
 	}

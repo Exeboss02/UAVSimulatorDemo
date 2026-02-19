@@ -51,7 +51,7 @@ std::vector<std::weak_ptr<MeshObject>> Renderer::GetVisibleObjects(CameraObject&
 
 	visible.reserve(this->meshRenderQueue.size());
 
-	DirectX::XMVECTOR cameraGlobalPos = camera.GetGlobalPosition();
+	DirectX::XMVECTOR cameraGlobalPos = camera.transform.GetGlobalPosition();
 
 	for (size_t i = 0; i < this->meshRenderQueue.size(); i++) {
 		if (this->meshRenderQueue[i].expired()) {
@@ -65,7 +65,7 @@ std::vector<std::weak_ptr<MeshObject>> Renderer::GetVisibleObjects(CameraObject&
 		// This should NOT be done every frame, very expensive matrix operations
 		float distance;
 		DirectX::XMStoreFloat(&distance, DirectX::XMVector3LengthSq(DirectX::XMVectorSubtract(
-											 cameraGlobalPos, this->meshRenderQueue[i].lock()->GetCachedGlobalPosition())));
+											 cameraGlobalPos, this->meshRenderQueue[i].lock()->transform.GetGlobalPosition())));
 		
 		if (distance > std::powf(camera.GetFarPlane(), 2.0f)) {
 			continue;
@@ -328,8 +328,8 @@ void Renderer::CreateRenderMap(RenderMap& renderMap, CameraObject& camera) {
 		DirectX::XMFLOAT4X4 worldMatrix;
 		DirectX::XMFLOAT4X4 worldMatrixInverseTransposed;
 
-		DirectX::XMStoreFloat4x4(&worldMatrix, meshObject->GetCachedGlobalMatrix(false));
-		DirectX::XMStoreFloat4x4(&worldMatrixInverseTransposed, meshObject->GetCachedGlobalMatrix(true));
+		DirectX::XMStoreFloat4x4(&worldMatrix, meshObject->transform.GetGlobalWorldMatrix(false));
+		DirectX::XMStoreFloat4x4(&worldMatrixInverseTransposed, meshObject->transform.GetGlobalWorldMatrix(true));
 
 		RenderMap::WorldMatrixBufferContainer worldMatrixBufferContainer = {worldMatrix, worldMatrixInverseTransposed};
 
@@ -392,8 +392,8 @@ void Renderer::CreateCheapRenderMap(CheapRenderMap& renderMap, CameraObject& cam
 		DirectX::XMFLOAT4X4 worldMatrix;
 		DirectX::XMFLOAT4X4 worldMatrixInverseTransposed;
 
-		DirectX::XMStoreFloat4x4(&worldMatrix, meshObject->GetCachedGlobalMatrix(false));
-		DirectX::XMStoreFloat4x4(&worldMatrixInverseTransposed, meshObject->GetCachedGlobalMatrix(true));
+		DirectX::XMStoreFloat4x4(&worldMatrix, meshObject->transform.GetGlobalWorldMatrix(false));
+		DirectX::XMStoreFloat4x4(&worldMatrixInverseTransposed, meshObject->transform.GetGlobalWorldMatrix(true));
 
 		RenderMap::WorldMatrixBufferContainer worldMatrixBufferContainer = {worldMatrix, worldMatrixInverseTransposed};
 
@@ -444,8 +444,8 @@ size_t Renderer::FillRenderMap(RenderMap& renderMap, CameraObject& camera) {
 		DirectX::XMFLOAT4X4 worldMatrix;
 		DirectX::XMFLOAT4X4 worldMatrixInverseTransposed;
 
-		DirectX::XMStoreFloat4x4(&worldMatrix, meshObject->GetGlobalWorldMatrix(false));
-		DirectX::XMStoreFloat4x4(&worldMatrixInverseTransposed, meshObject->GetGlobalWorldMatrix(true));
+		DirectX::XMStoreFloat4x4(&worldMatrix, meshObject->transform.GetGlobalWorldMatrix(false));
+		DirectX::XMStoreFloat4x4(&worldMatrixInverseTransposed, meshObject->transform.GetGlobalWorldMatrix(true));
 
 		RenderMap::WorldMatrixBufferContainer worldMatrixBufferContainer = {worldMatrix, worldMatrixInverseTransposed};
 
@@ -1087,9 +1087,9 @@ void Renderer::RenderMeshObject(MeshObject* meshObject, bool renderMaterial) {
 
 	// Bind worldmatrix
 	DirectX::XMFLOAT4X4 worldMatrix;
-	DirectX::XMStoreFloat4x4(&worldMatrix, meshObject->GetGlobalWorldMatrix(false));
+	DirectX::XMStoreFloat4x4(&worldMatrix, meshObject->transform.GetGlobalWorldMatrix(false));
 	DirectX::XMFLOAT4X4 worldMatrixInverseTransposed;
-	DirectX::XMStoreFloat4x4(&worldMatrixInverseTransposed, meshObject->GetGlobalWorldMatrix(true));
+	DirectX::XMStoreFloat4x4(&worldMatrixInverseTransposed, meshObject->transform.GetGlobalWorldMatrix(true));
 
 	RenderMap::WorldMatrixBufferContainer worldMatrixBufferContainer = {worldMatrix, worldMatrixInverseTransposed};
 

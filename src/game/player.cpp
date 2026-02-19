@@ -46,8 +46,8 @@ void Player::PhysicsTick()
 	}
 
 	DirectX::XMVECTOR moveVector = {};
-	moveVector = DirectX::XMVectorAdd(moveVector, DirectX::XMVectorScale(this->GetGlobalRight(), this->input[0] * this->speed * fixedDeltaTime)); //Add x-input
-	moveVector = DirectX::XMVectorAdd(moveVector, DirectX::XMVectorScale(this->GetGlobalForward(), this->input[1] * this->speed * fixedDeltaTime)); //Add z-input
+	moveVector = DirectX::XMVectorAdd(moveVector, DirectX::XMVectorScale(this->transform.GetGlobalRight(), this->input[0] * this->speed * fixedDeltaTime)); //Add x-input
+	moveVector = DirectX::XMVectorAdd(moveVector, DirectX::XMVectorScale(this->transform.GetGlobalForward(), this->input[1] * this->speed * fixedDeltaTime)); //Add z-input
 
 	DirectX::XMStoreFloat3(&this->linearVelocity, moveVector);
 	this->RigidBody::PhysicsTick(); //has to be last because of gravity

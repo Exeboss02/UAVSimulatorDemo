@@ -1,6 +1,6 @@
 #include "gameObjects/gameObject3D.h"
 
-GameObject3D::GameObject3D() : transform()
+GameObject3D::GameObject3D() : transform(this)
 {
 }
 
@@ -9,22 +9,7 @@ void GameObject3D::Tick()
 	
 }
 
-DirectX::XMVECTOR GameObject3D::GetGlobalPosition() const
-{
-	return GetDecomposedWorldMatrix(TransformComponent::TRANSLATAION);
-}
-
-DirectX::XMVECTOR GameObject3D::GetGlobalRotation() const
-{
-	return GetDecomposedWorldMatrix(TransformComponent::ROTATION);
-}
-
-DirectX::XMVECTOR GameObject3D::GetGlobalScale() const
-{
-	return GetDecomposedWorldMatrix(TransformComponent::SCALE);
-}
-
-DirectX::XMMATRIX GameObject3D::GetGlobalWorldMatrix(bool inverseTranspose) const
+DirectX::XMMATRIX GameObject3D::GetGlobalWorldMatrixRecursive(bool inverseTranspose) const
 {
 	DirectX::XMFLOAT4X4 localWorldXMFLOAT4X4 = this->transform.GetWorldMatrix(inverseTranspose);
 	DirectX::XMMATRIX localWorldMatrix = DirectX::XMLoadFloat4x4(&localWorldXMFLOAT4X4);
@@ -33,23 +18,16 @@ DirectX::XMMATRIX GameObject3D::GetGlobalWorldMatrix(bool inverseTranspose) cons
 		return localWorldMatrix;
 	}
 	else {
-		return localWorldMatrix * this->GetParent().lock()->GetGlobalWorldMatrix(inverseTranspose);
+		return localWorldMatrix * this->GetParent().lock()->GetGlobalWorldMatrixRecursive(inverseTranspose);
 	}
 }
 
-DirectX::XMVECTOR GameObject3D::GetGlobalForward() const
-{
-	return DirectX::XMVector3Rotate(DirectX::XMVectorSet(0, 0, 1, 0), GetGlobalRotation());
-}
+void GameObject3D::SetHasMovedRecursive() {
+	this->transform.HasMoved();
 
-DirectX::XMVECTOR GameObject3D::GetGlobalRight() const 
-{ 
-	return DirectX::XMVector3Rotate(DirectX::XMVectorSet(1, 0, 0, 0), GetGlobalRotation());
-}
-
-DirectX::XMVECTOR GameObject3D::GetGlobalUp() const
-{
-	return DirectX::XMVector3Rotate(DirectX::XMVectorSet(0, 1, 0, 0), GetGlobalRotation());
+	for (auto& child : this->GetChildren()) {
+		child.lock()->SetHasMovedRecursive();
+	}
 }
 
 void GameObject3D::LoadFromJson(const nlohmann::json& data) {
@@ -101,24 +79,4 @@ void GameObject3D::ShowInHierarchy()
 	float newScale[3] = {scale.m128_f32[0], scale.m128_f32[1], scale.m128_f32[2]};
 	ImGui::InputFloat3("Local Scale", newScale);
 	this->transform.SetScale(DirectX::XMVectorSet(newScale[0], newScale[1], newScale[2], 1.0f));
-}
-
-DirectX::XMVECTOR GameObject3D::GetDecomposedWorldMatrix(const TransformComponent& component) const
-{
-	DirectX::XMVECTOR scale;
-	DirectX::XMVECTOR rotationQuaternion;
-	DirectX::XMVECTOR translation;
-
-	DirectX::XMMatrixDecompose(&scale, &rotationQuaternion, &translation, GetGlobalWorldMatrix(false));
-	
-	switch (component) {
-	case TransformComponent::SCALE:
-		return scale;
-	case TransformComponent::ROTATION:
-		return rotationQuaternion;
-	case TransformComponent::TRANSLATAION:
-		return translation;
-	default:
-		throw std::runtime_error("Failed GameObject3D::GetDecomposedWorldMatrix()");
-	}
 }

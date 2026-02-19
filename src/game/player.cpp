@@ -37,7 +37,7 @@ void Player::Start()
 	//SFX
 	this->speaker = this->factory->CreateGameObjectOfType<SoundSourceObject>();
 	this->speaker.lock()->SetParent(this->GetPtr());
-	this->speaker.lock()->SetGain(0.8f);
+	this->speaker.lock()->SetGain(1.0f);
 
 	AssetManager::GetInstance().AddSoundClipStandardFolder("Step1.wav", "step1");
 	AssetManager::GetInstance().AddSoundClipStandardFolder("Step2.wav", "step2");
@@ -61,7 +61,7 @@ void Player::Tick()
 	{
 		this->musicTimer.Tick(deltaTime);
 
-		if(this->moveVector.m128_f32[0] > 0.01f || this->moveVector.m128_f32[2] > 0.01f)
+		if(DirectX::XMVectorGetX(DirectX::XMVector3Length(this->moveVector)) > 0.01f)
 		{
 			this->sfxTimer.Tick(deltaTime);
 		}

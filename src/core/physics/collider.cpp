@@ -158,12 +158,12 @@ bool Collider::BoxSphereCollision(BoxCollider* box, SphereCollider* sphere, Dire
 {
 	using namespace DirectX;
 
-	XMVECTOR boxCenter = box->GetGlobalPosition();
-	XMVECTOR sphereCenter = sphere->GetGlobalPosition();
+	XMVECTOR boxCenter = box->transform.GetGlobalPosition();
+	XMVECTOR sphereCenter = sphere->transform.GetGlobalPosition();
 	XMFLOAT3 fExtents = FLOAT3MULT1(box->GetExtents(), 1);
 	XMVECTOR vExtents = XMLoadFloat3(&fExtents);
 
-	XMMATRIX boxWorldMatrix = box->GetGlobalWorldMatrix(false);
+	XMMATRIX boxWorldMatrix = box->transform.GetGlobalWorldMatrix(false);
 
 	//we get the inverse of the rotation and translation matrices, scale should not be included
 	XMVECTOR scale, rotation, translation;

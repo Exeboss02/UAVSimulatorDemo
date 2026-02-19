@@ -12,9 +12,9 @@ BoxCollider::BoxCollider()
 	this->satData.center = DirectX::XMFLOAT3(0, 0, 0);
 	this->satData.nrOfPositions = 8;
 
-	DirectX::XMStoreFloat3(&this->axis[0], this->GetGlobalRight());
-	DirectX::XMStoreFloat3(&this->axis[1], this->GetGlobalUp());
-	DirectX::XMStoreFloat3(&this->axis[2], this->GetGlobalForward());
+	DirectX::XMStoreFloat3(&this->axis[0], this->transform.GetGlobalRight());
+	DirectX::XMStoreFloat3(&this->axis[1], this->transform.GetGlobalUp());
+	DirectX::XMStoreFloat3(&this->axis[2], this->transform.GetGlobalForward());
 	this->satData.nrOfNormals = 3;
 	this->satData.normalData = this->axis;
 
@@ -33,33 +33,33 @@ void BoxCollider::Tick()
 	if(!this->dynamic) return;
 
 	//update normals
-	DirectX::XMStoreFloat3(&this->axis[0], this->GetGlobalRight());
-	DirectX::XMStoreFloat3(&this->axis[1], this->GetGlobalUp());
-	DirectX::XMStoreFloat3(&this->axis[2], this->GetGlobalForward());
+	DirectX::XMStoreFloat3(&this->axis[0], this->transform.GetGlobalRight());
+	DirectX::XMStoreFloat3(&this->axis[1], this->transform.GetGlobalUp());
+	DirectX::XMStoreFloat3(&this->axis[2], this->transform.GetGlobalForward());
 	this->satData.normalData = this->axis;
 
 	this->BuildCornersArray(this->satData.positionData);
-	DirectX::XMStoreFloat3(&this->satData.center, this->GetGlobalPosition());
+	DirectX::XMStoreFloat3(&this->satData.center, this->transform.GetGlobalPosition());
 }
 
 void BoxCollider::Start()
 {
 	this->Collider::Start();
 	//update normals
-	DirectX::XMStoreFloat3(&this->axis[0], this->GetGlobalRight());
-	DirectX::XMStoreFloat3(&this->axis[1], this->GetGlobalUp());
-	DirectX::XMStoreFloat3(&this->axis[2], this->GetGlobalForward());
+	DirectX::XMStoreFloat3(&this->axis[0], this->transform.GetGlobalRight());
+	DirectX::XMStoreFloat3(&this->axis[1], this->transform.GetGlobalUp());
+	DirectX::XMStoreFloat3(&this->axis[2], this->transform.GetGlobalForward());
 	this->satData.normalData = this->axis;
 
 	this->BuildCornersArray(this->satData.positionData);
-	DirectX::XMStoreFloat3(&this->satData.center, this->GetGlobalPosition());
+	DirectX::XMStoreFloat3(&this->satData.center, this->transform.GetGlobalPosition());
 }
 
 void BoxCollider::LoadFromJson(const nlohmann::json& data)
 {
 	this->GameObject3D::LoadFromJson(data);
 
-	DirectX::XMStoreFloat3(&this->satData.center, this->GetGlobalPosition()); //check positions later
+	DirectX::XMStoreFloat3(&this->satData.center, this->transform.GetGlobalPosition()); //check positions later
 	this->BuildCornersArray(this->satData.positionData);
 
 	 if(data.contains("tag"))
@@ -117,7 +117,7 @@ void BoxCollider::BuildCornersArray(DirectX::XMFLOAT3*& positionArray)
 {
 	using namespace DirectX;
 
-	XMMATRIX worldMatrix = this->GetGlobalWorldMatrix(false); //iverse transpose?
+	XMMATRIX worldMatrix = this->transform.GetGlobalWorldMatrix(false); //iverse transpose?
 	//worldMatrix = XMMatrixTranspose(worldMatrix);
 
 	for (int i = 0; i < 8; i++)
@@ -156,7 +156,7 @@ void BoxCollider::SetExtents(DirectX::XMFLOAT3 extents)
 DirectX::XMFLOAT3 BoxCollider::GetExtents()
 {
 	DirectX::XMFLOAT3 extents = {};
-	DirectX::XMStoreFloat3(&extents, this->GetGlobalScale());
+	DirectX::XMStoreFloat3(&extents, this->transform.GetGlobalScale());
 	
 	return extents;
 }
@@ -190,7 +190,7 @@ bool BoxCollider::IntersectWithRay(const Ray& ray, float& distance, float maxDis
 	float tMAX = std::numeric_limits<float>::max();
 	float tMIN = 0.0f;
 
-	Vector3D originToCenter = Vector3D(this->GetGlobalPosition()) - ray.origin;
+	Vector3D originToCenter = Vector3D(this->transform.GetGlobalPosition()) - ray.origin;
 
 	float dimensions[3] = {
 		this->GetExtents().x,

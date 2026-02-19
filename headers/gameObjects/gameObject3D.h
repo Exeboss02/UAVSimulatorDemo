@@ -13,47 +13,15 @@ public:
 	Transform transform;
 
 	/// <summary>
-	/// Get global position as an XMVECTOR
+	/// Engine only. Don't use in game. Gets global world matrix for this object.
 	/// </summary>
-	/// <returns></returns>
-	virtual DirectX::XMVECTOR GetGlobalPosition() const;
+	DirectX::XMMATRIX GetGlobalWorldMatrixRecursive(bool inverseTranspose) const override;
 
 	/// <summary>
-	/// Get global rotation as a quaternion, in an XMVECTOR
+	/// Engine only. Tells children that they have moved.
 	/// </summary>
-	/// <returns></returns>
-	virtual DirectX::XMVECTOR GetGlobalRotation() const;
+	void SetHasMovedRecursive() override;
 
-	/// <summary>
-	/// Get global scale as an XMVECTOR
-	/// </summary>
-	/// <returns></returns>
-	virtual DirectX::XMVECTOR GetGlobalScale() const;
-
-	/// <summary>
-	/// Get XMMATRIX for the global world matrix
-	/// </summary>
-	/// <param name="inverseTranspose"></param>
-	/// <returns></returns>
-	DirectX::XMMATRIX GetGlobalWorldMatrix(bool inverseTranspose) const override;
-
-	/// <summary>
-	/// Maybe misleading name, but returns the forward vector of the object in global space
-	/// </summary>
-	/// <returns></returns>
-	virtual DirectX::XMVECTOR GetGlobalForward() const;
-
-	/// <summary>
-	/// Maybe misleading name, but returns the right vector of the object in global space
-	/// </summary>
-	/// <returns></returns>
-	virtual DirectX::XMVECTOR GetGlobalRight() const;
-
-	/// <summary>
-	/// Maybe misleading name, but returns the up vector of the object in global space
-	/// </summary>
-	/// <returns></returns>
-	virtual DirectX::XMVECTOR GetGlobalUp() const;
 
 	virtual void LoadFromJson(const nlohmann::json& data) override;
 	virtual void SaveToJson(nlohmann::json& data) override;
@@ -61,7 +29,4 @@ public:
 	virtual void ShowInHierarchy() override;
 
 private:
-	enum TransformComponent { SCALE, ROTATION, TRANSLATAION };
-
-	DirectX::XMVECTOR GetDecomposedWorldMatrix(const TransformComponent& component) const;
 };

@@ -9,7 +9,7 @@
 
 class TestEnemy : public GameObject3D {
 public:
-	TestEnemy() : GameObject3D(), movementSpeed(1.5f), currentPathIndex(0), path({}) {}
+	TestEnemy() : GameObject3D(), movementSpeed(2.5f), currentPathIndex(0), path({}) {}
 	~TestEnemy() = default;
 	void Start() override;
 	void Tick() override;

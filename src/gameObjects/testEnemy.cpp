@@ -45,8 +45,8 @@ void TestEnemy::Tick() {
 			}
 		}
 
-		DirectX::XMVECTOR direction = DirectX::XMVectorSubtract(this->path[this->currentPathIndex]->GetGlobalPosition(),
-																this->GetGlobalPosition());
+		DirectX::XMVECTOR direction = DirectX::XMVectorSubtract(this->path[this->currentPathIndex]->transform.GetGlobalPosition(),
+																this->transform.GetGlobalPosition());
 		direction = DirectX::XMVector3Normalize(direction);
 		this->transform.Move(direction, this->movementSpeed * Time::GetInstance().GetDeltaTime());
 	}

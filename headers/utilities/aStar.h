@@ -152,7 +152,7 @@ inline bool AStar::AddEdge(std::shared_ptr<AStarVertex> from, std::shared_ptr<AS
 }
 
 inline void AStar::SetGoal(std::shared_ptr<AStarVertex> goal) { 
-	this->goal = this->GetVertex(goal->GetGlobalPosition());
+	this->goal = this->GetVertex(goal->transform.GetGlobalPosition());
 }
 
 /// <summary>

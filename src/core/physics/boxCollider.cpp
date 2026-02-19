@@ -33,13 +33,13 @@ void BoxCollider::Tick()
 	if(!this->dynamic) return;
 
 	//update normals
-	DirectX::XMStoreFloat3(&this->axis[0], this->GetGlobalRight());
-	DirectX::XMStoreFloat3(&this->axis[1], this->GetGlobalUp());
-	DirectX::XMStoreFloat3(&this->axis[2], this->GetGlobalForward());
+	DirectX::XMStoreFloat3(&this->axis[0], this->transform.GetGlobalRight());
+	DirectX::XMStoreFloat3(&this->axis[1], this->transform.GetGlobalUp());
+	DirectX::XMStoreFloat3(&this->axis[2], this->transform.GetGlobalForward());
 	this->satData.normalData = this->axis;
 
 	this->BuildCornersArray(this->satData.positionData);
-	DirectX::XMStoreFloat3(&this->satData.center, this->GetGlobalPosition());
+	DirectX::XMStoreFloat3(&this->satData.center, this->transform.GetGlobalPosition());
 }
 
 void BoxCollider::Start()
@@ -116,7 +116,7 @@ void BoxCollider::BuildCornersArray(DirectX::XMFLOAT3*& positionArray)
 {
 	using namespace DirectX;
 
-	XMMATRIX worldMatrix = this->GetGlobalWorldMatrixRecursive(false); //iverse transpose?
+	XMMATRIX worldMatrix = this->transform.GetGlobalWorldMatrix(false); //iverse transpose?
 	//worldMatrix = XMMatrixTranspose(worldMatrix);
 
 	for (int i = 0; i < 8; i++)

@@ -710,7 +710,7 @@ void Renderer::RenderUI() {
 					float y1 = y0 + img->GetSize().y;
 
 					// Use widget global Z so image quads layer consistently with mesh widgets
-					DirectX::XMVECTOR globalPos = img->GetGlobalPosition();
+					DirectX::XMVECTOR globalPos = img->transform.GetGlobalPosition();
 					float widgetZ = globalPos.m128_f32[2];
 
 					Vertex vTL{}; // top-left

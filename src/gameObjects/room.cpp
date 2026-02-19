@@ -59,19 +59,22 @@ void Room::Start() {
 
 		meshobj->SetParent(this->GetPtr());
 
+		meshobj->transform.SetRotationRPY(0, 0, i * std::numbers::pi / 2);
+
 		meshobj->SetWallState(Room::WallState::window);
 
-		
-
-		meshobj->transform.SetRotationRPY(0, 0, i * std::numbers::pi / 2);
 		meshobj->SetWAllIndex(i);
-
+		
 		this->walls[i] = meshobj;
+
+
 	}
+	return;
 	auto buildCollider = this->factory->CreateStaticGameObject<BoxCollider>();
-	buildCollider->SetExtents({2, 1, 2});
+	buildCollider->transform.SetScale({2,1,2});
+	buildCollider->transform.SetPosition({0,1.5,0});
 	buildCollider->SetParent(this->GetPtr());
-	// Maybe tweak position
+	// Maybe tweak positionW
 	this->buildSlot = buildCollider;
 	buildCollider->SetOnInteract([&]() { 
 		if (this->builtObject.expired()) {

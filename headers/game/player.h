@@ -40,6 +40,7 @@ public:
 	void UpdateCamera();
 
 	bool isPlayingMusic = false;
+	bool canShoot = false;
 
 	Timer musicTimer;
 	Timer sfxTimer;

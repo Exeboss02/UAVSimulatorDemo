@@ -4,6 +4,7 @@
 #include "gameObjects/meshObject.h"
 #include "core/physics/physics.h"
 #include "core/physics/ray.h"
+#include <functional>
 
 static const DirectX::XMFLOAT3 localBoxCorners[8] =
 {
@@ -137,7 +138,20 @@ public:
 	/// <returns></returns>
 	virtual bool IntersectWithRay(const Ray& ray, float& distance, float maxDistance) = 0;
 
+	void Interact() { interactFunc(); };
+	void Hover() { hoverFunc(); };
+
+	void SetOnInteract(std::function<void()> func) {
+		Logger::Log("Set interact func");
+		this->interactFunc = func; 
+	
+	}
+	void SetOnHover(std::function<void()> func) { this->hoverFunc = func; }
+
 private:
+
+	std::function<void()> interactFunc = []() {};
+	std::function<void()> hoverFunc = []() {};
 	int id = -1;
 	std::weak_ptr<GameObject> meshObjectChild; //reference to the mesh visual representation of the collider (remove?)
 	std::weak_ptr<RigidBody> rigidBodyParent;

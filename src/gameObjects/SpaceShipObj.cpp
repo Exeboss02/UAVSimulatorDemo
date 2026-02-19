@@ -54,6 +54,14 @@ void SpaceShip::CreateRoom(size_t x, size_t y) {
 			}
 		}
 
+		pathfinder->SetGoal(roomMesh->GetPathfindingNodes()[0]);
+
+		if (!rooms[1][1].expired()) {
+			auto startRoom = rooms[1][1].lock();
+			auto& startNodes = startRoom->GetPathfindingNodes();
+			this->path = this->pathfinder->FindPath(startNodes[6]);
+		}
+
 		Logger::Log("Created Room");
 	}
 }
@@ -93,20 +101,11 @@ void SpaceShip::Tick() {
 void SpaceShip::Start() {
 	this->GameObject3D::Start();
 	this->CreateFloorColider();
-	
-	CreateRoom(2, 0);
-	auto room0 = this->GetRoom(2, 0);
-	auto nodes0 = room0.lock()->GetPathfindingNodes();
-	this->pathfinder->SetGoal(nodes0[4]);
-
-	CreateRoom(1, 0);
-	//auto room1 = this->GetRoom(1, 0);
-	//auto nodes1 = room1.lock()->GetPathfindingNodes();
 
 	CreateRoom(1, 1);
-	auto room2 = this->GetRoom(1, 1);
-	auto nodes2 = room2.lock()->GetPathfindingNodes();
-	this->path = this->pathfinder->FindPath(nodes2[6]);
+	auto room = this->GetRoom(1, 1);
+	auto nodes = room.lock()->GetPathfindingNodes();
+	this->path = this->pathfinder->FindPath(nodes[6]);
 
 }
 

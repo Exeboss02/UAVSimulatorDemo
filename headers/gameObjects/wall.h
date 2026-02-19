@@ -8,8 +8,8 @@
 
 class Wall : public MeshObject {
 public:
-	virtual void OnObserve() override;
-	virtual void OnInteract() override;
+	virtual void OnObserve();
+	virtual void OnInteract();
 
 	virtual void Start() override;
 

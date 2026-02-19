@@ -86,8 +86,9 @@ public:
 	/// Order: center, N, NE, E, SE, S, SW, W, NW
 	/// </summary>
 	std::array<std::shared_ptr<AStarVertex>, 9>& GetPathfindingNodes() { return this->pathfindingNodes; }
-
 private:
+	std::weak_ptr<GameObject3D> builtObject;
+	std::weak_ptr<BoxCollider> buildSlot;
 	std::array<size_t, 2> pos;
 	inline static float size;
 	std::weak_ptr<MeshObject> roof;

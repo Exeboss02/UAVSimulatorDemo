@@ -23,7 +23,7 @@ DirectX::BoundingBox MeshObject::GetBoundingBox() {
 	}
 
 	auto box = meshWeak.lock()->GetBoundingBox();
-	DirectX::XMMATRIX matrix = this->GetGlobalWorldMatrix(false);
+	DirectX::XMMATRIX matrix = this->transform.GetGlobalWorldMatrix(false);
 	box.Transform(box, matrix);
 	return box;
 }
@@ -39,9 +39,6 @@ void MeshObject::Tick() {
 }
 
 void MeshObject::LateTick() { 
-	this->cachedGlobalPosition = this->GetGlobalPosition();
-	this->cachedGlobalMatrix = this->GetGlobalWorldMatrix(false);
-	this->cachedGlobalMatrixIT = this->GetGlobalWorldMatrix(true);
 }
 
 void MeshObject::Start() { 
@@ -125,15 +122,3 @@ void MeshObject::ShowInHierarchy() {
 }
 
 bool MeshObject::IsHidden() { return this->hide; }
-
-DirectX::XMVECTOR& MeshObject::GetCachedGlobalPosition() { return this->cachedGlobalPosition; }
-
-DirectX::XMMATRIX& MeshObject::GetCachedGlobalMatrix(bool inverseTransposed) { 
-	if (inverseTransposed) {
-		return this->cachedGlobalMatrixIT; 
-	}
-	else
-	{
-		return this->cachedGlobalMatrix;
-	}
-}

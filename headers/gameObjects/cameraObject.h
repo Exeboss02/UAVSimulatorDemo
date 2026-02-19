@@ -61,7 +61,7 @@ public:
 
 	CameraObject::CameraMatrixContainer GetCameraMatrix(bool transposeViewProjMult = false);
 	DirectX::XMMATRIX GetViewProjectionMatrix(bool transposeViewProjMult = false);
-	DirectX::XMMATRIX GetViewMatrix() const;
+	DirectX::XMMATRIX GetViewMatrix();
 	DirectX::XMMATRIX GetProjectionMatrix() const;
 
 	static CameraObject& GetMainCamera();

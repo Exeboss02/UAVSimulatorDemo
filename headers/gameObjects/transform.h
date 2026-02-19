@@ -2,13 +2,16 @@
 
 #include <DirectXMath.h>
 
+class GameObject3D;
+
 class Transform {
 public:
-	Transform();
+	Transform(GameObject3D* gameObject);
 
-	Transform(DirectX::XMVECTOR position, DirectX::XMVECTOR quaternion = DirectX::XMQuaternionIdentity(),
+	Transform(GameObject3D* gameObject, DirectX::XMVECTOR position, DirectX::XMVECTOR quaternion = DirectX::XMQuaternionIdentity(),
 			  DirectX::XMVECTOR scale = {1, 1, 1});
-	Transform(DirectX::XMVECTOR position, float roll, float pitch, float yaw = 0, DirectX::XMVECTOR scale = {1, 1, 1});
+	Transform(GameObject3D* gameObject, DirectX::XMVECTOR position, float roll, float pitch, float yaw = 0,
+			  DirectX::XMVECTOR scale = {1, 1, 1});
 
 	/// <summary>
 	/// Sets the position of the transform.
@@ -126,8 +129,69 @@ public:
 	/// <returns></returns>
 	static DirectX::XMVECTOR GetCameraRotationQuaternion(float yawDegrees, float pitchDegrees);
 
+	/// <summary>
+	/// Get global position as an XMVECTOR
+	/// </summary>
+	/// <returns></returns>
+	DirectX::XMVECTOR GetGlobalPosition();
+
+	/// <summary>
+	/// Get global rotation as a quaternion, in an XMVECTOR
+	/// </summary>
+	/// <returns></returns>
+	DirectX::XMVECTOR GetGlobalRotation();
+
+	/// <summary>
+	/// Get global scale as an XMVECTOR
+	/// </summary>
+	/// <returns></returns>
+	DirectX::XMVECTOR GetGlobalScale();
+
+	/// <summary>
+	/// Get global world matrix recursively, in an XMMATRIX
+	/// </summary>
+	DirectX::XMMATRIX GetGlobalWorldMatrix(bool inverseTranspose);
+
+	/// <summary>
+	/// Maybe misleading name, but returns the forward vector of the object in global space
+	/// </summary>
+	/// <returns></returns>
+	DirectX::XMVECTOR GetGlobalForward();
+
+	/// <summary>
+	/// Maybe misleading name, but returns the right vector of the object in global space
+	/// </summary>
+	/// <returns></returns>
+	DirectX::XMVECTOR GetGlobalRight();
+
+	/// <summary>
+	/// Maybe misleading name, but returns the up vector of the object in global space
+	/// </summary>
+	/// <returns></returns>
+	DirectX::XMVECTOR GetGlobalUp();
+
+	void HasMoved();
+
 private:
 	DirectX::XMVECTOR position;
 	DirectX::XMVECTOR quaternion;
 	DirectX::XMVECTOR scale;
+
+	GameObject3D* myGameObject;
+
+	enum TransformComponent { SCALE, ROTATION, TRANSLATION };
+
+	DirectX::XMVECTOR GetDecomposedWorldMatrix(const TransformComponent& component);
+
+	bool recalculateGlobalWorldMatrix = true;
+	bool recalculateGlobalWorldMatrixInverseTransposed = true;
+	bool recalculateGlobalPosition = true;
+	bool recalculateGlobalRotation = true;
+	bool recalculateGlobalScale = true;
+
+	DirectX::XMMATRIX globalWorldMatrix;
+	DirectX::XMMATRIX globalWorldMatrixInverseTransposed;
+	DirectX::XMVECTOR globalPosition;
+	DirectX::XMVECTOR globalRotation;
+	DirectX::XMVECTOR globalScale;
 };

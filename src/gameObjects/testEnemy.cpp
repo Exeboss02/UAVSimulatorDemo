@@ -36,8 +36,8 @@ void TestEnemy::Tick() {
 			return;
 		}
 
-		if (DirectX::XMVector4NearEqual(this->GetGlobalPosition(),
-										this->path[this->currentPathIndex]->GetGlobalPosition(),
+		if (DirectX::XMVector4NearEqual(this->transform.GetGlobalPosition(),
+										this->path[this->currentPathIndex]->transform.GetGlobalPosition(),
 										DirectX::XMVectorSet(0.1f, 0.1f, 0.1f, 0.1f))) {
 			this->currentPathIndex++;
 			if (this->currentPathIndex >= this->path.size()) {
@@ -45,8 +45,8 @@ void TestEnemy::Tick() {
 			}
 		}
 
-		DirectX::XMVECTOR direction = DirectX::XMVectorSubtract(this->path[this->currentPathIndex]->GetGlobalPosition(),
-																this->GetGlobalPosition());
+		DirectX::XMVECTOR direction = DirectX::XMVectorSubtract(this->path[this->currentPathIndex]->transform.GetGlobalPosition(),
+																this->transform.GetGlobalPosition());
 		direction = DirectX::XMVector3Normalize(direction);
 		this->transform.Move(direction, this->movementSpeed * Time::GetInstance().GetDeltaTime());
 	}
@@ -55,5 +55,5 @@ void TestEnemy::Tick() {
 void TestEnemy::SetPath(const std::vector<std::shared_ptr<AStarVertex>>& newPath) {
 	this->path = newPath;
 	this->currentPathIndex = 0;
-	this->transform.SetPosition(this->path[0]->GetGlobalPosition());
+	this->transform.SetPosition(this->path[0]->transform.GetGlobalPosition());
 }

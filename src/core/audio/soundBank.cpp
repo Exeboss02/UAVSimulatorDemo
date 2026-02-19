@@ -39,21 +39,24 @@ std::string SoundBank::GetPathToSoundFolder()
 
 SoundClip* SoundBank::GetSoundClip(const std::string id)
 {
-	SoundClip* clip = this->soundClips[id];
+	SoundClip* clip;
+	auto clipIt = this->soundClips.find(id);
 
-	if (!clip)
+	if (clipIt == soundClips.end())
 	{
 		this->AddSoundClipStandardFolder(id, id);
-		clip = this->soundClips[id];
+		clip = this->soundClips.at(id);
 
 		if(!clip)
 		{
 			Logger::Log("couldn't find or load " + id);
 			return nullptr;
 		}
+	} else {
+		clip = clipIt->second;
 	}
 
-	return clip;
+	return (clip);
 }
 
 bool SoundBank::RemoveSoundClip(const std::string relativePath)

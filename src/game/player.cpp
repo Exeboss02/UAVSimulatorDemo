@@ -39,13 +39,13 @@ void Player::Start()
 	this->speaker.lock()->SetParent(this->GetPtr());
 	this->speaker.lock()->SetGain(1.0f);
 
-	AssetManager::GetInstance().AddSoundClipStandardFolder("Step1.wav", "step1");
-	AssetManager::GetInstance().AddSoundClipStandardFolder("Step2.wav", "step2");
-	AssetManager::GetInstance().AddSoundClipStandardFolder("Step3.wav", "step3");
-
-	this->soundClips.push_back(AssetManager::GetInstance().GetSoundClip("step1"));
-	this->soundClips.push_back(AssetManager::GetInstance().GetSoundClip("step2"));
-	this->soundClips.push_back(AssetManager::GetInstance().GetSoundClip("step3"));
+	//AssetManager::GetInstance().AddSoundClipStandardFolder("Step1.wav", "step1");
+	// AssetManager::GetInstance().AddSoundClipStandardFolder("Step2.wav", "step2");
+	// AssetManager::GetInstance().AddSoundClipStandardFolder("Step3.wav", "step3");
+	
+	this->soundClips.push_back(AssetManager::GetInstance().GetSoundClip("Step1.wav"));
+	this->soundClips.push_back(AssetManager::GetInstance().GetSoundClip("Step2.wav"));
+	this->soundClips.push_back(AssetManager::GetInstance().GetSoundClip("Step3.wav"));
 }
 
 void Player::Tick()

@@ -9,10 +9,14 @@
 #include "gameObjects/spotlightObject.h"
 #include "rendering/constantBuffer.h"
 #include "rendering/depthBuffer.h"
+#include "rendering/depthBufferArray.h"
 #include "rendering/indexBuffer.h"
 #include "rendering/inputLayout.h"
+#include "rendering/instanceBuffer.h"
 #include "rendering/material.h"
+#include "rendering/quadTree.h"
 #include "rendering/rasterizerState.h"
+#include "rendering/renderMap.h"
 #include "rendering/renderQueue.h"
 #include "rendering/renderTarget.h"
 #include "rendering/sampler.h"
@@ -23,18 +27,12 @@
 #include "rendering/vertexBuffer.h"
 #include "wrl/client.h"
 #include <algorithm>
+#include <functional>
+#include <unordered_map>
 
 namespace UI {
 class Widget;
 }
-#include "core/assetManager.h"
-#include "rendering/quadTree.h"
-#include "rendering/skybox.h"
-#include <unordered_map>
-
-#include "rendering/instanceBuffer.h"
-#include "rendering/renderMap.h"
-#include <functional>
 
 class Renderer {
 public:
@@ -170,10 +168,17 @@ private:
 
 	std::unique_ptr<ConstantBuffer> cameraBuffer;
 
-	std::unique_ptr<ConstantBuffer> spotlightCountBuffer;
 	std::unique_ptr<StructuredBuffer<SpotlightObject::SpotLightContainer>> spotlightBuffer;
+	std::unique_ptr<ConstantBuffer> spotlightCountBuffer;
+
 	std::unique_ptr<StructuredBuffer<PointLightObject::PointLightContainer>> pointlightBuffer;
 	std::unique_ptr<ConstantBuffer> pointlightCountBuffer;
+
+	DepthBufferArray spotLightShadows;
+	D3D11_VIEWPORT spotLightViewPort;
+
+	ShadowCube pointLightShadows;
+	D3D11_VIEWPORT pointLightViewPort;
 
 	std::unordered_map<size_t, std::unique_ptr<InstanceBuffer>> instanceBuffers;
 
@@ -214,15 +219,11 @@ private:
 	/// </summary
 	void RenderUI();
 
-	struct ShadowResourceViews {
-		std::vector<ID3D11ShaderResourceView*> spotlightSRVs;
-		std::vector<ID3D11ShaderResourceView*> pointLightSRVs;
-	};
 
-	ShadowResourceViews ShadowPass();
+	void ShadowPass();
 
-	std::vector<ID3D11ShaderResourceView*> SpotLightShadowPass();
-	std::vector<ID3D11ShaderResourceView*> PointLightShadowPass();
+	void SpotLightShadowPass();
+	void PointLightShadowPass();
 
 	/// <summary>
 	/// Clears last frame with a clear color

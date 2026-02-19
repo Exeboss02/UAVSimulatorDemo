@@ -1,8 +1,9 @@
 #include "gameObjects/room.h"
 #include "core/assetManager.h"
 #include "gameObjects/spaceShipObj.h"
-#include <numbers>
+#include "gameObjects/spotlightObject.h"
 #include "gameObjects/turret.h"
+#include <numbers>
 
 static const std::array<std::array<int, 2>, 4> wallpositions = {
 	std::array<int, 2>({0, 1}),
@@ -64,19 +65,16 @@ void Room::Start() {
 		meshobj->SetWallState(Room::WallState::window);
 
 		meshobj->SetWAllIndex(i);
-		
+
 		this->walls[i] = meshobj;
-
-
 	}
-	return;
 	auto buildCollider = this->factory->CreateStaticGameObject<BoxCollider>();
-	buildCollider->transform.SetScale({2,1,2});
-	buildCollider->transform.SetPosition({0,1.5,0});
+	buildCollider->transform.SetScale({1, .5, 1});
+	buildCollider->transform.SetPosition({0, 1, 0});
 	buildCollider->SetParent(this->GetPtr());
 	// Maybe tweak positionW
 	this->buildSlot = buildCollider;
-	buildCollider->SetOnInteract([&]() { 
+	buildCollider->SetOnInteract([&]() {
 		if (this->builtObject.expired()) {
 			auto turret = this->factory->CreateStaticGameObject<Turret>();
 			turret->SetParent(this->GetPtr());
@@ -84,8 +82,14 @@ void Room::Start() {
 			turret->SetMesh(AssetManager::GetInstance().GetMeshObjData("TexBox/TextureCube.glb:Mesh_0"));
 		}
 		this->factory->QueueDeleteGameObject(this->buildSlot);
-		});
+	});
 
+	auto spotLight = this->factory->CreateGameObjectOfType<SpotlightObject>().lock();
+	spotLight->SetParent(this->GetPtr());
+	spotLight->transform.SetPosition({0, 4.5, 0});
+	spotLight->transform.SetRotationRPY(0, std::numbers::pi / 2, 0);
+	spotLight->SetAngle(120.);
+	spotLight->SetIntensity(10.);
 }
 
 void Room::Tick() { this->GameObject3D::Tick(); }
@@ -132,7 +136,7 @@ void Room::SetupPathfindingNodes(std::shared_ptr<SpaceShip> spaceShip, std::shar
 		// Create through factory so myPtr is initialized properly
 		auto vertexWeak = this->factory->CreateGameObjectOfType<AStarVertex>();
 		auto vertex = vertexWeak.lock();
-		
+
 		// Initialize the vertex with its position
 		vertex->Initialize(nodesLocal[i]);
 		vertex->transform.SetPosition(nodesLocal[i]);
@@ -141,7 +145,7 @@ void Room::SetupPathfindingNodes(std::shared_ptr<SpaceShip> spaceShip, std::shar
 		vertex->SetParent(roomPtr);
 
 		this->pathfindingNodes[i] = vertex;
-		
+
 		spaceShip->GetPathfinder()->AddVertex(vertex);
 	}
 
@@ -157,5 +161,4 @@ void Room::SetupPathfindingNodes(std::shared_ptr<SpaceShip> spaceShip, std::shar
 		size_t nextIndex = (i % 8) + 1;
 		spaceShip->GetPathfinder()->AddEdge(this->pathfindingNodes[i], this->pathfindingNodes[nextIndex], edgeCost);
 	}
-
 }

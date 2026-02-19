@@ -27,10 +27,6 @@ public:
 
 
 	SpotLightContainer GetSpotLightData() const;
-	ID3D11DepthStencilView* GetDepthStencilView() const;
-	const D3D11_VIEWPORT& GetViewPort() const;
-	bool GetResolutionChanged() const;
-	ID3D11ShaderResourceView* GetSRV() const;
 
 	/// <summary>
 	/// Return the spotlight angle in degrees
@@ -44,10 +40,7 @@ public:
 	virtual void LoadFromJson(const nlohmann::json& data) override;
 	virtual void SaveToJson(nlohmann::json& data) override;
 
-
 	std::weak_ptr<CameraObject> camera;
-	void SetShadowResolution(size_t width, size_t height);
-	void SetDepthBuffer(ID3D11Device* device);
 
 	/// <summary>
 	/// Sets the light angle in degrees
@@ -55,14 +48,11 @@ public:
 	/// <param name="angle"></param>
 	void SetAngle(float angle);
 
+	void SetIntensity(float intensity);
 
 	virtual void ShowInHierarchy() override;
 
 private:
 
-	bool resolutionChanged = true;
-
-	D3D11_VIEWPORT shadowViewPort;
 	SpotLightContainer data;
-	DepthBuffer shadowbuffer;
 };

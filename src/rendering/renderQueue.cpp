@@ -5,6 +5,7 @@
 #include "gameObjects/meshObject.h"
 #include "gameObjects/pointLightObject.h"
 #include "gameObjects/spotlightObject.h"
+#include "rendering/quadTree.h"
 
 RenderQueue* RenderQueue::instance = nullptr;
 

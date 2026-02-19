@@ -27,6 +27,10 @@ public:
 
 	void SetResizeCallback(std::function<void(UINT, UINT)> callback);
 
+	// Global accessors for the current client size (updated when a Window is resized)
+	static UINT GetCurrentWidth();
+	static UINT GetCurrentHeight();
+
 private:
 	HWND hWnd;
 	UINT width;
@@ -44,4 +48,9 @@ private:
 	void ApplyFullscreenResolution(UINT width, UINT height);
 
 	std::function<void(UINT, UINT)> resizeCallback;
+	static UINT currentWidth;
+	static UINT currentHeight;
 };
+
+inline UINT Window::GetCurrentWidth() { return Window::currentWidth; }
+inline UINT Window::GetCurrentHeight() { return Window::currentHeight; }

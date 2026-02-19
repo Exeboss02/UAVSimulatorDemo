@@ -2,6 +2,7 @@
 #include "core/assetManager.h"
 #include "gameObjects/spaceShipObj.h"
 #include <numbers>
+#include "gameObjects/turret.h"
 
 static const std::array<std::array<int, 2>, 4> wallpositions = {
 	std::array<int, 2>({0, 1}),
@@ -67,6 +68,21 @@ void Room::Start() {
 
 		this->walls[i] = meshobj;
 	}
+	auto buildCollider = this->factory->CreateStaticGameObject<BoxCollider>();
+	buildCollider->SetExtents({2, 1, 2});
+	buildCollider->SetParent(this->GetPtr());
+	// Maybe tweak position
+	this->buildSlot = buildCollider;
+	buildCollider->SetOnInteract([&]() { 
+		if (this->builtObject.expired()) {
+			auto turret = this->factory->CreateStaticGameObject<Turret>();
+			turret->SetParent(this->GetPtr());
+			turret->transform.SetPosition({0, 1.5, 0});
+			turret->SetMesh(AssetManager::GetInstance().GetMeshObjData("TexBox/TextureCube.glb:Mesh_0"));
+		}
+		this->factory->QueueDeleteGameObject(this->buildSlot);
+		});
+
 }
 
 void Room::Tick() { this->GameObject3D::Tick(); }

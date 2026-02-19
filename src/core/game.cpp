@@ -48,7 +48,7 @@ void Game::Run(HINSTANCE hInstance, int nCmdShow) {
 	while (msg.message != WM_QUIT) {
 		this->imguiManager.ImguiAtFrameStart();
 
-		if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
+		while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
 			TranslateMessage(&msg);
 			DispatchMessage(&msg);
 		}

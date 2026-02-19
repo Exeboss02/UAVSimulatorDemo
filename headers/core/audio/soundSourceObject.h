@@ -87,7 +87,11 @@ public:
 	/// Retrieves sound source position
 	/// </summary>
 	/// <param name="position"></param>
-	void GetCurrentSourcePosition(ALfloat* position); //for debug
+	void GetCurrentSourcePosition(ALfloat* position);
+
+	/// @brief Set position of soundSourceObject
+	/// @param position 
+	void SetSourcePosition(float x, float y, float z);
 
 private:
 	int id = -1;

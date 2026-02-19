@@ -15,10 +15,17 @@
 class AudioManager
 {
 public:
-	AudioManager();
-	~AudioManager();
+	AudioManager(AudioManager& other) = delete;
+	AudioManager& operator=(const AudioManager&) = delete;
+
+	static AudioManager& GetInstance();
 
 	void Tick();
+
+	/// <summary>
+	/// Sets the listener position/// 
+	/// </summary>/// <param name="x"></param>/// <param name="y"></param>/// <param name="z"></param>
+	void SetListenerPosition(float x, float y, float z);
 
 	//MusicTrackManager Functions
 
@@ -97,10 +104,18 @@ public:
 	/// <returns></returns>
 	MusicTrack* GetMusicTrack(std::string id);
 
+	void SetMasterMusicVolume(float musicMaster);
+	float GetMasterMusicVolume() const;
+	void SetMasterSoundEffectsVolume(float soundEffectsMaster);
+	float GetMasterSoundEffectsVolume() const;
+
 private:
+	AudioManager();
+	~AudioManager();
+
 	ALCdevice* ALCDevice;
 	ALCcontext* ALCContext;
 
 	MusicTrackManager musicTrackManager;
-
+	MasterVolume masterVolume;
 };

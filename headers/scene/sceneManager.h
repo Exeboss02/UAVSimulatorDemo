@@ -37,26 +37,6 @@ public:
 	/// </summary>
 	void LoadScene(Scenes scene);
 
-	// Sound effects
-	void InitializeSoundBank(std::string pathToSoundFolder); // end the path with /
-	void AddSoundClipStandardFolder(std::string filename, std::string id);
-	void AddSoundClip(std::string path, std::string id);
-	std::string GetPathToSoundFolder();
-	SoundClip* GetSoundClip(std::string id);
-
-	// Music
-	void AudioManagerTick();
-	void InitializeMusicTrackManager(std::string pathToMusicFolder); // always end path with /
-	void AddMusicTrackStandardFolder(std::string filename, std::string id);
-	void AddMusicTrack(std::string path, std::string id);
-	void PlayMusicTrack(std::string id);
-	void StopMusicTrack(std::string id);
-	void FadeInPlayMusicTrack(std::string id, float startGain, float seconds);
-	void FadeOutStopMusicTrack(std::string id, float seconds);
-	void GetMusicTrackSourceState(std::string id, ALint& sourceState);
-	void SetMusicTrackGain(std::string id, float gain);
-	MusicTrack* GetMusicTrack(std::string id);
-
 	void SaveSceneToCurrentFile();
 	void CreateNewScene(std::shared_ptr<Scene>& scene);
 	void DeleteScene(std::shared_ptr<Scene>& scene);
@@ -73,7 +53,6 @@ private:
 	std::shared_ptr<Scene> mainScene;
 	std::shared_ptr<Scene> emptyScene;
 	ObjectFromStringFactory objectFromString;
-	AudioManager audioManager;
 
 	Renderer* renderer; // This is temporary
 	std::string currentScenePath;

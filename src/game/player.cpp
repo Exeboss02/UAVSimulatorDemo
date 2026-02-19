@@ -50,18 +50,76 @@ void Player::Start()
 		colliderobj->SetParent(this->GetPtr());
 	}
 
+
+	this->musicTimer.Initialize(2);
+	this->sfxTimer.Initialize(0.5f);
+
+	//move listener to audiomanager
+
+
+	//Master Volume
+	AudioManager::GetInstance().SetMasterMusicVolume(0.4f);
+	AudioManager::GetInstance().SetMasterSoundEffectsVolume(1);
+
+	//Music
+	AudioManager::GetInstance().AddMusicTrackStandardFolder("LethalContact.wav", "contact");
+
+	//SFX
+	this->speaker = this->factory->CreateGameObjectOfType<SoundSourceObject>();
+	this->speaker.lock()->SetParent(this->GetPtr());
+	this->speaker.lock()->SetGain(1.0f);
+
+	//AssetManager::GetInstance().AddSoundClipStandardFolder("Step1.wav", "step1");
+	// AssetManager::GetInstance().AddSoundClipStandardFolder("Step2.wav", "step2");
+	// AssetManager::GetInstance().AddSoundClipStandardFolder("Step3.wav", "step3");
+	
+	this->soundClips.push_back(AssetManager::GetInstance().GetSoundClip("Step1.wav"));
+	this->soundClips.push_back(AssetManager::GetInstance().GetSoundClip("Step2.wav"));
+	this->soundClips.push_back(AssetManager::GetInstance().GetSoundClip("Step3.wav"));
+	this->soundClips.push_back(AssetManager::GetInstance().GetSoundClip("Shoot3.wav"));
 }
 
 void Player::Tick()
 {
 	this->RigidBody::Tick();
 
+	DirectX::XMVECTOR position = this->transform.GetPosition();
+	AudioManager::GetInstance().SetListenerPosition(position.m128_f32[0], position.m128_f32[1], position.m128_f32[2]);
+	this->speaker.lock()->SetSourcePosition(position.m128_f32[0], position.m128_f32[1], position.m128_f32[2]);
+
 	this->input[0] = this->keyBoardInput.GetMovementVector().data()[0];
 	this->input[1] = this->keyBoardInput.GetMovementVector().data()[1];
 	this->UpdateCamera();
 	this->shootRay();
 
-	//Logger::Log("linear velocity: " + std::to_string(this->linearVelocity.x) + ", " + std::to_string(this->linearVelocity.y) + ", " + std::to_string(this->linearVelocity.z));
+	float deltaTime = Time::GetInstance().GetDeltaTime();
+	if(deltaTime < 1) //to prevent tick spam when loading scene
+	{
+		this->musicTimer.Tick(deltaTime);
+
+		if(DirectX::XMVectorGetX(DirectX::XMVector3Length(this->moveVector)) > 0.01f)
+		{
+			this->sfxTimer.Tick(deltaTime);
+		}
+	}
+
+	if(this->musicTimer.TimeIsUp() && !isPlayingMusic)
+	{
+		//AudioManager::GetInstance().FadeInPlay("contact", 0, 6);
+		AudioManager::GetInstance().Play("contact");
+		this->isPlayingMusic = true;
+	}
+
+	if(this->sfxTimer.TimeIsUp())
+	{
+		int randomIndex = RandomInt(0, 2);
+
+		std::shared_ptr<SoundSourceObject> lockedSpeaker = this->speaker.lock();
+		lockedSpeaker->SetRandomPitch(0.8f, 1.2f);
+		lockedSpeaker->Play(this->soundClips[randomIndex]);
+
+		this->sfxTimer.Reset();
+	}
 }
 
 void Player::PhysicsTick()
@@ -76,11 +134,11 @@ void Player::PhysicsTick()
 		return;
 	}
 
-	DirectX::XMVECTOR moveVector = {};
-	moveVector = DirectX::XMVectorAdd(moveVector, DirectX::XMVectorScale(this->transform.GetGlobalRight(), this->input[0] * this->speed * fixedDeltaTime)); //Add x-input
-	moveVector = DirectX::XMVectorAdd(moveVector, DirectX::XMVectorScale(this->transform.GetGlobalForward(), this->input[1] * this->speed * fixedDeltaTime)); //Add z-input
+	this->moveVector = {};
+	this->moveVector = DirectX::XMVectorAdd(moveVector, DirectX::XMVectorScale(this->transform.GetGlobalRight(), this->input[0] * this->speed * fixedDeltaTime)); //Add x-input
+	this->moveVector = DirectX::XMVectorAdd(moveVector, DirectX::XMVectorScale(this->transform.GetGlobalForward(), this->input[1] * this->speed * fixedDeltaTime)); //Add z-input
 
-	DirectX::XMStoreFloat3(&this->linearVelocity, moveVector);
+	DirectX::XMStoreFloat3(&this->linearVelocity, this->moveVector);
 	this->RigidBody::PhysicsTick(); //has to be last because of gravity
 }
 
@@ -158,6 +216,9 @@ void Player::shootRay() {
 	
 	if (this->keyBoardInput.LeftClick()) {
 
+		std::shared_ptr<SoundSourceObject> lockedSpeaker = this->speaker.lock();
+		lockedSpeaker->Play(this->soundClips[3]); //shoot sound
+
 		Ray ray{Vector3D{posVec}, Vector3D{lookVec}};
 		RayCastData rayCastData;
 		Logger::Log("shooting ray");
@@ -176,6 +237,7 @@ void Player::shootRay() {
 			auto colliderobjWeak = this->factory->CreateGameObjectOfType<MeshObject>();
 			auto colliderobj = colliderobjWeak.lock();
 			colliderobj->SetMesh(meshdata);
+			colliderobj->GetMesh().SetMaterial(0, AssetManager::GetInstance().GetMaterialWeakPtr("defaultUnlitMaterial").lock());
 			colliderobj->transform.SetPosition(this->transform.GetGlobalPosition());
 			colliderobj->transform.SetRotationQuaternion(this->transform.GetGlobalRotation());
 			DirectX::XMFLOAT3 scale(0.01f, 0.01f, rayCastData.distance);

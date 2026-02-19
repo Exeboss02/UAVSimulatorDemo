@@ -3,10 +3,8 @@
 class MasterVolume
 {
 public:
-	MasterVolume(MasterVolume& other) = delete;
-	MasterVolume& operator=(const MasterVolume&) = delete;
-
-	static MasterVolume& GetInstance();
+	MasterVolume() = default;
+	~MasterVolume() = default;
 
 	void SetMusicGain(float musicMaster);
 	float GetMusicGain() const;
@@ -14,17 +12,10 @@ public:
 	float GetSoundEffectsGain() const;
 
 private:
-	MasterVolume() = default;
 
 	float music = 1.0f;
     float soundEffects = 1.0f;
 };
-
-inline MasterVolume& MasterVolume::GetInstance()
-{
-	static MasterVolume instance;
-	return instance;
-}
 
 inline void MasterVolume::SetMusicGain(float musicMaster) 
 {

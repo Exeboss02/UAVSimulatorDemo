@@ -20,7 +20,8 @@ public:
 	std::weak_ptr<SoundSourceObject> speaker;
 
 	float speed = 12;
-	float mouseSensitivity = 0.006f;
+	float mouseSensitivity = 0.05f;
+	float stickSensitivity = 1100.0f;
 	float cameraFov = 80.0f;
 
 	DirectX::XMVECTOR moveVector = {};
@@ -42,6 +43,7 @@ public:
 
 	Timer musicTimer;
 	Timer sfxTimer;
+	Timer shootCoolDown;
 
 private:
 	float input[2] = {};

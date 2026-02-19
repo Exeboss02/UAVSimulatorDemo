@@ -63,6 +63,7 @@ void Player::Start()
 
 	this->musicTimer.Initialize(2);
 	this->sfxTimer.Initialize(0.4f);
+	this->shootCoolDown.Initialize(0.3f);
 
 
 	//Master Volume
@@ -106,6 +107,7 @@ void Player::Tick()
 	if(deltaTime < 1) //to prevent tick spam when loading scene
 	{
 		this->musicTimer.Tick(deltaTime);
+		this->shootCoolDown.Tick(deltaTime);
 
 		if(DirectX::XMVectorGetX(DirectX::XMVector3Length(this->moveVector)) > 0.01f)
 		{
@@ -166,16 +168,18 @@ void Player::UpdateCamera()
 		return;
 	}
 
-	if (this->keyBoardInput.Interact()) // 'F'
+	if (this->keyBoardInput.Interact() || this->controllerInput->Interact()) // 'F'
 	{
 		this->showCursor = !this->showCursor;
 		ShowCursor(this->showCursor);
 	}
 
-	if (this->showCursor) {
+	if (true) {
+		float deltaTime = Time::GetInstance().GetDeltaTime();
+
 		std::array<float, 2> lookVector = this->keyBoardInput.GetLookVector();
-		lookVector[0] += this->controllerInput->GetLookVector()[0];
-		lookVector[1] -= this->controllerInput->GetLookVector()[1];
+		lookVector[0] += this->controllerInput->GetLookVector()[0] * this->stickSensitivity * deltaTime;
+		lookVector[1] -= this->controllerInput->GetLookVector()[1] * this->stickSensitivity * deltaTime;
 
 		static float rot[3] = {0, 0, 0};
 
@@ -228,8 +232,14 @@ void Player::shootRay() {
 	
 	if (this->keyBoardInput.LeftClick() || this->controllerInput->LeftClick()) {
 
+		if(!this->shootCoolDown.TimeIsUp())
+		{
+			return;
+		}
+
 		std::shared_ptr<SoundSourceObject> lockedSpeaker = this->speaker.lock();
 		lockedSpeaker->Play(this->soundClips[3]); //shoot sound
+		this->shootCoolDown.Reset();
 
 		Ray ray{Vector3D{posVec}, Vector3D{lookVec}};
 		RayCastData rayCastData;

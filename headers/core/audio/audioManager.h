@@ -22,6 +22,11 @@ public:
 
 	void Tick();
 
+	/// <summary>
+	/// Sets the listener position/// 
+	/// </summary>/// <param name="x"></param>/// <param name="y"></param>/// <param name="z"></param>
+	void SetListenerPosition(float x, float y, float z);
+
 	//MusicTrackManager Functions
 
 	/// <summary>

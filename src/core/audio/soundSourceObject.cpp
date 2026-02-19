@@ -105,6 +105,21 @@ void SoundSourceObject::GetCurrentSourcePosition(ALfloat* position)
 	alGetSource3f(sources[this->sourceIndex], AL_POSITION, &position[0], &position[1], &position[2]);
 }
 
+void SoundSourceObject::SetSourcePosition(float x, float y, float z)
+{
+	DirectX::XMVECTOR position = {};
+	position.m128_f32[0] = x;
+	position.m128_f32[1] = y;
+	position.m128_f32[2] = z;
+	
+	this->transform.SetPosition(position);
+
+	for (int i = 0; i < this->nrOfSources; i++)
+	{
+		alSource3f(this->sources[i], AL_POSITION, x, y, z);
+	}
+}
+
 void SoundSourceObject::SetRandomPitch(float minPitch, float maxPitch)
 {
 	srand(time(0)); //this seed sucks, we need to fix this

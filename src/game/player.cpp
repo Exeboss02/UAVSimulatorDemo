@@ -76,11 +76,16 @@ void Player::Start()
 	this->soundClips.push_back(AssetManager::GetInstance().GetSoundClip("Step1.wav"));
 	this->soundClips.push_back(AssetManager::GetInstance().GetSoundClip("Step2.wav"));
 	this->soundClips.push_back(AssetManager::GetInstance().GetSoundClip("Step3.wav"));
+	this->soundClips.push_back(AssetManager::GetInstance().GetSoundClip("Shoot3.wav"));
 }
 
 void Player::Tick()
 {
 	this->RigidBody::Tick();
+
+	DirectX::XMVECTOR position = this->transform.GetPosition();
+	AudioManager::GetInstance().SetListenerPosition(position.m128_f32[0], position.m128_f32[1], position.m128_f32[2]);
+	this->speaker.lock()->SetSourcePosition(position.m128_f32[0], position.m128_f32[1], position.m128_f32[2]);
 
 	this->input[0] = this->keyBoardInput.GetMovementVector().data()[0];
 	this->input[1] = this->keyBoardInput.GetMovementVector().data()[1];
@@ -130,8 +135,8 @@ void Player::PhysicsTick()
 	}
 
 	this->moveVector = {};
-	this->moveVector = DirectX::XMVectorAdd(moveVector, DirectX::XMVectorScale(this->GetGlobalRight(), this->input[0] * this->speed * fixedDeltaTime)); //Add x-input
-	this->moveVector = DirectX::XMVectorAdd(moveVector, DirectX::XMVectorScale(this->GetGlobalForward(), this->input[1] * this->speed * fixedDeltaTime)); //Add z-input
+	this->moveVector = DirectX::XMVectorAdd(moveVector, DirectX::XMVectorScale(this->transform.GetGlobalRight(), this->input[0] * this->speed * fixedDeltaTime)); //Add x-input
+	this->moveVector = DirectX::XMVectorAdd(moveVector, DirectX::XMVectorScale(this->transform.GetGlobalForward(), this->input[1] * this->speed * fixedDeltaTime)); //Add z-input
 
 	DirectX::XMStoreFloat3(&this->linearVelocity, this->moveVector);
 	this->RigidBody::PhysicsTick(); //has to be last because of gravity
@@ -210,6 +215,9 @@ void Player::shootRay() {
 	const DirectX::XMVECTOR posVec = this->camera.lock()->transform.GetGlobalPosition();
 	
 	if (this->keyBoardInput.LeftClick()) {
+
+		std::shared_ptr<SoundSourceObject> lockedSpeaker = this->speaker.lock();
+		lockedSpeaker->Play(this->soundClips[3]); //shoot sound
 
 		Ray ray{Vector3D{posVec}, Vector3D{lookVec}};
 		RayCastData rayCastData;

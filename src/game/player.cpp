@@ -237,10 +237,12 @@ void Player::shootRay() {
 			auto colliderobjWeak = this->factory->CreateGameObjectOfType<MeshObject>();
 			auto colliderobj = colliderobjWeak.lock();
 			colliderobj->SetMesh(meshdata);
-			colliderobj->GetMesh().SetMaterial(0, AssetManager::GetInstance().GetMaterialWeakPtr("defaultUnlitMaterial").lock());
-			colliderobj->transform.SetPosition(this->transform.GetGlobalPosition());
-			colliderobj->transform.SetRotationQuaternion(this->transform.GetGlobalRotation());
-			DirectX::XMFLOAT3 scale(0.01f, 0.01f, rayCastData.distance);
+			colliderobj->GetMesh().SetMaterial(
+				0, AssetManager::GetInstance().GetMaterialWeakPtr("defaultUnlitMaterial").lock());
+			colliderobj->transform.SetPosition(
+				DirectX::XMVectorAdd(posVec, DirectX::XMVectorScale(lookVec, rayCastData.distance / 2)));
+			colliderobj->transform.SetRotationQuaternion(this->camera.lock()->transform.GetGlobalRotation());
+			DirectX::XMFLOAT3 scale(0.01f, 0.01f, rayCastData.distance / 2);
 			colliderobj->transform.SetScale(DirectX::XMLoadFloat3(&scale));
 			// end of rayVis
 		} else {

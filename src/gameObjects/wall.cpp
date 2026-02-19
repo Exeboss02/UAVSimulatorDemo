@@ -22,23 +22,21 @@ void Wall::OnInteract() {
 void Wall::Start(){ 
 	this->MeshObject::Start();
 	Logger::Log("Wall started");
-	this->interactable.lock()->SetOnInteract([&]() { 
-		this->OnInteract(); 
-		});
+
 }
 
 void Wall::SetWAllIndex(int wallIndex) { this->wallIndex = wallIndex; }
 
 
 void Wall::SpawnInteractables() {
-	auto colliderobjWeak = this->factory->CreateGameObjectOfType<BoxCollider>();
-
-	auto colliderobj = colliderobjWeak.lock();
+	auto colliderobj = this->factory->CreateStaticGameObject<BoxCollider>();
+	
 	DirectX::XMFLOAT3 pos(0.0f, 3.0f, 4.5f);
 	colliderobj->transform.SetPosition(DirectX::XMLoadFloat3(&pos));
 	DirectX::XMFLOAT3 scale(0.750f, 0.750f, 0.250f);
 	colliderobj->transform.SetScale(DirectX::XMLoadFloat3(&scale));
 	colliderobj->SetParent(this->GetPtr());
+	colliderobj->SetOnInteract([&]() { this->OnInteract(); });
 
 	this->interactable = colliderobj;
 }
@@ -52,8 +50,7 @@ void Wall::SpawnWallColliders(int wallStateIndex) {
 	switch (wallState) {
 	case (Room::WallState::window || Room::WallState::solid):
 		{
-		auto colliderobjWeak = this->factory->CreateGameObjectOfType<BoxCollider>();
-		auto colliderobj = colliderobjWeak.lock();
+		auto colliderobj = this->factory->CreateStaticGameObject<BoxCollider>();
 		DirectX::XMFLOAT3 pos(0.0f, 3.0f, 4.75f);
 		colliderobj->transform.SetPosition(DirectX::XMLoadFloat3(&pos));
 		DirectX::XMFLOAT3 scale(5.0f, 2.5f, 0.250f);
@@ -65,8 +62,7 @@ void Wall::SpawnWallColliders(int wallStateIndex) {
 		break;
 
 	case (Room::WallState::door): {
-		auto colliderobjWeak = this->factory->CreateGameObjectOfType<BoxCollider>();
-		auto colliderobj = colliderobjWeak.lock();
+		auto colliderobj = this->factory->CreateStaticGameObject<BoxCollider>();
 		DirectX::XMFLOAT3 pos(3.25f, 3.0f, 4.75f);
 		colliderobj->transform.SetPosition(DirectX::XMLoadFloat3(&pos));
 		DirectX::XMFLOAT3 scale(1.75f, 2.5f, 0.250f);
@@ -76,8 +72,7 @@ void Wall::SpawnWallColliders(int wallStateIndex) {
 		this->wallColliders.push_back(colliderobj);
 	}
 	{
-		auto colliderobjWeak = this->factory->CreateGameObjectOfType<BoxCollider>();
-		auto colliderobj = colliderobjWeak.lock();
+		auto colliderobj = this->factory->CreateStaticGameObject<BoxCollider>();
 		DirectX::XMFLOAT3 pos(-3.25f, 3.0f, 4.75f);
 		colliderobj->transform.SetPosition(DirectX::XMLoadFloat3(&pos));
 		DirectX::XMFLOAT3 scale(1.75f, 2.5f, 0.250f);

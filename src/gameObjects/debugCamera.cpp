@@ -64,7 +64,7 @@ void DebugCamera::Tick() {
 }
 
 void DebugCamera::shootRay() {
-	const DirectX::XMVECTOR lookVec = this->transform.GetDirectionVector();
+	const DirectX::XMVECTOR lookVec = DirectX::XMVector3Normalize(this->transform.GetDirectionVector());
 	const DirectX::XMVECTOR posVec = this->transform.GetPosition(); 
 	//{
 	//	Ray ray{Vector3D{posVec}, Vector3D{lookVec}};
@@ -104,7 +104,9 @@ void DebugCamera::shootRay() {
 		if (didHit) {
 
 			//std::shared_ptr<GameObject> hitCollider = 
-			rayCastData.hitColider.lock()->Interact();
+			auto collider = rayCastData.hitColider.lock();
+			collider->Interact();
+
 			//std::weak_ptr<GameObject> weakParent = hitCollider->GetParent(); 
 			//if (!weakParent.expired()) {
 			//	std::shared_ptr<GameObject> strongParent = weakParent.lock();
@@ -118,9 +120,9 @@ void DebugCamera::shootRay() {
 			auto colliderobj = colliderobjWeak.lock();
 			colliderobj->SetMesh(meshdata);
 			colliderobj->GetMesh().SetMaterial(0, AssetManager::GetInstance().GetMaterialWeakPtr("defaultUnlitMaterial").lock());
-			colliderobj->transform.SetPosition(this->transform.GetGlobalPosition());
+			colliderobj->transform.SetPosition(DirectX::XMVectorAdd(this->transform.GetGlobalPosition(), DirectX::XMVectorScale(lookVec, rayCastData.distance / 2)));
 			colliderobj->transform.SetRotationQuaternion(this->transform.GetGlobalRotation());
-			DirectX::XMFLOAT3 scale(0.01f, 0.01f, rayCastData.distance);
+			DirectX::XMFLOAT3 scale(0.01f, 0.01f, rayCastData.distance / 2);
 			colliderobj->transform.SetScale(DirectX::XMLoadFloat3(&scale));
 			// end of rayVis
 		} 

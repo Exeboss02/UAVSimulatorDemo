@@ -1,6 +1,7 @@
 #include "UI/canvasObject.h"
 #include "UI/button.h"
 #include "UI/canvas.h"
+#include "UI/image.h"
 #include "UI/text.h"
 #include "gameObjects/cameraObject.h"
 #include "rendering/renderQueue.h"
@@ -174,10 +175,13 @@ void UI::CanvasObject::ShowInHierarchy() {
 		}
 		if (ImGui::Selectable("Image")) {
 			if (this->factory) {
-				auto newWidgetWeak = this->factory->CreateGameObjectOfType<UI::Widget>();
+				auto newWidgetWeak = this->factory->CreateGameObjectOfType<UI::Image>();
 				if (!newWidgetWeak.expired()) {
 					auto newWidget = newWidgetWeak.lock();
 					newWidget->SetName("Image");
+					newWidget->SetPosition({50, 50});
+					newWidget->SetSize({100, 100});
+					newWidget->SetImage("assets/images/test.png");
 					std::weak_ptr<GameObject> me = this->GetPtr();
 					newWidget->SetParent(me);
 					this->AddChild(std::static_pointer_cast<UI::Widget>(newWidget));
@@ -205,7 +209,7 @@ void UI::CanvasObject::ShowInHierarchy() {
 	}
 
 	if (ImGui::Button("Clear Canvas Children")) {
-		canvas->Clear();
+		this->Clear();
 	}
 }
 

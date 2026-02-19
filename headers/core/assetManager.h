@@ -1,39 +1,43 @@
 #pragma once
-#include "gameObjects/mesh.h"
-#include <vector>
-#include <unordered_map>
 #include "d3d11.h"
+#include "gameObjects/mesh.h"
+#include <unordered_map>
+#include <vector>
 
 #include "gameObjects/meshObjData.h"
 
 #include "../headers/core/audio/soundEngine.h"
 #include "gameObjects/objectLoader.h"
-#include "rendering/texture.h"
 #include "rendering/shader.h"
+#include "rendering/texture.h"
 
 #include "rendering/genericMaterial.h"
 #include "rendering/unlitMaterial.h"
 
-
-class AssetManager
-{
+class AssetManager {
 public:
-	
 	AssetManager(const AssetManager& assetManager) = delete;
 
 	Mesh* GetMeshPtr(std::string ident) { return ident != "" ? this->meshes.at(ident).get() : nullptr; }
 	BaseMaterial* GetMaterialPtr(std::string ident) { return ident != "" ? this->materials.at(ident).get() : nullptr; }
-	std::weak_ptr<BaseMaterial> GetMaterialWeakPtr(std::string ident) { return ident != "" ? this->materials.at(ident) : nullptr; }
+	std::weak_ptr<BaseMaterial> GetMaterialWeakPtr(std::string ident) {
+		return ident != "" ? this->materials.at(ident) : nullptr;
+	}
 
-	void InitializeSoundBank(std::string pathToSoundFolder); //end the path with /
+	void InitializeSoundBank(std::string pathToSoundFolder); // end the path with /
 	void AddSoundClipStandardFolder(std::string filename, std::string id);
 	void AddSoundClip(std::string path, std::string id);
 
 	void SetDevicePointer(ID3D11Device* device);
 
+	ID3D11Device* GetDevicePointer() { return this->d3d11Device; }
+
 	bool GetMaterial(std::string identifier);
 	bool GetMesh(std::string identifier);
 	bool GetTexture(std::string identifier);
+	// Load a texture from an arbitrary image file (PNG/JPEG) and register it under the given identifier
+	bool LoadTextureFromFile(std::string identifier);
+	std::weak_ptr<Texture> GetTextureWeakPtr(std::string identifier);
 	MeshObjData GetMeshObjData(std::string identifier);
 
 	std::string GetPathToSoundFolder();
@@ -64,9 +68,8 @@ private:
 	std::unordered_map<std::string, MeshObjData> meshObjDataSets;
 
 	bool LoadNewGltf(std::string identifier);
-	
+
 	ID3D11Device* d3d11Device = nullptr;
 
 	std::string getCleanPath(std::string pathToFix);
 };
-

@@ -66,37 +66,13 @@ void DebugCamera::Tick() {
 void DebugCamera::shootRay() {
 	const DirectX::XMVECTOR lookVec = DirectX::XMVector3Normalize(this->transform.GetDirectionVector());
 	const DirectX::XMVECTOR posVec = this->transform.GetPosition(); 
-	//{
-	//	Ray ray{Vector3D{posVec}, Vector3D{lookVec}};
-	//	RayCastData rayCastData;
-	//	//Logger::Log("shooting ray");
-	//	// Logger::Log("shooting ray from pos: ", ray.origin.GetX(), " ", ray.origin.GetY(), " ", ray.origin.GetZ());
-	//	// Logger::Log("with direction: ", ray.direction.GetX(), " ", ray.direction.GetY(), " ", ray.direction.GetZ());
-
-	//	bool didHit = PhysicsQueue::GetInstance().castRay(ray, rayCastData);
-	//	std::string hitString;
-	//	if (didHit) {
-
-	//		std::shared_ptr<GameObject> hitCollider = rayCastData.hitColider.lock();
-	//		std::weak_ptr<GameObject> weakParent = hitCollider->GetParent();
-	//		if (!weakParent.expired()) {
-	//			std::shared_ptr<GameObject> strongParent = weakParent.lock();
-	//			strongParent->OnObserve();
-	//		}
-	//	} else {
-	//		hitString = "miss";
-	//	}
-
-	//	//Logger::Log(hitString, " at distance: ", std::to_string(rayCastData.distance));
-	//}
+	
 	if (keyboardInput.LeftClick()) {
 		
 		Ray ray{Vector3D{posVec}, Vector3D{lookVec}};
 		RayCastData rayCastData;
 		Logger::Log("shooting ray");
-		//Logger::Log("shooting ray from pos: ", ray.origin.GetX(), " ", ray.origin.GetY(), " ", ray.origin.GetZ());
-		//Logger::Log("with direction: ", ray.direction.GetX(), " ", ray.direction.GetY(), " ", ray.direction.GetZ());
-
+		
 		
 
 		bool didHit = PhysicsQueue::GetInstance().castRay(ray, rayCastData);

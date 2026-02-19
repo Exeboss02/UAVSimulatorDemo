@@ -171,6 +171,7 @@ void Player::UpdateCamera()
 	{
 		this->showCursor = !this->showCursor;
 		ShowCursor(this->showCursor);
+		this->canShoot = !this->canShoot;
 	}
 
 	if (!this->showCursor) {
@@ -231,7 +232,7 @@ void Player::shootRay() {
 	
 	if (this->keyBoardInput.LeftClick() || this->controllerInput->LeftClick()) {
 
-		if(!this->shootCoolDown.TimeIsUp())
+		if(!this->shootCoolDown.TimeIsUp() || !this->canShoot)
 		{
 			return;
 		}

@@ -24,8 +24,7 @@ void SphereCollider::Tick()
 }
 
 void SphereCollider::Start()
-{
-}
+{ this->Collider::Start(); }
 
 void SphereCollider::LoadFromJson(const nlohmann::json& data) 
 {

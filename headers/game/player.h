@@ -4,6 +4,9 @@
 #include "core/physics/physicsQueue.h"
 #include "core/input/keyboardInput.h"
 #include "gameObjects/cameraObject.h"
+#include "core/audio/audioManager.h"
+#include "core/assetManager.h"
+#include "core/tools.h"
 
 class Player : public RigidBody
 {
@@ -25,6 +28,11 @@ public:
 	void Start() override;
 	
 	void UpdateCamera();
+
+	bool isPlayingMusic = false;
+
+	Timer musicTimer;
+	Timer sfxTimer;
 
 private:
 	float input[2] = {};

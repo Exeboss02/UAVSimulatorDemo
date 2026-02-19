@@ -45,6 +45,12 @@ AudioManager::~AudioManager()
 	if (!alcCloseDevice(this->ALCDevice)) Logger::Error("failed to close AL-device!");
 }
 
+AudioManager& AudioManager::GetInstance()
+{
+	static AudioManager instance;
+	return instance;
+}
+
 void AudioManager::InitializeMusicTrackManager(std::string pathToMusicFolder)
 {
 	this->musicTrackManager.Initialize(pathToMusicFolder);
@@ -100,7 +106,24 @@ MusicTrack* AudioManager::GetMusicTrack(std::string id)
 	return this->musicTrackManager.GetMusicTrack(id);
 }
 
-void AudioManager::Tick()
+void AudioManager::Tick() { this->musicTrackManager.Tick(); }
+
+void AudioManager::SetMasterMusicVolume(float musicMaster)
 {
-	this->musicTrackManager.Tick();
+	this->masterVolume.SetMusicGain(musicMaster);
+}
+
+float AudioManager::GetMasterMusicVolume() const
+{
+	return this->masterVolume.GetMusicGain();
+}
+
+void AudioManager::SetMasterSoundEffectsVolume(float soundEffectsMaster)
+{
+	this->masterVolume.SetSoundEffectsGain(soundEffectsMaster);
+}
+
+float AudioManager::GetMasterSoundEffectsVolume() const
+{
+	return this->masterVolume.GetSoundEffectsGain();
 }

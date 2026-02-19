@@ -43,8 +43,14 @@ SoundClip* SoundBank::GetSoundClip(const std::string id)
 
 	if (!clip)
 	{
-		Logger::Log("couldn't find " + id);
-		return nullptr;
+		this->AddSoundClipStandardFolder(id, id);
+		clip = this->soundClips[id];
+
+		if(!clip)
+		{
+			Logger::Log("couldn't find or load " + id);
+			return nullptr;
+		}
 	}
 
 	return clip;

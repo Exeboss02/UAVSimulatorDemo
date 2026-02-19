@@ -20,6 +20,19 @@ void Player::Start()
 		Logger::Error("Player didn't have camera object!");
 		return;
 	}
+
+	this->musicTimer.Initialize(3);
+	this->sfxTimer.Initialize(0.4f);
+
+	//move listener to audiomanager
+
+
+	//Music
+	AudioManager::GetInstance().InitializeMusicTrackManager("../../assets/audio/music/");
+	AudioManager::GetInstance().SetMasterMusicVolume(0.5f);
+	AudioManager::GetInstance().SetMasterSoundEffectsVolume(1);
+
+	AudioManager::GetInstance().AddMusicTrackStandardFolder("Sneak16.wav", "sneak");
 }
 
 void Player::Tick()
@@ -30,7 +43,23 @@ void Player::Tick()
 	this->input[1] = this->keyBoardInput.GetMovementVector().data()[1];
 	this->UpdateCamera();
 
-	//Logger::Log("linear velocity: " + std::to_string(this->linearVelocity.x) + ", " + std::to_string(this->linearVelocity.y) + ", " + std::to_string(this->linearVelocity.z));
+	float deltaTime = Time::GetInstance().GetDeltaTime();
+	if(deltaTime < 1) //to prevent tick spam when loading scene
+	{
+		this->musicTimer.Tick(deltaTime);
+		this->sfxTimer.Tick(deltaTime);
+	}
+
+	if(this->musicTimer.TimeIsUp() && !isPlayingMusic)
+	{
+		AudioManager::GetInstance().FadeInPlay("sneak", 0, 8);
+		this->isPlayingMusic = true;
+	}
+
+	if(this->sfxTimer.TimeIsUp())
+	{
+
+	}
 }
 
 void Player::PhysicsTick()

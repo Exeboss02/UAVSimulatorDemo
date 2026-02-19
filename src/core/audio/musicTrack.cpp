@@ -1,4 +1,5 @@
 #include "core/audio/musicTrack.h"
+#include "core/audio/audioManager.h"
 
 MusicTrack::MusicTrack()
 {
@@ -81,7 +82,7 @@ void MusicTrack::FadeIn(float startGain, float seconds)
 	this->currentGain = startGain;
 	this->startGain = startGain;
 
-	alSourcef(this->source, AL_GAIN, startGain * MasterVolume::GetInstance().GetMusicGain());
+	alSourcef(this->source, AL_GAIN, startGain * AudioManager::GetInstance().GetMasterMusicVolume());
 }
 
 void MusicTrack::FadeOut(float seconds)
@@ -96,7 +97,7 @@ bool MusicTrack::LoadTrack()
 	alGenBuffers(NUM_BUFFERS, this->buffers);
 
 	alSourcef(this->source, AL_PITCH, this->pitch);
-	alSourcef(this->source, AL_GAIN, this->currentGain * MasterVolume::GetInstance().GetMusicGain());
+	alSourcef(this->source, AL_GAIN, this->currentGain * AudioManager::GetInstance().GetMasterMusicVolume());
 	alSource3f(this->source, AL_POSITION, this->position[0], this->position[1], this->position[2]);
 	alSource3f(this->source, AL_VELOCITY, this->velocity[0], this->velocity[1], this->velocity[2]);
 	alSourcei(this->source, AL_LOOPING, this->audioInstruction.loopSound);
@@ -149,7 +150,7 @@ void MusicTrack::SetGain(float gain)
 	this->currentGain = gain;
 	this->targetGain = gain;
 
-	alSourcef(this->source, AL_GAIN, gain * MasterVolume::GetInstance().GetMusicGain());
+	alSourcef(this->source, AL_GAIN, gain * AudioManager::GetInstance().GetMasterMusicVolume());
 }
 
 void MusicTrack::SetAudioInstruction(AudioInstruction audioInstruction)
@@ -228,7 +229,7 @@ void MusicTrack::UpdateBufferStream()
 			this->currentFadeInTime += deltaTime;
 			this->currentGain = (this->targetGain - this->startGain) * (this->currentFadeInTime / this->fadeInTime) + this->startGain;
 
-			alSourcef(this->source, AL_GAIN, this->currentGain * MasterVolume::GetInstance().GetMusicGain());
+			alSourcef(this->source, AL_GAIN, this->currentGain * AudioManager::GetInstance().GetMasterMusicVolume());
 		}
 
 		if (this->fadeOutTime > 0 && this->currentFadeOutTime < this->fadeOutTime)
@@ -242,7 +243,7 @@ void MusicTrack::UpdateBufferStream()
 				this->Stop();
 			}
 
-			alSourcef(this->source, AL_GAIN, this->currentGain * MasterVolume::GetInstance().GetMusicGain());
+			alSourcef(this->source, AL_GAIN, this->currentGain * AudioManager::GetInstance().GetMasterMusicVolume());
 		}
 	}
 }

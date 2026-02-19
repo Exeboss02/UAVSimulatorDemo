@@ -27,6 +27,8 @@ public:
 	void InitializeSoundBank(std::string pathToSoundFolder); // end the path with /
 	void AddSoundClipStandardFolder(std::string filename, std::string id);
 	void AddSoundClip(std::string path, std::string id);
+	std::string GetPathToSoundFolder();
+	SoundClip* GetSoundClip(std::string path);
 
 	void SetDevicePointer(ID3D11Device* device);
 
@@ -39,9 +41,6 @@ public:
 	bool LoadTextureFromFile(std::string identifier);
 	std::weak_ptr<Texture> GetTextureWeakPtr(std::string identifier);
 	MeshObjData GetMeshObjData(std::string identifier);
-
-	std::string GetPathToSoundFolder();
-	SoundClip* GetSoundClip(std::string path);
 
 	static AssetManager& GetInstance();
 

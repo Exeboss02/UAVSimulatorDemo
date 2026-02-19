@@ -15,8 +15,10 @@
 class AudioManager
 {
 public:
-	AudioManager();
-	~AudioManager();
+	AudioManager(AudioManager& other) = delete;
+	AudioManager& operator=(const AudioManager&) = delete;
+
+	static AudioManager& GetInstance();
 
 	void Tick();
 
@@ -97,10 +99,18 @@ public:
 	/// <returns></returns>
 	MusicTrack* GetMusicTrack(std::string id);
 
+	void SetMasterMusicVolume(float musicMaster);
+	float GetMasterMusicVolume() const;
+	void SetMasterSoundEffectsVolume(float soundEffectsMaster);
+	float GetMasterSoundEffectsVolume() const;
+
 private:
+	AudioManager();
+	~AudioManager();
+
 	ALCdevice* ALCDevice;
 	ALCcontext* ALCContext;
 
 	MusicTrackManager musicTrackManager;
-
+	MasterVolume masterVolume;
 };

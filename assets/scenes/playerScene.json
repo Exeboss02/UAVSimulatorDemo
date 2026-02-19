@@ -241,28 +241,6 @@
       "speed": 18,
       "mouseSensitivity": 0.004,
       "children": [
-    {
-      "fov": 80.0,
-      "transform": {
-        "position": [
-          0.0,
-          4.0,
-          0.0
-        ],
-        "rotation": [
-          0.0,
-          0.0,
-          0.0,
-          1.0
-        ],
-        "scale": [
-          1.0,
-          1.0,
-          1.0
-        ]
-      },
-      "type": "CameraObject"
-    },
       {
       "transform": {
         "position": [

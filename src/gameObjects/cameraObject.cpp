@@ -36,10 +36,10 @@ void CameraObject::SetAspectRatio(float aspectRatio) { this->aspectRatio = aspec
 CameraObject::CameraMatrixContainer CameraObject::GetCameraMatrix(bool transposeViewProjMult) {
 	CameraMatrixContainer matrix{};
 
-	matrix.cameraPosition = GetGlobalPosition();
+	matrix.cameraPosition = this->transform.GetGlobalPosition();
 
 	// View Projection Matrix
-	DirectX::XMVECTOR globalRotation = GetGlobalRotation();
+	DirectX::XMVECTOR globalRotation = this->transform.GetGlobalRotation();
 
 	DirectX::XMVECTOR focusPos = DirectX::XMVectorAdd(
 		matrix.cameraPosition, DirectX::XMVector3Rotate(DirectX::XMVectorSet(0, 0, 1, 0), globalRotation));
@@ -62,9 +62,9 @@ CameraObject::CameraMatrixContainer CameraObject::GetCameraMatrix(bool transpose
 
 DirectX::XMMATRIX CameraObject::GetViewProjectionMatrix(bool transposeViewProjMult) {
 	// View Projection Matrix
-	DirectX::XMVECTOR globalRotation = GetGlobalRotation();
+	DirectX::XMVECTOR globalRotation = this->transform.GetGlobalRotation();
 
-	DirectX::XMVECTOR position = this->GetGlobalPosition();
+	DirectX::XMVECTOR position = this->transform.GetGlobalPosition();
 
 	DirectX::XMVECTOR focusPos =
 		DirectX::XMVectorAdd(position, DirectX::XMVector3Rotate(DirectX::XMVectorSet(0, 0, 1, 0), globalRotation));
@@ -84,9 +84,9 @@ DirectX::XMMATRIX CameraObject::GetViewProjectionMatrix(bool transposeViewProjMu
 	return viewProjMatrix;
 }
 
-DirectX::XMMATRIX CameraObject::GetViewMatrix() const {
-	DirectX::XMVECTOR globalRotation = GetGlobalRotation();
-	DirectX::XMVECTOR position = this->GetGlobalPosition();
+DirectX::XMMATRIX CameraObject::GetViewMatrix() {
+	DirectX::XMVECTOR globalRotation = this->transform.GetGlobalRotation();
+	DirectX::XMVECTOR position = this->transform.GetGlobalPosition();
 
 	DirectX::XMVECTOR focusPos =
 		DirectX::XMVectorAdd(position, DirectX::XMVector3Rotate(DirectX::XMVectorSet(0, 0, 1, 0), globalRotation));

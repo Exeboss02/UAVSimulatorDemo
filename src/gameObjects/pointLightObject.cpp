@@ -19,7 +19,7 @@ PointLightObject::PointLightObject() {
 }
 
 PointLightObject::PointLightContainer PointLightObject::GetPointLightData() {
-	DirectX::XMStoreFloat3(&this->data.position, GetGlobalPosition());
+	DirectX::XMStoreFloat3(&this->data.position, this->transform.GetGlobalPosition());
 
 	for (size_t i = 0; i < 6; i++) {
 		if (this->cameras[i].expired()) {
@@ -80,7 +80,7 @@ void PointLightObject::Start() {
 void PointLightObject::Tick() {
 
 	// feels bad doing this every frame
-	DirectX::XMStoreFloat3(&this->data.position, GetGlobalPosition());
+	DirectX::XMStoreFloat3(&this->data.position, this->transform.GetGlobalPosition());
 
 	for (size_t i = 0; i < 6; i++) {
 		auto& cameraWeak = this->cameras[i];

@@ -26,6 +26,7 @@ void GameObject::SetParent(std::weak_ptr<GameObject> newParent) {
 	}
 
 
+	this->SetHasMovedRecursive();
 	Logger::Log("Set Parent.");
 }
 
@@ -62,11 +63,17 @@ void GameObject::LatePhysicsTick() {
 
 void GameObject::OnDestroy() {}
 
-DirectX::XMMATRIX GameObject::GetGlobalWorldMatrix(bool inverseTranspose) const {
+DirectX::XMMATRIX GameObject::GetGlobalWorldMatrixRecursive(bool inverseTranspose) const {
 	if (this->parent.expired()) {
 		return DirectX::XMMatrixIdentity();
 	} else {
-		return this->parent.lock()->GetGlobalWorldMatrix(inverseTranspose);
+		return this->parent.lock()->GetGlobalWorldMatrixRecursive(inverseTranspose);
+	}
+}
+
+void GameObject::SetHasMovedRecursive() {
+	for (auto& child : this->children) {
+		child.lock()->SetHasMovedRecursive();
 	}
 }
 

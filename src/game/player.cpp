@@ -1,6 +1,6 @@
 #include "game/player.h"
 #include "core/physics/sphereCollider.h"
-
+#include "gameObjects/meshObject.h"
 void Player::Start()
 {
 	this->RigidBody::Start();
@@ -206,14 +206,15 @@ void Player::SaveToJson(nlohmann::json& data)
 
 void Player::shootRay() {
 
-	const DirectX::XMVECTOR lookVec = this->camera.lock()->GetGlobalForward();
-	const DirectX::XMVECTOR posVec = this->camera.lock()->GetGlobalPosition();
+	const DirectX::XMVECTOR lookVec = this->camera.lock()->transform.GetGlobalForward();
+	const DirectX::XMVECTOR posVec = this->camera.lock()->transform.GetGlobalPosition();
 	
 	if (this->keyBoardInput.LeftClick()) {
 
 		Ray ray{Vector3D{posVec}, Vector3D{lookVec}};
 		RayCastData rayCastData;
 		Logger::Log("shooting ray");
+
 		
 
 		bool didHit = PhysicsQueue::GetInstance().castRay(ray, rayCastData);
@@ -222,6 +223,17 @@ void Player::shootRay() {
 
 			rayCastData.hitColider.lock()->Interact();
 			hitString = "hit";
+
+			// rayVis
+			MeshObjData meshdata = AssetManager::GetInstance().GetMeshObjData("TexBox/TextureCube.glb:Mesh_0");
+			auto colliderobjWeak = this->factory->CreateGameObjectOfType<MeshObject>();
+			auto colliderobj = colliderobjWeak.lock();
+			colliderobj->SetMesh(meshdata);
+			colliderobj->transform.SetPosition(this->transform.GetGlobalPosition());
+			colliderobj->transform.SetRotationQuaternion(this->transform.GetGlobalRotation());
+			DirectX::XMFLOAT3 scale(0.01f, 0.01f, rayCastData.distance);
+			colliderobj->transform.SetScale(DirectX::XMLoadFloat3(&scale));
+			// end of rayVis
 		} else {
 			hitString = "miss";
 		}

@@ -153,8 +153,8 @@ void Player::SaveToJson(nlohmann::json& data)
 
 void Player::shootRay() {
 
-	const DirectX::XMVECTOR lookVec = this->camera.lock()->GetGlobalForward();
-	const DirectX::XMVECTOR posVec = this->camera.lock()->GetGlobalPosition();
+	const DirectX::XMVECTOR lookVec = this->camera.lock()->transform.GetGlobalForward();
+	const DirectX::XMVECTOR posVec = this->camera.lock()->transform.GetGlobalPosition();
 	
 	if (this->keyBoardInput.LeftClick()) {
 

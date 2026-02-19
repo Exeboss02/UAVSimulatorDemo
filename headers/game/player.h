@@ -47,7 +47,7 @@ public:
 
 private:
 	float input[2] = {};
-	bool showCursor = false;
+	bool showCursor = true;
 
 	void shootRay();
 };

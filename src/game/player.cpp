@@ -174,7 +174,7 @@ void Player::UpdateCamera()
 		ShowCursor(this->showCursor);
 	}
 
-	if (true) {
+	if (!this->showCursor) {
 		float deltaTime = Time::GetInstance().GetDeltaTime();
 
 		std::array<float, 2> lookVector = this->keyBoardInput.GetLookVector();

@@ -142,7 +142,8 @@ void Scene::DeleteDeleteQueue() {
 }
 
 void Scene::CallStartOnAll() {
-	for (size_t i = 0; i < this->gameObjects.size(); i++) {
+	size_t startSize = this->gameObjects.size();
+	for (size_t i = 0; i < startSize; i++) {
 		std::shared_ptr<GameObject> gameObject = this->gameObjects[i];
 		gameObject->Start();
 	}

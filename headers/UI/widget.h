@@ -6,6 +6,7 @@
 // std
 #include <memory>
 #include <vector>
+
 // json
 #include <nlohmann/json.hpp>
 
@@ -50,6 +51,10 @@ public:
 
 	void SetWidgetMesh(MeshObjData& mesh);
 
+	// Z-order: higher zIndex draws on top
+	int GetZIndex() const;
+	void SetZIndex(int z);
+
 protected:
 	Vec2 position{};
 	Vec2 size{};
@@ -59,6 +64,8 @@ protected:
 
 	Widget* parent = nullptr;
 	std::vector<std::shared_ptr<Widget>> children;
+
+	int zIndex = 0;
 };
 
 } // namespace UI

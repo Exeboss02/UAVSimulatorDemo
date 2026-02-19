@@ -14,6 +14,7 @@ public:
 	~SphereCollider();
 
 	void Tick() override;
+	void Start() override;
 	void LoadFromJson(const nlohmann::json& data) override;
 	void SaveToJson(nlohmann::json& data) override;
 

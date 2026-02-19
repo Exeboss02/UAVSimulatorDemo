@@ -151,7 +151,9 @@ inline bool AStar::AddEdge(std::shared_ptr<AStarVertex> from, std::shared_ptr<AS
 	return true;
 }
 
-inline void AStar::SetGoal(std::shared_ptr<AStarVertex> goal) { this->goal = goal; }
+inline void AStar::SetGoal(std::shared_ptr<AStarVertex> goal) { 
+	this->goal = this->GetVertex(goal->GetGlobalPosition());
+}
 
 /// <summary>
 /// Finds the shortest path between two vertices using the A* pathfinding algorithm.

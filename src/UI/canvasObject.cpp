@@ -1,7 +1,9 @@
 #include "UI/canvasObject.h"
 #include "UI/button.h"
 #include "UI/canvas.h"
+#include "UI/image.h"
 #include "UI/text.h"
+#include "game/crosshair.h"
 #include "gameObjects/cameraObject.h"
 #include "rendering/renderQueue.h"
 
@@ -174,14 +176,36 @@ void UI::CanvasObject::ShowInHierarchy() {
 		}
 		if (ImGui::Selectable("Image")) {
 			if (this->factory) {
-				auto newWidgetWeak = this->factory->CreateGameObjectOfType<UI::Widget>();
+				auto newWidgetWeak = this->factory->CreateGameObjectOfType<UI::Image>();
 				if (!newWidgetWeak.expired()) {
 					auto newWidget = newWidgetWeak.lock();
 					newWidget->SetName("Image");
+					newWidget->SetPosition({50, 50});
+					newWidget->SetSize({100, 100});
+					newWidget->SetImage("assets/images/test.png");
 					std::weak_ptr<GameObject> me = this->GetPtr();
 					newWidget->SetParent(me);
 					this->AddChild(std::static_pointer_cast<UI::Widget>(newWidget));
 
+					RenderQueue::AddUIWidget(newWidget);
+				}
+			}
+		}
+		if (ImGui::Selectable("Crosshair")) {
+			if (this->factory) {
+				auto newWidgetWeak = this->factory->CreateGameObjectOfType<Crosshair>();
+				if (!newWidgetWeak.expired()) {
+					auto newWidget = newWidgetWeak.lock();
+					newWidget->SetName("Crosshair");
+					// Default size centered in canvas
+					auto sz = this->GetCanvas()->GetSize();
+					newWidget->SetSize({32, 32});
+					newWidget->SetPosition({(sz.x - 32.0f) * 0.5f, (sz.y - 32.0f) * 0.5f});
+					newWidget->SetCrosshairImage("assets/images/crosshair.png");
+					newWidget->SetVisible(true);
+					std::weak_ptr<GameObject> me = this->GetPtr();
+					newWidget->SetParent(me);
+					this->AddChild(std::static_pointer_cast<UI::Widget>(newWidget));
 					RenderQueue::AddUIWidget(newWidget);
 				}
 			}
@@ -205,7 +229,7 @@ void UI::CanvasObject::ShowInHierarchy() {
 	}
 
 	if (ImGui::Button("Clear Canvas Children")) {
-		canvas->Clear();
+		this->Clear();
 	}
 }
 

@@ -23,6 +23,10 @@ void SphereCollider::Tick()
 	// this->transform.SetScale(scale);
 }
 
+void SphereCollider::Start()
+{
+}
+
 void SphereCollider::LoadFromJson(const nlohmann::json& data) 
 {
 	this->GameObject3D::LoadFromJson(data);

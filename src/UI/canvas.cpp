@@ -1,4 +1,5 @@
 #include "UI/canvas.h"
+#include "core/window.h"
 
 #include <algorithm>
 
@@ -20,6 +21,16 @@ void UI::Canvas::Clear() { this->children.clear(); }
 const std::vector<std::shared_ptr<UI::Widget>>& UI::Canvas::GetChildren() const { return this->children; }
 
 void UI::Canvas::Update(float dt) {
+	UINT w = Window::GetCurrentWidth();
+	UINT h = Window::GetCurrentHeight();
+
+	if (w > 0 && h > 0) {
+		UI::Vec2 newSize{static_cast<float>(w), static_cast<float>(h)};
+		if (newSize.x != this->size.x || newSize.y != this->size.y) {
+			this->SetSize(newSize);
+		}
+	}
+
 	for (auto& child : children) {
 		if (child && child->isEnabled()) child->Update(dt);
 	}
@@ -32,9 +43,20 @@ void UI::Canvas::Draw() {
 }
 
 std::shared_ptr<UI::Widget> UI::Canvas::HitTest(Vec2 point) const {
-	for (auto it = this->children.rbegin(); it != this->children.rend(); ++it) {
-		if (!*it || !(*it)->IsVisible() || !(*it)->isEnabled()) continue;
-		auto hit = HitTestRecursive(*it, point);
+	// Consider z-index: test top-most first (higher z drawn on top)
+	std::vector<std::shared_ptr<Widget>> live;
+	live.reserve(this->children.size());
+	for (const auto& c : this->children) {
+		if (!c || !c->IsVisible() || !c->isEnabled()) continue;
+		live.push_back(c);
+	}
+
+	std::sort(live.begin(), live.end(), [](const std::shared_ptr<Widget>& a, const std::shared_ptr<Widget>& b) {
+		return a->GetZIndex() > b->GetZIndex();
+	});
+
+	for (const auto& c : live) {
+		auto hit = HitTestRecursive(c, point);
 		if (hit) return hit;
 	}
 

@@ -1,19 +1,17 @@
 #include "rendering/renderQueue.h"
 #include "UI/widget.h"
+#include "core/filepathHolder.h"
 #include "gameObjects/gameObject.h"
 #include "gameObjects/meshObject.h"
 #include "gameObjects/pointLightObject.h"
 #include "gameObjects/spotlightObject.h"
-#include "core/filepathHolder.h"
 
 RenderQueue* RenderQueue::instance = nullptr;
 
 RenderQueue::RenderQueue(std::vector<std::weak_ptr<MeshObject>>& meshRenderQueue,
 						 std::vector<std::weak_ptr<SpotlightObject>>& lightRenderQueue,
-						 std::vector<std::weak_ptr<PointLightObject>>& pointLightRenderQueue,
-						QuadTree& staticObjects,
-	std::vector<std::weak_ptr<UI::Widget>>& uiRenderQueue
-)
+						 std::vector<std::weak_ptr<PointLightObject>>& pointLightRenderQueue, QuadTree& staticObjects,
+						 std::vector<std::weak_ptr<UI::Widget>>& uiRenderQueue)
 	: meshRenderQueue(meshRenderQueue), lightRenderQueue(lightRenderQueue),
 	  pointLightRenderQueue(pointLightRenderQueue), staticObjects(staticObjects), uiRenderQueue(uiRenderQueue) {
 	Logger::Log("Initializing RenderQueue.");
@@ -41,7 +39,7 @@ void RenderQueue::AddMeshObject(std::weak_ptr<GameObject> newMeshObject) {
 		Logger::Error("Tried to add object to queue, but RenderQueue is not initialized.");
 		throw std::runtime_error("Fatal error in RenderQueue.");
 	}
-	
+
 	if (newMeshObject.lock()->GetIsStatic()) {
 		RenderQueue::instance->staticObjects.AddElement(static_pointer_cast<MeshObject>(newMeshObject.lock()));
 	} else {
@@ -49,8 +47,7 @@ void RenderQueue::AddMeshObject(std::weak_ptr<GameObject> newMeshObject) {
 			RenderQueue::instance->meshRenderQueue.begin(), RenderQueue::instance->meshRenderQueue.end(),
 			[&](std::weak_ptr<MeshObject> meshObj) { return meshObj.lock().get() == newMeshObject.lock().get(); });
 		if (found != RenderQueue::instance->meshRenderQueue.end()) {
-			// This shouldn't really be a warning
-			Logger::Warn("Tried to add object to queue, but it's already there.");
+			// Already present
 			return;
 		}
 
@@ -97,6 +94,12 @@ void RenderQueue::AddUIWidget(std::weak_ptr<GameObject> newUIWidget) {
 		throw std::runtime_error("Fatal error in RenderQueue.");
 	}
 
+	// Prevent pushing the same widget multiple times
+	UI::Widget* newPtr = std::static_pointer_cast<UI::Widget>(newUIWidget.lock()).get();
+	for (const auto& w : instance->uiRenderQueue) {
+		if (w.expired()) continue;
+		if (w.lock().get() == newPtr) return;
+	}
 	instance->uiRenderQueue.push_back(std::static_pointer_cast<UI::Widget>(newUIWidget.lock()));
 }
 
@@ -166,8 +169,7 @@ void RenderQueue::ClearAllQueues() {
 	Logger::Log("Clearing render queue successful.");
 }
 
-void RenderQueue::ChangeSkybox(std::string filename) 
-{ 
+void RenderQueue::ChangeSkybox(std::string filename) {
 	if (!instance) {
 		Logger::Error("Tried to change skybox, but RenderQueue is not initialized.");
 		throw std::runtime_error("Fatal error in RenderQueue.");

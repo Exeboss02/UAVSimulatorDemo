@@ -19,6 +19,7 @@
           50.0
         ]
       },
+      "name": "floor",
       "type": "GameObject3D",
       "children": [
       {
@@ -91,6 +92,7 @@
           35.0
         ]
       },
+      "pillar": "pillar",
       "type": "GameObject3D",
       "children": [
       {
@@ -164,6 +166,7 @@
           40.0
         ]
       },
+      "name": "otherPillar",
       "type": "GameObject3D",
       "children": [
       {
@@ -236,182 +239,16 @@
           1.0
         ]
       },
+      "name": "player",
       "type": "Player",
       "gravity": true,
       "speed": 18,
-      "mouseSensitivity": 0.004,
-      "children": [
-      {
-      "transform": {
-        "position": [
-          0.0,
-          0.0,
-          0.0
-        ],
-        "rotation": [
-          0.0,
-          0.0,
-          0.0,
-          1.0
-        ],
-        "scale": [
-          2.0,
-          2.0,
-          2.0
-        ]
-      },
-      "type": "SphereCollider",
-      "tag": 1,
-      "targetTag": 0,
-      "solid": true,
-      "dynamic": true
+      "mouseSensitivity": 0.004
     },
-    {
-      "transform": {
-        "position": [
-          0.0,
-          1.0,
-          0.0
-        ],
-        "rotation": [
-          0.0,
-          0.0,
-          0.0,
-          1.0
-        ],
-        "scale": [
-          2.0,
-          2.0,
-          2.0
-        ]
-      },
-      "type": "SphereCollider",
-      "tag": 1,
-      "targetTag": 3,
-      "solid": true,
-      "dynamic": true
-    },
-    {
-      "transform": {
-        "position": [
-          0.0,
-          2.0,
-          0.0
-        ],
-        "rotation": [
-          0.0,
-          0.0,
-          0.0,
-          1.0
-        ],
-        "scale": [
-          2.0,
-          2.0,
-          2.0
-        ]
-      },
-      "type": "SphereCollider",
-      "tag": 1,
-      "targetTag": 3,
-      "solid": true,
-      "dynamic": true
-    }
-      ]
-    },
-    {
-      "children": [
-        {
-          "children": [
-            {
-              "children": [
-                {
-                  "meshIdentifier": "TexBox/TextureCube.glb:Mesh_0",
-                  "transform": {
-                    "position": [
-                      0.0,
-                      2.0,
-                      0.0
-                    ],
-                    "rotation": [
-                      0.0,
-                      0.0,
-                      0.0,
-                      1.0
-                    ],
-                    "scale": [
-                      1.0,
-                      1.0,
-                      1.0
-                    ]
-                  },
-                  "type": "MeshObject"
-                }
-              ],
-              "fov": 120.0,
-              "transform": {
-                "position": [
-                  0.0,
-                  2.0,
-                  0.0
-                ],
-                "rotation": [
-                  0.0,
-                  0.0,
-                  0.0,
-                  1.0
-                ],
-                "scale": [
-                  1.0,
-                  1.0,
-                  1.0
-                ]
-              },
-              "type": "CameraObject"
-            }
-          ],
-          "meshIdentifier": "TexBox/TextureCube.glb:Mesh_0",
-          "transform": {
-            "position": [
-              5.0,
-              0.0,
-              0.0
-            ],
-            "rotation": [
-              0.0,
-              0.0,
-              0.0,
-              1.0
-            ],
-            "scale": [
-              1.0,
-              1.0,
-              1.0
-            ]
-          },
-          "type": "MeshObject"
-        }
-      ],
-      "meshIdentifier": "CS/cs2.glb:Mesh_0",
-      "transform": {
-        "position": [
-          0.0,
-          0.0,
-          10.0
-        ],
-        "rotation": [
-          0.0,
-          0.0,
-          0.0,
-          1.0
-        ],
-        "scale": [
-          1.0,
-          1.0,
-          1.0
-        ]
-      },
-      "type": "MeshObject"
-    },
+
+
+
+
     {
       "angleRadians": 6.2831854820251465,
       "color": [

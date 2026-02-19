@@ -1,6 +1,16 @@
 #include "game/player.h"
 #include "core/physics/sphereCollider.h"
 #include "gameObjects/meshObject.h"
+
+Player::Player()
+{
+	this->controllerInput = std::make_shared<ControllerInput>(0);
+}
+
+Player::~Player()
+{
+}
+
 void Player::Start()
 {
 	this->RigidBody::Start();
@@ -52,9 +62,7 @@ void Player::Start()
 
 
 	this->musicTimer.Initialize(2);
-	this->sfxTimer.Initialize(0.5f);
-
-	//move listener to audiomanager
+	this->sfxTimer.Initialize(0.4f);
 
 
 	//Master Volume
@@ -83,12 +91,14 @@ void Player::Tick()
 {
 	this->RigidBody::Tick();
 
+	InputManager::GetInstance().ReadControllerInput(this->controllerInput->GetControllerIndex());
+
 	DirectX::XMVECTOR position = this->transform.GetPosition();
 	AudioManager::GetInstance().SetListenerPosition(position.m128_f32[0], position.m128_f32[1], position.m128_f32[2]);
 	this->speaker.lock()->SetSourcePosition(position.m128_f32[0], position.m128_f32[1], position.m128_f32[2]);
 
-	this->input[0] = this->keyBoardInput.GetMovementVector().data()[0];
-	this->input[1] = this->keyBoardInput.GetMovementVector().data()[1];
+	this->input[0] = this->keyBoardInput.GetMovementVector().data()[0] + this->controllerInput->GetMovementVector().data()[0];
+	this->input[1] = this->keyBoardInput.GetMovementVector().data()[1] + this->controllerInput->GetMovementVector().data()[1];
 	this->UpdateCamera();
 	this->shootRay();
 
@@ -164,6 +174,8 @@ void Player::UpdateCamera()
 
 	if (this->showCursor) {
 		std::array<float, 2> lookVector = this->keyBoardInput.GetLookVector();
+		lookVector[0] += this->controllerInput->GetLookVector()[0];
+		lookVector[1] -= this->controllerInput->GetLookVector()[1];
 
 		static float rot[3] = {0, 0, 0};
 
@@ -214,7 +226,7 @@ void Player::shootRay() {
 	const DirectX::XMVECTOR lookVec = this->camera.lock()->transform.GetGlobalForward();
 	const DirectX::XMVECTOR posVec = this->camera.lock()->transform.GetGlobalPosition();
 	
-	if (this->keyBoardInput.LeftClick()) {
+	if (this->keyBoardInput.LeftClick() || this->controllerInput->LeftClick()) {
 
 		std::shared_ptr<SoundSourceObject> lockedSpeaker = this->speaker.lock();
 		lockedSpeaker->Play(this->soundClips[3]); //shoot sound

@@ -4,7 +4,7 @@
 #include "utilities/logger.h"
 #include "utilities/time.h"
 #include "core/physics/physicsQueue.h"
-
+#include <DirectXMath.h>
 #include "imgui.h"
 
 void DebugCamera::Tick() {
@@ -97,6 +97,8 @@ void DebugCamera::shootRay() {
 		//Logger::Log("shooting ray from pos: ", ray.origin.GetX(), " ", ray.origin.GetY(), " ", ray.origin.GetZ());
 		//Logger::Log("with direction: ", ray.direction.GetX(), " ", ray.direction.GetY(), " ", ray.direction.GetZ());
 
+		
+
 		bool didHit = PhysicsQueue::GetInstance().castRay(ray, rayCastData);
 		std::string hitString;
 		if (didHit) {
@@ -109,6 +111,18 @@ void DebugCamera::shootRay() {
 			//	strongParent->OnInteract();
 			//}
 			hitString = "hit";
+
+			// rayVis
+			MeshObjData meshdata = AssetManager::GetInstance().GetMeshObjData("TexBox/TextureCube.glb:Mesh_0");
+			auto colliderobjWeak = this->factory->CreateGameObjectOfType<MeshObject>();
+			auto colliderobj = colliderobjWeak.lock();
+			colliderobj->SetMesh(meshdata);
+			colliderobj->GetMesh().SetMaterial(0, AssetManager::GetInstance().GetMaterialWeakPtr("defaultUnlitMaterial").lock());
+			colliderobj->transform.SetPosition(this->transform.GetGlobalPosition());
+			colliderobj->transform.SetRotationQuaternion(this->transform.GetGlobalRotation());
+			DirectX::XMFLOAT3 scale(0.01f, 0.01f, rayCastData.distance);
+			colliderobj->transform.SetScale(DirectX::XMLoadFloat3(&scale));
+			// end of rayVis
 		} 
 		else {
 			hitString = "miss";

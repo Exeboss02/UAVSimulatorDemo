@@ -179,7 +179,7 @@ private:
 
 	GameObject3D* myGameObject;
 
-	enum TransformComponent { SCALE, ROTATION, TRANSLATAION };
+	enum TransformComponent { SCALE, ROTATION, TRANSLATION };
 
 	DirectX::XMVECTOR GetDecomposedWorldMatrix(const TransformComponent& component);
 

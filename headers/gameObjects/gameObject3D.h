@@ -20,7 +20,7 @@ public:
 	/// <summary>
 	/// Engine only. Tells children that they have moved.
 	/// </summary>
-	void SetHasMovedRecursive();
+	void SetHasMovedRecursive() override;
 
 
 	virtual void LoadFromJson(const nlohmann::json& data) override;

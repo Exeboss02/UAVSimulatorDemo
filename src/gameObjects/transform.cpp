@@ -144,7 +144,7 @@ DirectX::XMVECTOR Transform::GetCameraRotationQuaternion(float yawDegrees, float
 
 DirectX::XMVECTOR Transform::GetGlobalPosition() {
 	if (this->recalculateGlobalPosition) {
-		this->globalPosition = GetDecomposedWorldMatrix(TransformComponent::TRANSLATAION);
+		this->globalPosition = GetDecomposedWorldMatrix(TransformComponent::TRANSLATION);
 		this->recalculateGlobalPosition = false;
 	}
 
@@ -153,7 +153,7 @@ DirectX::XMVECTOR Transform::GetGlobalPosition() {
 
 DirectX::XMVECTOR Transform::GetGlobalRotation() {
 	if (this->recalculateGlobalRotation) {
-		this->globalRotation = GetDecomposedWorldMatrix(TransformComponent::ROTATION);
+		this->globalRotation = DirectX::XMQuaternionNormalize(GetDecomposedWorldMatrix(TransformComponent::ROTATION));
 		this->recalculateGlobalRotation = false;
 	}
 
@@ -183,6 +183,7 @@ DirectX::XMVECTOR Transform::GetGlobalUp() {
 
 void Transform::HasMoved() { 
 	this->recalculateGlobalWorldMatrix = true; 
+	this->recalculateGlobalWorldMatrixInverseTransposed = true;
 	this->recalculateGlobalPosition = true; 
 	this->recalculateGlobalRotation = true; 
 	this->recalculateGlobalScale = true; 
@@ -218,7 +219,7 @@ DirectX::XMVECTOR Transform::GetDecomposedWorldMatrix(const TransformComponent& 
 		return scale;
 	case TransformComponent::ROTATION:
 		return rotationQuaternion;
-	case TransformComponent::TRANSLATAION:
+	case TransformComponent::TRANSLATION:
 		return translation;
 	default:
 		throw std::runtime_error("Failed Transform::GetDecomposedWorldMatrix()");

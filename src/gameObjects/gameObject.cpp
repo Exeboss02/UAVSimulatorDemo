@@ -26,6 +26,7 @@ void GameObject::SetParent(std::weak_ptr<GameObject> newParent) {
 	}
 
 
+	this->SetHasMovedRecursive();
 	Logger::Log("Set Parent.");
 }
 

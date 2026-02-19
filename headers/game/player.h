@@ -13,14 +13,15 @@
 class Player : public RigidBody
 {
 public:
-	Player() = default;
-	~Player() = default;
+	Player();
+	~Player();
 
 	std::vector<SoundClip*> soundClips;
 	std::weak_ptr<SoundSourceObject> speaker;
 
 	float speed = 12;
-	float mouseSensitivity = 0.006f;
+	float mouseSensitivity = 0.05f;
+	float stickSensitivity = 1100.0f;
 	float cameraFov = 80.0f;
 
 	DirectX::XMVECTOR moveVector = {};
@@ -29,6 +30,7 @@ public:
 	void SaveToJson(nlohmann::json& data) override;
 
 	KeyboardInput keyBoardInput;
+	std::shared_ptr<ControllerInput> controllerInput;
 	std::weak_ptr<CameraObject> camera;
 
 	void PhysicsTick() override;
@@ -41,10 +43,11 @@ public:
 
 	Timer musicTimer;
 	Timer sfxTimer;
+	Timer shootCoolDown;
 
 private:
 	float input[2] = {};
-	bool showCursor = false;
+	bool showCursor = true;
 
 	void shootRay();
 };

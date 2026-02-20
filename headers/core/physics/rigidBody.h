@@ -68,14 +68,14 @@ public:
 	/// </summary>
 	/// <param name="rigidbody"></param>
 	/// <returns></returns>
-	bool Collision(std::weak_ptr<RigidBody> rigidbody);
+	bool Collision(std::weak_ptr<RigidBody> rigidbody, int& nrOfCollisionTestsOnTick);
 
 	/// <summary>
 	/// Checks and resolves collision with other Collider according to collider children's settings
 	/// </summary>
 	/// <param name="collider"></param>
 	/// <returns></returns>
-	bool Collision(std::weak_ptr<Collider> collider);
+	bool Collision(std::weak_ptr<Collider> collider, int& nrOfCollisionTestsOnTick);
 
 
 private:

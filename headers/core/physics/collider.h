@@ -73,6 +73,13 @@ public:
 	/// </summary>
 	/// <param name="other"></param>
 	/// <returns></returns>
+	bool Collision(Collider* other, int& nrOfCollisionTestsOnTick);
+
+	/// <summary>
+	/// USE THIS - Checks for collisions and automatically resolves them based on collider settings
+	/// </summary>
+	/// <param name="other"></param>
+	/// <returns></returns>
 	bool Collision(Collider* other, DirectX::XMVECTOR& contactNormal);
 
 	/// <summary>

@@ -29,6 +29,10 @@ enum Tag
 	GROUND,
 	FLOOR,
 	OBJECT,
+	WALL,
+	INTERACTABLE,
+	DISTANCE,
+	NOIGNORE
 };
 
 enum ColliderType
@@ -129,7 +133,7 @@ public:
 
 	ColliderType type = ColliderType::NONE;
 	Tag tag = Tag::OBJECT;
-	Tag targetTag = Tag::OBJECT;
+	Tag ignoreTag = Tag::NOIGNORE;
 	PhysicsMaterial physicsMaterial;
 	//DirectX::XMFLOAT3 previousPosition = {};
 	bool solid = true;

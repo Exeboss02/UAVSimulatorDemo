@@ -12,7 +12,7 @@ void PhysicsQueue::UpdatePhysicsPositions()
         if(!rigidBody) continue;
 
         rigidBody->SetPreviousPhysicsPosition(rigidBody->GetPhysicsPosition());
-        rigidBody->SetPhysicsPosition(rigidBody->transform.GetPosition());
+        rigidBody->SetPhysicsPosition(rigidBody->transform.GetGlobalPosition());
     }
 }
 
@@ -26,7 +26,7 @@ PhysicsQueue& PhysicsQueue::GetInstance()
 	return instance;
 }
 
-int PhysicsQueue::GetPhysicsTickCounter() 
+int PhysicsQueue::GetPhysicsTickCounter()
 {
     return this->physicsTickCounter; 
 }
@@ -103,7 +103,7 @@ void PhysicsQueue::SolveCollisions() {
             continue;
         }
 
-        DirectX::XMVECTOR rigidBodyPosition = thisRigidBody->transform.GetPosition();
+        DirectX::XMVECTOR rigidBodyPosition = thisRigidBody->transform.GetGlobalPosition();
 
         for (int j = i - 1; j >= 0; j--)
         {
@@ -115,7 +115,7 @@ void PhysicsQueue::SolveCollisions() {
                 continue;
             }
 
-            DirectX::XMVECTOR otherRigidBodyPosition = otherRigidBody->transform.GetPosition();
+            DirectX::XMVECTOR otherRigidBodyPosition = otherRigidBody->transform.GetGlobalPosition();
             DirectX::XMVECTOR distanceVector = DirectX::XMVectorSubtract(rigidBodyPosition, otherRigidBodyPosition);
             float distanceSquared = DirectX::XMVectorGetX(DirectX::XMVector3LengthSq(distanceVector));
 
@@ -135,7 +135,7 @@ void PhysicsQueue::SolveCollisions() {
             continue;
         }
 
-        DirectX::XMVECTOR colliderPosition = thisCollider->transform.GetPosition();
+        DirectX::XMVECTOR colliderPosition = thisCollider->transform.GetGlobalPosition();
 
         for (int j = i - 1; j >= 0; j--)
         {
@@ -147,11 +147,14 @@ void PhysicsQueue::SolveCollisions() {
                 continue;
             }
 
-            DirectX::XMVECTOR otherColliderPosition = otherCollider->transform.GetPosition();
+            DirectX::XMVECTOR otherColliderPosition = otherCollider->transform.GetGlobalPosition();
             DirectX::XMVECTOR distanceVector = DirectX::XMVectorSubtract(colliderPosition, otherColliderPosition);
             float distanceSquared = DirectX::XMVectorGetX(DirectX::XMVector3LengthSq(distanceVector));
 
-            if(distanceSquared >= this->colliderCullingDistanceSquared) continue; //early exit if colliders are too far apart
+            if(thisCollider->ignoreTag != Tag::DISTANCE || otherCollider->ignoreTag != Tag::DISTANCE)
+            {
+                if(distanceSquared >= this->colliderCullingDistanceSquared) continue; //early exit if colliders are too far apart
+            }
 
             thisCollider->Collision(otherCollider.get(), this->nrOfCollisionTestOnTick);
         }
@@ -167,7 +170,7 @@ void PhysicsQueue::SolveCollisions() {
             continue;
         }
 
-        DirectX::XMVECTOR rigidBodyPosition = rigidBody->transform.GetPosition();
+        DirectX::XMVECTOR rigidBodyPosition = rigidBody->transform.GetGlobalPosition();
 
         for (int j = strayColliders.size() - 1; j >= 0; j--)
         {
@@ -179,17 +182,20 @@ void PhysicsQueue::SolveCollisions() {
                 continue;
             }
 
-            DirectX::XMVECTOR colliderPosition = collider->transform.GetPosition();
+            DirectX::XMVECTOR colliderPosition = collider->transform.GetGlobalPosition();
             DirectX::XMVECTOR distanceVector = DirectX::XMVectorSubtract(rigidBodyPosition, colliderPosition);
             float distanceSquared = DirectX::XMVectorGetX(DirectX::XMVector3LengthSq(distanceVector));
 
-            if(distanceSquared >= this->colliderCullingDistanceSquared) continue; //early exit if colliders are too far apart
+            if(collider->ignoreTag != Tag::DISTANCE)
+            {
+                if(distanceSquared >= this->colliderCullingDistanceSquared) continue; //early exit if colliders are too far apart
+            }
 
             rigidBody->Collision(collider, this->nrOfCollisionTestOnTick);
         }
     }
 
-    Logger::Log("nr of collision tests: ", std::to_string(this->nrOfCollisionTestOnTick));
+    //Logger::Log("nr of collision tests: ", std::to_string(this->nrOfCollisionTestOnTick));
     this->nrOfCollisionTestOnTick = 0;
 }
 

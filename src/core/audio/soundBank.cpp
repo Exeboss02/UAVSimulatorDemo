@@ -1,4 +1,5 @@
 #include "core/audio/soundBank.h"
+#include "core/filepathHolder.h"
 
 SoundBank::SoundBank()
 {
@@ -24,7 +25,7 @@ void SoundBank::Initialize(std::string pathToSoundFolder)
 
 void SoundBank::AddSoundClipStandardFolder(const std::string filename, const std::string id)
 {
-	this->CreateSoundBuffer(this->pathToSoundFolder + filename, id);
+	this->CreateSoundBuffer((FilepathHolder::GetAssetsDirectory() / "audio" / "soundeffects" / filename).string(), id);
 }
 
 void SoundBank::AddSoundClip(const std::string path, const std::string id)

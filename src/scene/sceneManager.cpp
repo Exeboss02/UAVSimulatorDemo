@@ -8,6 +8,7 @@
 #include "gameObjects/pointLightObject.h"
 #include "gameObjects/room.h"
 #include "gameObjects/turret.h"
+#include "game/gameManager.h"
 
 // Very good macro, please don't remove
 #define NAMEOF(x) #x
@@ -38,19 +39,17 @@ SceneManager::SceneManager(Renderer* rend) : mainScene(nullptr), renderer(rend),
 	this->objectFromString.RegisterType<Crosshair>(NAMEOF(Crosshair));
 	this->objectFromString.RegisterType<UI::Image>(NAMEOF(UI::Image));
 
+	// Game specific
 	this->objectFromString.RegisterType<Player>(NAMEOF(Player)); // Game specific
+	this->objectFromString.RegisterType<GameManager>(NAMEOF(GameManager));
 
 	CreateNewScene(this->emptyScene);
 	this->emptyScene->CreateGameObjectOfType<CameraObject>();
-
-	//Initialize musicTrackManager and soundBank
-	AudioManager::GetInstance().InitializeMusicTrackManager("../../assets/audio/music/");
-	AssetManager::GetInstance().InitializeSoundBank("../../assets/audio/soundeffects/");
 }
 
 void SceneManager::SceneTick() {
 #ifdef TIMER_DEBUG
-	ImGui::Begin("Scen tick");
+	ImGui::Begin("Scene tick");
 	const auto start{std::chrono::steady_clock::now()};
 #endif
 
@@ -81,7 +80,7 @@ void SceneManager::LoadScene(Scenes scene) {
 		LoadSceneFromFile((FilepathHolder::GetAssetsDirectory() / "scenes" / "MainMenu.scene").string());
 		break;
 	case Scenes::GAME:
-		Logger::Warn("There is no game scene.");
+		LoadSceneFromFile((FilepathHolder::GetAssetsDirectory() / "scenes" / "SpaceShipScene.json").string());
 		break;
 	case Scenes::END_CREDITS:
 		Logger::Warn("There is no end credits scene.");
@@ -100,6 +99,7 @@ void SceneManager::CreateNewScene(std::shared_ptr<Scene>& scene) {
 	}
 
 	scene = std::make_shared<Scene>();
+	scene->loadSceneCallback = [&](std::string filepath) { this->LoadSceneFromFile(filepath); };
 }
 
 void SceneManager::DeleteScene(std::shared_ptr<Scene>& scene) {
@@ -110,6 +110,7 @@ void SceneManager::DeleteScene(std::shared_ptr<Scene>& scene) {
 
 void SceneManager::LoadSceneFromFile(const std::string& filePath) {
 	CreateNewScene(this->mainScene);
+	this->mainScene->sceneName = filePath;
 
 	this->mainScene->finishedLoading = false;
 

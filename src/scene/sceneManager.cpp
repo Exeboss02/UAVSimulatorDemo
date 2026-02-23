@@ -8,6 +8,7 @@
 #include "gameObjects/pointLightObject.h"
 #include "gameObjects/room.h"
 #include "gameObjects/turret.h"
+#include "gameObjects/enemy.h"
 
 // Very good macro, please don't remove
 #define NAMEOF(x) #x
@@ -29,6 +30,7 @@ SceneManager::SceneManager(Renderer* rend) : mainScene(nullptr), renderer(rend),
 	this->objectFromString.RegisterType<TestPlayer>(NAMEOF(TestPlayer));
 	this->objectFromString.RegisterType<Turret>(NAMEOF(Turret));
 	this->objectFromString.RegisterType<TestEnemy>(NAMEOF(TestEnemy));
+	this->objectFromString.RegisterType<Enemy>(NAMEOF(Enemy));
 
 	// UI widget types
 	this->objectFromString.RegisterType<UI::CanvasObject>(NAMEOF(UI::CanvasObject));

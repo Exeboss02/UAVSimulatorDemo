@@ -15,6 +15,7 @@ public:
 
 	void Start() override;
 
+
 private:
 
 	std::weak_ptr<MeshObject> gunVisual;
@@ -26,4 +27,6 @@ private:
 	Timer musicTimer;
 	Timer sfxTimer;
 	Timer shootCoolDown;
+
+	float damage = 20;
 };

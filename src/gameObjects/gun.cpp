@@ -28,7 +28,7 @@ void Gun::Shoot() {
 	std::string hitString;
 	if (didHit) {
 
-		rayCastData.hitColider.lock()->Interact();
+		rayCastData.hitColider.lock()->Hit(this->damage);
 		hitString = "hit";
 
 		// rayVis

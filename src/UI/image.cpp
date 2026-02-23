@@ -1,7 +1,7 @@
 #include "UI/image.h"
 #include "utilities/logger.h"
-#include <nlohmann/json.hpp>
 #include <DirectXMath.h>
+#include <nlohmann/json.hpp>
 
 void UI::Image::SetImage(const std::string& img) { this->image = img; }
 

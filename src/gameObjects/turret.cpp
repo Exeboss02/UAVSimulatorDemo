@@ -4,7 +4,10 @@
 #include "core/physics/rayCaster.h"
 #include "utilities/time.h"
 
-void Turret::Start() { this->MeshObject::Start(); }
+void Turret::Start() { 
+	this->SetMesh(AssetManager::GetInstance().GetMeshObjData("TexBox/TextureCube.glb:Mesh_0"));
+	this->MeshObject::Start();
+}
 
 void Turret::Tick() {
 	this->MeshObject::Tick();

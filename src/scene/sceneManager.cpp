@@ -3,16 +3,28 @@
 #include "UI/canvasObject.h"
 #include "UI/image.h"
 #include "UI/text.h"
+#include "core/eventManager.h"
 #include "core/filepathHolder.h"
 #include "game/crosshair.h"
+#include "game/events.h"
 #include "gameObjects/pointLightObject.h"
 #include "gameObjects/room.h"
 #include "gameObjects/turret.h"
 
+// std
+#include <Windows.h>
+
 // Very good macro, please don't remove
 #define NAMEOF(x) #x
 
-SceneManager::SceneManager(Renderer* rend) : mainScene(nullptr), renderer(rend), objectFromString(), isPaused(false) {
+// Define static active instance
+SceneManager* SceneManager::activeInstance = nullptr;
+
+SceneManager::SceneManager(Renderer* rend)
+	: mainScene(nullptr), renderer(rend), objectFromString(), isPaused(false),
+	  eventManager(std::make_unique<EventManager>()) {
+	// set active instance for editor/runtime wiring
+	SceneManager::activeInstance = this;
 	this->objectFromString.RegisterType<GameObject>(NAMEOF(GameObject));
 	this->objectFromString.RegisterType<GameObject3D>(NAMEOF(GameObject3D));
 	this->objectFromString.RegisterType<MeshObject>(NAMEOF(MeshObject));
@@ -43,9 +55,28 @@ SceneManager::SceneManager(Renderer* rend) : mainScene(nullptr), renderer(rend),
 	CreateNewScene(this->emptyScene);
 	this->emptyScene->CreateGameObjectOfType<CameraObject>();
 
-	//Initialize musicTrackManager and soundBank
+	// Initialize musicTrackManager and soundBank
 	AudioManager::GetInstance().InitializeMusicTrackManager("../../assets/audio/music/");
 	AssetManager::GetInstance().InitializeSoundBank("../../assets/audio/soundeffects/");
+}
+
+SceneManager* SceneManager::GetActive() { return SceneManager::activeInstance; }
+
+void SceneManager::WireButtonEvents(UI::Button* button) {
+	if (!button) return;
+	int clickId = button->GetOnClickEventID();
+	int pressId = button->GetOnPressedEventID();
+	int releaseId = button->GetOnReleasedEventID();
+
+	if (clickId != 0) {
+		button->SetOnClick([this, clickId]() { this->eventManager->Trigger(clickId); });
+	}
+	if (pressId != 0) {
+		button->SetOnPressed([this, pressId]() { this->eventManager->Trigger(pressId); });
+	}
+	if (releaseId != 0) {
+		button->SetOnReleased([this, releaseId]() { this->eventManager->Trigger(releaseId); });
+	}
 }
 
 void SceneManager::SceneTick() {
@@ -81,10 +112,10 @@ void SceneManager::LoadScene(Scenes scene) {
 		LoadSceneFromFile((FilepathHolder::GetAssetsDirectory() / "scenes" / "MainMenu.scene").string());
 		break;
 	case Scenes::GAME:
-		Logger::Warn("There is no game scene.");
+		LoadSceneFromFile((FilepathHolder::GetAssetsDirectory() / "scenes" / "Game.scene").string());
 		break;
 	case Scenes::END_CREDITS:
-		Logger::Warn("There is no end credits scene.");
+		LoadSceneFromFile((FilepathHolder::GetAssetsDirectory() / "scenes" / "EndCredits.scene").string());
 		break;
 	case Scenes::DEMO:
 		LoadSceneFromFile((FilepathHolder::GetAssetsDirectory() / "scenes" / "testresult.json").string());
@@ -103,6 +134,11 @@ void SceneManager::CreateNewScene(std::shared_ptr<Scene>& scene) {
 }
 
 void SceneManager::DeleteScene(std::shared_ptr<Scene>& scene) {
+	// Clear scene-level events to avoid stale callbacks
+	if (this->eventManager) {
+		this->eventManager->ClearAllCallbacks();
+	}
+
 	scene.reset();
 	RenderQueue::ClearAllQueues();
 	Logger::Log("Deleted scene: ", this->currentScenePath);
@@ -123,6 +159,25 @@ void SceneManager::LoadSceneFromFile(const std::string& filePath) {
 
 	this->mainScene->finishedLoading = true;
 	this->mainScene->CallStartOnAll();
+
+	// register listener for Play
+	this->eventManager->RegisterCallback(static_cast<int>(ButtonEvent::PLAY), [this]() {
+		Logger::Log("PLAY event triggered: loading GAME scene");
+		this->LoadScene(SceneManager::Scenes::GAME);
+	});
+
+	// register listener for Exit
+	this->eventManager->RegisterCallback(static_cast<int>(ButtonEvent::EXIT), []() {
+		Logger::Log("EXIT event triggered: posting quit message");
+		PostQuitMessage(0);
+	});
+
+	// After all objects are started, wire any buttons that were created/modified in the editor
+	for (const auto& go : this->mainScene->GetGameObjects()) {
+		if (auto btn = dynamic_cast<UI::Button*>(go.get())) {
+			this->WireButtonEvents(btn);
+		}
+	}
 
 	SetMainCameraInScene(this->mainScene);
 }
@@ -148,6 +203,25 @@ void SceneManager::CreateObjectsFromJsonRecursively(const nlohmann::json& data, 
 		}
 
 		obj->LoadFromJson(objectData);
+
+		if (auto btn = dynamic_cast<UI::Button*>(obj.get())) {
+			int clickEid = 0;
+			int pressedEid = 0;
+			int releasedEid = 0;
+			if (objectData.contains("onClickEvent") && objectData["onClickEvent"].is_number())
+				clickEid = objectData["onClickEvent"].get<int>();
+
+			if (objectData.contains("onPressedEvent") && objectData["onPressedEvent"].is_number())
+				pressedEid = objectData["onPressedEvent"].get<int>();
+
+			if (objectData.contains("onReleasedEvent") && objectData["onReleasedEvent"].is_number())
+				releasedEid = objectData["onReleasedEvent"].get<int>();
+
+			// Fallback to values stored on the Button instance
+			if (clickEid == 0) clickEid = btn->GetOnClickEventID();
+			if (pressedEid == 0) pressedEid = btn->GetOnPressedEventID();
+			if (releasedEid == 0) releasedEid = btn->GetOnReleasedEventID();
+		}
 	}
 }
 

@@ -2,23 +2,30 @@
 
 #include "core/assetManager.h"
 #include "core/audio/soundEngine.h"
+#include "core/physics/collision.h"
+#include "core/physics/rigidBody.h"
+#include "core/physics/testPlayer.h"
+#include "core/tools.h"
+#include "game/player.h"
 #include "gameObjects/SpaceShipObj.h"
 #include "gameObjects/cameraObject.h"
 #include "gameObjects/debugCamera.h"
 #include "gameObjects/meshObject.h"
+#include "gameObjects/testEnemy.h"
 #include "rendering/renderer.h"
-#include "core/physics/rigidBody.h"
-#include "core/physics/collision.h"
 #include "scene/objectFromStringFactory.h"
 #include "utilities/masterVolume.h"
 #include <memory>
 #include <scene/scene.h>
 #include <utilities/logger.h>
-#include "core/physics/rigidBody.h"
-#include "core/physics/testPlayer.h"
-#include "game/player.h"
-#include "gameObjects/testEnemy.h"
-#include "core/tools.h"
+
+#include "core/eventManager.h"
+#include "game/events.h"
+
+// Forward-declare UI::Button to avoid including UI headers here
+namespace UI {
+class Button;
+}
 
 #include <fstream>
 #include <nlohmann/json.hpp>
@@ -29,6 +36,12 @@ public:
 
 	SceneManager(Renderer* rend); // The renderer reference is temporary
 	~SceneManager() = default;
+
+	// Active scene manager access for editor/runtime wiring (nullable)
+	static SceneManager* GetActive();
+
+	// Wire a single UI::Button's stored event IDs to this SceneManager's EventManager
+	void WireButtonEvents(class UI::Button* button);
 
 	void SceneTick();
 
@@ -54,10 +67,15 @@ private:
 	std::shared_ptr<Scene> emptyScene;
 	ObjectFromStringFactory objectFromString;
 
+	std::unique_ptr<EventManager> eventManager;
+
 	Renderer* renderer; // This is temporary
 	std::string currentScenePath;
 
 	std::vector<std::unique_ptr<Mesh>> tempMeshes; // This is also temporary
 
 	bool isPaused;
+
+	// Active instance pointer
+	static SceneManager* activeInstance;
 };

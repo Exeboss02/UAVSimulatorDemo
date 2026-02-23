@@ -41,6 +41,18 @@ public:
     void AddToAllColliders(std::weak_ptr<Collider> collider);
 
     /// <summary>
+    /// Sets the distance at which collision checks stops being performed
+    /// </summary>
+    /// <param name="distanceSquared"></param>
+    void SetColliderCullingDistanceSquared(float distanceSquared);
+
+    /// <summary>
+    /// Gets the distance at which collision checks stops being performed
+    /// </summary>
+    /// <param name="distanceSquared"></param>
+    float GetColliderCullingDistanceSquared();
+
+    /// <summary>
     /// Starts checking and resolving current collisions
     /// </summary>
     void SolveCollisions();
@@ -57,6 +69,9 @@ public:
 private:
     PhysicsQueue();
     ~PhysicsQueue();
+
+    int nrOfCollisionTestOnTick = 0;
+    float colliderCullingDistanceSquared = 25;
 
     int rigidBodyIdCounter = 0;
     int colliderIdCounter = 0;

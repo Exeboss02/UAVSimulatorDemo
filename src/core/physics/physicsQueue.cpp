@@ -12,7 +12,7 @@ void PhysicsQueue::UpdatePhysicsPositions()
         if(!rigidBody) continue;
 
         rigidBody->SetPreviousPhysicsPosition(rigidBody->GetPhysicsPosition());
-        rigidBody->SetPhysicsPosition(rigidBody->transform.GetPosition());
+        rigidBody->SetPhysicsPosition(rigidBody->transform.GetGlobalPosition());
     }
 }
 
@@ -26,7 +26,7 @@ PhysicsQueue& PhysicsQueue::GetInstance()
 	return instance;
 }
 
-int PhysicsQueue::GetPhysicsTickCounter() 
+int PhysicsQueue::GetPhysicsTickCounter()
 {
     return this->physicsTickCounter; 
 }
@@ -82,9 +82,18 @@ void PhysicsQueue::AddToAllColliders(std::weak_ptr<Collider> collider) {
 	this->colliderIdCounter++;
 }
 
-void PhysicsQueue::SolveCollisions()
+void PhysicsQueue::SetColliderCullingDistanceSquared(float distanceSquared)
 {
-    //RigidBody vs RigidBody collisions
+    this->colliderCullingDistanceSquared = distanceSquared;
+}
+
+float PhysicsQueue::GetColliderCullingDistanceSquared() 
+{ 
+    return this->colliderCullingDistanceSquared; 
+}
+
+void PhysicsQueue::SolveCollisions() {
+	//RigidBody vs RigidBody collisions
     for(int i = rigidBodies.size() - 1; i >= 0; i--)
     {
         std::shared_ptr<RigidBody> thisRigidBody = this->rigidBodies[i].lock();
@@ -93,6 +102,8 @@ void PhysicsQueue::SolveCollisions()
             this->rigidBodies.erase(this->rigidBodies.begin() + i);
             continue;
         }
+
+        DirectX::XMVECTOR rigidBodyPosition = thisRigidBody->transform.GetGlobalPosition();
 
         for (int j = i - 1; j >= 0; j--)
         {
@@ -104,7 +115,13 @@ void PhysicsQueue::SolveCollisions()
                 continue;
             }
 
-            thisRigidBody->Collision(otherRigidBody);
+            DirectX::XMVECTOR otherRigidBodyPosition = otherRigidBody->transform.GetGlobalPosition();
+            DirectX::XMVECTOR distanceVector = DirectX::XMVectorSubtract(rigidBodyPosition, otherRigidBodyPosition);
+            float distanceSquared = DirectX::XMVectorGetX(DirectX::XMVector3LengthSq(distanceVector));
+
+            if(distanceSquared >= this->colliderCullingDistanceSquared) continue; //early exit if colliders are too far apart
+
+            thisRigidBody->Collision(otherRigidBody, this->nrOfCollisionTestOnTick);
         }
     }
 
@@ -118,6 +135,8 @@ void PhysicsQueue::SolveCollisions()
             continue;
         }
 
+        DirectX::XMVECTOR colliderPosition = thisCollider->transform.GetGlobalPosition();
+
         for (int j = i - 1; j >= 0; j--)
         {
             std::shared_ptr<Collider> otherCollider = this->strayColliders[j].lock();
@@ -128,7 +147,16 @@ void PhysicsQueue::SolveCollisions()
                 continue;
             }
 
-            thisCollider->Collision(otherCollider.get());
+            DirectX::XMVECTOR otherColliderPosition = otherCollider->transform.GetGlobalPosition();
+            DirectX::XMVECTOR distanceVector = DirectX::XMVectorSubtract(colliderPosition, otherColliderPosition);
+            float distanceSquared = DirectX::XMVectorGetX(DirectX::XMVector3LengthSq(distanceVector));
+
+            if(thisCollider->ignoreTag != Tag::DISTANCE || otherCollider->ignoreTag != Tag::DISTANCE)
+            {
+                if(distanceSquared >= this->colliderCullingDistanceSquared) continue; //early exit if colliders are too far apart
+            }
+
+            thisCollider->Collision(otherCollider.get(), this->nrOfCollisionTestOnTick);
         }
     }
 
@@ -142,6 +170,8 @@ void PhysicsQueue::SolveCollisions()
             continue;
         }
 
+        DirectX::XMVECTOR rigidBodyPosition = rigidBody->transform.GetGlobalPosition();
+
         for (int j = strayColliders.size() - 1; j >= 0; j--)
         {
             std::shared_ptr<Collider> collider = this->strayColliders[j].lock();
@@ -152,9 +182,21 @@ void PhysicsQueue::SolveCollisions()
                 continue;
             }
 
-            rigidBody->Collision(collider);
+            DirectX::XMVECTOR colliderPosition = collider->transform.GetGlobalPosition();
+            DirectX::XMVECTOR distanceVector = DirectX::XMVectorSubtract(rigidBodyPosition, colliderPosition);
+            float distanceSquared = DirectX::XMVectorGetX(DirectX::XMVector3LengthSq(distanceVector));
+
+            if(collider->ignoreTag != Tag::DISTANCE)
+            {
+                if(distanceSquared >= this->colliderCullingDistanceSquared) continue; //early exit if colliders are too far apart
+            }
+
+            rigidBody->Collision(collider, this->nrOfCollisionTestOnTick);
         }
     }
+
+    //Logger::Log("nr of collision tests: ", std::to_string(this->nrOfCollisionTestOnTick));
+    this->nrOfCollisionTestOnTick = 0;
 }
 
 bool PhysicsQueue::castRay(Ray& ray, RayCastData& rayCastData, float maxDistance) {

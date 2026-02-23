@@ -40,10 +40,10 @@ void SphereCollider::LoadFromJson(const nlohmann::json& data)
 	 	Logger::Log("didn't find tag!!!");
 	 }
 
-	 if(data.contains("targetTag"))
+	 if(data.contains("ignoreTag"))
 	 {
-	 	this->targetTag = (Tag)data.at("targetTag").get<int>(); //write enum as integer in json
-	 	Logger::Log("targetTag was found in json: " + std::to_string(this->targetTag));
+	 	this->ignoreTag = (Tag)data.at("ignoreTag").get<int>(); //write enum as integer in json
+	 	Logger::Log("ignoreTag was found in json: " + std::to_string(this->ignoreTag));
 	 }
 
 	 if(data.contains("solid"))
@@ -64,7 +64,7 @@ void SphereCollider::SaveToJson(nlohmann::json& data)
 	this->GameObject3D::SaveToJson(data);
 
 	data["tag"] = this->tag;
-	data["targetTag"] = this->targetTag;
+	data["ignoreTag"] = this->ignoreTag;
 	data["solid"] = this->solid;
 	data["dynamic"] = this->dynamic;
 }

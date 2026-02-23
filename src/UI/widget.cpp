@@ -31,7 +31,7 @@ void UI::Widget::Update(float dt) {
 	float z = 0.5f + static_cast<float>(this->GetZIndex()) * 0.001f + epsilon;
 	XMVECTOR posVec =
 		XMVectorSet(this->position.x + this->size.x * 0.5f, this->position.y + this->size.y * 0.5f, z, 1.0f);
-	XMVECTOR scaleVec = XMVectorSet(this->size.x, this->size.y, 1.0f, 0.0f);
+	XMVECTOR scaleVec = XMVectorSet(this->size.x * 0.5f, this->size.y * 0.5f, 1.0f, 0.0f);
 	this->transform.SetPosition(posVec);
 	this->transform.SetScale(scaleVec);
 

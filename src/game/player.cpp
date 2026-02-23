@@ -1,9 +1,9 @@
 #include "game/player.h"
 #include "core/physics/sphereCollider.h"
 #include "gameObjects/meshObject.h"
+#include "game/gameManager.h"
 
-Player::Player()
-{
+Player::Player() : cameraRotation{0, 0, 0} {
 	this->controllerInput = std::make_shared<ControllerInput>(0);
 }
 
@@ -131,6 +131,18 @@ void Player::Tick()
 
 		this->sfxTimer.Reset();
 	}
+
+	ImGui::Begin("GameManager testing");
+	if (ImGui::Button("Win")) {
+		GameManager::GetInstance()->Win();
+	}
+	if (ImGui::Button("Loose")) {
+		GameManager::GetInstance()->Loose();
+	}
+	if (ImGui::Button("Player died")) {
+		GameManager::GetInstance()->PlayerDied();
+	}
+	ImGui::End();
 }
 
 void Player::PhysicsTick()
@@ -181,19 +193,23 @@ void Player::UpdateCamera()
 		lookVector[0] += this->controllerInput->GetLookVector()[0] * this->stickSensitivity * deltaTime;
 		lookVector[1] -= this->controllerInput->GetLookVector()[1] * this->stickSensitivity * deltaTime;
 
-		static float rot[3] = {0, 0, 0};
-
 		float rotSpeed = this->mouseSensitivity;
 
-		rot[0] += rotSpeed * lookVector[1];
-		rot[1] += rotSpeed * lookVector[0];
+		this->cameraRotation[0] += rotSpeed * lookVector[1];
+		this->cameraRotation[1] += rotSpeed * lookVector[0];
 
-		if (rot[0] > 1.5f) rot[0] = 1.5f;
-		if (rot[0] < -1.5f) rot[0] = -1.5f;
+		if (this->cameraRotation[0] > 1.5f) this->cameraRotation[0] = 1.5f;
+		if (this->cameraRotation[0] < -1.5f) this->cameraRotation[0] = -1.5f;
 
-		cam->transform.SetRotationRPY(0.0f, rot[0], 0);
-		this->transform.SetRotationRPY(0.0f, 0, rot[1]);
+		cam->transform.SetRotationRPY(0.0f, this->cameraRotation[0], 0);
+		this->transform.SetRotationRPY(0.0f, 0, this->cameraRotation[1]);
 	}
+}
+
+void Player::SetCameraRotation(float r, float p, float y) {
+	this->cameraRotation[0] = r;
+	this->cameraRotation[1] = p;
+	this->cameraRotation[2] = y;
 }
 
 void Player::LoadFromJson(const nlohmann::json& data)

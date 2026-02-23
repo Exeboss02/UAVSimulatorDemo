@@ -76,6 +76,13 @@ public:
 	/// <param name="newSelected"></param>
 	virtual void SetSelected(std::weak_ptr<GameObject>& newSelected) { this->selectedObject = newSelected; }
 
+	/// <summary>
+	/// Load a scene. Remember to use the FilepathHolder for paths!
+	/// </summary>
+	virtual void QueueLoadScene(std::string filepath) = 0;
+
+	virtual std::string GetMainSceneFilepath() = 0;
+
 private:
 	/// <summary>
 	/// Add GameObject to game engine logic

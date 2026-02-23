@@ -5,8 +5,7 @@
 #include "game/gameManager.h"
 
 
-Player::Player()
-{
+
 Player::Player() : cameraRotation{0, 0, 0} {
 	this->controllerInput = std::make_shared<ControllerInput>(0);
 }
@@ -149,7 +148,7 @@ void Player::Tick()
 
 	//this->aim();
 	this->checkForTriggerPress();
-}
+
 
 	ImGui::Begin("GameManager testing");
 	if (ImGui::Button("Win")) {

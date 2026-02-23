@@ -128,6 +128,9 @@ public:
 	/// <param name="resolveDistance"></param>
 	bool BoxSphereCollision(BoxCollider* box, SphereCollider* sphere, DirectX::XMFLOAT3& resolveAxis, float& resolveDistance);
 
+	void SetExtraCullingDistance(float distanceSquared);
+	float GetExtraCullingDistance();
+
 	//DirectX::XMFLOAT3 resolveAxis = {};
 	//float resolveDistance = 0;
 
@@ -160,6 +163,7 @@ public:
 	void SetOnHover(std::function<void()> func) { this->hoverFunc = func; }
 
 private:
+	float extraCullingDistanceSquared = 0;
 
 	std::function<void()> interactFunc = []() {};
 	std::function<void()> hoverFunc = []() {};

@@ -115,11 +115,11 @@ void PhysicsQueue::SolveCollisions() {
                 continue;
             }
 
-            DirectX::XMVECTOR otherRigidBodyPosition = otherRigidBody->transform.GetGlobalPosition();
-            DirectX::XMVECTOR distanceVector = DirectX::XMVectorSubtract(rigidBodyPosition, otherRigidBodyPosition);
-            float distanceSquared = DirectX::XMVectorGetX(DirectX::XMVector3LengthSq(distanceVector));
+            // DirectX::XMVECTOR otherRigidBodyPosition = otherRigidBody->transform.GetGlobalPosition();
+            // DirectX::XMVECTOR distanceVector = DirectX::XMVectorSubtract(rigidBodyPosition, otherRigidBodyPosition);
+            // float distanceSquared = DirectX::XMVectorGetX(DirectX::XMVector3LengthSq(distanceVector));
 
-            if(distanceSquared >= this->colliderCullingDistanceSquared) continue; //early exit if colliders are too far apart
+            // if(distanceSquared >= this->colliderCullingDistanceSquared) continue; //early exit if colliders are too far apart
 
             thisRigidBody->Collision(otherRigidBody, this->nrOfCollisionTestOnTick);
         }
@@ -150,10 +150,15 @@ void PhysicsQueue::SolveCollisions() {
             DirectX::XMVECTOR otherColliderPosition = otherCollider->transform.GetGlobalPosition();
             DirectX::XMVECTOR distanceVector = DirectX::XMVectorSubtract(colliderPosition, otherColliderPosition);
             float distanceSquared = DirectX::XMVectorGetX(DirectX::XMVector3LengthSq(distanceVector));
+            float thisExtraCullingDistance = thisCollider->GetExtraCullingDistance();
+            float otherExtraCullingDistance = otherCollider->GetExtraCullingDistance();
 
-            if(thisCollider->ignoreTag != Tag::DISTANCE || otherCollider->ignoreTag != Tag::DISTANCE)
+            if(thisCollider->ignoreTag != Tag::DISTANCE && otherCollider->ignoreTag != Tag::DISTANCE)
             {
-                if(distanceSquared >= this->colliderCullingDistanceSquared) continue; //early exit if colliders are too far apart
+                if(distanceSquared >= this->colliderCullingDistanceSquared
+                 + thisExtraCullingDistance
+                 + otherExtraCullingDistance
+                ) continue; //early exit if colliders are too far apart
             }
 
             thisCollider->Collision(otherCollider.get(), this->nrOfCollisionTestOnTick);
@@ -182,14 +187,14 @@ void PhysicsQueue::SolveCollisions() {
                 continue;
             }
 
-            DirectX::XMVECTOR colliderPosition = collider->transform.GetGlobalPosition();
-            DirectX::XMVECTOR distanceVector = DirectX::XMVectorSubtract(rigidBodyPosition, colliderPosition);
-            float distanceSquared = DirectX::XMVectorGetX(DirectX::XMVector3LengthSq(distanceVector));
+            // DirectX::XMVECTOR colliderPosition = collider->transform.GetGlobalPosition();
+            // DirectX::XMVECTOR distanceVector = DirectX::XMVectorSubtract(rigidBodyPosition, colliderPosition);
+            // float distanceSquared = DirectX::XMVectorGetX(DirectX::XMVector3LengthSq(distanceVector));
 
-            if(collider->ignoreTag != Tag::DISTANCE)
-            {
-                if(distanceSquared >= this->colliderCullingDistanceSquared) continue; //early exit if colliders are too far apart
-            }
+            // if(collider->ignoreTag != Tag::DISTANCE)
+            // {
+            //     if(distanceSquared >= this->colliderCullingDistanceSquared) continue; //early exit if colliders are too far apart
+            // }
 
             rigidBody->Collision(collider, this->nrOfCollisionTestOnTick);
         }

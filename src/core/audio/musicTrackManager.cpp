@@ -1,4 +1,5 @@
 #include "core/audio/musicTrackManager.h"
+#include "core/filepathHolder.h"
 
 MusicTrackManager::MusicTrackManager()
 {
@@ -17,16 +18,11 @@ MusicTrackManager::~MusicTrackManager()
 	this->musicTracks.clear();
 }
 
-void MusicTrackManager::Initialize(std::string pathToMusicFolder)
-{
-	this->pathToMusicFolder = pathToMusicFolder;
-}
-
 void MusicTrackManager::AddMusicTrackStandardFolder(std::string filename, std::string id)
 {
 	MusicTrack* newTrack = new MusicTrack();
 
-	if (!newTrack->Initialize(this->pathToMusicFolder + filename, id))
+	if (!newTrack->Initialize((FilepathHolder::GetAssetsDirectory() / "audio" / "music" / filename).string(), id))
 	{
 		Logger::Error("Error loading music track: " + this->pathToMusicFolder + filename);
 		delete newTrack;

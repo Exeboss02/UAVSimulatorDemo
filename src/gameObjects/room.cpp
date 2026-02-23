@@ -79,7 +79,7 @@ void Room::Start() {
 			auto turret = this->factory->CreateStaticGameObject<Turret>();
 			turret->SetParent(this->GetPtr());
 			turret->transform.SetPosition({0, 1.5, 0});
-			turret->SetMesh(AssetManager::GetInstance().GetMeshObjData("TexBox/TextureCube.glb:Mesh_0"));
+			//turret->SetMesh(AssetManager::GetInstance().GetMeshObjData("TexBox/TextureCube.glb:Mesh_0"));
 		}
 		this->factory->QueueDeleteGameObject(this->buildSlot);
 	});

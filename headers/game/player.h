@@ -39,6 +39,8 @@ public:
 	
 	void UpdateCamera();
 
+	void SetCameraRotation(float r, float p, float y);
+
 	bool isPlayingMusic = false;
 	bool canShoot = false;
 
@@ -49,6 +51,8 @@ public:
 private:
 	float input[2] = {};
 	bool showCursor = true;
+
+	float cameraRotation[3];
 
 	void shootRay();
 };

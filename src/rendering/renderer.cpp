@@ -8,6 +8,7 @@
 #include "gameObjects/objectLoader.h"
 #include <chrono>
 #include <cmath>
+#include <memory>
 
 // #define DEBUG_TIMER
 
@@ -40,7 +41,6 @@ void Renderer::Init(const Window& window) {
 	this->pointLightShadows.Init(this->device.Get(), 256, this->maximumSpotlights);
 
 	this->pointLightViewPort = this->spotLightViewPort;
-
 }
 
 void Renderer::SetAllDefaults() {
@@ -710,6 +710,7 @@ void Renderer::RenderUI() {
 				if (!texWeak.expired()) {
 					auto tex = texWeak.lock();
 					ID3D11ShaderResourceView* srv = tex->GetSrv();
+					// no logging here to avoid spamming per-frame
 
 					// Build quad vertices matching widget position/size (top-left origin)
 					std::vector<Vertex> vertices;
@@ -884,7 +885,8 @@ void Renderer::PointLightShadowPass() {
 
 		for (size_t j = 0; j < 6; j++) {
 
-			this->immediateContext->ClearDepthStencilView(this->pointLightShadows.GetDsv(i, j), D3D11_CLEAR_DEPTH, 1, 0);
+			this->immediateContext->ClearDepthStencilView(this->pointLightShadows.GetDsv(i, j), D3D11_CLEAR_DEPTH, 1,
+														  0);
 			this->immediateContext->OMSetRenderTargets(0, nullptr, this->pointLightShadows.GetDsv(i, j));
 
 			if (light->cameras[j].expired()) {
@@ -1277,16 +1279,17 @@ void Renderer::DrawTextQuads(const std::vector<Vertex>& vertices, const std::vec
 
 	this->immediateContext->IASetVertexBuffers(0, 2, bufferPointers, strides, offsets);
 
-	// Create a temporary unlit material using the provided SRV and apply tint color
-	UnlitMaterial tempMat(this->device.Get());
-	tempMat.unlitShader = AssetManager::GetInstance().GetShaderPtr("PSUnlit");
-	tempMat.diffuseTexture = std::make_shared<Texture>(srv, "__font_atlas");
-	tempMat.color[0] = color.x;
-	tempMat.color[1] = color.y;
-	tempMat.color[2] = color.z;
-	tempMat.color[3] = color.w;
+	// Create a temporary unlit material (heap-allocated to avoid pointer-collision
+	// with renderer's material caching) using the provided SRV and apply tint color
+	auto tempMat = std::make_unique<UnlitMaterial>(this->device.Get());
+	tempMat->unlitShader = AssetManager::GetInstance().GetShaderPtr("PSUnlit");
+	tempMat->diffuseTexture = std::make_shared<Texture>(srv, "__ui_temp");
+	tempMat->color[0] = color.x;
+	tempMat->color[1] = color.y;
+	tempMat->color[2] = color.z;
+	tempMat->color[3] = color.w;
 	// Honor global wireframe toggle so UI quads reflect renderAllWireframe
-	tempMat.wireframe = this->renderAllWireframe;
+	tempMat->wireframe = this->renderAllWireframe;
 
 	// Use dedicated UI sampler for text rendering. Choose linear when requested (scaling up), otherwise point.
 	ID3D11SamplerState* fontSampler = nullptr;
@@ -1301,8 +1304,10 @@ void Renderer::DrawTextQuads(const std::vector<Vertex>& vertices, const std::vec
 	if (fontSampler) this->immediateContext->PSSetSamplers(0, 1, &fontSampler);
 
 	// Bind material and draw
-	BindMaterial(&tempMat);
+	BindMaterial(tempMat.get());
 	this->immediateContext->DrawIndexedInstanced(static_cast<UINT>(indices.size()), 1, 0, 0, 0);
+	// Prevent renderer from caching pointer to this ephemeral material
+	this->currentMaterial = nullptr;
 
 	// Restore previous sampler
 	if (prevSampler) this->immediateContext->PSSetSamplers(0, 1, &prevSampler);

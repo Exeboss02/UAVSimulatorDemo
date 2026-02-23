@@ -187,13 +187,13 @@ void SceneManager::SkyboxMenu() {
 		RenderQueue::ChangeSkybox("cubeMap.dds");
 	}
 	if (ImGui::MenuItem("Space")) {
-		RenderQueue::ChangeSkybox("space.dds");
+		RenderQueue::ChangeSkybox("bright_space.dds");
 	}
 	if (ImGui::MenuItem("Asteroid")) {
-		RenderQueue::ChangeSkybox("asteroids.dds");
+		RenderQueue::ChangeSkybox("bright_asteroid.dds");
 	}
 	if (ImGui::MenuItem("Planet")) {
-		RenderQueue::ChangeSkybox("mars.dds");
+		RenderQueue::ChangeSkybox("bright_planet.dds");
 	}
 }
 

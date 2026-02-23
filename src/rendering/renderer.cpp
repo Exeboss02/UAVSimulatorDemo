@@ -57,7 +57,7 @@ void Renderer::SetAllDefaults() {
 	this->skybox = std::make_unique<Skybox>();
 
 	this->skybox->Init(this->device.Get(), this->immediateContext.Get(),
-					   (FilepathHolder::GetAssetsDirectory() / "skybox" / "asteroids.dds").string());
+					   (FilepathHolder::GetAssetsDirectory() / "skybox" / "bright_asteroid.dds").string());
 
 	// Preload default UI font atlas so TextRenderer can render immediately
 	UI::TextRenderer::GetInstance().LoadFont("default", this->device.Get());

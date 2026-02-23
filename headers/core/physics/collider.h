@@ -1,53 +1,23 @@
 #pragma once
-#include <memory>
-#include "gameObjects/gameObject3D.h"
-#include "gameObjects/meshObject.h"
 #include "core/physics/physics.h"
 #include "core/physics/ray.h"
+#include "gameObjects/gameObject3D.h"
+#include "gameObjects/meshObject.h"
 #include <functional>
+#include <memory>
 
-static const DirectX::XMFLOAT3 localBoxCorners[8] =
-{
-	{ -1, -1, -1 },
-	{ +1, -1, -1 },
-	{ -1, +1, -1 },
-	{ +1, +1, -1 },
-	{ -1, -1, +1 },
-	{ +1, -1, +1 },
-	{ -1, +1, +1 },
-	{ +1, +1, +1 }
-};
+static const DirectX::XMFLOAT3 localBoxCorners[8] = {{-1, -1, -1}, {+1, -1, -1}, {-1, +1, -1}, {+1, +1, -1},
+													 {-1, -1, +1}, {+1, -1, +1}, {-1, +1, +1}, {+1, +1, +1}};
 
+enum Tag { PLAYER, PLAYER_ATTACK, ENEMY, ENEMY_ATTACK, GROUND, FLOOR, OBJECT, WALL, INTERACTABLE, DISTANCE, NOIGNORE };
 
+enum ColliderType { BOX, SPHERE, NONE };
 
-enum Tag
-{
-	PLAYER,
-	PLAYER_ATTACK,
-	ENEMY,
-	ENEMY_ATTACK,
-	GROUND,
-	FLOOR,
-	OBJECT,
-	WALL,
-	INTERACTABLE,
-	DISTANCE,
-	NOIGNORE
-};
-
-enum ColliderType
-{
-	BOX,
-	SPHERE,
-	NONE
-};
-
-class BoxCollider; //forward declaration
+class BoxCollider; // forward declaration
 class SphereCollider;
 class RigidBody;
 
-class Collider : public GameObject3D
-{
+class Collider : public GameObject3D {
 public:
 	Collider();
 	~Collider();
@@ -126,45 +96,44 @@ public:
 	/// </summary>
 	/// <param name="resolveAxis"></param>
 	/// <param name="resolveDistance"></param>
-	bool BoxSphereCollision(BoxCollider* box, SphereCollider* sphere, DirectX::XMFLOAT3& resolveAxis, float& resolveDistance);
+	bool BoxSphereCollision(BoxCollider* box, SphereCollider* sphere, DirectX::XMFLOAT3& resolveAxis,
+							float& resolveDistance);
 
-	//DirectX::XMFLOAT3 resolveAxis = {};
-	//float resolveDistance = 0;
+	// DirectX::XMFLOAT3 resolveAxis = {};
+	// float resolveDistance = 0;
 
 	ColliderType type = ColliderType::NONE;
 	Tag tag = Tag::OBJECT;
 	Tag ignoreTag = Tag::NOIGNORE;
 	PhysicsMaterial physicsMaterial;
-	//DirectX::XMFLOAT3 previousPosition = {};
+	// DirectX::XMFLOAT3 previousPosition = {};
 	bool solid = true;
 	bool dynamic = false;
 	bool hasInitializedPreviousPosition = false;
 
 	/// <summary>
-	/// returns true if ray intersects object with distance 
-	/// to hit and max ray distance 
+	/// returns true if ray intersects object with distance
+	/// to hit and max ray distance
 	/// </summary>
 	/// <param name="ray"></param>
 	/// <param name="distance"></param>
 	/// <returns></returns>
 	virtual bool IntersectWithRay(const Ray& ray, float& distance, float maxDistance) = 0;
 
-	void Interact() { interactFunc(); };
-	void Hover() { hoverFunc(); };
+	void Interact() { this->interactFunc(); };
+	void Hover() { this->hoverFunc(); };
+	void Hit(float damage) { this->hitFunc(damage); }
 
-	void SetOnInteract(std::function<void()> func) {
-		Logger::Log("Set interact func");
-		this->interactFunc = func; 
-	
-	}
+	void SetOnInteract(std::function<void()> func) { this->interactFunc = func; }
 	void SetOnHover(std::function<void()> func) { this->hoverFunc = func; }
+	void SetOnHit(std::function<void(float)> func) { this->hitFunc = func; }
 
 private:
-
 	std::function<void()> interactFunc = []() {};
 	std::function<void()> hoverFunc = []() {};
+	std::function<void(float)> hitFunc = [](float) {};
 	int id = -1;
-	std::weak_ptr<GameObject> meshObjectChild; //reference to the mesh visual representation of the collider (remove?)
+	std::weak_ptr<GameObject> meshObjectChild; // reference to the mesh visual representation of the collider (remove?)
 	std::weak_ptr<RigidBody> rigidBodyParent;
 	std::weak_ptr<GameObject3D> gameObject3DParent;
 

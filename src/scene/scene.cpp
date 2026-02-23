@@ -3,7 +3,7 @@
 #include "core/imguiManager.h"
 #include "core/physics/physicsQueue.h"
 
-Scene::Scene() : gameObjects(), finishedLoading(true), currentGameObjectId(0) {}
+Scene::Scene() : gameObjects(), finishedLoading(true), currentGameObjectId(0), sceneName(""), queuedScene("") {}
 
 void Scene::SceneTick(bool isPaused) {
 	for (size_t i = 0; i < this->gameObjects.size(); i++) {
@@ -41,6 +41,15 @@ void Scene::SceneTick(bool isPaused) {
 	}
 
 	this->DeleteDeleteQueue();
+
+	if (queuedScene != "") {
+		if (this->loadSceneCallback) {
+			this->loadSceneCallback(this->queuedScene);
+		} else {
+			Logger::Error("Scene is not properly initialized.");
+		}
+
+	}
 }
 
 void Scene::SceneLateTick(bool isPaused) {
@@ -101,6 +110,12 @@ void Scene::QueueDeleteGameObject(std::weak_ptr<GameObject> gameObject) { this->
 size_t Scene::GetNumberOfGameObjects() { return this->gameObjects.size(); }
 
 int Scene::GetNextID() { return this->currentGameObjectId++; }
+
+void Scene::QueueLoadScene(std::string filepath) { this->queuedScene = filepath; }
+
+std::string Scene::GetMainSceneFilepath() { 
+	return this->sceneName; 
+}
 
 void Scene::DeleteDeleteQueue() {
 	if (this->deleteQueue.empty()) {

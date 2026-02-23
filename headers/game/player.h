@@ -9,6 +9,7 @@
 #include "core/audio/audioManager.h"
 #include "core/assetManager.h"
 #include "core/tools.h"
+#include "gameObjects/gun.h"
 
 class Player : public RigidBody
 {
@@ -50,5 +51,11 @@ private:
 	float input[2] = {};
 	bool showCursor = true;
 
-	void shootRay();
+	void Interact();
+
+	void checkForTriggerPress();
+
+	void aim();
+
+	std::weak_ptr<Gun> gun;
 };

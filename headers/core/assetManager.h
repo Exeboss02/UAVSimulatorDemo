@@ -37,9 +37,14 @@ public:
 	bool GetMaterial(std::string identifier);
 	bool GetMesh(std::string identifier);
 	bool GetTexture(std::string identifier);
+	// Preload all recognized image files in `path`. If `recursive` is true, traverse subfolders.
+	void PreloadTexturesInFolder(const std::string& path, bool recursive = true);
 	// Load a texture from an arbitrary image file (PNG/JPEG) and register it under the given identifier
 	bool LoadTextureFromFile(std::string identifier);
 	std::weak_ptr<Texture> GetTextureWeakPtr(std::string identifier);
+
+	// Try to resolve identifier to an existing absolute path. Returns empty string if not resolvable.
+	std::string ResolveTexturePath(const std::string& identifier);
 	MeshObjData GetMeshObjData(std::string identifier);
 
 	static AssetManager& GetInstance();

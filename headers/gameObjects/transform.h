@@ -20,6 +20,11 @@ public:
 	void SetPosition(DirectX::XMVECTOR position);
 
 	/// <summary>
+	/// Sets the position of the transform.
+	/// </summary>
+	void SetPosition(float x, float y, float z);
+
+	/// <summary>
 	/// Sets the rotation of the transform in order roll, pitch, and yaw angles (in radians).
 	/// </summary>
 	/// <param name="roll">Roll value in radians</param>
@@ -34,6 +39,16 @@ public:
 	void SetRotationRPY(DirectX::XMVECTOR rollPitchYaw);
 
 	/// <summary>
+	/// Sets the direction of the quaternion, assuming {0, 1, 0} is up
+	/// </summary>
+	void SetDirection(float x, float y, float z);
+
+	/// <summary>
+	/// Sets the direction of the quaternion, assuming {0, 1, 0} is up
+	/// </summary>
+	void SetDirection(DirectX::XMVECTOR direction);
+
+	/// <summary>
 	/// Sets the rotation using the provided DirectX quaternion.
 	/// </summary>
 	/// <param name="quaternion">A DirectX::XMVECTOR in quaternion format</param>
@@ -44,6 +59,11 @@ public:
 	/// </summary>
 	/// <param name="scale">The scale vector</param>
 	void SetScale(DirectX::XMVECTOR scale);
+
+	/// <summary>
+	/// Sets the transform scale using a scale vector
+	/// </summary>
+	void SetScale(float x, float y, float z);
 
 	/// <summary>
 	/// Adds the provided vector to the current position

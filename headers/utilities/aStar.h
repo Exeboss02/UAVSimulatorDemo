@@ -165,7 +165,7 @@ inline std::vector<std::shared_ptr<AStarVertex>> AStar::FindPath(std::shared_ptr
 	this->ClearPathfindingData(); // Reset the state of the algorithm before starting a new search
 	
 	if (!this->goal) {
-	    Logger::Log("NO GOAL HAS BEEN SET!");
+	    Logger::Error("NO GOAL HAS BEEN SET!");
 	    return {};
 	}
 	

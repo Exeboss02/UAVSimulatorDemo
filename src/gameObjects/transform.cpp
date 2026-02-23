@@ -1,5 +1,4 @@
 #include "gameObjects/transform.h"
-#include "transform.h"
 
 Transform::Transform(GameObject3D* gameObject)
 	: position({}), quaternion(DirectX::XMQuaternionIdentity()), scale({1, 1, 1}), myGameObject(gameObject) {}

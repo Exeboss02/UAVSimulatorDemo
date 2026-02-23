@@ -71,7 +71,7 @@ private:
     ~PhysicsQueue();
 
     int nrOfCollisionTestOnTick = 0;
-    float colliderCullingDistanceSquared = 25;
+    float colliderCullingDistanceSquared = 9;
 
     int rigidBodyIdCounter = 0;
     int colliderIdCounter = 0;

@@ -294,7 +294,7 @@ void Player::Interact() {
 		std::string hitString;
 		if (didHit) {
 
-			rayCastData.hitColider.lock()->Interact();
+			rayCastData.hitColider.lock()->Interact(static_pointer_cast<Player>(this->GetPtr()));
 			hitString = "hit";
 
 			// rayVis

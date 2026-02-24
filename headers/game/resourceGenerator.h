@@ -6,11 +6,12 @@
 class ResourceGenerator : public MeshObject {
 public:
 	void Start() override;
-	void Tick() override;
-
 
 private:
 	Interact(std::shared_ptr<Player> player);
 	float lastGenerated = 0;
+
+	float generatedPerSecond = 1;
+
 	std::weak_ptr<SphereCollider> interactCollider;
 };

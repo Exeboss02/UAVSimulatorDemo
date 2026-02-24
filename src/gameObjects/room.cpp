@@ -80,7 +80,7 @@ void Room::Start() {
 	buildCollider->SetTag(Tag::INTERACTABLE);
 	// Maybe tweak positionW
 	this->buildSlot = buildCollider;
-	buildCollider->SetOnInteract([&]() {
+	buildCollider->SetOnInteract([&](std::shared_ptr<Player> p) {
 		if (this->builtObject.expired()) {
 			auto turret = this->factory->CreateStaticGameObject<Turret>();
 			turret->SetParent(this->GetPtr());

@@ -27,6 +27,9 @@ void Renderer::Init(const Window& window) {
 	CreateRenderTarget();
 	CreateDepthBuffer(window);
 
+	// Initialize FW1FontWrapper for text rendering
+	UI::TextRenderer::GetInstance().InitializeFW1(this->device.Get());
+
 	this->spotLightShadows.Init(this->device.Get(), 256, this->maximumSpotlights);
 
 	this->spotLightViewPort = {
@@ -59,8 +62,7 @@ void Renderer::SetAllDefaults() {
 	this->skybox->Init(this->device.Get(), this->immediateContext.Get(),
 					   (FilepathHolder::GetAssetsDirectory() / "skybox" / "bright_asteroid.dds").string());
 
-	// Preload default UI font atlas so TextRenderer can render immediately
-	UI::TextRenderer::GetInstance().LoadFont("default", this->device.Get());
+	// FW1FontWrapper handles font loading at runtime; no atlas preload needed
 }
 
 std::vector<std::weak_ptr<MeshObject>> Renderer::GetVisibleObjects(CameraObject& camera) {
@@ -794,7 +796,7 @@ void Renderer::RenderUI() {
 	// Ensure depth test is disabled for UI text (BindRenderTarget rebinds depth state)
 	this->immediateContext->OMSetDepthStencilState(nullptr, 0);
 	// Render all text submissions now (TextRenderer sorts by zIndex)
-	UI::TextRenderer::GetInstance().Render(this);
+	UI::TextRenderer::GetInstance().Render(this->immediateContext.Get());
 	// Restore default rasterizer and blend state
 	this->immediateContext->OMSetBlendState(nullptr, nullptr, 0xffffffff);
 	this->BindRasterizerState(this->standardRasterizerState.get());

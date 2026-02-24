@@ -8,8 +8,8 @@ class Transform {
 public:
 	Transform(GameObject3D* gameObject);
 
-	Transform(GameObject3D* gameObject, DirectX::XMVECTOR position, DirectX::XMVECTOR quaternion = DirectX::XMQuaternionIdentity(),
-			  DirectX::XMVECTOR scale = {1, 1, 1});
+	Transform(GameObject3D* gameObject, DirectX::XMVECTOR position,
+			  DirectX::XMVECTOR quaternion = DirectX::XMQuaternionIdentity(), DirectX::XMVECTOR scale = {1, 1, 1});
 	Transform(GameObject3D* gameObject, DirectX::XMVECTOR position, float roll, float pitch, float yaw = 0,
 			  DirectX::XMVECTOR scale = {1, 1, 1});
 

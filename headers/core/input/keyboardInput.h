@@ -7,6 +7,7 @@ enum KeyboardKeybinds {
 	MOVE_BACKWARD = 'S',
 	MOVE_LEFT = 'A',
 	MOVE_RIGHT = 'D',
+	TOGGLE_CAMERA = 'O',
 	JUMP = VK_SPACE,
 	SPRINT = VK_LSHIFT,
 
@@ -32,5 +33,6 @@ public:
 	bool Interact() const override;
 	bool FullscreenToggle() const override;
 	bool Quit() const override;
+	bool ToggleCamera() const;
 
 };

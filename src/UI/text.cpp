@@ -27,7 +27,13 @@ void Text::ShowInHierarchy() {
 		std::strncpy(this->editBuffer.data(), this->text.c_str(), this->editBuffer.size() - 1);
 	}
 
-	if (ImGui::InputText("Text", this->editBuffer.data(), static_cast<int>(this->editBuffer.size()))) {
+	ImGuiInputTextFlags textFlags = ImGuiInputTextFlags_None;
+	textFlags |= ImGuiInputTextFlags_EnterReturnsTrue;
+
+	if (ImGui::InputText("Text", this->editBuffer.data(), static_cast<int>(this->editBuffer.size()), textFlags)) {
+		this->text = std::string(this->editBuffer.data());
+		this->SetName(this->text);
+	} else if (ImGui::IsItemDeactivatedAfterEdit()) {
 		this->text = std::string(this->editBuffer.data());
 		this->SetName(this->text);
 	}
@@ -42,7 +48,12 @@ void Text::ShowInHierarchy() {
 		if (this->font.empty()) this->font = "default";
 	}
 
-	if (ImGui::InputText("Font", this->fontEditBuffer.data(), static_cast<int>(this->fontEditBuffer.size()))) {
+	ImGuiInputTextFlags fontFlags = ImGuiInputTextFlags_None;
+	fontFlags |= ImGuiInputTextFlags_EnterReturnsTrue;
+	if (ImGui::InputText("Font", this->fontEditBuffer.data(), static_cast<int>(this->fontEditBuffer.size()),
+						 fontFlags)) {
+		this->font = std::string(this->fontEditBuffer.data());
+	} else if (ImGui::IsItemDeactivatedAfterEdit()) {
 		this->font = std::string(this->fontEditBuffer.data());
 	}
 
@@ -92,8 +103,7 @@ void Text::Draw() {
 
 	UI::TextRenderer::GetInstance().SubmitText(
 		this->text, this->GetPosition(), this->GetSize().y,
-		DirectX::XMFLOAT4(this->color.x, this->color.y, this->color.z, this->color.w), this->font,
-		this->GetZIndex());
+		DirectX::XMFLOAT4(this->color.x, this->color.y, this->color.z, this->color.w), this->font, this->GetZIndex());
 
 	// Draw children (if any)
 	Widget::Draw();

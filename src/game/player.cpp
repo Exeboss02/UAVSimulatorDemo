@@ -41,38 +41,50 @@ void Player::Start()
 	{
 		auto colliderobjWeak = this->factory->CreateGameObjectOfType<SphereCollider>();
 		auto colliderobj = colliderobjWeak.lock();
-		colliderobj->dynamic = true;
-		colliderobj->solid = true;
+		colliderobj->SetDynamic(true);
+		colliderobj->SetSolid(true);
 		DirectX::XMFLOAT3 pos(0.0f, 0.0f, 0.0f);
 		colliderobj->transform.SetPosition(DirectX::XMLoadFloat3(&pos));
 		DirectX::XMFLOAT3 scale(1.0f, 1.0f, 1.0f);
 		colliderobj->transform.SetScale(DirectX::XMLoadFloat3(&scale));
 		colliderobj->SetParent(this->GetPtr());
+		colliderobj->SetTag(Tag::PLAYER);
+		colliderobj->SetIgnoreTag(Tag::INTERACTABLE);
+		colliderobj->SetName("PlayerCollider " + std::to_string(this->factory->GetNextID()));
 	}
 
 	{
 		auto colliderobjWeak = this->factory->CreateGameObjectOfType<SphereCollider>();
 		auto colliderobj = colliderobjWeak.lock();
-		colliderobj->dynamic = true;
-		colliderobj->solid = true;
+		colliderobj->SetDynamic(true);
+		colliderobj->SetSolid(true);
 		DirectX::XMFLOAT3 pos(0.0f, 0.4f, 0.0f);
 		colliderobj->transform.SetPosition(DirectX::XMLoadFloat3(&pos));
 		DirectX::XMFLOAT3 scale(1.0f, 1.0f, 1.0f);
 		colliderobj->transform.SetScale(DirectX::XMLoadFloat3(&scale));
 		colliderobj->SetParent(this->GetPtr());
+		colliderobj->SetTag(Tag::PLAYER);
+		colliderobj->SetIgnoreTag(Tag::INTERACTABLE);
+		colliderobj->SetName("PlayerCollider " + std::to_string(this->factory->GetNextID()));
 	}
 
 	{
 		auto colliderobjWeak = this->factory->CreateGameObjectOfType<SphereCollider>();
 		auto colliderobj = colliderobjWeak.lock();
-		colliderobj->dynamic = true;
-		colliderobj->solid = true;
+		colliderobj->SetDynamic(true);
+		colliderobj->SetSolid(true);
 		DirectX::XMFLOAT3 pos(0.0f, 0.8f, 0.0f);
 		colliderobj->transform.SetPosition(DirectX::XMLoadFloat3(&pos));
 		DirectX::XMFLOAT3 scale(1.0f, 1.0f, 1.0f);
 		colliderobj->transform.SetScale(DirectX::XMLoadFloat3(&scale));
 		colliderobj->SetParent(this->GetPtr());
+		colliderobj->SetTag(Tag::PLAYER);
+		colliderobj->SetIgnoreTag(Tag::INTERACTABLE);
+		colliderobj->SetName("PlayerCollider " + std::to_string(this->factory->GetNextID()));
 	}
+
+	std::function<void(std::weak_ptr<GameObject3D>)> function = [&](std::weak_ptr<GameObject3D> gameObject3D) { this->OnCollision(gameObject3D); };
+	this->SetAllOnCollisionFunction(function);
 
 	this->musicTimer.Initialize(2);
 	this->sfxTimer.Initialize(0.4f);
@@ -228,6 +240,13 @@ void Player::SetCameraRotation(float r, float p, float y) {
 	this->cameraRotation[0] = r;
 	this->cameraRotation[1] = p;
 	this->cameraRotation[2] = y;
+}
+
+void Player::OnCollision(std::weak_ptr<GameObject3D> gameObject3D)
+{
+	std::string name = gameObject3D.lock()->GetName();
+
+	//Logger::Log("COLLIDED WITH ", name);
 }
 
 void Player::LoadFromJson(const nlohmann::json& data)

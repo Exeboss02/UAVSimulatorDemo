@@ -40,6 +40,7 @@ public:
 	void UpdateCamera();
 
 	void SetCameraRotation(float r, float p, float y);
+	void OnCollision(std::weak_ptr<GameObject3D> gameObjectt3D);
 
 	bool isPlayingMusic = false;
 	bool canShoot = false;

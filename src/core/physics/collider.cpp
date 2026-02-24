@@ -97,10 +97,10 @@ bool Collider::Collision(Collider* otherCollider)
 {
 	if(!this->dynamic && !otherCollider->dynamic) return false;
 
-	// if(this->ignoreTag == otherCollider->tag || otherCollider->ignoreTag == this->tag)
-	// {
-	// 	return false;
-	// }
+	if ((this->ignoreTag & otherCollider->tag) != 0 || (otherCollider->ignoreTag & this->tag) != 0)
+	{
+		return false;
+	}
 
 	DirectX::XMFLOAT3 mtvAxis = {};
 	float mtvDistance = 0;
@@ -112,10 +112,10 @@ bool Collider::Collision(Collider* otherCollider, int& nrOfCollisionTestsOnTick)
 {
 	if(!this->dynamic && !otherCollider->dynamic) return false;
 
-	// if(this->ignoreTag == otherCollider->tag || otherCollider->ignoreTag == this->tag)
-	// {
-	// 	return false;
-	// }
+	if ((this->ignoreTag & otherCollider->tag) != 0 || (otherCollider->ignoreTag & this->tag) != 0)
+	{
+		return false;
+	}
 
 	DirectX::XMFLOAT3 mtvAxis = {};
 	float mtvDistance = 0;
@@ -128,10 +128,10 @@ bool Collider::Collision(Collider* otherCollider, DirectX::XMVECTOR& contactNorm
 {
 	if(!this->dynamic && !otherCollider->dynamic) return false;
 
-	// if(this->ignoreTag == otherCollider->tag || otherCollider->ignoreTag == this->tag)
-	// {
-	// 	return false;
-	// }
+	if ((this->ignoreTag & otherCollider->tag) != 0 || (otherCollider->ignoreTag & this->tag) != 0)
+	{
+		return false;
+	}
 
 	DirectX::XMFLOAT3 mtvAxis = {};
 	float mtvDistance = 0;
@@ -296,6 +296,19 @@ bool Collider::CollisionHandling(Collider* otherCollider, DirectX::XMFLOAT3& mtv
 	}
 
 	if (!collision) return false;
+
+	std::weak_ptr<GameObject> parent = this->GetParent();
+	if(parent.expired())
+	{
+		std::shared_ptr<GameObject3D> self = std::static_pointer_cast<GameObject3D>(this->GetPtr());
+		this->OnCollision(self);
+	}
+	else
+	{
+		std::shared_ptr<GameObject3D> parent3D = std::static_pointer_cast<GameObject3D>(parent.lock());
+		this->OnCollision(parent3D);
+	}
+
 	if (!this->solid || !otherCollider->solid) return collision;
 
 	// Determine who moves

@@ -29,7 +29,7 @@ public:
 	bool HasTarget() const;
 
 	std::weak_ptr<GameObject3D> GetTarget() const;
-	void Fire();
+	virtual void Fire();
 private:
 	std::weak_ptr<GameObject3D> target;
 	float lastFired = 0;

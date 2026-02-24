@@ -1,14 +1,19 @@
 #pragma once
 
 #include "UI/widget.h"
+
 #include <DirectXMath.h>
+#include <d3d11.h>
 #include <string>
-#include <unordered_map>
 #include <vector>
 #include <wrl.h>
 
-struct ID3D11ShaderResourceView;
+// FW1FontWrapper forward declarations
+struct IFW1Factory;
+struct IFW1FontWrapper;
+
 struct ID3D11Device;
+struct ID3D11DeviceContext;
 
 namespace UI {
 
@@ -31,29 +36,15 @@ public:
 	void ClearSubmissions();
 	void Render(void* context);
 
-	// Load a font atlas (JSON + PNG) into memory. Returns true on success.
-	bool LoadFont(const std::string& fontName, ID3D11Device* device);
+	// Initialize FW1FontWrapper (call once, after device is created)
+	bool InitializeFW1(ID3D11Device* device);
 
 private:
 	std::vector<TextSubmission> submissions;
 
-	struct Glyph {
-		int x;
-		int y;
-		int w;
-		int h;
-		int xadvance;
-	};
-
-	struct FontAtlas {
-		int baseSize = 0;
-		int atlasWidth = 0;
-		int atlasHeight = 0;
-		std::unordered_map<int, Glyph> glyphs;
-		Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> atlasSrv;
-	};
-
-	std::unordered_map<std::string, FontAtlas> fonts;
+	IFW1Factory* fw1Factory = nullptr;
+	IFW1FontWrapper* fw1FontWrapper = nullptr;
+	bool fw1Initialized = false;
 };
 
 } // namespace UI

@@ -107,10 +107,21 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(imgui)
 
 # Project sources
+FetchContent_Declare(
+  FW1FontWrapper
+  GIT_REPOSITORY https://github.com/gamelaster/FW1FontWrapper.git
+  GIT_TAG 1.1
+)
+FetchContent_MakeAvailable(FW1FontWrapper)
+
 file(GLOB_RECURSE PROJECT_SOURCES CONFIGURE_DEPENDS "${CMAKE_SOURCE_DIR}/src/*.cpp")
 file(GLOB_RECURSE PROJECT_HEADERS CONFIGURE_DEPENDS "${CMAKE_SOURCE_DIR}/headers/*.h" "${CMAKE_SOURCE_DIR}/headers/*.hpp")
 
-add_executable(${PROJECT_NAME} WIN32 ${PROJECT_SOURCES} ${PROJECT_HEADERS})
+file(GLOB FW1FONTWRAPPER_SOURCES
+  "${CMAKE_BINARY_DIR}/_deps/fw1fontwrapper-src/FW1FontWrapper/Source/*.cpp"
+)
+
+add_executable(${PROJECT_NAME} WIN32 ${PROJECT_SOURCES} ${PROJECT_HEADERS} ${FW1FONTWRAPPER_SOURCES})
 
 # Target-scoped Windows Unicode defines
 target_compile_definitions(${PROJECT_NAME} PRIVATE
@@ -132,7 +143,22 @@ endif()
 target_include_directories(${PROJECT_NAME} PRIVATE
   "${CMAKE_SOURCE_DIR}/headers"
   "${CMAKE_BINARY_DIR}/include"
+  ${FW1FontWrapper_SOURCE_DIR}/FW1FontWrapper/Source
+  # FW1FontWrapper public headers live in the "Include" directory of the
+  # FetchContent checkout.  Add it so #include "FW1FontWrapper.h" resolves.
+  "${FW1FontWrapper_SOURCE_DIR}/FW1FontWrapper/Include"
 )
+
+# Some tools / IDEs (and certain generator/build folders) resolve the
+# FetchContent checkout into the CMake binary directory under "_deps".
+# Add that path as a fallback if the header lives there (common when
+# configuring out-of-source builds). This covers paths such as:
+#   ${CMAKE_BINARY_DIR}/_deps/fw1fontwrapper-src/FW1FontWrapper/Source
+if(EXISTS "${CMAKE_BINARY_DIR}/_deps/fw1fontwrapper-src/FW1FontWrapper/Source/FW1FontWrapper.h")
+  target_include_directories(${PROJECT_NAME} PRIVATE
+    "${CMAKE_BINARY_DIR}/_deps/fw1fontwrapper-src/FW1FontWrapper/Source"
+  )
+endif()
 
 # ImGui sources and include paths
 if(imgui_SOURCE_DIR)

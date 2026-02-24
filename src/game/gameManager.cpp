@@ -1,18 +1,20 @@
 #include "game/gameManager.h"
 #include "core/filepathHolder.h"
-#include <format>
 #include <cstdlib>
+#include <format>
 #include <random>
 
 std::weak_ptr<GameManager> GameManager::instance;
 
-GameManager::GameManager() : spawnPoint(DirectX::XMVectorSet(310.0, 5.0, 0.0, 0.0)), 
-currentRound(0), lastRound(10), inCombat(false), spawnTimer(1), unspawnedEnemies(0), spawnDelay(2) {}
+GameManager::GameManager()
+	: spawnPoint(DirectX::XMVectorSet(310.0, 5.0, 0.0, 0.0)), currentRound(0), lastRound(10), inCombat(false),
+	  spawnTimer(1), unspawnedEnemies(0), spawnDelay(2), idleTime(30), idleTimeTimer(0) 
+{}
 
-void GameManager::Start() { 
+void GameManager::Start() {
 	auto newPlayer = this->factory->FindObjectOfType<Player>();
 	if (!newPlayer.expired()) {
-		this->player = newPlayer; 
+		this->player = newPlayer;
 	} else {
 		Logger::Error("Failed to find player, add one to the scene.");
 	}
@@ -29,9 +31,11 @@ void GameManager::Start() {
 	} else {
 		Logger::Error("Two GameManagers?");
 	}
+
+	this->idleTimeTimer = this->idleTime;
 }
 
-void GameManager::Tick() { 
+void GameManager::Tick() {
 	if (this->inCombat) {
 		if (this->unspawnedEnemies > 0) {
 			if (this->spawnTimer > 0) {
@@ -53,18 +57,29 @@ void GameManager::Tick() {
 		if (this->unspawnedEnemies <= 0 && this->enemies.size() <= 0) {
 			EndRound();
 		}
+	} else {
+		if (this->idleTimeTimer > 0) {
+			this->idleTimeTimer -= Time::GetInstance().GetDeltaTime();
+		} else {
+			SpawnNextRound();
+		}
 	}
 
-	ImGui::Begin("Rounds"); 
+	ImGui::Begin("Rounds");
+	if (this->inCombat) {
+		ImGui::Text(std::format("Enemies: {}", this->enemies.size()).c_str());
+	} else {
+		ImGui::Text(std::format("Idle time: {}", this->idleTimeTimer).c_str());
+	}
 	ImGui::Text(std::format("Current round: {}", this->currentRound).c_str());
 	ImGui::Text(std::format("Enemies: {}", this->enemies.size()).c_str());
-	if (ImGui::Button("Next round")) {
+	if (ImGui::Button("Start next round")) {
 		SpawnNextRound();
 	}
 	ImGui::End();
 }
 
-void GameManager::ReloadScene() { 
+void GameManager::ReloadScene() {
 	std::string mainScene = this->factory->GetMainSceneFilepath();
 	if (mainScene != "") {
 		this->factory->QueueLoadScene(mainScene);
@@ -75,23 +90,27 @@ void GameManager::ReloadScene() {
 
 void GameManager::Win() { Logger::Log("You won!"); }
 
-void GameManager::PlayerDied() { 
-	Logger::Log("Player died"); 
+void GameManager::PlayerDied() {
+	Logger::Log("Player died");
 	auto lockedPlayer = this->player.lock();
 	lockedPlayer->transform.SetPosition(this->spawnPoint);
-	lockedPlayer->transform.SetRotationRPY(0,0,0);
-	lockedPlayer->SetCameraRotation(0,0,0);
+	lockedPlayer->transform.SetRotationRPY(0, 0, 0);
+	lockedPlayer->SetCameraRotation(0, 0, 0);
 	lockedPlayer->SetPhysicsPosition(this->spawnPoint);
 	lockedPlayer->SetPreviousPhysicsPosition(this->spawnPoint);
 }
 
-void GameManager::Loose() { 
-	Logger::Log("Game over!"); 
+void GameManager::Loose() {
+	Logger::Log("Game over!");
 	this->ReloadScene();
 }
 
-void GameManager::SpawnNextRound() { 
-	Logger::Log("New round!"); 
+void GameManager::SpawnNextRound() {
+	if (this->inCombat) {
+		EndRound();
+	}
+
+	Logger::Log("New round!");
 	this->inCombat = true;
 
 	if (auto spaceshipLock = this->spaceship.lock()) {
@@ -101,7 +120,7 @@ void GameManager::SpawnNextRound() {
 			throw std::runtime_error("Fatal error in GameManager.");
 		}
 
-		Vector2Int selectedRoom{0, 0};
+		Vector2Int selectedRoom{31, 0};
 		float longestDistance = 0;
 
 		for (auto& room : rooms) {
@@ -118,7 +137,6 @@ void GameManager::SpawnNextRound() {
 	}
 
 	this->unspawnedEnemies = 5;
-	this->unspawnedEnemies--;
 
 	this->spawnTimer = 0;
 }
@@ -128,18 +146,26 @@ void GameManager::SpawnEnemy() {
 
 	if (auto enemyPtr = enemy.lock()) {
 		enemyPtr->SetPath(this->path);
+		this->enemies.push_back(enemyPtr);
+
+		if (unspawnedEnemies > 0) {
+			this->unspawnedEnemies--;
+		}
 	} else {
 		Logger::Error("This shouldn't happen.");
 	}
-
-	if (unspawnedEnemies > 0) {
-		this->unspawnedEnemies--;
-	}
 }
 
-void GameManager::EndRound() { 
+void GameManager::EndRound() {
+	Logger::Log("Finished round");
 	this->inCombat = false;
-	this->currentRound++; 
+
+	if (currentRound < lastRound) {
+		this->currentRound++;
+		this->idleTimeTimer = this->idleTime;
+	} else {
+		Win();
+	}
 }
 
 const size_t& GameManager::GetCurrentRound() { return this->currentRound; }
@@ -148,12 +174,12 @@ const float& GameManager::GetSpawnDelay() { return this->spawnDelay; }
 
 void GameManager::SetSpawnDelay(float& newSpawnDelay) { this->spawnDelay = newSpawnDelay; }
 
-void GameManager::SaveToJson(nlohmann::json& data) { 
+void GameManager::SaveToJson(nlohmann::json& data) {
 	this->GameObject::SaveToJson(data);
 	data["type"] = "GameManager";
 }
 
-std::shared_ptr<GameManager> GameManager::GetInstance() { 
+std::shared_ptr<GameManager> GameManager::GetInstance() {
 	if (!GameManager::instance.expired()) {
 		return GameManager::instance.lock();
 	} else {
@@ -162,11 +188,11 @@ std::shared_ptr<GameManager> GameManager::GetInstance() {
 	}
 }
 
-float GameManager::GetRandom(float startValue, float endValue) { 
+float GameManager::GetRandom(float startValue, float endValue) {
 	assert(startValue < endValue);
+
 	float diff = endValue - startValue;
 	float value = (std::rand() % 10000) / 10000.0;
 	value = value * diff + startValue;
-	Logger::Log("Random value: ", value);
 	return value;
 }

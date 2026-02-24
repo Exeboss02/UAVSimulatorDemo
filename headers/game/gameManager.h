@@ -33,6 +33,9 @@ public:
 	/// </summary>
 	static std::shared_ptr<GameManager> GetInstance();
 
+	/// <summary>
+	/// Gets a random number between the start and end values
+	/// </summary>
 	float GetRandom(float startValue, float endValue);
 
 private:
@@ -54,6 +57,9 @@ private:
 
 	float spawnTimer;
 	float spawnDelay;
+
+	float idleTimeTimer;
+	const float idleTime;
 
 	size_t unspawnedEnemies;
 };

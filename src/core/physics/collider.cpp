@@ -158,7 +158,7 @@ void Collider::Tick()
 	this->GameObject3D::Tick();
 }
 
-void Collider::SetId(int id) 
+void Collider::SetId(int id)
 {
 	this->id = id;
 }
@@ -329,4 +329,22 @@ bool Collider::CollisionHandling(Collider* otherCollider, DirectX::XMFLOAT3& mtv
 	return true;
 }
 
+void Collider::SetType(ColliderType type) {this->type = type;}
 
+ColliderType Collider::GetType() { return this->type; }
+
+size_t Collider::GetTag() { return this->tag; }
+
+void Collider::SetTag(size_t tag) {this->tag = tag;}
+
+size_t Collider::GetIgnoreTag() { return this->ignoreTag; }
+
+void Collider::SetIgnoreTag(size_t ignoreTag) {this->ignoreTag = ignoreTag;}
+
+bool Collider::GetSolid() { return this->solid;}
+
+void Collider::SetSolid(bool solid) {this->solid = solid;}
+
+bool Collider::GetDynamic() { return this->dynamic; }
+
+void Collider::SetDynamic(bool dynamic) {this->dynamic = dynamic;}

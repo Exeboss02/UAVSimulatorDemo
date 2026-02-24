@@ -187,7 +187,7 @@ bool RigidBody::Collision(std::weak_ptr<RigidBody> rigidbody, int& nrOfCollision
 		{
 			Collider* otherCollider = (*rigidbody.lock()->GetColliderChildrenVector())[j].lock().get(); //make sure this ptr isn't stored in collider
 
-			if(thisCollider->ignoreTag != Tag::DISTANCE && otherCollider->ignoreTag != Tag::DISTANCE)
+			if(thisCollider->GetIgnoreTag() != Tag::DISTANCE && otherCollider->GetIgnoreTag() != Tag::DISTANCE)
 			{
 				DirectX::XMVECTOR colliderPosition = thisCollider->transform.GetGlobalPosition();
 				DirectX::XMVECTOR otherColliderPosition = otherCollider->transform.GetGlobalPosition();
@@ -232,7 +232,7 @@ bool RigidBody::Collision(std::weak_ptr<Collider> collider, int& nrOfCollisionTe
 
 		Collider* thisCollider = this->colliderChildren[i].lock().get(); //make sure this ptr isn't stored in collider
 
-		if(thisCollider->ignoreTag != Tag::DISTANCE && otherCollider->ignoreTag != Tag::DISTANCE)
+		if(thisCollider->GetIgnoreTag() != Tag::DISTANCE && otherCollider->GetIgnoreTag() != Tag::DISTANCE)
 		{
 			DirectX::XMVECTOR colliderPosition = thisCollider->transform.GetGlobalPosition();
 			DirectX::XMVECTOR otherColliderPosition = otherCollider->transform.GetGlobalPosition();

@@ -147,7 +147,7 @@ void PhysicsQueue::SolveCollisions() {
             float thisExtraCullingDistance = thisCollider->GetExtraCullingDistance();
             float otherExtraCullingDistance = otherCollider->GetExtraCullingDistance();
 
-            if(thisCollider->ignoreTag != Tag::DISTANCE && otherCollider->ignoreTag != Tag::DISTANCE)
+            if(thisCollider->GetIgnoreTag() != Tag::DISTANCE && otherCollider->GetIgnoreTag() != Tag::DISTANCE)
             {
                 if(distanceSquared >= this->colliderCullingDistanceSquared
                  + thisExtraCullingDistance

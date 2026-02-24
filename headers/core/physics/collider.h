@@ -117,14 +117,6 @@ public:
 	void SetExtraCullingDistance(float distanceSquared);
 	float GetExtraCullingDistance();
 
-	ColliderType type = ColliderType::NONE;
-	size_t tag = Tag::OBJECT;
-	size_t ignoreTag = Tag::NOIGNORE;
-	PhysicsMaterial physicsMaterial;
-	bool solid = true;
-	bool dynamic = false;
-	bool hasInitializedPreviousPosition = false;
-
 	/// <summary>
 	/// returns true if ray intersects object with distance
 	/// to hit and max ray distance
@@ -144,7 +136,26 @@ public:
 	void SetOnHit(std::function<void(float)> func) { this->hitFunc = func; }
 	void SetOnCollision(std::function<void(std::weak_ptr<GameObject3D>)> func) { this->collisionFunc = func; }
 
+	void SetType(ColliderType type);
+	ColliderType GetType();
+	size_t GetTag();
+	void SetTag(size_t tag);
+	size_t GetIgnoreTag();
+	void SetIgnoreTag(size_t ignoreTag);
+	bool GetSolid();
+	void SetSolid(bool solid);
+	bool GetDynamic();
+	void SetDynamic(bool dynamic);
+
 private:
+	ColliderType type = ColliderType::NONE;
+	size_t tag = Tag::OBJECT;
+	size_t ignoreTag = Tag::NOIGNORE;
+	PhysicsMaterial physicsMaterial;
+	bool solid = true;
+	bool dynamic = false;
+	bool hasInitializedPreviousPosition = false;
+
 	float extraCullingDistanceSquared = 0;
 
 	std::function<void()> interactFunc = []() {};

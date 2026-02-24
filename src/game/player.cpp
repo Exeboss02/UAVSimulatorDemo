@@ -41,40 +41,46 @@ void Player::Start()
 	{
 		auto colliderobjWeak = this->factory->CreateGameObjectOfType<SphereCollider>();
 		auto colliderobj = colliderobjWeak.lock();
-		colliderobj->dynamic = true;
-		colliderobj->solid = true;
+		colliderobj->SetDynamic(true);
+		colliderobj->SetSolid(true);
 		DirectX::XMFLOAT3 pos(0.0f, 0.0f, 0.0f);
 		colliderobj->transform.SetPosition(DirectX::XMLoadFloat3(&pos));
 		DirectX::XMFLOAT3 scale(1.0f, 1.0f, 1.0f);
 		colliderobj->transform.SetScale(DirectX::XMLoadFloat3(&scale));
 		colliderobj->SetParent(this->GetPtr());
-		//colliderobj->ignoreTag = Tag::WALL;
+		colliderobj->SetTag(Tag::PLAYER);
+		colliderobj->SetIgnoreTag(Tag::INTERACTABLE);
+		colliderobj->SetName("PlayerCollider " + std::to_string(this->factory->GetNextID()));
 	}
 
 	{
 		auto colliderobjWeak = this->factory->CreateGameObjectOfType<SphereCollider>();
 		auto colliderobj = colliderobjWeak.lock();
-		colliderobj->dynamic = true;
-		colliderobj->solid = true;
+		colliderobj->SetDynamic(true);
+		colliderobj->SetSolid(true);
 		DirectX::XMFLOAT3 pos(0.0f, 0.4f, 0.0f);
 		colliderobj->transform.SetPosition(DirectX::XMLoadFloat3(&pos));
 		DirectX::XMFLOAT3 scale(1.0f, 1.0f, 1.0f);
 		colliderobj->transform.SetScale(DirectX::XMLoadFloat3(&scale));
 		colliderobj->SetParent(this->GetPtr());
-		//colliderobj->ignoreTag = Tag::WALL;
+		colliderobj->SetTag(Tag::PLAYER);
+		colliderobj->SetIgnoreTag(Tag::INTERACTABLE);
+		colliderobj->SetName("PlayerCollider " + std::to_string(this->factory->GetNextID()));
 	}
 
 	{
 		auto colliderobjWeak = this->factory->CreateGameObjectOfType<SphereCollider>();
 		auto colliderobj = colliderobjWeak.lock();
-		colliderobj->dynamic = true;
-		colliderobj->solid = true;
+		colliderobj->SetDynamic(true);
+		colliderobj->SetSolid(true);
 		DirectX::XMFLOAT3 pos(0.0f, 0.8f, 0.0f);
 		colliderobj->transform.SetPosition(DirectX::XMLoadFloat3(&pos));
 		DirectX::XMFLOAT3 scale(1.0f, 1.0f, 1.0f);
 		colliderobj->transform.SetScale(DirectX::XMLoadFloat3(&scale));
 		colliderobj->SetParent(this->GetPtr());
-		//colliderobj->ignoreTag = Tag::WALL;
+		colliderobj->SetTag(Tag::PLAYER);
+		colliderobj->SetIgnoreTag(Tag::INTERACTABLE);
+		colliderobj->SetName("PlayerCollider " + std::to_string(this->factory->GetNextID()));
 	}
 
 	std::function<void(std::weak_ptr<GameObject3D>)> function = [&](std::weak_ptr<GameObject3D> gameObject3D) { this->OnCollision(gameObject3D); };

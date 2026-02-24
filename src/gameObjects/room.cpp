@@ -75,8 +75,9 @@ void Room::Start() {
 	buildCollider->transform.SetScale({1, .5, 1});
 	buildCollider->transform.SetPosition({0, 1, 0});
 	buildCollider->SetParent(this->GetPtr());
-	buildCollider->solid = false;
-	buildCollider->SetName("BUILD COLLIDER"	+ std::to_string(this->factory->GetNextID()));
+	buildCollider->SetSolid(false);
+	buildCollider->SetName("BuildCollider"	+ std::to_string(this->factory->GetNextID()));
+	buildCollider->SetTag(Tag::INTERACTABLE);
 	// Maybe tweak positionW
 	this->buildSlot = buildCollider;
 	buildCollider->SetOnInteract([&]() {

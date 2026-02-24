@@ -66,6 +66,8 @@ void Room::Start() {
 
 		meshobj->SetWAllIndex(i);
 
+		meshobj->SetName("A WALL");
+
 		this->walls[i] = meshobj;
 	}
 	auto buildCollider = this->factory->CreateStaticGameObject<BoxCollider>();
@@ -73,6 +75,7 @@ void Room::Start() {
 	buildCollider->transform.SetPosition({0, 1, 0});
 	buildCollider->SetParent(this->GetPtr());
 	buildCollider->solid = false;
+	buildCollider->SetName("BUILD COLLIDER");
 	// Maybe tweak positionW
 	this->buildSlot = buildCollider;
 	buildCollider->SetOnInteract([&]() {

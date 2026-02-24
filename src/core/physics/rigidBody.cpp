@@ -70,8 +70,29 @@ void RigidBody::SetPreviousPhysicsPosition(DirectX::XMVECTOR oldPosition)
 	this->previousPhysicsPosition = oldPosition;
 }
 
-void RigidBody::LoadFromJson(const nlohmann::json& data)
+void RigidBody::SetOnCollisionFunction(std::function<void(std::weak_ptr<GameObject3D>)> function, int index)
 {
+	if(index >= this->colliderChildren.size())
+	{
+		Logger::Log("Tried to set RigidBody collider function with index out of range");
+		return;
+	}
+
+	if(!this->colliderChildren[index].expired())
+	{
+		this->colliderChildren[index].lock()->SetOnCollision(function);
+	}
+}
+
+void RigidBody::SetAllOnCollisionFunction(std::function<void(std::weak_ptr<GameObject3D>)> function)
+{
+	for(int i = 0; i < this->colliderChildren.size(); i++)
+	{
+		this->SetOnCollisionFunction(function, i);
+	}
+}
+
+void RigidBody::LoadFromJson(const nlohmann::json& data) {
 	this->GameObject3D::LoadFromJson(data);
 
 	 if(data.contains("gravity"))

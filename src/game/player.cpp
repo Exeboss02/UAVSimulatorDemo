@@ -48,6 +48,7 @@ void Player::Start()
 		DirectX::XMFLOAT3 scale(1.0f, 1.0f, 1.0f);
 		colliderobj->transform.SetScale(DirectX::XMLoadFloat3(&scale));
 		colliderobj->SetParent(this->GetPtr());
+		//colliderobj->ignoreTag = Tag::FLOOR;
 	}
 
 	{
@@ -60,6 +61,7 @@ void Player::Start()
 		DirectX::XMFLOAT3 scale(1.0f, 1.0f, 1.0f);
 		colliderobj->transform.SetScale(DirectX::XMLoadFloat3(&scale));
 		colliderobj->SetParent(this->GetPtr());
+		//colliderobj->ignoreTag = Tag::FLOOR;
 	}
 
 	{
@@ -72,7 +74,11 @@ void Player::Start()
 		DirectX::XMFLOAT3 scale(1.0f, 1.0f, 1.0f);
 		colliderobj->transform.SetScale(DirectX::XMLoadFloat3(&scale));
 		colliderobj->SetParent(this->GetPtr());
+		//colliderobj->ignoreTag = Tag::FLOOR;
 	}
+
+	std::function<void(std::weak_ptr<GameObject3D>)> function = [&](std::weak_ptr<GameObject3D> gameObject3D) { this->OnCollision(gameObject3D); };
+	this->SetAllOnCollisionFunction(function);
 
 	this->musicTimer.Initialize(2);
 	this->sfxTimer.Initialize(0.4f);
@@ -228,6 +234,13 @@ void Player::SetCameraRotation(float r, float p, float y) {
 	this->cameraRotation[0] = r;
 	this->cameraRotation[1] = p;
 	this->cameraRotation[2] = y;
+}
+
+void Player::OnCollision(std::weak_ptr<GameObject3D> gameObject3D)
+{
+	std::string name = gameObject3D.lock()->GetName();
+
+	Logger::Log("COLLIDED WITH ", name);
 }
 
 void Player::LoadFromJson(const nlohmann::json& data)

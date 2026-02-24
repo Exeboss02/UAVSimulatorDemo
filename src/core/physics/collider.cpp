@@ -297,11 +297,11 @@ bool Collider::CollisionHandling(Collider* otherCollider, DirectX::XMFLOAT3& mtv
 
 	if (!collision) return false;
 
-	std::weak_ptr<GameObject> parent = this->GetParent();
+	std::weak_ptr<GameObject> parent = otherCollider->GetParent();
 	if(parent.expired())
 	{
-		std::shared_ptr<GameObject3D> self = std::static_pointer_cast<GameObject3D>(this->GetPtr());
-		this->OnCollision(self);
+		std::shared_ptr<GameObject3D> other = std::static_pointer_cast<GameObject3D>(otherCollider->GetPtr());
+		this->OnCollision(other);
 	}
 	else
 	{

@@ -27,6 +27,7 @@ void SpaceShip::CreateRoom(size_t x, size_t y) {
 		roomMesh->SetupPathfindingNodes(std::dynamic_pointer_cast<SpaceShip>(this->GetPtr()), roomMesh);
 
 		this->rooms[x][y] = roomMesh;
+		this->placedRooms.emplace(Vector2Int{(int)x,(int)y}, );
 		
 		roomMesh.Init();
 

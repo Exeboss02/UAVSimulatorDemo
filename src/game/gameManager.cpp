@@ -1,9 +1,10 @@
 #include "game/gameManager.h"
 #include "core/filepathHolder.h"
+#include <format>
 
 std::weak_ptr<GameManager> GameManager::instance;
 
-GameManager::GameManager() : spawnPoint(DirectX::XMVectorSet(310.0, 5.0, 0.0, 0.0)){}
+GameManager::GameManager() : spawnPoint(DirectX::XMVectorSet(310.0, 5.0, 0.0, 0.0)), currentRound(0), lastRound(10), inCombat(false) {}
 
 void GameManager::Start() { 
 	auto newPlayer = this->factory->FindObjectOfType<Player>();
@@ -11,6 +12,13 @@ void GameManager::Start() {
 		this->player = newPlayer; 
 	} else {
 		Logger::Error("Failed to find player, add one to the scene.");
+	}
+
+	auto newSpaceship = this->factory->FindObjectOfType<SpaceShip>();
+	if (!newSpaceship.expired()) {
+		this->spaceship = newSpaceship;
+	} else {
+		Logger::Error("Failed to find spaceship, add one to the scene.");
 	}
 
 	if (GameManager::instance.expired()) {
@@ -21,6 +29,27 @@ void GameManager::Start() {
 }
 
 void GameManager::Tick() { 
+	if (this->inCombat) {
+		for (size_t i = 0; i < this->enemies.size(); i++) {
+			if (this->enemies[i].expired()) {
+				this->enemies.erase(this->enemies.begin() + i);
+				i--;
+				continue;
+			}
+		}
+
+		if (this->enemies.size() <= 0) {
+			EndRound();
+		}
+	}
+
+	ImGui::Begin("Rounds"); 
+	ImGui::Text(std::format("Current round: {}", this->currentRound).c_str());
+	ImGui::Text(std::format("Enemies: {}", this->enemies.size()).c_str());
+	if (ImGui::Button("Next round")) {
+		SpawnNextRound();
+	}
+	ImGui::End();
 }
 
 void GameManager::ReloadScene() { 
@@ -48,6 +77,34 @@ void GameManager::Loose() {
 	Logger::Log("Game over!"); 
 	this->ReloadScene();
 }
+
+void GameManager::SpawnNextRound() { 
+	Logger::Log("New round!"); 
+	this->inCombat = true;
+
+	if (auto spaceshipLock = this->spaceship.lock()) {
+		//this->path = spaceshipLock->GetPathfinder()->FindPath(roomMesh->GetPathfindingNodes()[0]);
+	} else {
+		Logger::Error("Failed to create enemy path.");
+	}
+
+	for (size_t i = 0; i < 5; i++) {
+		auto enemy = this->factory->CreateGameObjectOfType<TestEnemy>();
+
+		if (auto enemyPtr = enemy.lock()) {
+			enemyPtr->SetPath(this->path);
+		} else {
+			Logger::Error("This shouldn't happen.");
+		}
+	}
+}
+
+void GameManager::EndRound() { 
+	this->inCombat = false;
+	this->currentRound++; 
+}
+
+const size_t& GameManager::GetCurrentRound() { return this->currentRound; }
 
 void GameManager::SaveToJson(nlohmann::json& data) { 
 	this->GameObject::SaveToJson(data);

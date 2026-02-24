@@ -12,11 +12,11 @@
 #include "utilities/logger.h"
 
 Enemy::Enemy() : GameObject3D(), health(100), path({}), maxPathIndex(0), currentPathIndex(0),
-	hasFinishedPath(false), timeSinceLastShot(0.0f)
-{
+	hasFinishedPath(false), timeSinceLastShot(0.0f) {
 	this->direction = DirectX::XMVectorSet(0, 0, 1, 0);
 	this->targetRotation = DirectX::XMQuaternionIdentity();
 	this->SetMoveSpeedMode(MoveSpeedMode::NORMAL);
+	this->transform.SetScale({0.5f, 0.5f, 0.5f});
 }
 
 void Enemy::Start() { 
@@ -40,18 +40,15 @@ void Enemy::Start() {
 }
 
 void Enemy::Tick() {
-
 	this->UpdateShootCooldown();
-
 
 	if (this->maxPathIndex != 0 && !this->hasFinishedPath) {
 		this->MoveAlongPath();
+		this->ShootAtPlayer();
 	}
-
 	else if (this->hasFinishedPath) {
 		this->ShootAtCore();
 	}
-	this->ShootAtPlayer();
 }
 
 void Enemy::SetMoveSpeedMode(MoveSpeedMode mode) {
@@ -140,7 +137,10 @@ void Enemy::ShootAtCore() {
 	float maxDistance = rayDirection.Length() + 1.f; // Small bias
 	rayDirection.Normalize();
 
-	Ray ray{enemyPosition, rayDirection};
+	Vector3D adjustedPos = enemyPosition + rayDirection * 1.f;
+	DirectX::XMVECTOR pos = DirectX::XMVectorSet(enemyPosition.GetX(), enemyPosition.GetY(), enemyPosition.GetZ(), 1.0f);
+	DirectX::XMVECTOR dir = DirectX::XMVectorSet(rayDirection.GetX(), rayDirection.GetY(), rayDirection.GetZ(), 0.0f);
+	Ray ray{adjustedPos, rayDirection};
 	RayCastData rayCastData = {};
 
 	bool didHit = PhysicsQueue::GetInstance().castRay(ray, rayCastData, maxDistance);
@@ -148,6 +148,17 @@ void Enemy::ShootAtCore() {
 		rayCastData.hitColider.lock()->Hit(this->damage);
 		Logger::Log("Enemy shooting at core");
 		this->canShoot = false;
+
+		MeshObjData meshdata = AssetManager::GetInstance().GetMeshObjData("TexBox/TextureCube.glb:Mesh_0");
+		auto colliderobjWeak = this->factory->CreateGameObjectOfType<MeshObject>();
+		auto colliderobj = colliderobjWeak.lock();
+		colliderobj->SetMesh(meshdata);
+		colliderobj->GetMesh().SetMaterial(0, AssetManager::GetInstance().GetMaterialWeakPtr("defaultUnlitMaterial").lock());
+		DirectX::XMVECTOR direction = DirectX::XMVectorSet(rayDirection.GetX(), rayDirection.GetY(), rayDirection.GetZ(), 0.0f);
+		colliderobj->transform.SetPosition(DirectX::XMVectorAdd(pos, DirectX::XMVectorScale(direction, rayCastData.distance / 2)));
+		colliderobj->transform.SetRotationQuaternion(dir);
+		DirectX::XMFLOAT3 scale(0.01f, 0.01f, rayCastData.distance);
+		colliderobj->transform.SetScale(DirectX::XMLoadFloat3(&scale));
 	}
 }
 
@@ -166,7 +177,9 @@ void Enemy::ShootAtPlayer() {
 	float maxDistance = rayDirection.Length() + 1.f; // Small bias;
 	rayDirection.Normalize();
 
-	Vector3D adjustedPos = enemyPosition + rayDirection * 1.5f; // Move the ray origin slightly forward to avoid hitting self
+	Vector3D adjustedPos = enemyPosition + rayDirection * 1.f; // Move the ray origin slightly forward to avoid hitting self
+	DirectX::XMVECTOR pos = DirectX::XMVectorSet(enemyPosition.GetX(), enemyPosition.GetY(), enemyPosition.GetZ(), 1.0f);
+	DirectX::XMVECTOR dir = DirectX::XMVectorSet(rayDirection.GetX(), rayDirection.GetY(), rayDirection.GetZ(), 0.0f);
 	Ray ray{adjustedPos, rayDirection};
 	RayCastData rayCastData = {};
 
@@ -177,6 +190,20 @@ void Enemy::ShootAtPlayer() {
 				rayCastData.hitColider.lock()->Hit(this->damage);
 				Logger::Log("Enemy shooting at player");
 				this->canShoot = false;
+
+				MeshObjData meshdata = AssetManager::GetInstance().GetMeshObjData("TexBox/TextureCube.glb:Mesh_0");
+				auto colliderobjWeak = this->factory->CreateGameObjectOfType<MeshObject>();
+				auto colliderobj = colliderobjWeak.lock();
+				colliderobj->SetMesh(meshdata);
+				colliderobj->GetMesh().SetMaterial(
+					0, AssetManager::GetInstance().GetMaterialWeakPtr("defaultUnlitMaterial").lock());
+				DirectX::XMVECTOR direction =
+					DirectX::XMVectorSet(rayDirection.GetX(), rayDirection.GetY(), rayDirection.GetZ(), 0.0f);
+				colliderobj->transform.SetPosition(
+					DirectX::XMVectorAdd(pos, DirectX::XMVectorScale(direction, rayCastData.distance / 2)));
+				colliderobj->transform.SetRotationQuaternion(dir);
+				DirectX::XMFLOAT3 scale(0.01f, 0.01f, rayCastData.distance);
+				colliderobj->transform.SetScale(DirectX::XMLoadFloat3(&scale));
 			}
 		}
 	}

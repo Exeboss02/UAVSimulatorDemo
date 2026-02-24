@@ -7,6 +7,8 @@
 #include "rendering/unlitMaterial.h"
 #include "utilities/logger.h"
 
+#include "scene/sceneManager.h"
+
 // json
 #include <nlohmann/json.hpp>
 
@@ -25,7 +27,6 @@ void UI::Button::Start() {
 
 	auto meshPtr = mesh.GetMesh().lock();
 	size_t subCount = meshPtr->GetSubMeshes().size();
-	Logger::Log("Button::Start: quad mesh submeshes:", subCount);
 
 	// Create a per-button unlit material so the tint/color is unique per button
 	ID3D11Device* dev = AssetManager::GetInstance().GetDevicePointer();
@@ -56,7 +57,6 @@ void UI::Button::Start() {
 	mesh.SetMaterial(0, mat);
 	// keep a shared_ptr to the material so we can update it later
 	this->material = mat;
-	Logger::Log("Button::Start: Assigned per-button material to quad mesh (", matId, ")");
 
 	this->SetMesh(mesh);
 }
@@ -175,6 +175,51 @@ void UI::Button::ShowInHierarchy() {
 	}
 
 	ImGui::Separator();
+
+	// Event IDs (editable in the editor). Use 0 for none.
+	int clickId = this->onClickEventID;
+	if (ImGui::InputInt("OnClick Event ID", &clickId)) {
+		SetOnClickEventID_Wire(clickId);
+	}
+
+	int pressedId = this->onPressedEventID;
+	if (ImGui::InputInt("OnPressed Event ID", &pressedId)) {
+		SetOnPressedEventID_Wire(pressedId);
+	}
+
+	int releasedId = this->onReleasedEventID;
+	if (ImGui::InputInt("OnReleased Event ID", &releasedId)) {
+		SetOnReleasedEventID_Wire(releasedId);
+	}
+}
+
+void UI::Button::SetOnClickEventID(int id) { this->onClickEventID = id; }
+
+int UI::Button::GetOnClickEventID() const { return this->onClickEventID; }
+
+void UI::Button::SetOnPressedEventID(int id) { this->onPressedEventID = id; }
+
+int UI::Button::GetOnPressedEventID() const { return this->onPressedEventID; }
+
+void UI::Button::SetOnReleasedEventID(int id) { this->onReleasedEventID = id; }
+
+int UI::Button::GetOnReleasedEventID() const { return this->onReleasedEventID; }
+
+// After changing the stored event IDs, attempt to wire the button to the active SceneManager's EventManager
+// so edits in the inspector take effect immediately.
+void UI::Button::SetOnClickEventID_Wire(int id) {
+	this->SetOnClickEventID(id);
+	if (auto sm = SceneManager::GetActive()) sm->WireButtonEvents(this);
+}
+
+void UI::Button::SetOnPressedEventID_Wire(int id) {
+	this->SetOnPressedEventID(id);
+	if (auto sm = SceneManager::GetActive()) sm->WireButtonEvents(this);
+}
+
+void UI::Button::SetOnReleasedEventID_Wire(int id) {
+	this->SetOnReleasedEventID(id);
+	if (auto sm = SceneManager::GetActive()) sm->WireButtonEvents(this);
 }
 
 void UI::Button::SetLabel(const std::string& l) { this->label = l; }
@@ -192,6 +237,14 @@ void UI::Button::LoadFromJson(const nlohmann::json& data) {
 		this->color.z = data["color"][2].get<float>();
 		this->color.w = data["color"][3].get<float>();
 	}
+
+	// Load persisted event IDs if present
+	if (data.contains("onClickEvent") && data["onClickEvent"].is_number())
+		this->onClickEventID = data["onClickEvent"].get<int>();
+	if (data.contains("onPressedEvent") && data["onPressedEvent"].is_number())
+		this->onPressedEventID = data["onPressedEvent"].get<int>();
+	if (data.contains("onReleasedEvent") && data["onReleasedEvent"].is_number())
+		this->onReleasedEventID = data["onReleasedEvent"].get<int>();
 }
 
 void UI::Button::SaveToJson(nlohmann::json& data) {
@@ -199,6 +252,11 @@ void UI::Button::SaveToJson(nlohmann::json& data) {
 	data["type"] = "UI::Button";
 	data["label"] = this->GetLabel();
 	data["color"] = {this->color.x, this->color.y, this->color.z, this->color.w};
+
+	// Persist event IDs
+	if (this->onClickEventID != 0) data["onClickEvent"] = this->onClickEventID;
+	if (this->onPressedEventID != 0) data["onPressedEvent"] = this->onPressedEventID;
+	if (this->onReleasedEventID != 0) data["onReleasedEvent"] = this->onReleasedEventID;
 }
 
 void UI::Button::SetTint(const DirectX::XMFLOAT4& c) {

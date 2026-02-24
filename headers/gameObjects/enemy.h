@@ -27,6 +27,8 @@ private:
 	int health;
 	float movementSpeed;
 	DirectX::XMVECTOR direction;
+	DirectX::XMVECTOR targetRotation;
+	const float rotationSpeed = 5.0f;
 
 	std::weak_ptr<BoxCollider> hitbox;
 
@@ -35,6 +37,8 @@ private:
 	size_t currentPathIndex;
 	bool hasFinishedPath;
 
+	const float damage = 5.f;
+	bool canShoot = true;
 	const float shotCooldown = 2.f;
 	float timeSinceLastShot;
 

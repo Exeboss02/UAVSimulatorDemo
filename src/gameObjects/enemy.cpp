@@ -6,12 +6,16 @@
 #include "core/physics/physicsQueue.h"
 #include "gameObjects/meshObject.h"
 #include "gameObjects/meshObjData.h"
+#include "game/player.h"
 #include "core/assetManager.h"
+
+#include "utilities/logger.h"
 
 Enemy::Enemy() : GameObject3D(), health(100), path({}), maxPathIndex(0), currentPathIndex(0),
 	hasFinishedPath(false), timeSinceLastShot(0.0f)
 {
 	this->direction = DirectX::XMVectorSet(0, 0, 1, 0);
+	this->targetRotation = DirectX::XMQuaternionIdentity();
 	this->SetMoveSpeedMode(MoveSpeedMode::NORMAL);
 }
 
@@ -39,16 +43,15 @@ void Enemy::Tick() {
 
 	this->UpdateShootCooldown();
 
-	this->ShootAtPlayer();
 
 	if (this->maxPathIndex != 0 && !this->hasFinishedPath) {
 		this->MoveAlongPath();
 	}
 
-	// Reached cockpit and can now attack core
 	else if (this->hasFinishedPath) {
 		this->ShootAtCore();
 	}
+	this->ShootAtPlayer();
 }
 
 void Enemy::SetMoveSpeedMode(MoveSpeedMode mode) {
@@ -96,11 +99,18 @@ void Enemy::MoveAlongPath() {
 		rotationMatrix.r[2] = this->direction;
 		rotationMatrix.r[3] = DirectX::XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f);
 
-		DirectX::XMVECTOR rotation = DirectX::XMQuaternionRotationMatrix(rotationMatrix);
-		this->transform.SetRotationQuaternion(rotation);
+		this->targetRotation = DirectX::XMQuaternionRotationMatrix(rotationMatrix);
 	}
 
-	this->transform.Move(this->direction, this->movementSpeed * Time::GetInstance().GetDeltaTime());
+	float dt = Time::GetInstance().GetDeltaTime();
+
+	// Smoothly lerp rotation
+	DirectX::XMVECTOR currentRotation = this->transform.GetRotationQuaternion();
+	float deltaRotation = this->rotationSpeed * dt;
+	DirectX::XMVECTOR newRotation = DirectX::XMQuaternionSlerp(currentRotation, this->targetRotation, deltaRotation);
+	this->transform.SetRotationQuaternion(newRotation);
+
+	this->transform.Move(this->direction, this->movementSpeed * dt);
 }
 
 bool Enemy::IsAtCurrentPathNode() { 
@@ -109,20 +119,25 @@ bool Enemy::IsAtCurrentPathNode() {
 										DirectX::XMVectorSet(0.1f, 0.1f, 0.1f, 0.1f));
 }
 
-void Enemy::UpdateShootCooldown() {}
+void Enemy::UpdateShootCooldown() {
+
+	if (this->canShoot == false) {
+		this->timeSinceLastShot += Time::GetInstance().GetDeltaTime();
+
+		if (this->timeSinceLastShot >= this->shotCooldown) {
+			this->canShoot = true;
+			this->timeSinceLastShot = 0.0f;
+		}
+	}
+}
 
 void Enemy::ShootAtCore() {
-	this->timeSinceLastShot += Time::GetInstance().GetDeltaTime();
-
-	if (this->timeSinceLastShot < this->shotCooldown) {
-		return;
-	}
+	if (!this->canShoot) return;
 
 	Vector3D enemyPosition = this->transform.GetGlobalPosition();
 	Vector3D corePosition = this->path[this->maxPathIndex]->transform.GetGlobalPosition();
 	Vector3D rayDirection = corePosition - enemyPosition;
-	Logger::Log(std::to_string(rayDirection.Length()));
-	float maxDistance = rayDirection.Length() + 2.f; // Small buffer to ensure hit
+	float maxDistance = rayDirection.Length() + 1.f; // Small bias
 	rayDirection.Normalize();
 
 	Ray ray{enemyPosition, rayDirection};
@@ -130,34 +145,38 @@ void Enemy::ShootAtCore() {
 
 	bool didHit = PhysicsQueue::GetInstance().castRay(ray, rayCastData, maxDistance);
 	if (didHit) {
-		rayCastData.hitColider.lock()->Hit();
-		this->timeSinceLastShot = 0.0f;
+		rayCastData.hitColider.lock()->Hit(this->damage);
+		Logger::Log("Enemy shooting at core");
+		this->canShoot = false;
 	}
 }
 
 void Enemy::ShootAtPlayer() { 
+	if (!this->canShoot) return;
+
 	auto player = this->factory->FindObjectOfType<Player>().lock();
 	if (!player) {
-		Logger::Error("Enemy couldn't find player.");
+		Logger::Log("Enemy couldn't find player.");
 		return;
 	}
 
 	Vector3D enemyPosition = this->transform.GetGlobalPosition();
 	Vector3D playerPosition = player->transform.GetGlobalPosition();
 	Vector3D rayDirection = playerPosition - enemyPosition;
-	float maxDistance = rayDirection.Length();
+	float maxDistance = rayDirection.Length() + 1.f; // Small bias;
 	rayDirection.Normalize();
 
-	Ray ray{enemyPosition, rayDirection};
+	Vector3D adjustedPos = enemyPosition + rayDirection * 1.5f; // Move the ray origin slightly forward to avoid hitting self
+	Ray ray{adjustedPos, rayDirection};
 	RayCastData rayCastData = {};
 
 	bool didHit = PhysicsQueue::GetInstance().castRay(ray, rayCastData, maxDistance);
 	if (didHit) {
 		if (auto hitCollider = rayCastData.hitColider.lock()) {
 			if (hitCollider->GetParent().lock().get() == player.get()) {
-				// Player take damage logic here
-				rayCastData.hitColider.lock()->Hit();
-				this->timeSinceLastShot = 0.0f;
+				rayCastData.hitColider.lock()->Hit(this->damage);
+				Logger::Log("Enemy shooting at player");
+				this->canShoot = false;
 			}
 		}
 	}

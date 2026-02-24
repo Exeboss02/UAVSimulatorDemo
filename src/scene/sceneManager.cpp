@@ -164,7 +164,8 @@ void SceneManager::LoadSceneFromFile(const std::string& filePath) {
 	// register listener for Play
 	this->eventManager->RegisterCallback(static_cast<int>(ButtonEvent::PLAY), [this]() {
 		Logger::Log("PLAY event triggered: loading GAME scene");
-		this->LoadScene(SceneManager::Scenes::GAME);
+		this->mainScene->QueueLoadScene(
+			(FilepathHolder::GetAssetsDirectory() / "scenes" / "SpaceShipScene.json").string());
 	});
 
 	// register listener for Exit

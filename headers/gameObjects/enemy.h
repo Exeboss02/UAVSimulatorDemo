@@ -40,5 +40,9 @@ private:
 
 	void MoveAlongPath();
 	bool IsAtCurrentPathNode();
+
+	void UpdateShootCooldown();
+
 	void ShootAtCore();
+	void ShootAtPlayer();
 };

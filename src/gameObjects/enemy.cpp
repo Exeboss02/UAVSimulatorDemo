@@ -19,7 +19,7 @@ void Enemy::Start() {
 	auto meshObj = this->factory->CreateGameObjectOfType<MeshObject>().lock();
 	meshObj->SetParent(this->GetPtr());
 
-	MeshObjData meshData = AssetManager::GetInstance().GetMeshObjData(""); // TODO: Add enemy mesh
+	MeshObjData meshData = AssetManager::GetInstance().GetMeshObjData("TexBox/TextureCube.glb:Mesh_0"); // TODO: Add enemy mesh
 	meshObj->SetMesh(meshData);
 
 	auto collider = this->factory->CreateGameObjectOfType<BoxCollider>().lock();
@@ -35,7 +35,12 @@ void Enemy::Start() {
 	this->hitbox = collider;
 }
 
-void Enemy::Tick() { 
+void Enemy::Tick() {
+
+	this->UpdateShootCooldown();
+
+	this->ShootAtPlayer();
+
 	if (this->maxPathIndex != 0 && !this->hasFinishedPath) {
 		this->MoveAlongPath();
 	}
@@ -69,7 +74,7 @@ void Enemy::SetPath(const std::vector<std::shared_ptr<AStarVertex>>& newPath) {
 }
 
 void Enemy::MoveAlongPath() { 
-	if (this->currentPathIndex >= this->maxPathIndex - 1) { // Stop on node before core.
+	if (this->currentPathIndex >= this->maxPathIndex) { // Stop on node before core.
 		this->hasFinishedPath = true;
 		return;
 	}
@@ -104,6 +109,8 @@ bool Enemy::IsAtCurrentPathNode() {
 										DirectX::XMVectorSet(0.1f, 0.1f, 0.1f, 0.1f));
 }
 
+void Enemy::UpdateShootCooldown() {}
+
 void Enemy::ShootAtCore() {
 	this->timeSinceLastShot += Time::GetInstance().GetDeltaTime();
 
@@ -114,6 +121,7 @@ void Enemy::ShootAtCore() {
 	Vector3D enemyPosition = this->transform.GetGlobalPosition();
 	Vector3D corePosition = this->path[this->maxPathIndex]->transform.GetGlobalPosition();
 	Vector3D rayDirection = corePosition - enemyPosition;
+	Logger::Log(std::to_string(rayDirection.Length()));
 	float maxDistance = rayDirection.Length() + 2.f; // Small buffer to ensure hit
 	rayDirection.Normalize();
 
@@ -122,7 +130,35 @@ void Enemy::ShootAtCore() {
 
 	bool didHit = PhysicsQueue::GetInstance().castRay(ray, rayCastData, maxDistance);
 	if (didHit) {
-		rayCastData.hitColider.lock()->Interact();
+		rayCastData.hitColider.lock()->Hit();
 		this->timeSinceLastShot = 0.0f;
+	}
+}
+
+void Enemy::ShootAtPlayer() { 
+	auto player = this->factory->FindObjectOfType<Player>().lock();
+	if (!player) {
+		Logger::Error("Enemy couldn't find player.");
+		return;
+	}
+
+	Vector3D enemyPosition = this->transform.GetGlobalPosition();
+	Vector3D playerPosition = player->transform.GetGlobalPosition();
+	Vector3D rayDirection = playerPosition - enemyPosition;
+	float maxDistance = rayDirection.Length();
+	rayDirection.Normalize();
+
+	Ray ray{enemyPosition, rayDirection};
+	RayCastData rayCastData = {};
+
+	bool didHit = PhysicsQueue::GetInstance().castRay(ray, rayCastData, maxDistance);
+	if (didHit) {
+		if (auto hitCollider = rayCastData.hitColider.lock()) {
+			if (hitCollider->GetParent().lock().get() == player.get()) {
+				// Player take damage logic here
+				rayCastData.hitColider.lock()->Hit();
+				this->timeSinceLastShot = 0.0f;
+			}
+		}
 	}
 }

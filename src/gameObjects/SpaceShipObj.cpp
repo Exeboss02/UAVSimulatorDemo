@@ -2,6 +2,7 @@
 #include "core/assetManager.h"
 #include "gameObjects/meshObject.h"
 #include "gameObjects/testEnemy.h"
+#include "gameObjects/enemy.h"
 #include "imgui.h"
 #include <array>
 
@@ -83,7 +84,7 @@ void SpaceShip::Tick() {
 
 	ImGui::Begin("Spawn enemy");
 	if (ImGui::Button("Spawn")) {
-		auto enemy = this->factory->CreateGameObjectOfType<TestEnemy>();
+		auto enemy = this->factory->CreateGameObjectOfType<Enemy>();
 		Logger::Log("Spawned Enemy");
 		if (auto enemyPtr = enemy.lock()) {
 			enemyPtr->SetPath(this->path);

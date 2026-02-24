@@ -16,6 +16,7 @@ enum ColliderType { BOX, SPHERE, NONE };
 class BoxCollider; // forward declaration
 class SphereCollider;
 class RigidBody;
+class Player;
 
 class Collider : public GameObject3D {
 public:
@@ -122,18 +123,18 @@ public:
 	/// <returns></returns>
 	virtual bool IntersectWithRay(const Ray& ray, float& distance, float maxDistance) = 0;
 
-	void Interact() { this->interactFunc(); };
+	void Interact(Player player) { this->interactFunc(player); };
 	void Hover() { this->hoverFunc(); };
 	void Hit(float damage) { this->hitFunc(damage); }
 
-	void SetOnInteract(std::function<void()> func) { this->interactFunc = func; }
+	void SetOnInteract(std::function<void(Player)> func) { this->interactFunc = func; }
 	void SetOnHover(std::function<void()> func) { this->hoverFunc = func; }
 	void SetOnHit(std::function<void(float)> func) { this->hitFunc = func; }
 
 private:
 	float extraCullingDistanceSquared = 0;
 
-	std::function<void()> interactFunc = []() {};
+	std::function<void(Player)> interactFunc = [](Player) {};
 	std::function<void()> hoverFunc = []() {};
 	std::function<void(float)> hitFunc = [](float) {};
 	int id = -1;

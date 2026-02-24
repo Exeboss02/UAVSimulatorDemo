@@ -15,9 +15,42 @@ void Text::SetColor(const DirectX::XMFLOAT4& c) { this->color = c; }
 DirectX::XMFLOAT4 Text::GetColor() const { return this->color; }
 
 void Text::ShowInHierarchy() {
-	Widget::ShowInHierarchy();
+	// Show base GameObject inspector (name, active, delete/reparent)
+	this->GameObject::ShowInHierarchy();
 
 	ImGui::Separator();
+	ImGui::Text("Widget settings:");
+
+	// Position
+	Vec2 pos = this->GetPosition();
+	if (ImGui::InputFloat2("Position", &pos.x)) {
+		this->SetPosition(pos);
+	}
+
+	// Replace Size control with Font Size for text widgets
+	if (ImGui::DragFloat("Font Size", &this->fontSize, 1.0f, 1.0f, 512.0f)) {
+		if (this->fontSize < 1.0f) this->fontSize = 1.0f;
+	}
+
+	// Visibility / enabled
+	bool vis = this->IsVisible();
+	if (ImGui::Checkbox("Visible", &vis)) {
+		this->SetVisible(vis);
+	}
+
+	bool en = this->isEnabled();
+	if (ImGui::Checkbox("Enabled", &en)) {
+		this->SetEnabled(en);
+	}
+
+	// Z-index
+	int z = this->GetZIndex();
+	if (ImGui::InputInt("Z Index", &z)) {
+		this->SetZIndex(z);
+	}
+
+	ImGui::Separator();
+
 	ImGui::Text("Text settings:");
 
 	// Text content — use a persistent edit buffer so ImGui can edit across frames
@@ -32,20 +65,18 @@ void Text::ShowInHierarchy() {
 
 	if (ImGui::InputText("Text", this->editBuffer.data(), static_cast<int>(this->editBuffer.size()), textFlags)) {
 		this->text = std::string(this->editBuffer.data());
-		this->SetName(this->text);
 	} else if (ImGui::IsItemDeactivatedAfterEdit()) {
 		this->text = std::string(this->editBuffer.data());
-		this->SetName(this->text);
 	}
 
 	// Font — persistent buffer so we can show and edit the font name (default when empty)
 	if (this->fontEditBuffer.empty()) {
 		this->fontEditBuffer.resize(128);
 		std::fill(this->fontEditBuffer.begin(), this->fontEditBuffer.end(), 0);
-		const char* initial = this->font.empty() ? "default" : this->font.c_str();
+		const char* initial = this->font.empty() ? "assets/fonts/lucon.ttf" : this->font.c_str();
 		std::strncpy(this->fontEditBuffer.data(), initial, this->fontEditBuffer.size() - 1);
 		// if font member was empty, set it to default so renderer uses it
-		if (this->font.empty()) this->font = "default";
+		if (this->font.empty()) this->font = "assets/fonts/lucon.ttf";
 	}
 
 	ImGuiInputTextFlags fontFlags = ImGuiInputTextFlags_None;
@@ -65,9 +96,10 @@ void Text::ShowInHierarchy() {
 		this->color.z = col[2];
 		this->color.w = col[3];
 	}
-
-	ImGui::Separator();
 }
+
+void Text::SetFontSize(float s) { this->fontSize = s; }
+float Text::GetFontSize() const { return this->fontSize; }
 
 void Text::LoadFromJson(const nlohmann::json& data) {
 	this->Widget::LoadFromJson(data);
@@ -79,6 +111,8 @@ void Text::LoadFromJson(const nlohmann::json& data) {
 							  data["color"][2].get<float>(), data["color"][3].get<float>()};
 		this->SetColor(col);
 	}
+
+	if (data.contains("fontSize")) this->SetFontSize(data.at("fontSize").get<float>());
 }
 
 void Text::SaveToJson(nlohmann::json& data) {
@@ -88,6 +122,7 @@ void Text::SaveToJson(nlohmann::json& data) {
 	data["font"] = this->GetFont();
 	auto c = this->GetColor();
 	data["color"] = {c.x, c.y, c.z, c.w};
+	data["fontSize"] = this->GetFontSize();
 }
 
 void Text::Update(float dt) {
@@ -102,7 +137,7 @@ void Text::Draw() {
 	}
 
 	UI::TextRenderer::GetInstance().SubmitText(
-		this->text, this->GetPosition(), this->GetSize().y,
+		this->text, this->GetPosition(), this->GetFontSize(),
 		DirectX::XMFLOAT4(this->color.x, this->color.y, this->color.z, this->color.w), this->font, this->GetZIndex());
 
 	// Draw children (if any)

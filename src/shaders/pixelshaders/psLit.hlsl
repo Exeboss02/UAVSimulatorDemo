@@ -54,10 +54,10 @@ Texture2D specularTexture : register(t3);
 Texture2D normalTexture : register(t4);
 
 StructuredBuffer<Spotlight> spotlightBuffer : register(t0);
-Texture2DArray<unorm float> shadowMaps : register(t5);
+Texture2DArray shadowMaps : register(t5);
 
 StructuredBuffer<PointLight> pointLightBuffer : register(t6);
-TextureCubeArray<unorm float> pointLightShadowMaps : register(t7);
+TextureCubeArray pointLightShadowMaps : register(t7);
 
 SamplerState mainSampler : register(s0);
 SamplerState shadowSampler : register(s1);

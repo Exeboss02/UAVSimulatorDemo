@@ -4,7 +4,9 @@
 class Cockpit : public GameObject3D {
 public:
 	void Start() override;
+	void SetOnDeath(std::function<void()> func);
 
 private:
-	float health = 10;
+	std::function<void()> onDeath = []() { Logger::Log("Core Died"); };
+	float health = 100;
 };

@@ -10,6 +10,7 @@
 #include "core/assetManager.h"
 #include "core/tools.h"
 #include "gameObjects/gun.h"
+#include "game/resourceManager.h"
 
 class Player : public RigidBody
 {
@@ -48,6 +49,8 @@ public:
 	Timer musicTimer;
 	Timer sfxTimer;
 	Timer shootCoolDown;
+
+	ResourceManager resources;
 
 private:
 	float input[2] = {};

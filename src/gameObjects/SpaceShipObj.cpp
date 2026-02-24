@@ -100,8 +100,11 @@ void SpaceShip::Start() {
 	CreateRoom(31, 0);
 	auto room = this->GetRoom(31, 0);
 	auto nodes = room.lock()->GetPathfindingNodes();
-	this->pathfinder->SetGoal(nodes[0]);
+	this->pathfinder->SetGoal(nodes[5]);
 
+	this->pathfinder->RemoveVertex(nodes[0]);
+
+	CreateRoom(31, 1);
 }
 
 void SpaceShip::CreateFloorColider() {

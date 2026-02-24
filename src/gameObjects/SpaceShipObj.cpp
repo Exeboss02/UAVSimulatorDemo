@@ -101,6 +101,12 @@ void SpaceShip::Start() {
 	auto nodes = room.lock()->GetPathfindingNodes();
 	this->pathfinder->SetGoal(nodes[0]);
 
+	room.lock()->SetWallState(Room::WallIndex::South, Room::WallState::door);
+	auto cockpit = this->factory->CreateStaticGameObject<Cockpit>();
+	cockpit->transform.SetPosition(SpaceShip::ROOM_SIZE * (SpaceShip::SHIP_MAX_SIZE_X / 2), 0,
+								   -SpaceShip::ROOM_SIZE);
+	cockpit->SetParent(this->GetPtr());
+
 }
 
 void SpaceShip::CreateFloorColider() {
@@ -112,6 +118,7 @@ void SpaceShip::CreateFloorColider() {
 	colliderobj->transform.SetPosition(DirectX::XMLoadFloat3(&pos));
 	DirectX::XMFLOAT3 scale((this->SHIP_MAX_SIZE_Y) * this->ROOM_SIZE + this->ROOM_SIZE / 2, 0.5f,
 							(this->SHIP_MAX_SIZE_Y) * this->ROOM_SIZE + this->ROOM_SIZE/2);
+
 	colliderobj->transform.SetScale(DirectX::XMLoadFloat3(&scale));
 	colliderobj->SetParent(this->GetPtr());
 	colliderobj->tag = Tag::FLOOR;

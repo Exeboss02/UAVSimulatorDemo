@@ -40,7 +40,14 @@ bool AssetManager::GetMesh(std::string identifier) {
 }
 
 bool AssetManager::GetTexture(std::string identifier) {
+	// Quick hit: exact key
 	if (this->textures.find(identifier) != textures.end()) {
+		return true;
+	}
+
+	// Try to resolve identifier to an existing stored path (normalization)
+	std::string resolved = this->ResolveTexturePath(identifier);
+	if (!resolved.empty() && this->textures.find(resolved) != this->textures.end()) {
 		return true;
 	}
 
@@ -124,6 +131,9 @@ bool AssetManager::LoadTextureFromFile(std::string identifier) {
 			}
 		}
 	}
+	// Normalize to absolute path and use that as the canonical key
+	p = fs::absolute(p);
+	std::string key = p.string();
 
 	std::wstring wp = p.wstring();
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> srv;
@@ -132,10 +142,9 @@ bool AssetManager::LoadTextureFromFile(std::string identifier) {
 		Logger::Error("AssetManager: Failed to create texture SRV from file:", p.string());
 		return false;
 	}
-
-	auto tex = std::make_shared<Texture>(srv, identifier);
-	this->textures.emplace(identifier, tex);
-	Logger::Log("AssetManager: Loaded texture:", identifier);
+	auto tex = std::make_shared<Texture>(srv, key);
+	this->textures.emplace(key, tex);
+	Logger::Log("AssetManager: Loaded texture:", key);
 	return true;
 }
 
@@ -216,8 +225,73 @@ void AssetManager::AddMaterial(std::string identifier, std::shared_ptr<BaseMater
 }
 
 std::weak_ptr<Texture> AssetManager::GetTextureWeakPtr(std::string identifier) {
-	if (identifier != "" && this->textures.find(identifier) != this->textures.end()) {
-		return this->textures.at(identifier);
+	if (identifier != "") {
+		if (this->textures.find(identifier) != this->textures.end()) return this->textures.at(identifier);
+		std::string resolved = this->ResolveTexturePath(identifier);
+		if (!resolved.empty() && this->textures.find(resolved) != this->textures.end())
+			return this->textures.at(resolved);
 	}
 	return std::weak_ptr<Texture>();
+}
+
+std::string AssetManager::ResolveTexturePath(const std::string& identifier) {
+	namespace fs = std::filesystem;
+	if (identifier.empty()) return std::string();
+
+	fs::path p(identifier);
+	if (fs::exists(p)) return fs::absolute(p).string();
+
+	fs::path cwdTry = fs::current_path() / identifier;
+	if (fs::exists(cwdTry)) return fs::absolute(cwdTry).string();
+
+	fs::path exeTry = FilepathHolder::GetExeDirectory() / identifier;
+	if (fs::exists(exeTry)) return fs::absolute(exeTry).string();
+
+	std::string idStr = identifier;
+	size_t pos = idStr.find("assets/");
+	if (pos == std::string::npos) pos = idStr.find("assets\\");
+	fs::path assetsTry;
+	if (pos != std::string::npos) {
+		std::string rel = idStr.substr(pos + std::string("assets/").length());
+		assetsTry = FilepathHolder::GetAssetsDirectory() / rel;
+	} else {
+		assetsTry = FilepathHolder::GetAssetsDirectory() / identifier;
+	}
+
+	if (fs::exists(assetsTry)) return fs::absolute(assetsTry).string();
+
+	return std::string();
+}
+
+void AssetManager::PreloadTexturesInFolder(const std::string& path, bool recursive) {
+	namespace fs = std::filesystem;
+	try {
+		fs::path p(path);
+		if (!fs::exists(p)) {
+			Logger::Warn("AssetManager: Preload path not found:", path);
+			return;
+		}
+
+		if (recursive) {
+			for (auto& entry : fs::recursive_directory_iterator(p)) {
+				if (!entry.is_regular_file()) continue;
+				std::string ext = entry.path().extension().string();
+				std::transform(ext.begin(), ext.end(), ext.begin(), [](unsigned char c) { return std::tolower(c); });
+				if (ext == ".png") {
+					this->GetTexture(entry.path().string());
+				}
+			}
+		} else {
+			for (auto& entry : fs::directory_iterator(p)) {
+				if (!entry.is_regular_file()) continue;
+				std::string ext = entry.path().extension().string();
+				std::transform(ext.begin(), ext.end(), ext.begin(), [](unsigned char c) { return std::tolower(c); });
+				if (ext == ".png") {
+					this->GetTexture(entry.path().string());
+				}
+			}
+		}
+	} catch (const std::exception& e) {
+		Logger::Warn("AssetManager: Preload failed:", e.what());
+	}
 }

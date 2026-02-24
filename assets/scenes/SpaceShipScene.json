@@ -1,10 +1,14 @@
 {
   "gameObjects": [
     {
+      "name": "GameManager",
+      "type": "GameManager"
+    },
+    {
       "transform": {
         "position": [
-          0.0,
-          45.0,
+          310,
+          5.0,
           0.0
         ],
         "rotation": [

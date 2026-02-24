@@ -37,6 +37,7 @@ void Wall::SpawnInteractables() {
 	colliderobj->transform.SetScale(DirectX::XMLoadFloat3(&scale));
 	colliderobj->SetParent(this->GetPtr());
 	colliderobj->SetOnInteract([&]() { this->OnInteract(); });
+	colliderobj->tag = Tag::INTERACTABLE;
 
 	this->interactable = colliderobj;
 }
@@ -56,6 +57,7 @@ void Wall::SpawnWallColliders(int wallStateIndex) {
 		DirectX::XMFLOAT3 scale(5.0f, 2.5f, 0.250f);
 		colliderobj->transform.SetScale(DirectX::XMLoadFloat3(&scale));
 		colliderobj->SetParent(this->GetPtr());
+		colliderobj->tag = Tag::WALL;
 
 		this->wallColliders.push_back(colliderobj);
 	}

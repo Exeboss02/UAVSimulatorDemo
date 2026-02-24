@@ -21,42 +21,48 @@ void SphereCollider::Tick()
 	// scale.m128_f32[2] = diameter;
 	// //scale.m128_f32[3] = diameter;
 	// this->transform.SetScale(scale);
+
+	this->SetExtraCullingDistance((this->GetDiameter() * 0.5f) * (this->GetDiameter() * 0.5f));
 }
 
 void SphereCollider::Start()
-{ this->Collider::Start(); }
+{ 
+	this->Collider::Start();
+
+	this->SetExtraCullingDistance((this->GetDiameter() * 0.5f) * (this->GetDiameter() * 0.5f));
+}
 
 void SphereCollider::LoadFromJson(const nlohmann::json& data) 
 {
 	this->GameObject3D::LoadFromJson(data);
 
-	 if(data.contains("tag"))
-	 {
-	 	this->tag = static_cast<Tag>(data.at("tag").get<int>()); //write enum as integer in json
-	 	Logger::Log("tag was found in json: " + std::to_string(this->tag));
-	 }
-	 else
-	 {
-	 	Logger::Log("didn't find tag!!!");
-	 }
+	if(data.contains("tag"))
+	{
+	this->tag = static_cast<Tag>(data.at("tag").get<int>()); //write enum as integer in json
+	Logger::Log("tag was found in json: " + std::to_string(this->tag));
+	}
+	else
+	{
+	Logger::Log("didn't find tag!!!");
+	}
 
-	 if(data.contains("targetTag"))
-	 {
-	 	this->targetTag = (Tag)data.at("targetTag").get<int>(); //write enum as integer in json
-	 	Logger::Log("targetTag was found in json: " + std::to_string(this->targetTag));
-	 }
+	if(data.contains("ignoreTag"))
+	{
+	this->ignoreTag = (Tag)data.at("ignoreTag").get<int>(); //write enum as integer in json
+	Logger::Log("ignoreTag was found in json: " + std::to_string(this->ignoreTag));
+	}
 
-	 if(data.contains("solid"))
-	 {
-	 	this->solid = data.at("solid").get<bool>(); //write enum as integer in json
-	 	Logger::Log("solid was found in json: " + std::to_string(this->solid));
-	 }
+	if(data.contains("solid"))
+	{
+	this->solid = data.at("solid").get<bool>(); //write enum as integer in json
+	Logger::Log("solid was found in json: " + std::to_string(this->solid));
+	}
 
-	 if(data.contains("dynamic"))
-	 {
-	 	this->dynamic = data.at("dynamic").get<bool>(); //write enum as integer in json
-	 	Logger::Log("dynamic was found in json: " + std::to_string(this->dynamic));
-	 }
+	if(data.contains("dynamic"))
+	{
+	this->dynamic = data.at("dynamic").get<bool>(); //write enum as integer in json
+	Logger::Log("dynamic was found in json: " + std::to_string(this->dynamic));
+	}
 }
 
 void SphereCollider::SaveToJson(nlohmann::json& data) 
@@ -64,7 +70,7 @@ void SphereCollider::SaveToJson(nlohmann::json& data)
 	this->GameObject3D::SaveToJson(data);
 
 	data["tag"] = this->tag;
-	data["targetTag"] = this->targetTag;
+	data["ignoreTag"] = this->ignoreTag;
 	data["solid"] = this->solid;
 	data["dynamic"] = this->dynamic;
 }

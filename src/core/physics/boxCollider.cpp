@@ -30,6 +30,15 @@ void BoxCollider::Tick()
 {
 	this->Collider::Tick();
 
+	DirectX::XMFLOAT3 extents = this->GetExtents();
+	DirectX::XMVECTOR vExtents = DirectX::XMLoadFloat3(&extents);
+
+	float extraCullingDistanceSquared = 
+	vExtents.m128_f32[0] * vExtents.m128_f32[0] 
+	+ vExtents.m128_f32[1] * vExtents.m128_f32[1]
+	+ vExtents.m128_f32[2] * vExtents.m128_f32[2];
+	this->SetExtraCullingDistance(extraCullingDistanceSquared);
+
 	if(!this->dynamic) return;
 
 	//update normals
@@ -53,6 +62,16 @@ void BoxCollider::Start()
 
 	this->BuildCornersArray(this->satData.positionData);
 	DirectX::XMStoreFloat3(&this->satData.center, this->transform.GetGlobalPosition());
+
+	DirectX::XMFLOAT3 extents = this->GetExtents();
+	DirectX::XMVECTOR vExtents = DirectX::XMLoadFloat3(&extents);
+
+	float extraCullingDistanceSquared = 
+	vExtents.m128_f32[0] * vExtents.m128_f32[0] 
+	+ vExtents.m128_f32[1] * vExtents.m128_f32[1]
+	+ vExtents.m128_f32[2] * vExtents.m128_f32[2];
+
+	this->SetExtraCullingDistance(extraCullingDistanceSquared);
 }
 
 void BoxCollider::LoadFromJson(const nlohmann::json& data)
@@ -72,10 +91,10 @@ void BoxCollider::LoadFromJson(const nlohmann::json& data)
 	 	Logger::Log("didn't find tag!!!");
 	 }
 
-	 if(data.contains("targetTag"))
+	 if(data.contains("ignoreTag"))
 	 {
-	 	this->targetTag = (Tag)data.at("targetTag").get<int>(); //write enum as integer in json
-	 	Logger::Log("targetTag was found in json: " + std::to_string(this->targetTag));
+	 	this->ignoreTag = (Tag)data.at("ignoreTag").get<int>(); //write enum as integer in json
+	 	Logger::Log("ignoreTag was found in json: " + std::to_string(this->ignoreTag));
 	 }
 
 	 if(data.contains("solid"))
@@ -96,7 +115,7 @@ void BoxCollider::SaveToJson(nlohmann::json& data)
 	this->GameObject3D::SaveToJson(data);
 
 	data["tag"] = this->tag;
-	data["targetTag"] = this->targetTag;
+	data["ignoreTag"] = this->ignoreTag;
 	data["solid"] = this->solid;
 	data["dynamic"] = this->dynamic;
 }

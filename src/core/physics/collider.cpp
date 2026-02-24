@@ -95,16 +95,44 @@ void Collider::Start()
 
 bool Collider::Collision(Collider* otherCollider)
 {
+	if(!this->dynamic && !otherCollider->dynamic) return false;
+
+	// if(this->ignoreTag == otherCollider->tag || otherCollider->ignoreTag == this->tag)
+	// {
+	// 	return false;
+	// }
+
 	DirectX::XMFLOAT3 mtvAxis = {};
 	float mtvDistance = 0;
 
+	return this->CollisionHandling(otherCollider, mtvAxis, mtvDistance);
+}
+
+bool Collider::Collision(Collider* otherCollider, int& nrOfCollisionTestsOnTick)
+{
 	if(!this->dynamic && !otherCollider->dynamic) return false;
 
+	// if(this->ignoreTag == otherCollider->tag || otherCollider->ignoreTag == this->tag)
+	// {
+	// 	return false;
+	// }
+
+	DirectX::XMFLOAT3 mtvAxis = {};
+	float mtvDistance = 0;
+
+	nrOfCollisionTestsOnTick++;
 	return this->CollisionHandling(otherCollider, mtvAxis, mtvDistance);
 }
 
 bool Collider::Collision(Collider* otherCollider, DirectX::XMVECTOR& contactNormal)
 {
+	if(!this->dynamic && !otherCollider->dynamic) return false;
+
+	// if(this->ignoreTag == otherCollider->tag || otherCollider->ignoreTag == this->tag)
+	// {
+	// 	return false;
+	// }
+
 	DirectX::XMFLOAT3 mtvAxis = {};
 	float mtvDistance = 0;
 	bool collision = this->CollisionHandling(otherCollider, mtvAxis, mtvDistance);
@@ -113,6 +141,16 @@ bool Collider::Collision(Collider* otherCollider, DirectX::XMVECTOR& contactNorm
 	contactNormal = DirectX::XMVector3Normalize(contactNormal);
 
 	return collision;
+}
+
+void Collider::SetExtraCullingDistance(float distanceSquared)
+{
+	this->extraCullingDistanceSquared = distanceSquared;
+}
+
+float Collider::GetExtraCullingDistance()
+{
+	return this->extraCullingDistanceSquared;
 }
 
 void Collider::Tick()

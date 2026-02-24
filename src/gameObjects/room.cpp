@@ -72,6 +72,7 @@ void Room::Start() {
 	buildCollider->transform.SetScale({1, .5, 1});
 	buildCollider->transform.SetPosition({0, 1, 0});
 	buildCollider->SetParent(this->GetPtr());
+	buildCollider->solid = false;
 	// Maybe tweak positionW
 	this->buildSlot = buildCollider;
 	buildCollider->SetOnInteract([&]() {
@@ -79,7 +80,7 @@ void Room::Start() {
 			auto turret = this->factory->CreateStaticGameObject<Turret>();
 			turret->SetParent(this->GetPtr());
 			turret->transform.SetPosition({0, 1.5, 0});
-			turret->SetMesh(AssetManager::GetInstance().GetMeshObjData("TexBox/TextureCube.glb:Mesh_0"));
+			//turret->SetMesh(AssetManager::GetInstance().GetMeshObjData("TexBox/TextureCube.glb:Mesh_0"));
 		}
 		this->factory->QueueDeleteGameObject(this->buildSlot);
 	});

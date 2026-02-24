@@ -4,8 +4,8 @@
 #include "core/input/inputManager.h"
 #include "scene/sceneManager.h"
 #include "utilities/time.h"
-#include <memory>
 #include <chrono>
+#include <memory>
 
 // Game Loop
 void Game::Run(HINSTANCE hInstance, int nCmdShow) {
@@ -16,6 +16,9 @@ void Game::Run(HINSTANCE hInstance, int nCmdShow) {
 	this->renderer.Init(window);
 	AssetManager::GetInstance().SetDevicePointer(this->renderer.GetDevice());
 	AssetManager::GetInstance().CreateDefaultAssets();
+
+	// Preload images folder via AssetManager (loads each file only once)
+	AssetManager::GetInstance().PreloadTexturesInFolder((FilepathHolder::GetAssetsDirectory() / "images").string());
 	this->renderer.SetAllDefaults();
 	this->sceneManager = std::make_unique<SceneManager>(&renderer);
 
@@ -41,7 +44,7 @@ void Game::Run(HINSTANCE hInstance, int nCmdShow) {
 
 	this->imguiManager.SetSkyboxPopupCallback([&]() { this->sceneManager->SkyboxMenu(); });
 
-	this->sceneManager->LoadScene(SceneManager::Scenes::DEMO);
+	this->sceneManager->LoadScene(SceneManager::Scenes::GAME);
 
 	MSG msg = {};
 

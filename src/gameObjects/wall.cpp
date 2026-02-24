@@ -23,6 +23,7 @@ void Wall::Start(){
 	this->MeshObject::Start();
 	Logger::Log("Wall started");
 
+	this->SetName("WALL" + std::to_string(this->factory->GetNextID()));
 }
 
 void Wall::SetWAllIndex(int wallIndex) { this->wallIndex = wallIndex; }

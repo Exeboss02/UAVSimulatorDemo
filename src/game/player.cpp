@@ -48,7 +48,7 @@ void Player::Start()
 		DirectX::XMFLOAT3 scale(1.0f, 1.0f, 1.0f);
 		colliderobj->transform.SetScale(DirectX::XMLoadFloat3(&scale));
 		colliderobj->SetParent(this->GetPtr());
-		//colliderobj->ignoreTag = Tag::FLOOR;
+		//colliderobj->ignoreTag = Tag::WALL;
 	}
 
 	{
@@ -61,7 +61,7 @@ void Player::Start()
 		DirectX::XMFLOAT3 scale(1.0f, 1.0f, 1.0f);
 		colliderobj->transform.SetScale(DirectX::XMLoadFloat3(&scale));
 		colliderobj->SetParent(this->GetPtr());
-		//colliderobj->ignoreTag = Tag::FLOOR;
+		//colliderobj->ignoreTag = Tag::WALL;
 	}
 
 	{
@@ -74,7 +74,7 @@ void Player::Start()
 		DirectX::XMFLOAT3 scale(1.0f, 1.0f, 1.0f);
 		colliderobj->transform.SetScale(DirectX::XMLoadFloat3(&scale));
 		colliderobj->SetParent(this->GetPtr());
-		//colliderobj->ignoreTag = Tag::FLOOR;
+		//colliderobj->ignoreTag = Tag::WALL;
 	}
 
 	std::function<void(std::weak_ptr<GameObject3D>)> function = [&](std::weak_ptr<GameObject3D> gameObject3D) { this->OnCollision(gameObject3D); };
@@ -240,7 +240,7 @@ void Player::OnCollision(std::weak_ptr<GameObject3D> gameObject3D)
 {
 	std::string name = gameObject3D.lock()->GetName();
 
-	Logger::Log("COLLIDED WITH ", name);
+	//Logger::Log("COLLIDED WITH ", name);
 }
 
 void Player::LoadFromJson(const nlohmann::json& data)

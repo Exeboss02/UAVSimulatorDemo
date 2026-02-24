@@ -33,6 +33,9 @@ void Room::SetPosition(size_t x, size_t y) { this->pos = {x, y}; }
 
 void Room::Start() {
 	Logger::Warn("room size ", this->size);
+
+	this->SetName("ROOM " + std::to_string(this->factory->GetNextID()));
+
 	{
 		auto meshobj = this->factory->CreateStaticGameObject<MeshObject>();
 
@@ -66,8 +69,6 @@ void Room::Start() {
 
 		meshobj->SetWAllIndex(i);
 
-		meshobj->SetName("A WALL");
-
 		this->walls[i] = meshobj;
 	}
 	auto buildCollider = this->factory->CreateStaticGameObject<BoxCollider>();
@@ -75,7 +76,7 @@ void Room::Start() {
 	buildCollider->transform.SetPosition({0, 1, 0});
 	buildCollider->SetParent(this->GetPtr());
 	buildCollider->solid = false;
-	buildCollider->SetName("BUILD COLLIDER");
+	buildCollider->SetName("BUILD COLLIDER"	+ std::to_string(this->factory->GetNextID()));
 	// Maybe tweak positionW
 	this->buildSlot = buildCollider;
 	buildCollider->SetOnInteract([&]() {

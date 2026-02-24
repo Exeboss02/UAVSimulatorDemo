@@ -1,7 +1,8 @@
 #pragma once
-#include <d3d11.h>
-#include <wrl.h>
 #include <array>
+#include <d3d11.h>
+#include <vector>
+#include <wrl.h>
 
 class ShadowCube {
 public:
@@ -13,8 +14,6 @@ public:
 	ID3D11DepthStencilView* GetDsv(size_t cubeIndex, size_t faceIndex) const;
 
 private:
-	
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> shaderResourceView;
 	std::vector<std::array<Microsoft::WRL::ComPtr<ID3D11DepthStencilView>, 6>> depthStencilViews;
 };
-

@@ -1,5 +1,8 @@
 #include "rendering/shadowCube.h"
 #include "utilities/logger.h"
+#include <format>
+#include <stdexcept>
+#include <string>
 
 void ShadowCube::Init(ID3D11Device* device, size_t resolution, size_t maxShadowCubes) {
 	this->shaderResourceView.Reset();
@@ -40,12 +43,11 @@ void ShadowCube::Init(ID3D11Device* device, size_t resolution, size_t maxShadowC
 
 	hr = device->CreateShaderResourceView(texture.Get(), &srvDesc, this->shaderResourceView.GetAddressOf());
 	if (FAILED(hr)) {
-		std::string error =
-			std::format("Failed to create shadow shader resource view, HRESULT: 0x{:08X}", static_cast<unsigned long>(hr));
+		std::string error = std::format("Failed to create shadow shader resource view, HRESULT: 0x{:08X}",
+										static_cast<unsigned long>(hr));
 		Logger::Error(error);
 		throw std::exception(error.c_str());
 	}
-
 
 	D3D11_DEPTH_STENCIL_VIEW_DESC dsvDesc = {};
 	dsvDesc.Format = DXGI_FORMAT_D32_FLOAT;
@@ -55,22 +57,22 @@ void ShadowCube::Init(ID3D11Device* device, size_t resolution, size_t maxShadowC
 	for (size_t cube = 0; cube < this->depthStencilViews.size(); cube++) {
 		for (size_t i = 0; i < 6; i++) {
 			dsvDesc.Texture2DArray.FirstArraySlice = cube * 6 + i;
-			hr = device->CreateDepthStencilView(texture.Get(), &dsvDesc, this->depthStencilViews[cube][i].GetAddressOf());
+			hr = device->CreateDepthStencilView(texture.Get(), &dsvDesc,
+												this->depthStencilViews[cube][i].GetAddressOf());
 
 			if (FAILED(hr)) {
-				std::string error =
-					std::format("Failed to create shadow depth stencil view, HRESULT: 0x{:08X}", static_cast<unsigned long>(hr));
+				std::string error = std::format("Failed to create shadow depth stencil view, HRESULT: 0x{:08X}",
+												static_cast<unsigned long>(hr));
 				Logger::Error(error);
 				throw std::exception(error.c_str());
 			}
 		}
 	}
-
 }
 
 ID3D11ShaderResourceView* ShadowCube::GetSrv() const { return this->shaderResourceView.Get(); }
 
-ID3D11DepthStencilView* ShadowCube::GetDsv(size_t cubeIndex, size_t faceIndex) const { 
+ID3D11DepthStencilView* ShadowCube::GetDsv(size_t cubeIndex, size_t faceIndex) const {
 	if (cubeIndex >= this->depthStencilViews.size()) {
 		std::string error = "Trying to access depthstencilview out of bounds";
 		Logger::Error(error);

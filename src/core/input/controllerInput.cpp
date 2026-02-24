@@ -39,9 +39,9 @@ bool ControllerInput::Jump() const { return InputManager::GetInstance().WasContr
 
 bool ControllerInput::Sprint() const { return InputManager::GetInstance().IsControllerButtonDown(this->controllerIndex, static_cast<int>(CONTROLLER_SPRINT)); }
 
-bool ControllerInput::LeftClick() const { return InputManager::GetInstance().WasRightBackTriggerPressed(this->controllerIndex); }
+bool ControllerInput::LeftClick() const { return InputManager::GetInstance().WasLeftBackTriggerPressed(this->controllerIndex); }
 
-bool ControllerInput::RightClick() const { return InputManager::GetInstance().WasLeftBackTriggerPressed(this->controllerIndex); }
+bool ControllerInput::RightClick() const {return InputManager::GetInstance().WasRightBackTriggerPressed(this->controllerIndex);}
 
 bool ControllerInput::Interact() const { return InputManager::GetInstance().WasControllerButtonPressed(this->controllerIndex, static_cast<int>(CONTROLLER_INTERACT)); }
 

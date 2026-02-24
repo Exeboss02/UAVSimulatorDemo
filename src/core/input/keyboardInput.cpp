@@ -57,3 +57,5 @@ bool KeyboardInput::Interact() const { return InputManager::GetInstance().WasKey
 bool KeyboardInput::FullscreenToggle() const { return InputManager::GetInstance().WasKeyPressed(FULLSCREEN_TOGGLE); }
 
 bool KeyboardInput::Quit() const { return InputManager::GetInstance().WasKeyPressed(QUIT); }
+
+bool KeyboardInput::ToggleCamera() const { return InputManager::GetInstance().WasKeyPressed(TOGGLE_CAMERA); }

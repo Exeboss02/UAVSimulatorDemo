@@ -11,6 +11,8 @@
 #include "core/tools.h"
 #include "gameObjects/gun.h"
 #include "game/resourceManager.h"
+#include "game/hud.h"
+#include <memory>
 
 class Player : public RigidBody
 {
@@ -51,6 +53,7 @@ public:
 	Timer shootCoolDown;
 
 	ResourceManager resources;
+	std::unique_ptr<HUD> hud;
 
 private:
 	float input[2] = {};

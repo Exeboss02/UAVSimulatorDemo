@@ -69,6 +69,19 @@ void TextRenderer::Render(void* context) {
 	submissions.clear();
 }
 
+float TextRenderer::MeasureString(const std::string& text, float fontSize, const std::string& font) {
+	if (!fw1Initialized || fw1FontWrapper == nullptr) return 0.0f;
+	if (text.empty()) return 0.0f;
+
+	std::wstring wtext(text.begin(), text.end());
+	std::wstring wfont(font.empty() ? L"assets/fonts/lucon.ttf" : std::wstring(font.begin(), font.end()));
+
+	FW1_RECTF layout{0.0f, 0.0f, 0.0f, 0.0f};
+	FW1_RECTF rect = fw1FontWrapper->MeasureString(wtext.c_str(), wfont.c_str(), fontSize, &layout, 0);
+
+	return rect.Right - rect.Left;
+}
+
 bool TextRenderer::InitializeFW1(ID3D11Device* device) {
 	if (fw1Initialized) return true;
 	HRESULT hr = FW1CreateFactory(FW1_VERSION, &fw1Factory);

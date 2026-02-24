@@ -31,6 +31,9 @@ public:
 	void SetColor(const DirectX::XMFLOAT4& c);
 	DirectX::XMFLOAT4 GetColor() const;
 
+	void SetFontSize(float s);
+	float GetFontSize() const;
+
 private:
 	std::string text = "Text";
 	std::string font;
@@ -39,6 +42,9 @@ private:
 	std::vector<char> editBuffer;
 	// Persistent edit buffer for the font field so ImGui keeps focus/state
 	std::vector<char> fontEditBuffer;
+
+	// Font size (in pixels) for rendering text
+	float fontSize = 16.0f;
 };
 
 } // namespace UI

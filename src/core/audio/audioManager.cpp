@@ -51,11 +51,6 @@ AudioManager& AudioManager::GetInstance()
 	return instance;
 }
 
-void AudioManager::InitializeMusicTrackManager(std::string pathToMusicFolder)
-{
-	this->musicTrackManager.Initialize(pathToMusicFolder);
-}
-
 void AudioManager::AddMusicTrackStandardFolder(std::string filename, std::string id)
 {
 	this->musicTrackManager.AddMusicTrackStandardFolder(filename, id);

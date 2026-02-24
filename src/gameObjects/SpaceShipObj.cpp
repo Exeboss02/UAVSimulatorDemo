@@ -115,6 +115,6 @@ void SpaceShip::CreateFloorColider() {
 	colliderobj->transform.SetScale(DirectX::XMLoadFloat3(&scale));
 	colliderobj->SetParent(this->GetPtr());
 	colliderobj->tag = Tag::FLOOR;
-	colliderobj->ignoreTag = Tag::DISTANCE;
+	//colliderobj->ignoreTag = Tag::DISTANCE;
 
 }

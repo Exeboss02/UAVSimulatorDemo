@@ -1,6 +1,10 @@
 {
   "gameObjects": [
     {
+      "name": "GameManager",
+      "type": "GameManager"
+    },
+    {
       "transform": {
         "position": [
           310,

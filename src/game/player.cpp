@@ -1,9 +1,12 @@
 #include "game/player.h"
 #include "core/physics/sphereCollider.h"
 #include "gameObjects/meshObject.h"
+#include <numbers>
+#include "game/gameManager.h"
 
-Player::Player()
-{
+
+
+Player::Player() : cameraRotation{0, 0, 0} {
 	this->controllerInput = std::make_shared<ControllerInput>(0);
 }
 
@@ -23,17 +26,28 @@ void Player::Start()
 
 	this->camera = cameraShared;
 
+	//adding gun
+	{
+		auto gunWeak = this->factory->CreateGameObjectOfType<Gun>();
+		auto gun = gunWeak.lock();
+		gun->SetParent(this->camera.lock()->GetPtr());
+		DirectX::XMFLOAT3 pos(-0.4f, -0.4f, 0.7f);
+		gun->transform.SetPosition(DirectX::XMLoadFloat3(&pos));
+		this->gun = gun;
+	}
+
+
 	//adding body colliders
 	{
-	auto colliderobjWeak = this->factory->CreateGameObjectOfType<SphereCollider>();
-	auto colliderobj = colliderobjWeak.lock();
-	colliderobj->dynamic = true;
-	colliderobj->solid = true;
-	DirectX::XMFLOAT3 pos(0.0f, 0.0f, 0.0f);
-	colliderobj->transform.SetPosition(DirectX::XMLoadFloat3(&pos));
-	DirectX::XMFLOAT3 scale(1.0f, 1.0f, 1.0f);
-	colliderobj->transform.SetScale(DirectX::XMLoadFloat3(&scale));
-	colliderobj->SetParent(this->GetPtr());
+		auto colliderobjWeak = this->factory->CreateGameObjectOfType<SphereCollider>();
+		auto colliderobj = colliderobjWeak.lock();
+		colliderobj->dynamic = true;
+		colliderobj->solid = true;
+		DirectX::XMFLOAT3 pos(0.0f, 0.0f, 0.0f);
+		colliderobj->transform.SetPosition(DirectX::XMLoadFloat3(&pos));
+		DirectX::XMFLOAT3 scale(1.0f, 1.0f, 1.0f);
+		colliderobj->transform.SetScale(DirectX::XMLoadFloat3(&scale));
+		colliderobj->SetParent(this->GetPtr());
 	}
 
 	{
@@ -100,7 +114,7 @@ void Player::Tick()
 	this->input[0] = this->keyBoardInput.GetMovementVector().data()[0] + this->controllerInput->GetMovementVector().data()[0];
 	this->input[1] = this->keyBoardInput.GetMovementVector().data()[1] + this->controllerInput->GetMovementVector().data()[1];
 	this->UpdateCamera();
-	this->shootRay();
+	this->Interact();
 
 	float deltaTime = Time::GetInstance().GetDeltaTime();
 	if(deltaTime < 1) //to prevent tick spam when loading scene
@@ -131,6 +145,22 @@ void Player::Tick()
 
 		this->sfxTimer.Reset();
 	}
+
+	//this->aim();
+	this->checkForTriggerPress();
+
+
+	ImGui::Begin("GameManager testing");
+	if (ImGui::Button("Win")) {
+		GameManager::GetInstance()->Win();
+	}
+	if (ImGui::Button("Loose")) {
+		GameManager::GetInstance()->Loose();
+	}
+	if (ImGui::Button("Player died")) {
+		GameManager::GetInstance()->PlayerDied();
+	}
+	ImGui::End();
 }
 
 void Player::PhysicsTick()
@@ -167,7 +197,7 @@ void Player::UpdateCamera()
 		return;
 	}
 
-	if (this->keyBoardInput.Interact() || this->controllerInput->Interact()) // 'F'
+	if (this->keyBoardInput.ToggleCamera()) 
 	{
 		this->showCursor = !this->showCursor;
 		ShowCursor(this->showCursor);
@@ -181,19 +211,23 @@ void Player::UpdateCamera()
 		lookVector[0] += this->controllerInput->GetLookVector()[0] * this->stickSensitivity * deltaTime;
 		lookVector[1] -= this->controllerInput->GetLookVector()[1] * this->stickSensitivity * deltaTime;
 
-		static float rot[3] = {0, 0, 0};
-
 		float rotSpeed = this->mouseSensitivity;
 
-		rot[0] += rotSpeed * lookVector[1];
-		rot[1] += rotSpeed * lookVector[0];
+		this->cameraRotation[0] += rotSpeed * lookVector[1];
+		this->cameraRotation[1] += rotSpeed * lookVector[0];
 
-		if (rot[0] > 1.5f) rot[0] = 1.5f;
-		if (rot[0] < -1.5f) rot[0] = -1.5f;
+		if (this->cameraRotation[0] > 1.5f) this->cameraRotation[0] = 1.5f;
+		if (this->cameraRotation[0] < -1.5f) this->cameraRotation[0] = -1.5f;
 
-		cam->transform.SetRotationRPY(0.0f, rot[0], 0);
-		this->transform.SetRotationRPY(0.0f, 0, rot[1]);
+		cam->transform.SetRotationRPY(0.0f, this->cameraRotation[0], 0);
+		this->transform.SetRotationRPY(0.0f, 0, this->cameraRotation[1]);
 	}
+}
+
+void Player::SetCameraRotation(float r, float p, float y) {
+	this->cameraRotation[0] = r;
+	this->cameraRotation[1] = p;
+	this->cameraRotation[2] = y;
 }
 
 void Player::LoadFromJson(const nlohmann::json& data)
@@ -225,25 +259,15 @@ void Player::SaveToJson(nlohmann::json& data)
 	data["mouseSensitivity"] = this->mouseSensitivity;
 }
 
-void Player::shootRay() {
+void Player::Interact() {
 
 	const DirectX::XMVECTOR lookVec = this->camera.lock()->transform.GetGlobalForward();
 	const DirectX::XMVECTOR posVec = this->camera.lock()->transform.GetGlobalPosition();
 	
-	if (this->keyBoardInput.LeftClick() || this->controllerInput->LeftClick()) {
-
-		if(!this->shootCoolDown.TimeIsUp() || !this->canShoot)
-		{
-			return;
-		}
-
-		std::shared_ptr<SoundSourceObject> lockedSpeaker = this->speaker.lock();
-		lockedSpeaker->Play(this->soundClips[3]); //shoot sound
-		this->shootCoolDown.Reset();
+	if (this->keyBoardInput.Interact() || this->controllerInput->Interact()) {
 
 		Ray ray{Vector3D{posVec}, Vector3D{lookVec}};
 		RayCastData rayCastData;
-		Logger::Log("shooting ray");
 
 		
 
@@ -271,6 +295,29 @@ void Player::shootRay() {
 			hitString = "miss";
 		}
 
-		Logger::Log(hitString, " at distance: ", std::to_string(rayCastData.distance));
+		//Logger::Log(hitString, " at distance: ", std::to_string(rayCastData.distance));
 	}
+}
+
+void Player::checkForTriggerPress() {
+
+	if (this->keyBoardInput.LeftClick() || this->controllerInput->RightClick() && this->canShoot) {
+		this->gun.lock()->Shoot();
+	}
+
+}
+
+void Player::aim() {
+	static bool isAiming = false;
+	if (this->keyBoardInput.RightClick() || this->controllerInput->LeftClick() && this->canShoot && !isAiming) {
+		DirectX::XMFLOAT3 pos(0.0f, -0.2f, 0.7f);
+		this->gun.lock()->transform.SetPosition(DirectX::XMLoadFloat3(&pos));
+		isAiming = true;
+	} else if (this->keyBoardInput.RightClick() || this->controllerInput->LeftClick() && this->canShoot && isAiming) {
+	
+		DirectX::XMFLOAT3 pos(-0.4f, -0.4f, 0.7f);
+		this->gun.lock()->transform.SetPosition(DirectX::XMLoadFloat3(&pos));
+		isAiming = false;
+	}
+
 }

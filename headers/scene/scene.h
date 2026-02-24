@@ -34,6 +34,9 @@ public:
 
 	virtual int GetNextID() override;
 
+	virtual void QueueLoadScene(std::string filepath) override;
+	virtual std::string GetMainSceneFilepath() override;
+
 private:
 	/// <summary>
 	/// Deletes all GameObjects in the deleteQueue (that is, all objects added using QueueDeleteGameObject())
@@ -67,4 +70,9 @@ private:
 	bool finishedLoading; // True if in the middle of loading a scene from file
 
 	int currentGameObjectId; // Keeps track of GameObjectIds
+
+	std::function<void(std::string)> loadSceneCallback;
+	std::string queuedScene = "";
+
+	std::string sceneName;
 };

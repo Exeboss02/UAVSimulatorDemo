@@ -7,6 +7,7 @@
 #include "core/filepathHolder.h"
 #include "game/crosshair.h"
 #include "game/events.h"
+#include "game/gameManager.h"
 #include "gameObjects/pointLightObject.h"
 #include "gameObjects/room.h"
 #include "gameObjects/turret.h"
@@ -50,14 +51,12 @@ SceneManager::SceneManager(Renderer* rend)
 	this->objectFromString.RegisterType<Crosshair>(NAMEOF(Crosshair));
 	this->objectFromString.RegisterType<UI::Image>(NAMEOF(UI::Image));
 
+	// Game specific
 	this->objectFromString.RegisterType<Player>(NAMEOF(Player)); // Game specific
+	this->objectFromString.RegisterType<GameManager>(NAMEOF(GameManager));
 
 	CreateNewScene(this->emptyScene);
 	this->emptyScene->CreateGameObjectOfType<CameraObject>();
-
-	// Initialize musicTrackManager and soundBank
-	AudioManager::GetInstance().InitializeMusicTrackManager("../../assets/audio/music/");
-	AssetManager::GetInstance().InitializeSoundBank("../../assets/audio/soundeffects/");
 }
 
 SceneManager* SceneManager::GetActive() { return SceneManager::activeInstance; }
@@ -81,7 +80,7 @@ void SceneManager::WireButtonEvents(UI::Button* button) {
 
 void SceneManager::SceneTick() {
 #ifdef TIMER_DEBUG
-	ImGui::Begin("Scen tick");
+	ImGui::Begin("Scene tick");
 	const auto start{std::chrono::steady_clock::now()};
 #endif
 
@@ -112,7 +111,7 @@ void SceneManager::LoadScene(Scenes scene) {
 		LoadSceneFromFile((FilepathHolder::GetAssetsDirectory() / "scenes" / "MainMenu.scene").string());
 		break;
 	case Scenes::GAME:
-		LoadSceneFromFile((FilepathHolder::GetAssetsDirectory() / "scenes" / "Game.scene").string());
+		LoadSceneFromFile((FilepathHolder::GetAssetsDirectory() / "scenes" / "SpaceShipScene.json").string());
 		break;
 	case Scenes::END_CREDITS:
 		LoadSceneFromFile((FilepathHolder::GetAssetsDirectory() / "scenes" / "EndCredits.scene").string());
@@ -131,6 +130,7 @@ void SceneManager::CreateNewScene(std::shared_ptr<Scene>& scene) {
 	}
 
 	scene = std::make_shared<Scene>();
+	scene->loadSceneCallback = [&](std::string filepath) { this->LoadSceneFromFile(filepath); };
 }
 
 void SceneManager::DeleteScene(std::shared_ptr<Scene>& scene) {
@@ -146,6 +146,7 @@ void SceneManager::DeleteScene(std::shared_ptr<Scene>& scene) {
 
 void SceneManager::LoadSceneFromFile(const std::string& filePath) {
 	CreateNewScene(this->mainScene);
+	this->mainScene->sceneName = filePath;
 
 	this->mainScene->finishedLoading = false;
 

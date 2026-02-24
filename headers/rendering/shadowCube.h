@@ -2,6 +2,7 @@
 #include <d3d11.h>
 #include <wrl.h>
 #include <array>
+#include <vector>
 
 class ShadowCube {
 public:

@@ -16,8 +16,6 @@ public:
 	MusicTrackManager();
 	~MusicTrackManager();
 
-	void Initialize(std::string pathToMusicFolder);
-
 	/// <summary>
 	/// filename or path is ONLY used for loading, id is used for Get()'ing a track
 	/// </summary>

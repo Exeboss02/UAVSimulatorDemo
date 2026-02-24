@@ -1,10 +1,13 @@
 #include "game/gameManager.h"
 #include "core/filepathHolder.h"
 #include <format>
+#include <cstdlib>
+#include <random>
 
 std::weak_ptr<GameManager> GameManager::instance;
 
-GameManager::GameManager() : spawnPoint(DirectX::XMVectorSet(310.0, 5.0, 0.0, 0.0)), currentRound(0), lastRound(10), inCombat(false) {}
+GameManager::GameManager() : spawnPoint(DirectX::XMVectorSet(310.0, 5.0, 0.0, 0.0)), 
+currentRound(0), lastRound(10), inCombat(false), spawnTimer(1), unspawnedEnemies(0), spawnDelay(2) {}
 
 void GameManager::Start() { 
 	auto newPlayer = this->factory->FindObjectOfType<Player>();
@@ -30,6 +33,15 @@ void GameManager::Start() {
 
 void GameManager::Tick() { 
 	if (this->inCombat) {
+		if (this->unspawnedEnemies > 0) {
+			if (this->spawnTimer > 0) {
+				this->spawnTimer -= Time::GetInstance().GetDeltaTime();
+			} else {
+				SpawnEnemy();
+				this->spawnTimer = this->spawnDelay;
+			}
+		}
+
 		for (size_t i = 0; i < this->enemies.size(); i++) {
 			if (this->enemies[i].expired()) {
 				this->enemies.erase(this->enemies.begin() + i);
@@ -38,7 +50,7 @@ void GameManager::Tick() {
 			}
 		}
 
-		if (this->enemies.size() <= 0) {
+		if (this->unspawnedEnemies <= 0 && this->enemies.size() <= 0) {
 			EndRound();
 		}
 	}
@@ -83,19 +95,45 @@ void GameManager::SpawnNextRound() {
 	this->inCombat = true;
 
 	if (auto spaceshipLock = this->spaceship.lock()) {
-		//this->path = spaceshipLock->GetPathfinder()->FindPath(roomMesh->GetPathfindingNodes()[0]);
+		auto rooms = spaceshipLock->GetPlacedRooms();
+		if (rooms.size() <= 0) {
+			Logger::Error("No rooms");
+			throw std::runtime_error("Fatal error in GameManager.");
+		}
+
+		Vector2Int selectedRoom{0, 0};
+		float longestDistance = 0;
+
+		for (auto& room : rooms) {
+			if (room.second * GetRandom(0.1, 1.0) > longestDistance) {
+				longestDistance = room.second;
+				selectedRoom = room.first;
+			}
+		}
+
+		this->path = spaceshipLock->GetPathfinder()->FindPath(
+			spaceshipLock->GetRoom(selectedRoom.x, selectedRoom.y).lock()->GetPathfindingNodes()[0]);
 	} else {
 		Logger::Error("Failed to create enemy path.");
 	}
 
-	for (size_t i = 0; i < 5; i++) {
-		auto enemy = this->factory->CreateGameObjectOfType<TestEnemy>();
+	this->unspawnedEnemies = 5;
+	this->unspawnedEnemies--;
 
-		if (auto enemyPtr = enemy.lock()) {
-			enemyPtr->SetPath(this->path);
-		} else {
-			Logger::Error("This shouldn't happen.");
-		}
+	this->spawnTimer = 0;
+}
+
+void GameManager::SpawnEnemy() {
+	auto enemy = this->factory->CreateGameObjectOfType<TestEnemy>();
+
+	if (auto enemyPtr = enemy.lock()) {
+		enemyPtr->SetPath(this->path);
+	} else {
+		Logger::Error("This shouldn't happen.");
+	}
+
+	if (unspawnedEnemies > 0) {
+		this->unspawnedEnemies--;
 	}
 }
 
@@ -105,6 +143,10 @@ void GameManager::EndRound() {
 }
 
 const size_t& GameManager::GetCurrentRound() { return this->currentRound; }
+
+const float& GameManager::GetSpawnDelay() { return this->spawnDelay; }
+
+void GameManager::SetSpawnDelay(float& newSpawnDelay) { this->spawnDelay = newSpawnDelay; }
 
 void GameManager::SaveToJson(nlohmann::json& data) { 
 	this->GameObject::SaveToJson(data);
@@ -118,4 +160,13 @@ std::shared_ptr<GameManager> GameManager::GetInstance() {
 		Logger::Error("Unable to find GameManager");
 		throw std::runtime_error("Fatal error in GameManager");
 	}
+}
+
+float GameManager::GetRandom(float startValue, float endValue) { 
+	assert(startValue < endValue);
+	float diff = endValue - startValue;
+	float value = (std::rand() % 10000) / 10000.0;
+	value = value * diff + startValue;
+	Logger::Log("Random value: ", value);
+	return value;
 }

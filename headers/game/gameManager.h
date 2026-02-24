@@ -18,9 +18,13 @@ public:
 	void Loose();
 
 	void SpawnNextRound();
+	void SpawnEnemy();
 	void EndRound();
 
 	const size_t& GetCurrentRound();
+
+	const float& GetSpawnDelay();
+	void SetSpawnDelay(float& newSpawnDelay);
 
 	virtual void SaveToJson(nlohmann::json& data) override;
 
@@ -28,6 +32,8 @@ public:
 	/// Don't use this in start
 	/// </summary>
 	static std::shared_ptr<GameManager> GetInstance();
+
+	float GetRandom(float startValue, float endValue);
 
 private:
 	std::weak_ptr<Player> player;
@@ -45,4 +51,9 @@ private:
 
 	// Temp
 	std::vector<std::shared_ptr<AStarVertex>> path;
+
+	float spawnTimer;
+	float spawnDelay;
+
+	size_t unspawnedEnemies;
 };

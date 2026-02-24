@@ -27,7 +27,10 @@ void SpaceShip::CreateRoom(size_t x, size_t y) {
 		roomMesh->SetupPathfindingNodes(std::dynamic_pointer_cast<SpaceShip>(this->GetPtr()), roomMesh);
 
 		this->rooms[x][y] = roomMesh;
-		this->placedRooms.emplace(Vector2Int{(int)x,(int)y}, );
+
+		// Calculations to determine which room is furthest from the cockpit
+		int xFromStart = x - 31;
+		this->placedRooms.emplace(Vector2Int{(int) x, (int) y}, static_cast<float>(xFromStart * xFromStart + y * y));
 		
 		roomMesh.Init();
 
@@ -65,6 +68,8 @@ std::weak_ptr<Room> SpaceShip::GetRoom(size_t x, size_t y) {
 	if (x < SHIP_MAX_SIZE_X && y < SHIP_MAX_SIZE_Y) return this->rooms[x][y];
 	return std::weak_ptr<Room>();
 }
+
+const std::unordered_map<Vector2Int, float>& SpaceShip::GetPlacedRooms() { return this->placedRooms; }
 
 void SpaceShip::Tick() {
 

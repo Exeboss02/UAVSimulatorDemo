@@ -23,7 +23,7 @@ void DebugCamera::Tick() {
 
 	static bool showCursor = true;
 
-	if (keyboardInput.Interact()) { // 'F'
+	if (keyboardInput.ToggleCamera()) {
 		showCursor = !showCursor;
 		ShowCursor(showCursor);
 	}

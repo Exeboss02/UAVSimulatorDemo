@@ -9,6 +9,7 @@
 #include "core/audio/audioManager.h"
 #include "core/assetManager.h"
 #include "core/tools.h"
+#include "gameObjects/gun.h"
 #include "game/resourceManager.h"
 
 class Player : public RigidBody
@@ -58,4 +59,11 @@ private:
 	float cameraRotation[3];
 
 	void shootRay();
+	void Interact();
+
+	void checkForTriggerPress();
+
+	void aim();
+
+	std::weak_ptr<Gun> gun;
 };

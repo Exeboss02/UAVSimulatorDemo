@@ -33,6 +33,10 @@ public:
 
 	void SetFontSize(float s);
 	float GetFontSize() const;
+	void SetRightAligned(bool v);
+	bool IsRightAligned() const;
+	void SetMaxWidth(float w);
+	float GetMaxWidth() const;
 
 private:
 	std::string text = "Text";
@@ -45,6 +49,8 @@ private:
 
 	// Font size (in pixels) for rendering text
 	float fontSize = 16.0f;
+	bool rightAligned = false;
+	float maxWidth = 0.0f;
 };
 
 } // namespace UI

@@ -2,6 +2,7 @@
 #include "core/assetManager.h"
 #include "gameObjects/meshObject.h"
 #include "gameObjects/testEnemy.h"
+#include "gameObjects/enemy.h"
 #include "imgui.h"
 #include <array>
 
@@ -77,7 +78,7 @@ void SpaceShip::Tick() {
 
 	ImGui::Begin("Spawn enemy");
 	if (ImGui::Button("Spawn")) {
-		auto enemy = this->factory->CreateGameObjectOfType<TestEnemy>();
+		auto enemy = this->factory->CreateGameObjectOfType<Enemy>();
 		Logger::Log("Spawned Enemy");
 		if (auto enemyPtr = enemy.lock()) {
 			enemyPtr->SetPath(this->path);
@@ -99,11 +100,7 @@ void SpaceShip::Start() {
 	CreateRoom(31, 0);
 	auto room = this->GetRoom(31, 0);
 	auto nodes = room.lock()->GetPathfindingNodes();
-	this->pathfinder->SetGoal(nodes[5]);
-
-	this->pathfinder->RemoveVertex(nodes[0]);
-
-	CreateRoom(31, 1);
+	this->pathfinder->SetGoal(nodes[0]);
 }
 
 void SpaceShip::CreateFloorColider() {

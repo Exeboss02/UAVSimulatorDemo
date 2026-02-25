@@ -59,7 +59,6 @@ void GameManager::Tick() {
 				size_t cachedUnspawnedEnemies = this->unspawnedEnemies;
 				for (size_t i = 0; i < std::min(this->rounds[this->currentRound].breachPoints, cachedUnspawnedEnemies); i++) {
 					SpawnEnemy(i);
-					Logger::Log("Breach point ", i);
 				}
 
 				this->enemySpawnTimer = this->enemySpawnDelay;

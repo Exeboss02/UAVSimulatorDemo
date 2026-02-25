@@ -30,8 +30,8 @@ void Enemy::Start() {
 	collider->transform.SetScale({1, 1, 1});
 	collider->SetParent(this->GetPtr());
 
-	collider->SetOnInteract([&](std::shared_ptr<Player>) {
-		this->health -= 20;
+	collider->SetOnHit([&](float damage) {
+		this->health -= damage;
 		if (this->health <= 0) {
 			this->factory->QueueDeleteGameObject(this->GetPtr());
 		}
@@ -41,7 +41,7 @@ void Enemy::Start() {
 
 void Enemy::Tick() {
 	this->UpdateShootCooldown();
-
+	
 	if (this->maxPathIndex != 0 && !this->hasFinishedPath) {
 		this->MoveAlongPath();
 		this->ShootAtPlayer();

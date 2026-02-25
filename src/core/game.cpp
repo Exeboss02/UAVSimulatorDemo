@@ -44,7 +44,7 @@ void Game::Run(HINSTANCE hInstance, int nCmdShow) {
 
 	this->imguiManager.SetSkyboxPopupCallback([&]() { this->sceneManager->SkyboxMenu(); });
 
-	this->sceneManager->LoadScene(SceneManager::Scenes::MAIN_MENU);
+	this->sceneManager->LoadScene(SceneManager::Scenes::GAME);
 
 	MSG msg = {};
 

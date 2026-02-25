@@ -1,29 +1,31 @@
 #include "gameObjects/enemy.h"
 
-#include "core/physics/vector3D.h"
+#include "core/assetManager.h"
+#include "core/physics/physicsQueue.h"
 #include "core/physics/ray.h"
 #include "core/physics/rayCaster.h"
-#include "core/physics/physicsQueue.h"
-#include "gameObjects/meshObject.h"
-#include "gameObjects/meshObjData.h"
+#include "core/physics/vector3D.h"
 #include "game/player.h"
-#include "core/assetManager.h"
+#include "gameObjects/meshObjData.h"
+#include "gameObjects/meshObject.h"
 
 #include "utilities/logger.h"
 
-Enemy::Enemy() : GameObject3D(), health(100), path({}), maxPathIndex(0), currentPathIndex(0),
-	hasFinishedPath(false), canShoot(true), shotCooldown(1.5f), timeSinceLastShot(0.0f) {
+Enemy::Enemy()
+	: GameObject3D(), health(100), path({}), maxPathIndex(0), currentPathIndex(0), hasFinishedPath(false),
+	  canShoot(true), shotCooldown(1.5f), timeSinceLastShot(0.0f) {
 	this->direction = DirectX::XMVectorSet(0, 0, 1, 0);
 	this->targetRotation = DirectX::XMQuaternionIdentity();
 	this->SetMoveSpeedMode(MoveSpeedMode::NORMAL);
 	this->transform.SetScale({0.5f, 0.5f, 0.5f});
 }
 
-void Enemy::Start() { 
+void Enemy::Start() {
 	auto meshObj = this->factory->CreateGameObjectOfType<MeshObject>().lock();
 	meshObj->SetParent(this->GetPtr());
 
-	MeshObjData meshData = AssetManager::GetInstance().GetMeshObjData("TexBox/TextureCube.glb:Mesh_0"); // TODO: Add enemy mesh
+	MeshObjData meshData =
+		AssetManager::GetInstance().GetMeshObjData("TexBox/TextureCube.glb:Mesh_0"); // TODO: Add enemy mesh
 	meshObj->SetMesh(meshData);
 
 	auto collider = this->factory->CreateGameObjectOfType<BoxCollider>().lock();
@@ -45,23 +47,22 @@ void Enemy::Tick() {
 	if (this->maxPathIndex != 0 && !this->hasFinishedPath) {
 		this->MoveAlongPath();
 		this->ShootAtPlayer();
-	}
-	else {
+	} else {
 		this->ShootAtCore();
 	}
 }
 
 void Enemy::SetMoveSpeedMode(MoveSpeedMode mode) {
 	switch (mode) {
-		case MoveSpeedMode::NORMAL:
-			this->movementSpeed = 2.0f;
-			break;
-		case MoveSpeedMode::SLOWED:
-			this->movementSpeed = 1.0f;
-			break;
-		default:
-			this->movementSpeed = 2.0f;
-			break;
+	case MoveSpeedMode::NORMAL:
+		this->movementSpeed = 2.0f;
+		break;
+	case MoveSpeedMode::SLOWED:
+		this->movementSpeed = 1.0f;
+		break;
+	default:
+		this->movementSpeed = 2.0f;
+		break;
 	}
 }
 
@@ -73,7 +74,7 @@ void Enemy::SetPath(const std::vector<std::shared_ptr<AStarVertex>>& newPath) {
 	this->transform.SetPosition(this->path[0]->transform.GetGlobalPosition());
 }
 
-void Enemy::MoveAlongPath() { 
+void Enemy::MoveAlongPath() {
 	if (this->currentPathIndex >= this->maxPathIndex) { // Stop on node before core.
 		this->hasFinishedPath = true;
 		return;
@@ -110,10 +111,10 @@ void Enemy::MoveAlongPath() {
 	this->transform.Move(this->direction, this->movementSpeed * dt);
 }
 
-bool Enemy::IsAtCurrentPathNode() { 
+bool Enemy::IsAtCurrentPathNode() {
 	return DirectX::XMVector4NearEqual(this->transform.GetGlobalPosition(),
-										this->path[this->currentPathIndex]->transform.GetGlobalPosition(),
-										DirectX::XMVectorSet(0.1f, 0.1f, 0.1f, 0.1f));
+									   this->path[this->currentPathIndex]->transform.GetGlobalPosition(),
+									   DirectX::XMVectorSet(0.1f, 0.1f, 0.1f, 0.1f));
 }
 
 void Enemy::UpdateShootCooldown() {
@@ -171,7 +172,7 @@ void Enemy::ShootAtCore() {
 	}
 }
 
-void Enemy::ShootAtPlayer() { 
+void Enemy::ShootAtPlayer() {
 	if (!this->canShoot) return;
 
 	auto player = this->factory->FindObjectOfType<Player>().lock();
@@ -215,7 +216,8 @@ void Enemy::VisualizeRay(const DirectX::XMVECTOR& position, const DirectX::XMVEC
 	auto colliderobjWeak = this->factory->CreateGameObjectOfType<MeshObject>();
 	auto colliderobj = colliderobjWeak.lock();
 	colliderobj->SetMesh(meshdata);
-	colliderobj->GetMesh().SetMaterial(0, AssetManager::GetInstance().GetMaterialWeakPtr("defaultUnlitMaterial").lock());
+	colliderobj->GetMesh().SetMaterial(0,
+									   AssetManager::GetInstance().GetMaterialWeakPtr("defaultUnlitMaterial").lock());
 	colliderobj->transform.SetPosition(DirectX::XMVectorAdd(position, DirectX::XMVectorScale(direction, distance / 2)));
 
 	DirectX::XMVECTOR up = DirectX::XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);

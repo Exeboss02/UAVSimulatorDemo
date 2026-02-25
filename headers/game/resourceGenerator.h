@@ -7,8 +7,17 @@ class ResourceGenerator : public MeshObject {
 public:
 	void Start() override;
 
+	void SetGenerationSpeed(float generatedPerSecond);
+
+	size_t GetCurrentlyGenerated() const;
+
+	ResourceType GetResourceType() const;
+
+	void SetResourceType(ResourceType type);
+
 private:
-	Interact(std::shared_ptr<Player> player);
+	ResourceType resourceType;
+	void Interact(std::shared_ptr<Player> player);
 	float lastGenerated = 0;
 
 	float generatedPerSecond = 1;

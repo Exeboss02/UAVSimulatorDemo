@@ -67,12 +67,11 @@ private:
 
 	float cameraRotation[3];
 
-	void shootRay();
 	void Interact();
 
-	void checkForTriggerPress();
+	void CheckForTriggerPress();
 
-	void aim();
+	void Aim();
 
 	std::weak_ptr<Gun> gun;
 };

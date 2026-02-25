@@ -12,7 +12,7 @@
 #include "utilities/logger.h"
 
 Enemy::Enemy() : GameObject3D(), health(100), path({}), maxPathIndex(0), currentPathIndex(0),
-	hasFinishedPath(false), timeSinceLastShot(0.0f) {
+	hasFinishedPath(false), canShoot(true), shotCooldown(1.5f), timeSinceLastShot(0.0f) {
 	this->direction = DirectX::XMVectorSet(0, 0, 1, 0);
 	this->targetRotation = DirectX::XMQuaternionIdentity();
 	this->SetMoveSpeedMode(MoveSpeedMode::NORMAL);
@@ -46,7 +46,7 @@ void Enemy::Tick() {
 		this->MoveAlongPath();
 		this->ShootAtPlayer();
 	}
-	else if (this->hasFinishedPath) {
+	else {
 		this->ShootAtCore();
 	}
 }
@@ -117,9 +117,9 @@ bool Enemy::IsAtCurrentPathNode() {
 }
 
 void Enemy::UpdateShootCooldown() {
-
-	if (this->canShoot == false) {
-		this->timeSinceLastShot += Time::GetInstance().GetDeltaTime();
+	if (!this->canShoot) {
+		float deltaTime = Time::GetInstance().GetDeltaTime();
+		this->timeSinceLastShot += deltaTime;
 
 		if (this->timeSinceLastShot >= this->shotCooldown) {
 			this->canShoot = true;
@@ -144,23 +144,26 @@ void Enemy::ShootAtCore() {
 	RayCastData rayCastData = {};
 
 	bool didHit = PhysicsQueue::GetInstance().castRay(ray, rayCastData, maxDistance);
-	if (didHit) {
-		rayCastData.hitColider.lock()->Hit(this->damage);
-		Logger::Log("Enemy shooting at core");
-		this->canShoot = false;
+	if (didHit && !rayCastData.hitColider.expired()) {
+		auto hitCollider = rayCastData.hitColider.lock();
+		if (hitCollider) {
+			hitCollider->Hit(this->damage);
+			Logger::Log("Enemy shooting at core");
+			this->canShoot = false;
 
-		MeshObjData meshdata = AssetManager::GetInstance().GetMeshObjData("TexBox/TextureCube.glb:Mesh_0");
-		auto colliderobjWeak = this->factory->CreateGameObjectOfType<MeshObject>();
-		auto colliderobj = colliderobjWeak.lock();
-		colliderobj->SetMesh(meshdata);
-		colliderobj->GetMesh().SetMaterial(0, AssetManager::GetInstance().GetMaterialWeakPtr("defaultUnlitMaterial").lock());
-		DirectX::XMVECTOR direction = DirectX::XMVectorSet(rayDirection.GetX(), rayDirection.GetY(), rayDirection.GetZ(), 0.0f);
-		colliderobj->transform.SetPosition(DirectX::XMVectorAdd(pos, DirectX::XMVectorScale(direction, rayCastData.distance / 2)));
-		colliderobj->transform.SetRotationQuaternion(dir);
-		DirectX::XMFLOAT3 scale(0.01f, 0.01f, rayCastData.distance);
-		colliderobj->transform.SetScale(DirectX::XMLoadFloat3(&scale));
-	}
-}
+					MeshObjData meshdata = AssetManager::GetInstance().GetMeshObjData("TexBox/TextureCube.glb:Mesh_0");
+					auto colliderobjWeak = this->factory->CreateGameObjectOfType<MeshObject>();
+					auto colliderobj = colliderobjWeak.lock();
+					colliderobj->SetMesh(meshdata);
+					colliderobj->GetMesh().SetMaterial(0, AssetManager::GetInstance().GetMaterialWeakPtr("defaultUnlitMaterial").lock());
+					DirectX::XMVECTOR direction = DirectX::XMVectorSet(rayDirection.GetX(), rayDirection.GetY(), rayDirection.GetZ(), 0.0f);
+					colliderobj->transform.SetPosition(DirectX::XMVectorAdd(pos, DirectX::XMVectorScale(direction, rayCastData.distance / 2)));
+					colliderobj->transform.SetRotationQuaternion(dir);
+					DirectX::XMFLOAT3 scale(0.01f, 0.01f, rayCastData.distance);
+					colliderobj->transform.SetScale(DirectX::XMLoadFloat3(&scale));
+				}
+			}
+		}
 
 void Enemy::ShootAtPlayer() { 
 	if (!this->canShoot) return;

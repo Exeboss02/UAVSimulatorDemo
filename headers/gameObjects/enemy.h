@@ -30,16 +30,19 @@ private:
 	DirectX::XMVECTOR targetRotation;
 	const float rotationSpeed = 5.0f;
 
+	// Collider
 	std::weak_ptr<BoxCollider> hitbox;
 
+	// Pathfinding
 	std::vector<std::shared_ptr<AStarVertex>> path;
 	size_t maxPathIndex;
 	size_t currentPathIndex;
 	bool hasFinishedPath;
 
+	// Shooting
 	const float damage = 5.f;
-	bool canShoot = true;
-	const float shotCooldown = 2.f;
+	bool canShoot;
+	const float shotCooldown;
 	float timeSinceLastShot;
 
 	void MoveAlongPath();

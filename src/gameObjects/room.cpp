@@ -3,6 +3,7 @@
 #include "gameObjects/spaceShipObj.h"
 #include "gameObjects/spotlightObject.h"
 #include "gameObjects/turret.h"
+#include "game/resourceGenerator.h"
 #include <numbers>
 
 static const std::array<std::array<int, 2>, 4> wallpositions = {
@@ -80,9 +81,9 @@ void Room::Start() {
 	buildCollider->SetTag(Tag::INTERACTABLE);
 	// Maybe tweak positionW
 	this->buildSlot = buildCollider;
-	buildCollider->SetOnInteract([&]() {
+	buildCollider->SetOnInteract([&](std::shared_ptr<Player> p) {
 		if (this->builtObject.expired()) {
-			auto turret = this->factory->CreateStaticGameObject<Turret>();
+			auto turret = this->factory->CreateStaticGameObject<ResourceGenerator>();
 			turret->SetParent(this->GetPtr());
 			turret->transform.SetPosition({0, 1.5, 0});
 			//turret->SetMesh(AssetManager::GetInstance().GetMeshObjData("TexBox/TextureCube.glb:Mesh_0"));

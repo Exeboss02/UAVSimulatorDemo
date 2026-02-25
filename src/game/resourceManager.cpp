@@ -25,4 +25,7 @@ bool Resource::AlterAmount(long long amount) {
 }
 
 ResourceManager::ResourceManager()
-	: titanium("Titanium", 0), lubricant("Lubricant", 0), carbonFiber("Carbon Fiber", 0), circuit("Circuits", 0) {}
+	: titanium("Titanium", 0), lubricant("Lubricant", 0), carbonFiber("Carbon Fiber", 0), circuit("Circuits", 0),
+	  resources({&titanium, &lubricant, &carbonFiber, &circuit}) {}
+
+Resource& ResourceManager::GetResource(ResourceType resource) { return *this->resources[static_cast<size_t>(resource)]; }

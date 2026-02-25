@@ -18,7 +18,7 @@ void TestEnemy::Start() {
 	collider->SetParent(this->GetPtr());
 
 
-	collider->SetOnInteract([&]() { 
+	collider->SetOnInteract([&](std::shared_ptr<Player>) { 
 		this->health -= 20;
 		Logger::Log("Enemy got hit");
 		if (this->health <= 0) {

@@ -1,19 +1,20 @@
 #pragma once
-#include "core/physics/collision.h"
-#include "gameObjects/meshObject.h"
-#include "core/physics/physicsQueue.h"
-#include "core/input/keyboardInput.h"
-#include "gameObjects/cameraObject.h"
-#include "core/input/inputManager.h"
-#include "core/input/controllerInput.h"
-#include "core/audio/audioManager.h"
 #include "core/assetManager.h"
+#include "core/audio/audioManager.h"
+#include "core/input/controllerInput.h"
+#include "core/input/inputManager.h"
+#include "core/input/keyboardInput.h"
+#include "core/physics/collision.h"
+#include "core/physics/physicsQueue.h"
 #include "core/tools.h"
-#include "gameObjects/gun.h"
+#include "game/hud.h"
 #include "game/resourceManager.h"
+#include "gameObjects/cameraObject.h"
+#include "gameObjects/gun.h"
+#include "gameObjects/meshObject.h"
+#include <memory>
 
-class Player : public RigidBody
-{
+class Player : public RigidBody {
 public:
 	Player();
 	~Player();
@@ -38,11 +39,15 @@ public:
 	void PhysicsTick() override;
 	void Tick() override;
 	void Start() override;
-	
+
 	void UpdateCamera();
 
 	void SetCameraRotation(float r, float p, float y);
 	void OnCollision(std::weak_ptr<GameObject3D> gameObject3D);
+
+	void DecrementHealth(uint8_t hp);
+	void IncrementHealth(uint8_t hp);
+	uint8_t GetHealth() const;
 
 	bool isPlayingMusic = false;
 	bool canShoot = false;
@@ -52,10 +57,13 @@ public:
 	Timer shootCoolDown;
 
 	ResourceManager resources;
+	std::unique_ptr<HUD> hud;
 
 private:
 	float input[2] = {};
 	bool showCursor = true;
+
+	uint8_t health;
 
 	float cameraRotation[3];
 

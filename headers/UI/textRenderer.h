@@ -33,6 +33,9 @@ public:
 	void SubmitText(const std::string& text, Vec2 position, float fontSize, DirectX::XMFLOAT4 color,
 					const std::string& font = "", int zIndex = 0);
 
+	// Measure a string using the underlying FW1 font wrapper. Returns pixel width.
+	float MeasureString(const std::string& text, float fontSize, const std::string& font = "");
+
 	void ClearSubmissions();
 	void Render(void* context);
 

@@ -2,6 +2,7 @@
 #include "core/assetManager.h"
 #include "gameObjects/meshObject.h"
 #include "gameObjects/testEnemy.h"
+#include "gameObjects/enemy.h"
 #include "imgui.h"
 #include <array>
 
@@ -27,6 +28,10 @@ void SpaceShip::CreateRoom(size_t x, size_t y) {
 		roomMesh->SetupPathfindingNodes(std::dynamic_pointer_cast<SpaceShip>(this->GetPtr()), roomMesh);
 
 		this->rooms[x][y] = roomMesh;
+
+		// Calculations to determine which room is furthest from the cockpit
+		int xFromStart = x - 31;
+		this->placedRooms.emplace(Vector2Int{(int) x, (int) y}, static_cast<float>(xFromStart * xFromStart + y * y));
 		
 		roomMesh.Init();
 
@@ -65,6 +70,8 @@ std::weak_ptr<Room> SpaceShip::GetRoom(size_t x, size_t y) {
 	return std::weak_ptr<Room>();
 }
 
+const std::unordered_map<Vector2Int, float>& SpaceShip::GetPlacedRooms() { return this->placedRooms; }
+
 void SpaceShip::Tick() {
 
 	this->GameObject3D::Tick();
@@ -77,7 +84,7 @@ void SpaceShip::Tick() {
 
 	ImGui::Begin("Spawn enemy");
 	if (ImGui::Button("Spawn")) {
-		auto enemy = this->factory->CreateGameObjectOfType<TestEnemy>();
+		auto enemy = this->factory->CreateGameObjectOfType<Enemy>();
 		Logger::Log("Spawned Enemy");
 		if (auto enemyPtr = enemy.lock()) {
 			enemyPtr->SetPath(this->path);
@@ -99,11 +106,7 @@ void SpaceShip::Start() {
 	CreateRoom(31, 0);
 	auto room = this->GetRoom(31, 0);
 	auto nodes = room.lock()->GetPathfindingNodes();
-	this->pathfinder->SetGoal(nodes[5]);
-
-	this->pathfinder->RemoveVertex(nodes[0]);
-
-	CreateRoom(31, 1);
+	this->pathfinder->SetGoal(nodes[0]);
 }
 
 void SpaceShip::CreateFloorColider() {

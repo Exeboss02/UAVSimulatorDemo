@@ -1,4 +1,6 @@
 #pragma once
+#include <array>
+#include <string>
 
 class Resource {
 public:
@@ -30,13 +32,19 @@ private:
 	size_t amount;
 };
 
+enum class ResourceType { Titanium, Lubricant, CarbonFiber, Circuit };
+
 class ResourceManager {
 public:
 	ResourceManager();
+
 	Resource titanium;
 	Resource lubricant;
 	Resource carbonFiber;
 	Resource circuit;
 
+	Resource& GetResource(ResourceType resource);
+
 private:
+	std::array<Resource*, 4> resources;
 };

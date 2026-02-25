@@ -7,6 +7,23 @@ class Room;
 #include "gameObjects/room.h"
 #include "utilities/aStar.h"
 
+#include <functional>
+
+struct Vector2Int {
+	int x;
+	int y;
+
+	bool operator==(const Vector2Int& other) const { return x == other.x && y == other.y; }
+};
+
+namespace std {
+template <>
+struct hash<Vector2Int> {
+	size_t operator()(const Vector2Int& v) const { return hash<int>()(v.x) ^ (hash<int>()(v.y) << 1); }
+};
+} // namespace std
+
+
 class SpaceShip : public GameObject3D {
 public:
 	SpaceShip();
@@ -29,6 +46,8 @@ public:
 	/// <returns></returns>
 	std::weak_ptr<Room> GetRoom(size_t x, size_t y);
 
+	const std::unordered_map<Vector2Int, float>& GetPlacedRooms();
+
 	/// <summary>
 	/// Only overloaded for Imgui currently
 	/// </summary>
@@ -43,6 +62,7 @@ private:
 	static const size_t SHIP_MAX_SIZE_X = 63;
 	static const size_t SHIP_MAX_SIZE_Y = 63;
 	std::array<std::array<std::weak_ptr<Room>, SHIP_MAX_SIZE_Y>, SHIP_MAX_SIZE_X> rooms{};
+	std::unordered_map<Vector2Int, float> placedRooms;
 
 	std::unique_ptr<AStar> pathfinder;
 	std::vector<std::shared_ptr<AStarVertex>> path;

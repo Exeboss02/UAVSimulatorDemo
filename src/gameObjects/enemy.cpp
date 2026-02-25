@@ -1,0 +1,239 @@
+#include "gameObjects/enemy.h"
+
+#include "core/assetManager.h"
+#include "core/physics/physicsQueue.h"
+#include "core/physics/ray.h"
+#include "core/physics/rayCaster.h"
+#include "core/physics/vector3D.h"
+#include "game/player.h"
+#include "gameObjects/meshObjData.h"
+#include "gameObjects/meshObject.h"
+
+#include "utilities/logger.h"
+
+Enemy::Enemy()
+	: GameObject3D(), health(100), path({}), maxPathIndex(0), currentPathIndex(0), hasFinishedPath(false),
+	  canShoot(true), shotCooldown(1.5f), timeSinceLastShot(0.0f) {
+	this->direction = DirectX::XMVectorSet(0, 0, 1, 0);
+	this->targetRotation = DirectX::XMQuaternionIdentity();
+	this->SetMoveSpeedMode(MoveSpeedMode::NORMAL);
+	this->transform.SetScale({0.5f, 0.5f, 0.5f});
+}
+
+void Enemy::Start() {
+	auto meshObj = this->factory->CreateGameObjectOfType<MeshObject>().lock();
+	meshObj->SetParent(this->GetPtr());
+
+	MeshObjData meshData =
+		AssetManager::GetInstance().GetMeshObjData("TexBox/TextureCube.glb:Mesh_0"); // TODO: Add enemy mesh
+	meshObj->SetMesh(meshData);
+
+	auto collider = this->factory->CreateGameObjectOfType<BoxCollider>().lock();
+	collider->transform.SetScale({1, 1, 1});
+	collider->SetParent(this->GetPtr());
+
+	collider->SetOnInteract([&](std::shared_ptr<Player>) {
+		this->health.Decrement(20);
+		if (this->health.IsDead()) {
+			this->factory->QueueDeleteGameObject(this->GetPtr());
+		}
+	});
+	this->hitbox = collider;
+}
+
+void Enemy::Tick() {
+	this->UpdateShootCooldown();
+
+	if (this->maxPathIndex != 0 && !this->hasFinishedPath) {
+		this->MoveAlongPath();
+		this->ShootAtPlayer();
+	} else {
+		this->ShootAtCore();
+	}
+}
+
+void Enemy::SetMoveSpeedMode(MoveSpeedMode mode) {
+	switch (mode) {
+	case MoveSpeedMode::NORMAL:
+		this->movementSpeed = 2.0f;
+		break;
+	case MoveSpeedMode::SLOWED:
+		this->movementSpeed = 1.0f;
+		break;
+	default:
+		this->movementSpeed = 2.0f;
+		break;
+	}
+}
+
+void Enemy::SetPath(const std::vector<std::shared_ptr<AStarVertex>>& newPath) {
+	this->path = newPath;
+	this->maxPathIndex = newPath.size() - 1;
+	this->currentPathIndex = 0;
+	this->hasFinishedPath = false;
+	this->transform.SetPosition(this->path[0]->transform.GetGlobalPosition());
+}
+
+void Enemy::MoveAlongPath() {
+	if (this->currentPathIndex >= this->maxPathIndex) { // Stop on node before core.
+		this->hasFinishedPath = true;
+		return;
+	}
+
+	if (this->IsAtCurrentPathNode()) {
+		this->currentPathIndex++;
+		this->direction = DirectX::XMVectorSubtract(this->path[this->currentPathIndex]->transform.GetGlobalPosition(),
+													this->transform.GetGlobalPosition());
+		this->direction = DirectX::XMVector3Normalize(this->direction);
+
+		DirectX::XMVECTOR up = DirectX::XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
+		DirectX::XMVECTOR right = DirectX::XMVector3Cross(up, this->direction);
+		right = DirectX::XMVector3Normalize(right);
+		DirectX::XMVECTOR actualUp = DirectX::XMVector3Cross(this->direction, right);
+
+		DirectX::XMMATRIX rotationMatrix = DirectX::XMMatrixIdentity();
+		rotationMatrix.r[0] = right;
+		rotationMatrix.r[1] = actualUp;
+		rotationMatrix.r[2] = this->direction;
+		rotationMatrix.r[3] = DirectX::XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f);
+
+		this->targetRotation = DirectX::XMQuaternionRotationMatrix(rotationMatrix);
+	}
+
+	float dt = Time::GetInstance().GetDeltaTime();
+
+	// Smoothly lerp rotation
+	DirectX::XMVECTOR currentRotation = this->transform.GetRotationQuaternion();
+	float deltaRotation = this->rotationSpeed * dt;
+	DirectX::XMVECTOR newRotation = DirectX::XMQuaternionSlerp(currentRotation, this->targetRotation, deltaRotation);
+	this->transform.SetRotationQuaternion(newRotation);
+
+	this->transform.Move(this->direction, this->movementSpeed * dt);
+}
+
+bool Enemy::IsAtCurrentPathNode() {
+	return DirectX::XMVector4NearEqual(this->transform.GetGlobalPosition(),
+									   this->path[this->currentPathIndex]->transform.GetGlobalPosition(),
+									   DirectX::XMVectorSet(0.1f, 0.1f, 0.1f, 0.1f));
+}
+
+void Enemy::UpdateShootCooldown() {
+	if (!this->canShoot) {
+		float deltaTime = Time::GetInstance().GetDeltaTime();
+		this->timeSinceLastShot += deltaTime;
+
+		if (this->timeSinceLastShot >= this->shotCooldown) {
+			this->canShoot = true;
+			this->timeSinceLastShot = 0.0f;
+		}
+	}
+}
+
+void Enemy::ShootAtCore() {
+	if (!this->canShoot) return;
+
+	if (this->path.empty()) {
+		Logger::Log("Enemy cannot shoot at core: path is empty");
+		return;
+	}
+
+	if (this->maxPathIndex >= this->path.size()) {
+		Logger::Log("Enemy cannot shoot at core: maxPathIndex out of bounds");
+		return;
+	}
+
+	Vector3D enemyPosition = this->transform.GetGlobalPosition();
+	Vector3D corePosition = this->path[this->maxPathIndex]->transform.GetGlobalPosition();
+	Vector3D rayDirection = corePosition - enemyPosition;
+	float rayLength = rayDirection.Length();
+	rayDirection.Normalize();
+
+	// Offset ray origin to avoid hitting self
+	Vector3D adjustedPos = enemyPosition + rayDirection * 1.5f;
+	float maxDistance = rayLength + 1.f; // Subtract offset, add small bias
+
+	DirectX::XMVECTOR pos = DirectX::XMVectorSet(adjustedPos.GetX(), adjustedPos.GetY(), adjustedPos.GetZ(), 1.0f);
+	DirectX::XMVECTOR dir = DirectX::XMVectorSet(rayDirection.GetX(), rayDirection.GetY(), rayDirection.GetZ(), 0.0f);
+	Ray ray{adjustedPos, rayDirection};
+	RayCastData rayCastData = {};
+
+	bool didHit = PhysicsQueue::GetInstance().castRay(ray, rayCastData, maxDistance);
+
+	// Always trigger cooldown after attempting to shoot
+	this->canShoot = false;
+
+	if (didHit && !rayCastData.hitColider.expired()) {
+		auto hitCollider = rayCastData.hitColider.lock();
+		if (hitCollider) {
+			Logger::Log("Enemy shooting at core - HIT!");
+			hitCollider->Hit(this->damage);
+			this->VisualizeRay(pos, dir, rayCastData.distance);
+		}
+	}
+}
+
+void Enemy::ShootAtPlayer() {
+	if (!this->canShoot) return;
+
+	auto player = this->factory->FindObjectOfType<Player>().lock();
+	if (!player) {
+		Logger::Log("Enemy couldn't find player.");
+		return;
+	}
+
+	Vector3D enemyPosition = this->transform.GetGlobalPosition();
+	Vector3D playerPosition = player->transform.GetGlobalPosition();
+	Vector3D rayDirection = playerPosition - enemyPosition;
+	float rayLength = rayDirection.Length();
+	rayDirection.Normalize();
+
+	// Offset ray origin to avoid hitting self
+	Vector3D adjustedPos = enemyPosition + rayDirection * 1.5f;
+	float maxDistance = rayLength + 1.f; // Subtract offset, add small bias
+
+	DirectX::XMVECTOR pos = DirectX::XMVectorSet(adjustedPos.GetX(), adjustedPos.GetY(), adjustedPos.GetZ(), 1.0f);
+	DirectX::XMVECTOR dir = DirectX::XMVectorSet(rayDirection.GetX(), rayDirection.GetY(), rayDirection.GetZ(), 0.0f);
+	Ray ray{adjustedPos, rayDirection};
+	RayCastData rayCastData = {};
+
+	bool didHit = PhysicsQueue::GetInstance().castRay(ray, rayCastData, maxDistance);
+
+	if (didHit) {
+		if (auto hitCollider = rayCastData.hitColider.lock()) {
+			if (hitCollider->GetParent().lock().get() == player.get()) {
+				rayCastData.hitColider.lock()->Hit(this->damage);
+				Logger::Log("Enemy shooting at player");
+				this->canShoot = false;
+
+				this->VisualizeRay(pos, dir, rayCastData.distance);
+			}
+		}
+	}
+}
+
+void Enemy::VisualizeRay(const DirectX::XMVECTOR& position, const DirectX::XMVECTOR& direction, float distance) {
+	MeshObjData meshdata = AssetManager::GetInstance().GetMeshObjData("TexBox/TextureCube.glb:Mesh_0");
+	auto colliderobjWeak = this->factory->CreateGameObjectOfType<MeshObject>();
+	auto colliderobj = colliderobjWeak.lock();
+	colliderobj->SetMesh(meshdata);
+	colliderobj->GetMesh().SetMaterial(0,
+									   AssetManager::GetInstance().GetMaterialWeakPtr("defaultUnlitMaterial").lock());
+	colliderobj->transform.SetPosition(DirectX::XMVectorAdd(position, DirectX::XMVectorScale(direction, distance / 2)));
+
+	DirectX::XMVECTOR up = DirectX::XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
+	DirectX::XMVECTOR right = DirectX::XMVector3Cross(up, direction);
+	right = DirectX::XMVector3Normalize(right);
+	DirectX::XMVECTOR actualUp = DirectX::XMVector3Cross(direction, right);
+
+	DirectX::XMMATRIX rotationMatrix = DirectX::XMMatrixIdentity();
+	rotationMatrix.r[0] = right;
+	rotationMatrix.r[1] = actualUp;
+	rotationMatrix.r[2] = direction;
+	rotationMatrix.r[3] = DirectX::XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f);
+
+	DirectX::XMVECTOR rayRotation = DirectX::XMQuaternionRotationMatrix(rotationMatrix);
+	colliderobj->transform.SetRotationQuaternion(rayRotation);
+
+	DirectX::XMFLOAT3 scale(0.01f, 0.01f, distance);
+	colliderobj->transform.SetScale(DirectX::XMLoadFloat3(&scale));
+}

@@ -9,6 +9,8 @@
 #include "core/audio/audioManager.h"
 #include "core/assetManager.h"
 #include "core/tools.h"
+#include "gameObjects/gun.h"
+#include "game/resourceManager.h"
 
 class Player : public RigidBody
 {
@@ -39,6 +41,9 @@ public:
 	
 	void UpdateCamera();
 
+	void SetCameraRotation(float r, float p, float y);
+	void OnCollision(std::weak_ptr<GameObject3D> gameObject3D);
+
 	bool isPlayingMusic = false;
 	bool canShoot = false;
 
@@ -46,9 +51,20 @@ public:
 	Timer sfxTimer;
 	Timer shootCoolDown;
 
+	ResourceManager resources;
+
 private:
 	float input[2] = {};
 	bool showCursor = true;
 
+	float cameraRotation[3];
+
 	void shootRay();
+	void Interact();
+
+	void checkForTriggerPress();
+
+	void aim();
+
+	std::weak_ptr<Gun> gun;
 };

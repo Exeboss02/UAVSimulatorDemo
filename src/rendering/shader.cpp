@@ -31,7 +31,14 @@ void Shader::Init(ID3D11Device* device, ShaderType shaderType, const char* csoPa
 	}
 
 	reader.seekg(0, std::ios::end);
-	shaderData.reserve(static_cast<unsigned int>(reader.tellg()));
+	reader.seekg(0, std::ios::end);
+	std::streampos endPos = reader.tellg();
+	if (endPos != std::streampos(-1)) {
+		shaderData.reserve(static_cast<size_t>(endPos));
+	} else {
+		// If tellg failed, clear state and continue without reserving
+		reader.clear();
+	}
 	reader.seekg(0, std::ios::beg);
 
 	shaderData.assign((std::istreambuf_iterator<char>(reader)),

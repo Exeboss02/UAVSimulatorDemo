@@ -1,6 +1,10 @@
 {
   "gameObjects": [
     {
+      "name": "GameManager",
+      "type": "GameManager"
+    },
+    {
       "transform": {
         "position": [
           310,
@@ -20,12 +24,14 @@
         ]
       },
       "type": "Player",
+      "name": "PLAYER",
       "gravity": true,
       "speed": 18,
       "mouseSensitivity": 0.004
     },
     {
       "fov": 80.0,
+      "name": "THE SPACESHIP",
       "transform": {
         "position": [
           0.0,

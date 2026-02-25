@@ -30,12 +30,6 @@ public:
 	//MusicTrackManager Functions
 
 	/// <summary>
-	/// Takes path and sets as default music folder. Later you only need to put a filename when you load a music file. Always end path with /
-	/// </summary>
-	/// <param name="pathToMusicFolder"></param>
-	void InitializeMusicTrackManager(std::string pathToMusicFolder);
-
-	/// <summary>
 	/// Loads and adds music track to bank from your standard music folder. Only put filename and an id for later identification
 	/// </summary>
 	/// <param name="filename"></param>

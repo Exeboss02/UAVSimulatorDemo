@@ -239,11 +239,11 @@ void Player::SetCameraRotation(float r, float p, float y) {
 	this->cameraRotation[2] = y;
 }
 
-void Player::DecrementHealth(uint8_t hp) { this->health -= hp; }
+void Player::DecrementHealth(int hp) { this->health.Decrement(hp); }
 
-void Player::IncrementHealth(uint8_t hp) { this->health += hp; }
+void Player::IncrementHealth(int hp) { this->health.Increment(hp); }
 
-uint8_t Player::GetHealth() const { return this->health; }
+int Player::GetHealth() const { return this->health.Get(); }
 
 void Player::OnCollision(std::weak_ptr<GameObject3D> gameObject3D) {
 	std::string name = gameObject3D.lock()->GetName();

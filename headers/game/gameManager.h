@@ -5,6 +5,11 @@
 #include "gameObjects/SpaceShipObj.h"
 #include "gameObjects/testEnemy.h"
 
+struct Round {
+	size_t enemyCount;
+	size_t breachPoints;
+};
+
 class GameManager : public GameObject {
 public:
 	GameManager();
@@ -18,7 +23,8 @@ public:
 	void Loose();
 
 	void SpawnNextRound();
-	void SpawnEnemy();
+	void SpawnRound(size_t roundIndex);
+	void SpawnEnemy(size_t atBreachpoint);
 	void EndRound();
 
 	const size_t& GetCurrentRound();
@@ -39,24 +45,30 @@ public:
 	float GetRandom(float startValue, float endValue);
 
 private:
+	static std::weak_ptr<GameManager> instance;
+
 	std::weak_ptr<Player> player;
 	std::weak_ptr<SpaceShip> spaceship;
 
-	static std::weak_ptr<GameManager> instance;
-	DirectX::XMVECTOR spawnPoint;
+	DirectX::XMVECTOR playerSpawnPoint;
+
+
+	// Round stuff:
 
 	size_t currentRound;
-	size_t lastRound;
-
+	std::vector<Round> rounds;
 	bool inCombat;
 
 	std::vector<std::weak_ptr<GameObject3D>> enemies;
 
-	// Temp
-	std::vector<std::shared_ptr<AStarVertex>> path;
+	struct Path {
+		std::vector<std::shared_ptr<AStarVertex>> path;
+	};
 
-	float spawnTimer;
-	float spawnDelay;
+	std::vector<Path> paths;
+
+	float enemySpawnTimer;
+	float enemySpawnDelay;
 
 	float idleTimeTimer;
 	const float idleTime;

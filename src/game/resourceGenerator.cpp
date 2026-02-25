@@ -8,6 +8,8 @@ void ResourceGenerator::Start() {
 	interactCollider->SetOnInteract([&](std::shared_ptr<Player> player) { this->Interact(player); });
 	interactCollider->transform.SetScale(2, 2, 2);
 
+	this->lastGenerated = Time::GetInstance().GetSessionTime();
+
 	this->MeshObject::Start();
 }
 

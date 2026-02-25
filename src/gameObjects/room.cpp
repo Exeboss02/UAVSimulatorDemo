@@ -3,6 +3,7 @@
 #include "gameObjects/spaceShipObj.h"
 #include "gameObjects/spotlightObject.h"
 #include "gameObjects/turret.h"
+#include "gameObjects/mine.h"
 #include <numbers>
 
 static const std::array<std::array<int, 2>, 4> wallpositions = {
@@ -82,7 +83,7 @@ void Room::Start() {
 	this->buildSlot = buildCollider;
 	buildCollider->SetOnInteract([&]() {
 		if (this->builtObject.expired()) {
-			auto turret = this->factory->CreateStaticGameObject<Turret>();
+			auto turret = this->factory->CreateStaticGameObject<Mine>();
 			turret->SetParent(this->GetPtr());
 			turret->transform.SetPosition({0, 1.5, 0});
 			//turret->SetMesh(AssetManager::GetInstance().GetMeshObjData("TexBox/TextureCube.glb:Mesh_0"));

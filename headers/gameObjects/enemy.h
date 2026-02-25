@@ -52,4 +52,6 @@ private:
 
 	void ShootAtCore();
 	void ShootAtPlayer();
+
+	void VisualizeRay(const DirectX::XMVECTOR& position, const DirectX::XMVECTOR& direction, float distance);
 };

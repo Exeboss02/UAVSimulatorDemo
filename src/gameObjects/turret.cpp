@@ -4,6 +4,7 @@
 #include "core/physics/rayCaster.h"
 #include "utilities/time.h"
 #include "game/gameManager.h"
+#include "gameObjects/rayVis.h"
 
 void Turret::Start() { 
 	this->SetMesh(AssetManager::GetInstance().GetMeshObjData("TexBox/TextureCube.glb:Mesh_0"));
@@ -78,26 +79,24 @@ void Turret::Fire() {
 	Logger::Log("Boom");
 	this->lastFired = Time::GetInstance().GetSessionTime();
 
-	const DirectX::XMVECTOR lookVec = DirectX::XMVector3Normalize(this->transform.GetDirectionVector());
-	const DirectX::XMVECTOR posVec = this->transform.GetPosition();
+	const DirectX::XMVECTOR lookVec = this->transform.GetGlobalForward();
+	const DirectX::XMVECTOR posVec = this->transform.GetGlobalPosition();
 
 	Ray ray{Vector3D{posVec}, Vector3D{lookVec}};
 	RayCastData rayCastData;
-	Logger::Log("shooting ray");
 
 	bool didHit = PhysicsQueue::GetInstance().castRay(ray, rayCastData);
 	std::string hitString;
 	if (didHit) {
 
-		auto collider = rayCastData.hitColider.lock();
-		collider->Hit(this->damage);
-
+		rayCastData.hitColider.lock()->Hit(this->damage);
 		hitString = "hit";
 
 		// rayVis
 		MeshObjData meshdata = AssetManager::GetInstance().GetMeshObjData("TexBox/TextureCube.glb:Mesh_0");
-		auto colliderobjWeak = this->factory->CreateGameObjectOfType<MeshObject>();
+		auto colliderobjWeak = this->factory->CreateGameObjectOfType<RayVis>();
 		auto colliderobj = colliderobjWeak.lock();
+		colliderobj->StartDeathTimer(0.05f);
 		colliderobj->SetMesh(meshdata);
 		colliderobj->GetMesh().SetMaterial(
 			0, AssetManager::GetInstance().GetMaterialWeakPtr("defaultUnlitMaterial").lock());
@@ -110,6 +109,4 @@ void Turret::Fire() {
 	} else {
 		hitString = "miss";
 	}
-
-	Logger::Log(hitString, " at distance: ", std::to_string(rayCastData.distance));
 }

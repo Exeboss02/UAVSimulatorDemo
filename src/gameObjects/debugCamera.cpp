@@ -81,7 +81,7 @@ void DebugCamera::shootRay() {
 
 			//std::shared_ptr<GameObject> hitCollider = 
 			auto collider = rayCastData.hitColider.lock();
-			collider->Interact();
+			collider->Interact(nullptr);
 
 			//std::weak_ptr<GameObject> weakParent = hitCollider->GetParent(); 
 			//if (!weakParent.expired()) {

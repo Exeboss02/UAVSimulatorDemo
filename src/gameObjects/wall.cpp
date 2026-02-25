@@ -23,6 +23,7 @@ void Wall::Start(){
 	this->MeshObject::Start();
 	Logger::Log("Wall started");
 
+	this->SetName("WALL" + std::to_string(this->factory->GetNextID()));
 }
 
 void Wall::SetWAllIndex(int wallIndex) { this->wallIndex = wallIndex; }
@@ -36,8 +37,9 @@ void Wall::SpawnInteractables() {
 	DirectX::XMFLOAT3 scale(0.750f, 0.750f, 0.250f);
 	colliderobj->transform.SetScale(DirectX::XMLoadFloat3(&scale));
 	colliderobj->SetParent(this->GetPtr());
-	colliderobj->SetOnInteract([&]() { this->OnInteract(); });
-	colliderobj->tag = Tag::INTERACTABLE;
+	colliderobj->SetOnInteract([&](std::shared_ptr<Player>) { this->OnInteract(); });
+	colliderobj->SetTag(Tag::INTERACTABLE);
+	colliderobj->SetName("Interactable " + std::to_string(this->factory->GetNextID()));
 
 	this->interactable = colliderobj;
 }
@@ -57,7 +59,7 @@ void Wall::SpawnWallColliders(int wallStateIndex) {
 		DirectX::XMFLOAT3 scale(5.0f, 2.5f, 0.250f);
 		colliderobj->transform.SetScale(DirectX::XMLoadFloat3(&scale));
 		colliderobj->SetParent(this->GetPtr());
-		colliderobj->tag = Tag::WALL;
+		colliderobj->SetTag(Tag::WALL);
 
 		this->wallColliders.push_back(colliderobj);
 	}
@@ -70,6 +72,7 @@ void Wall::SpawnWallColliders(int wallStateIndex) {
 		DirectX::XMFLOAT3 scale(1.75f, 2.5f, 0.250f);
 		colliderobj->transform.SetScale(DirectX::XMLoadFloat3(&scale));
 		colliderobj->SetParent(this->GetPtr());
+		colliderobj->SetTag(Tag::WALL);
 
 		this->wallColliders.push_back(colliderobj);
 	}
@@ -80,6 +83,7 @@ void Wall::SpawnWallColliders(int wallStateIndex) {
 		DirectX::XMFLOAT3 scale(1.75f, 2.5f, 0.250f);
 		colliderobj->transform.SetScale(DirectX::XMLoadFloat3(&scale));
 		colliderobj->SetParent(this->GetPtr());
+		colliderobj->SetTag(Tag::WALL);
 
 		this->wallColliders.push_back(colliderobj);
 	}

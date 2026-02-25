@@ -43,6 +43,7 @@ public:
 	void UpdateCamera();
 
 	void SetCameraRotation(float r, float p, float y);
+	void OnCollision(std::weak_ptr<GameObject3D> gameObject3D);
 
 	void DecrementHealth(uint8_t hp);
 	void IncrementHealth(uint8_t hp);

@@ -3,7 +3,7 @@
 
 SphereCollider::SphereCollider()
 {
-	this->type = ColliderType::SPHERE;
+	this->SetType(ColliderType::SPHERE);
 }
 
 SphereCollider::~SphereCollider()
@@ -38,8 +38,8 @@ void SphereCollider::LoadFromJson(const nlohmann::json& data)
 
 	if(data.contains("tag"))
 	{
-	this->tag = static_cast<Tag>(data.at("tag").get<int>()); //write enum as integer in json
-	Logger::Log("tag was found in json: " + std::to_string(this->tag));
+	this->SetTag(static_cast<Tag>(data.at("tag").get<int>())); //write enum as integer in json
+	Logger::Log("tag was found in json: " + std::to_string(this->GetTag()));
 	}
 	else
 	{
@@ -48,20 +48,20 @@ void SphereCollider::LoadFromJson(const nlohmann::json& data)
 
 	if(data.contains("ignoreTag"))
 	{
-	this->ignoreTag = (Tag)data.at("ignoreTag").get<int>(); //write enum as integer in json
-	Logger::Log("ignoreTag was found in json: " + std::to_string(this->ignoreTag));
+	this->SetIgnoreTag((Tag)data.at("ignoreTag").get<int>()); //write enum as integer in json
+	Logger::Log("ignoreTag was found in json: " + std::to_string(this->GetIgnoreTag()));
 	}
 
 	if(data.contains("solid"))
 	{
-	this->solid = data.at("solid").get<bool>(); //write enum as integer in json
-	Logger::Log("solid was found in json: " + std::to_string(this->solid));
+	this->SetSolid(data.at("solid").get<bool>()); //write enum as integer in json
+	Logger::Log("solid was found in json: " + std::to_string(this->GetSolid()));
 	}
 
 	if(data.contains("dynamic"))
 	{
-	this->dynamic = data.at("dynamic").get<bool>(); //write enum as integer in json
-	Logger::Log("dynamic was found in json: " + std::to_string(this->dynamic));
+	this->SetDynamic(data.at("dynamic").get<bool>()); //write enum as integer in json
+	Logger::Log("dynamic was found in json: " + std::to_string(this->GetDynamic()));
 	}
 }
 
@@ -69,10 +69,10 @@ void SphereCollider::SaveToJson(nlohmann::json& data)
 {
 	this->GameObject3D::SaveToJson(data);
 
-	data["tag"] = this->tag;
-	data["ignoreTag"] = this->ignoreTag;
-	data["solid"] = this->solid;
-	data["dynamic"] = this->dynamic;
+	data["tag"] = this->GetTag();
+	data["ignoreTag"] = this->GetIgnoreTag();
+	data["solid"] = this->GetSolid();
+	data["dynamic"] = this->GetDynamic();
 }
 
 bool SphereCollider::DoubleDispatchCollision(Collider* otherCollider, DirectX::XMFLOAT3& mtvAxis, float& mtvDistance) {

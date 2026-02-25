@@ -30,6 +30,9 @@ public:
 
 	const size_t& GetCurrentRound();
 
+	std::shared_ptr<Player> GetPlayer();
+	const std::vector<std::weak_ptr<Enemy>>& GetEnemies();
+
 	const float& GetSpawnDelay();
 	void SetSpawnDelay(float& newSpawnDelay);
 

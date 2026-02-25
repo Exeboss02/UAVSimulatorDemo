@@ -221,6 +221,10 @@ void GameManager::EndRound() {
 
 const size_t& GameManager::GetCurrentRound() { return this->currentRound; }
 
+std::shared_ptr<Player> GameManager::GetPlayer() { return this->player.lock(); }
+
+const std::vector<std::weak_ptr<Enemy>>& GameManager::GetEnemies() { return this->enemies; }
+
 const float& GameManager::GetSpawnDelay() { return this->enemySpawnDelay; }
 
 void GameManager::SetSpawnDelay(float& newSpawnDelay) { this->enemySpawnDelay = newSpawnDelay; }

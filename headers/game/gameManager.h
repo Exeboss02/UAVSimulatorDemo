@@ -4,6 +4,7 @@
 #include "game/player.h"
 #include "gameObjects/SpaceShipObj.h"
 #include "gameObjects/testEnemy.h"
+#include "gameObjects/enemy.h"
 
 struct Round {
 	size_t enemyCount;
@@ -59,7 +60,7 @@ private:
 	std::vector<Round> rounds;
 	bool inCombat;
 
-	std::vector<std::weak_ptr<GameObject3D>> enemies;
+	std::vector<std::weak_ptr<Enemy>> enemies;
 
 	struct Path {
 		std::vector<std::shared_ptr<AStarVertex>> path;

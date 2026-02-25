@@ -16,7 +16,8 @@ public:
 	void SetResourceType(ResourceType type);
 
 private:
-	ResourceType resourceType;
+	ResourceType resourceType = ResourceType::Titanium;
+
 	void Interact(std::shared_ptr<Player> player);
 	float lastGenerated = 0;
 

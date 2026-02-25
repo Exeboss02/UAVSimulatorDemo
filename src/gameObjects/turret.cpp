@@ -3,6 +3,7 @@
 #include "core/physics/ray.h"
 #include "core/physics/rayCaster.h"
 #include "utilities/time.h"
+#include "game/gameManager.h"
 
 void Turret::Start() { 
 	this->SetMesh(AssetManager::GetInstance().GetMeshObjData("TexBox/TextureCube.glb:Mesh_0"));
@@ -30,17 +31,26 @@ void Turret::Tick() {
 			}
 			return;
 		}
+	} else {
+		float currentTime = Time::GetInstance().GetSessionTime();
+		float timePast = currentTime - this->lastAttemptedTargeting;
+		if (timePast > this->retargetTime) {
+			this->SetTargetClosest();
+		}
 	}
-	this->target = std::weak_ptr<GameObject3D>();
 }
 
 void Turret::SetTarget(std::weak_ptr<GameObject3D> target) { this->target = target; }
 
 std::weak_ptr<GameObject3D> Turret::GetTarget() const { return this->target; }
 
-void Turret::SetTargetClosest(const std::vector<std::weak_ptr<GameObject3D>> potentialTargets) {
+void Turret::SetTargetClosest() {
+
+	auto& potentialTargets = GameManager::GetInstance()->GetEnemies();
 	std::weak_ptr<GameObject3D> currentTarget;
+
 	float currentDistanceSquared = this->range * this->range;
+
 	for (const auto& objectWeak : potentialTargets) {
 		const auto& object = objectWeak.lock();
 		DirectX::XMVECTOR betweenVec =
@@ -54,6 +64,7 @@ void Turret::SetTargetClosest(const std::vector<std::weak_ptr<GameObject3D>> pot
 		}
 	}
 	this->SetTarget(currentTarget);
+	this->retargetTime = Time::GetInstance().GetSessionTime();
 }
 void Turret::SetRPM(float rpm) { this->rpm = rpm; }
 

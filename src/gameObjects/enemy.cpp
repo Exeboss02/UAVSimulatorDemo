@@ -35,7 +35,7 @@ void Enemy::Start() {
 	collider->SetOnInteract([&](std::shared_ptr<Player>) {
 		this->health.Decrement(20);
 		if (this->health.IsDead()) {
-			this->factory->QueueDeleteGameObject(this->GetPtr());
+			this->KillSelf();
 		}
 	});
 	this->hitbox = collider;
@@ -73,6 +73,18 @@ void Enemy::SetPath(const std::vector<std::shared_ptr<AStarVertex>>& newPath) {
 	this->hasFinishedPath = false;
 	this->transform.SetPosition(this->path[0]->transform.GetGlobalPosition());
 }
+
+void Enemy::KillSelf() { this->factory->QueueDeleteGameObject(this->GetPtr()); }
+
+void Enemy::DecrementHealth(size_t amount) {
+	this->health.Increment(static_cast<int>(amount));
+	if (this->health.IsDead()) {
+		this->KillSelf();
+	}
+}
+
+void Enemy::IncrementHealth(size_t amount) { this->health.Increment(static_cast<int>(amount)); }
+
 
 void Enemy::MoveAlongPath() {
 	if (this->currentPathIndex >= this->maxPathIndex) { // Stop on node before core.

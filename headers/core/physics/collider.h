@@ -8,14 +8,31 @@
 
 static const DirectX::XMFLOAT3 localBoxCorners[8] = {{-1, -1, -1}, {+1, -1, -1}, {-1, +1, -1}, {+1, +1, -1},
 													 {-1, -1, +1}, {+1, -1, +1}, {-1, +1, +1}, {+1, +1, +1}};
-
-enum Tag { PLAYER, PLAYER_ATTACK, ENEMY, ENEMY_ATTACK, GROUND, FLOOR, OBJECT, WALL, INTERACTABLE, DISTANCE, NOIGNORE };
+/// <summary>
+/// Tag is used to tell what the collider is for, and will in combination with ignoreTag minimize the nr of collision checks
+/// </summary>
+/// <returns></returns>
+enum Tag 
+{
+    PLAYER         = 1 << 0,  // 1
+    PLAYER_ATTACK  = 1 << 1,  // 2
+    ENEMY          = 1 << 2,  // 4
+    ENEMY_ATTACK   = 1 << 3,  // 8
+    GROUND         = 1 << 4,  // 16
+    FLOOR          = 1 << 5,  // 32
+    OBJECT         = 1 << 6,  // 64
+    WALL           = 1 << 7,  // 128
+    INTERACTABLE   = 1 << 8,  // 256
+    DISTANCE       = 1 << 9,  // 512
+    NOIGNORE       = 1 << 10  // 1024
+ };
 
 enum ColliderType { BOX, SPHERE, NONE };
 
 class BoxCollider; // forward declaration
 class SphereCollider;
 class RigidBody;
+class Player;
 
 class Collider : public GameObject3D {
 public:
@@ -101,18 +118,6 @@ public:
 	void SetExtraCullingDistance(float distanceSquared);
 	float GetExtraCullingDistance();
 
-	// DirectX::XMFLOAT3 resolveAxis = {};
-	// float resolveDistance = 0;
-
-	ColliderType type = ColliderType::NONE;
-	Tag tag = Tag::OBJECT;
-	Tag ignoreTag = Tag::NOIGNORE;
-	PhysicsMaterial physicsMaterial;
-	// DirectX::XMFLOAT3 previousPosition = {};
-	bool solid = true;
-	bool dynamic = false;
-	bool hasInitializedPreviousPosition = false;
-
 	/// <summary>
 	/// returns true if ray intersects object with distance
 	/// to hit and max ray distance
@@ -122,20 +127,43 @@ public:
 	/// <returns></returns>
 	virtual bool IntersectWithRay(const Ray& ray, float& distance, float maxDistance) = 0;
 
-	void Interact() { this->interactFunc(); };
+	void Interact(std::shared_ptr<Player> player) { this->interactFunc(player); };
 	void Hover() { this->hoverFunc(); };
 	void Hit(float damage) { this->hitFunc(damage); }
+	void OnCollision(std::weak_ptr<GameObject3D> gameObject3D) { this->collisionFunc(gameObject3D); }
 
-	void SetOnInteract(std::function<void()> func) { this->interactFunc = func; }
+	void SetOnInteract(std::function<void(std::shared_ptr<Player>)> func) { this->interactFunc = func; }
 	void SetOnHover(std::function<void()> func) { this->hoverFunc = func; }
 	void SetOnHit(std::function<void(float)> func) { this->hitFunc = func; }
+	void SetOnCollision(std::function<void(std::weak_ptr<GameObject3D>)> func) { this->collisionFunc = func; }
+
+	void SetType(ColliderType type);
+	ColliderType GetType();
+	size_t GetTag();
+	void SetTag(size_t tag);
+	size_t GetIgnoreTag();
+	void SetIgnoreTag(size_t ignoreTag);
+	bool GetSolid();
+	void SetSolid(bool solid);
+	bool GetDynamic();
+	void SetDynamic(bool dynamic);
 
 private:
+	ColliderType type = ColliderType::NONE;
+	size_t tag = Tag::OBJECT;
+	size_t ignoreTag = Tag::NOIGNORE;
+	PhysicsMaterial physicsMaterial;
+	bool solid = true;
+	bool dynamic = false;
+	bool hasInitializedPreviousPosition = false;
+
 	float extraCullingDistanceSquared = 0;
 
-	std::function<void()> interactFunc = []() {};
+	std::function<void(std::shared_ptr<Player>)> interactFunc = [](std::shared_ptr<Player>) {};
 	std::function<void()> hoverFunc = []() {};
 	std::function<void(float)> hitFunc = [](float) {};
+	std::function<void(std::weak_ptr<GameObject3D>)> collisionFunc = [](std::weak_ptr<GameObject3D>) {};
+
 	int id = -1;
 	std::weak_ptr<GameObject> meshObjectChild; // reference to the mesh visual representation of the collider (remove?)
 	std::weak_ptr<RigidBody> rigidBodyParent;

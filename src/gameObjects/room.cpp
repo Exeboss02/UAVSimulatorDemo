@@ -3,6 +3,7 @@
 #include "gameObjects/spaceShipObj.h"
 #include "gameObjects/spotlightObject.h"
 #include "gameObjects/turret.h"
+#include "game/resourceGenerator.h"
 #include <numbers>
 
 static const std::array<std::array<int, 2>, 4> wallpositions = {
@@ -33,6 +34,9 @@ void Room::SetPosition(size_t x, size_t y) { this->pos = {x, y}; }
 
 void Room::Start() {
 	Logger::Warn("room size ", this->size);
+
+	this->SetName("ROOM " + std::to_string(this->factory->GetNextID()));
+
 	{
 		auto meshobj = this->factory->CreateStaticGameObject<MeshObject>();
 
@@ -72,12 +76,14 @@ void Room::Start() {
 	buildCollider->transform.SetScale({1, .5, 1});
 	buildCollider->transform.SetPosition({0, 1, 0});
 	buildCollider->SetParent(this->GetPtr());
-	buildCollider->solid = false;
+	buildCollider->SetSolid(false);
+	buildCollider->SetName("BuildCollider"	+ std::to_string(this->factory->GetNextID()));
+	buildCollider->SetTag(Tag::INTERACTABLE);
 	// Maybe tweak positionW
 	this->buildSlot = buildCollider;
-	buildCollider->SetOnInteract([&]() {
+	buildCollider->SetOnInteract([&](std::shared_ptr<Player> p) {
 		if (this->builtObject.expired()) {
-			auto turret = this->factory->CreateStaticGameObject<Turret>();
+			auto turret = this->factory->CreateStaticGameObject<ResourceGenerator>();
 			turret->SetParent(this->GetPtr());
 			turret->transform.SetPosition({0, 1.5, 0});
 			//turret->SetMesh(AssetManager::GetInstance().GetMeshObjData("TexBox/TextureCube.glb:Mesh_0"));

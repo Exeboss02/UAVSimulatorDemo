@@ -14,14 +14,13 @@ void TestEnemy::Start() {
 	meshObj->SetMesh(meshData);
 
 	auto collider = this->factory->CreateGameObjectOfType<BoxCollider>().lock();
-	collider->transform.SetScale({1,1, 1});
+	collider->transform.SetScale({1, 1, 1});
 	collider->SetParent(this->GetPtr());
 
-
-	collider->SetOnInteract([&]() { 
-		this->health -= 20;
+	collider->SetOnInteract([&](std::shared_ptr<Player>) {
+		this->health.Decrement(20);
 		Logger::Log("Enemy got hit");
-		if (this->health <= 0) {
+		if (this->health.IsDead()) {
 			this->factory->QueueDeleteGameObject(this->GetPtr());
 		}
 	});
@@ -45,8 +44,8 @@ void TestEnemy::Tick() {
 			}
 		}
 
-		DirectX::XMVECTOR direction = DirectX::XMVectorSubtract(this->path[this->currentPathIndex]->transform.GetGlobalPosition(),
-																this->transform.GetGlobalPosition());
+		DirectX::XMVECTOR direction = DirectX::XMVectorSubtract(
+			this->path[this->currentPathIndex]->transform.GetGlobalPosition(), this->transform.GetGlobalPosition());
 		direction = DirectX::XMVector3Normalize(direction);
 		this->transform.Move(direction, this->movementSpeed * Time::GetInstance().GetDeltaTime());
 	}

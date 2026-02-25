@@ -101,6 +101,12 @@ void Text::ShowInHierarchy() {
 void Text::SetFontSize(float s) { this->fontSize = s; }
 float Text::GetFontSize() const { return this->fontSize; }
 
+void Text::SetRightAligned(bool v) { this->rightAligned = v; }
+bool Text::IsRightAligned() const { return this->rightAligned; }
+
+void Text::SetMaxWidth(float w) { this->maxWidth = w; }
+float Text::GetMaxWidth() const { return this->maxWidth; }
+
 void Text::LoadFromJson(const nlohmann::json& data) {
 	this->Widget::LoadFromJson(data);
 
@@ -136,9 +142,22 @@ void Text::Draw() {
 		return;
 	}
 
-	UI::TextRenderer::GetInstance().SubmitText(
-		this->text, this->GetPosition(), this->GetFontSize(),
-		DirectX::XMFLOAT4(this->color.x, this->color.y, this->color.z, this->color.w), this->font, this->GetZIndex());
+	// If right-aligned with a max width, measure the text and shift position so the text is right-aligned
+	UI::Vec2 pos = this->GetPosition();
+	if (this->rightAligned && this->maxWidth > 0.0f) {
+		float measured = UI::TextRenderer::GetInstance().MeasureString(this->text, this->GetFontSize(), this->font);
+		float x = pos.x + std::max(0.0f, this->maxWidth - measured);
+		UI::Vec2 p{x, pos.y};
+		UI::TextRenderer::GetInstance().SubmitText(
+			this->text, p, this->GetFontSize(),
+			DirectX::XMFLOAT4(this->color.x, this->color.y, this->color.z, this->color.w), this->font,
+			this->GetZIndex());
+	} else {
+		UI::TextRenderer::GetInstance().SubmitText(
+			this->text, pos, this->GetFontSize(),
+			DirectX::XMFLOAT4(this->color.x, this->color.y, this->color.z, this->color.w), this->font,
+			this->GetZIndex());
+	}
 
 	// Draw children (if any)
 	Widget::Draw();

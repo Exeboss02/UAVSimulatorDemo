@@ -42,7 +42,7 @@
         ]
       },
       "type": "BoxCollider",
-      "tag": 1,
+      "tag": 0,
       "ignoreTag": 0,
       "solid": true,
       "dynamic": false
@@ -92,7 +92,7 @@
           35.0
         ]
       },
-      "pillar": "pillar",
+      "name": "pillar",
       "type": "GameObject3D",
       "children": [
       {
@@ -115,8 +115,8 @@
         ]
       },
       "type": "BoxCollider",
-      "tag": 1,
-      "ignoreTag": 0,
+      "tag": 0,
+      "ignoreTag": 1024,
       "solid": true,
       "dynamic": false
     },
@@ -190,7 +190,7 @@
       },
       "type": "BoxCollider",
       "tag": 1,
-      "ignoreTag": 0,
+      "ignoreTag": 1024,
       "solid": true,
       "dynamic": false
     },

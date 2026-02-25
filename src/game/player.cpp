@@ -4,6 +4,8 @@
 #include "game/hud.h"
 #include "gameObjects/meshObject.h"
 #include <numbers>
+#include "game/gameManager.h"
+#include "gameObjects/pistol01.h"
 
 Player::Player() : cameraRotation{0, 0, 0} { this->controllerInput = std::make_shared<ControllerInput>(0); }
 
@@ -22,11 +24,9 @@ void Player::Start() {
 
 	// adding gun
 	{
-		auto gunWeak = this->factory->CreateGameObjectOfType<Gun>();
+		auto gunWeak = this->factory->CreateGameObjectOfType<Pistol01>();
 		auto gun = gunWeak.lock();
 		gun->SetParent(this->camera.lock()->GetPtr());
-		DirectX::XMFLOAT3 pos(-0.4f, -0.4f, 0.7f);
-		gun->transform.SetPosition(DirectX::XMLoadFloat3(&pos));
 		this->gun = gun;
 	}
 
@@ -154,8 +154,8 @@ void Player::Tick() {
 		this->sfxTimer.Reset();
 	}
 
-	// this->aim();
-	this->checkForTriggerPress();
+	//this->aim();
+	this->CheckForTriggerPress();
 
 	// Update HUD with current resources
 	if (this->hud) this->hud->Update(this->resources, this->health);
@@ -312,14 +312,14 @@ void Player::Interact() {
 	}
 }
 
-void Player::checkForTriggerPress() {
+void Player::CheckForTriggerPress() {
 
 	if (this->keyBoardInput.LeftClick() || this->controllerInput->RightClick() && this->canShoot) {
 		this->gun.lock()->Shoot();
 	}
 }
 
-void Player::aim() {
+void Player::Aim() {
 	static bool isAiming = false;
 	if (this->keyBoardInput.RightClick() || this->controllerInput->LeftClick() && this->canShoot && !isAiming) {
 		DirectX::XMFLOAT3 pos(0.0f, -0.2f, 0.7f);

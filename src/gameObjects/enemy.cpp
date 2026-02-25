@@ -11,6 +11,8 @@
 
 #include "utilities/logger.h"
 
+#include "gameObjects/rayVis.h"
+
 Enemy::Enemy()
 	: GameObject3D(), health(100), path({}), maxPathIndex(0), currentPathIndex(0), hasFinishedPath(false),
 	  canShoot(true), shotCooldown(1.5f), timeSinceLastShot(0.0f) {
@@ -33,8 +35,8 @@ void Enemy::Start() {
 	collider->SetParent(this->GetPtr());
 
 	collider->SetOnHit([&](float damage) {
-		this->health -= damage;
-		if (this->health <= 0) {
+		this->health.Decrement(damage);
+		if (this->health.Get() <= 0) {
 			this->factory->QueueDeleteGameObject(this->GetPtr());
 		}
 	});
@@ -213,8 +215,9 @@ void Enemy::ShootAtPlayer() {
 
 void Enemy::VisualizeRay(const DirectX::XMVECTOR& position, const DirectX::XMVECTOR& direction, float distance) {
 	MeshObjData meshdata = AssetManager::GetInstance().GetMeshObjData("TexBox/TextureCube.glb:Mesh_0");
-	auto colliderobjWeak = this->factory->CreateGameObjectOfType<MeshObject>();
+	auto colliderobjWeak = this->factory->CreateGameObjectOfType<RayVis>();
 	auto colliderobj = colliderobjWeak.lock();
+	colliderobj->StartDeathTimer(1);
 	colliderobj->SetMesh(meshdata);
 	colliderobj->GetMesh().SetMaterial(0,
 									   AssetManager::GetInstance().GetMaterialWeakPtr("defaultUnlitMaterial").lock());

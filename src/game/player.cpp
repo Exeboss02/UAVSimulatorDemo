@@ -133,7 +133,7 @@ void Player::Tick() {
 
 	InputManager::GetInstance().ReadControllerInput(this->controllerInput->GetControllerIndex());
 
-	DirectX::XMVECTOR position = this->transform.GetPosition();
+	DirectX::XMVECTOR position = this->transform.GetGlobalPosition();
 	AudioManager::GetInstance().SetListenerPosition(position.m128_f32[0], position.m128_f32[1], position.m128_f32[2]);
 
 	this->input[0] = this->keyBoardInput.GetMovementVector().data()[0] + this->controllerInput->GetMovementVector().data()[0];

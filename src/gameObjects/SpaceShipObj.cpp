@@ -100,14 +100,15 @@ void SpaceShip::Start() {
 	CreateRoom(31, 0);
 	auto room = this->GetRoom(31, 0);
 	auto nodes = room.lock()->GetPathfindingNodes();
-	this->pathfinder->SetGoal(nodes[0]);
 
+	// Cockpit
 	room.lock()->SetWallState(Room::WallIndex::South, Room::WallState::door);
 	auto cockpit = this->factory->CreateStaticGameObject<Cockpit>();
 	cockpit->transform.SetPosition(SpaceShip::ROOM_SIZE * (SpaceShip::SHIP_MAX_SIZE_X / 2), 0,
 								   -SpaceShip::ROOM_SIZE);
 	cockpit->SetParent(this->GetPtr());
-
+	cockpit->SetupPathfindingNodes(std::dynamic_pointer_cast<SpaceShip>(this->GetPtr()), cockpit);
+	this->pathfinder->AddEdge(nodes[Room::WallIndex::South * 2 + 1], cockpit->GetPathfindingNodes()[1], 1);
 }
 
 void SpaceShip::CreateFloorColider() {

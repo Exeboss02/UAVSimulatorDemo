@@ -21,6 +21,7 @@ void Player::Start() {
 	DirectX::XMFLOAT3 pos(0.0f, 1.5f, 0.0f);
 	cameraShared->transform.SetPosition(DirectX::XMLoadFloat3(&pos));
 	cameraShared->SetParent(this->GetPtr());
+	cameraShared->SetFarPlane(100);
 
 	this->camera = cameraShared;
 

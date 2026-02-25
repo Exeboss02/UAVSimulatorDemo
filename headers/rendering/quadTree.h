@@ -32,4 +32,6 @@ private:
 	size_t maxDepth;
 	size_t maxElements;
 	std::unique_ptr<Node> root;
+
+	size_t collisionChecks = 0;
 };

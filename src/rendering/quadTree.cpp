@@ -43,7 +43,12 @@ std::vector<std::weak_ptr<MeshObject>> QuadTree::GetVisibleElements(CameraObject
 	DirectX::XMMATRIX world = DirectX::XMMatrixInverse(nullptr, view);
 	viewFrustrum.Transform(viewFrustrum, world);
 
+	this->collisionChecks = 0;
 	this->CheckNode(viewFrustrum, this->root, out, found);
+
+	ImGui::Begin("QuadTree Debug");
+	ImGui::Text(std::format("intersections tests {}", this->collisionChecks).c_str());
+	ImGui::End();
 
 	return out;
 }
@@ -120,22 +125,30 @@ void QuadTree::SubdivideNode(std::unique_ptr<Node>& node) {
 
 void QuadTree::CheckNode(DirectX::BoundingFrustum& frustum, std::unique_ptr<Node>& node,
 						 std::vector<std::weak_ptr<MeshObject>>& out, std::unordered_set<MeshObject*>& found) {
+	
+	bool isLeaf = (node->children[0] == nullptr);	
+	if (!isLeaf && node->children.size() <= 0) {
+		return;
+	}
+
 	bool collision = frustum.Intersects(node->boundingBox);
+	this->collisionChecks++;
 	if (!collision) {
 		return;
 	}
 
-	bool isLeaf = (node->children[0] == nullptr);
 	if (isLeaf) {
 		for (auto& elementWeak : node->elements) {
 			if (!elementWeak.expired()) {
 				std::shared_ptr<MeshObject> element = elementWeak.lock();
 				if (found.find(element.get()) == found.end()) {
-					bool inView = frustum.Intersects(element->GetBoundingBox());
+					out.emplace_back(element);
+					found.insert(element.get());
+					/*bool inView = frustum.Intersects(element->GetBoundingBox());
 					if (inView) {
 						out.emplace_back(element);
 						found.insert(element.get());
-					}
+					}*/
 				}
 			}
 		}

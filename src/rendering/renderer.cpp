@@ -14,7 +14,7 @@
 
 Renderer::Renderer()
 	: viewport(), currentPixelShader(nullptr), currentVertexShader(nullptr), currentRasterizerState(nullptr),
-	  currentMaterial(nullptr), maximumSpotlights(16), staticObjectsTree({-10, -10, -10}, {10 * 64, 20, 10 * 64}, 4, 4),
+	  currentMaterial(nullptr), maximumSpotlights(16), staticObjectsTree({-10, -10, -10}, {10 * 64, 20, 10 * 64}, 5, 4),
 	  renderQueue(this->meshRenderQueue, this->spotLightRenderQueue, this->pointLightRenderQueue,
 				  this->staticObjectsTree, this->uiRenderQueue) {
 	this->renderQueue.newSkyboxCallback = [this](std::string filename) { this->ChangeSkybox(filename); };

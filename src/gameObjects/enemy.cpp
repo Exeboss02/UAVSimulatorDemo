@@ -30,7 +30,7 @@ void Enemy::Start() {
 	collider->transform.SetScale({1, 1, 1});
 	collider->SetParent(this->GetPtr());
 
-	collider->SetOnInteract([&]() {
+	collider->SetOnInteract([&](std::shared_ptr<Player>) {
 		this->health -= 20;
 		if (this->health <= 0) {
 			this->factory->QueueDeleteGameObject(this->GetPtr());

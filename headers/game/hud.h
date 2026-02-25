@@ -21,8 +21,8 @@ public:
 	// Create UI objects (call once after construction)
 	void Start();
 
-	// Update displayed values from the player's ResourceManager
-	void Update(const ResourceManager& resources);
+	// Update displayed values from the player's health and resource
+	void Update(const ResourceManager& resources, const uint8_t& playerHealth);
 
 	// Clean up (queue deletes) if needed
 	void OnDestroy();
@@ -43,6 +43,9 @@ private:
 
 	std::weak_ptr<UI::Image> circuitIcon;
 	std::weak_ptr<UI::Text> circuitText;
+
+	std::weak_ptr<UI::Image> playerHealthIcon;
+	std::weak_ptr<UI::Text> playerHealthText;
 
 	std::weak_ptr<Crosshair> crosshair;
 };

@@ -144,7 +144,7 @@ void Player::Tick() {
 	this->checkForTriggerPress();
 
 	// Update HUD with current resources
-	if (this->hud) this->hud->Update(this->resources);
+	if (this->hud) this->hud->Update(this->resources, this->health);
 
 	ImGui::Begin("GameManager testing");
 	if (ImGui::Button("Win")) {
@@ -224,6 +224,12 @@ void Player::SetCameraRotation(float r, float p, float y) {
 	this->cameraRotation[1] = p;
 	this->cameraRotation[2] = y;
 }
+
+void Player::DecrementHealth(uint8_t hp) { this->health -= hp; }
+
+void Player::IncrementHealth(uint8_t hp) { this->health += hp; }
+
+uint8_t Player::GetHealth() const { return this->health; }
 
 void Player::LoadFromJson(const nlohmann::json& data) {
 	this->RigidBody::LoadFromJson(data);

@@ -28,7 +28,8 @@ void HUD::Start() {
 	canvasShared->SetName("PlayerHUD_Canvas");
 	this->canvasObj = canvasShared;
 
-	auto makeText = [&](const std::string& name, const std::string& text, float x, float y, float width) {
+	auto makeText = [&](const std::string& name, const std::string& text, float x, float y, float width,
+						bool rightAligned) {
 		auto textWeak = this->factory->CreateGameObjectOfType<UI::Text>();
 		if (textWeak.expired()) return std::weak_ptr<UI::Text>();
 
@@ -39,9 +40,13 @@ void HUD::Start() {
 		textShared->SetSize(UI::Vec2{width, 32.0f});
 		textShared->SetFontSize(24.0f);
 
-		// Make amount right-aligned within the reserved width
-		textShared->SetRightAligned(true);
-		textShared->SetMaxWidth(width);
+		// Alignment: use right-aligned behavior only when requested
+		textShared->SetRightAligned(rightAligned);
+		if (rightAligned) {
+			textShared->SetMaxWidth(width);
+		} else {
+			textShared->SetMaxWidth(0.0f);
+		}
 
 		std::weak_ptr<GameObject> me = canvasShared->GetPtr();
 		textShared->SetParent(me);
@@ -92,25 +97,43 @@ void HUD::Start() {
 		return std::tuple<float, float, float, float>(iconX, iconY, textX, textY);
 	};
 
+	auto makeLeftAlignedPositions = [&](int row) {
+		float iconX = padding;
+		float iconY = padding + row * lineHeight;
+		float textX = iconX + iconSize + 8.0f;
+		float textY = iconY + (iconSize - 32.0f) * 0.5f;
+		return std::tuple<float, float, float, float>(iconX, iconY, textX, textY);
+	};
+
+	// Titanium
 	{
 		auto [ix, iy, tx, ty] = makeRightAlignedPositions(0);
 		this->titaniumIcon = makeIcon("HUD_Titanium_Icon", "assets/images/metal.png", ix, iy, iconSize);
-		this->titaniumText = makeText("HUD_Titanium", "0", tx, ty, textWidth);
+		this->titaniumText = makeText("HUD_Titanium", "0", tx, ty, textWidth, true);
 	}
+	// Lubricant
 	{
 		auto [ix, iy, tx, ty] = makeRightAlignedPositions(1);
 		this->lubricantIcon = makeIcon("HUD_Lubricant_Icon", "assets/images/lubricant.png", ix, iy, iconSize);
-		this->lubricantText = makeText("HUD_Lubricant", "0", tx, ty, textWidth);
+		this->lubricantText = makeText("HUD_Lubricant", "0", tx, ty, textWidth, true);
 	}
+	// Carbon
 	{
 		auto [ix, iy, tx, ty] = makeRightAlignedPositions(2);
 		this->carbonFiberIcon = makeIcon("HUD_Carbon_Icon", "assets/images/carbon_fiber.png", ix, iy, iconSize);
-		this->carbonFiberText = makeText("HUD_Carbon", "0", tx, ty, textWidth);
+		this->carbonFiberText = makeText("HUD_Carbon", "0", tx, ty, textWidth, true);
 	}
+	// Circuit
 	{
 		auto [ix, iy, tx, ty] = makeRightAlignedPositions(3);
 		this->circuitIcon = makeIcon("HUD_Circuit_Icon", "assets/images/circuit_board.png", ix, iy, iconSize);
-		this->circuitText = makeText("HUD_Circuit", "0", tx, ty, textWidth);
+		this->circuitText = makeText("HUD_Circuit", "0", tx, ty, textWidth, true);
+	}
+	// Player health
+	{
+		auto [ix, iy, tx, ty] = makeLeftAlignedPositions(0);
+		this->playerHealthIcon = makeIcon("HUD_Player_Health_Icon", "assets/images/health.png", ix, iy, iconSize);
+		this->playerHealthText = makeText("HUD_Player_Health", "0", tx, ty, textWidth, false);
 	}
 
 	{
@@ -132,7 +155,7 @@ void HUD::Start() {
 	}
 }
 
-void HUD::Update(const ResourceManager& resources) {
+void HUD::Update(const ResourceManager& resources, const uint8_t& playerHealth) {
 	auto safeSet = [](std::weak_ptr<UI::Text> w, const std::string& s) {
 		if (w.expired()) return;
 		auto p = w.lock();
@@ -144,6 +167,7 @@ void HUD::Update(const ResourceManager& resources) {
 	safeSet(this->lubricantText, std::to_string(resources.lubricant.GetAmount()));
 	safeSet(this->carbonFiberText, std::to_string(resources.carbonFiber.GetAmount()));
 	safeSet(this->circuitText, std::to_string(resources.circuit.GetAmount()));
+	safeSet(this->playerHealthText, std::to_string(playerHealth));
 }
 
 void HUD::OnDestroy() {

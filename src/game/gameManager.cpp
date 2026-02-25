@@ -95,7 +95,6 @@ void GameManager::Tick() {
 		ImGui::Text(std::format("Idle time: {}", this->idleTimeTimer).c_str());
 	}
 	ImGui::Text(std::format("Current round: {}", this->currentRound).c_str());
-	ImGui::Text(std::format("Enemies: {}", this->enemies.size()).c_str());
 	if (ImGui::Button("Start next round")) {
 		SpawnNextRound();
 	}

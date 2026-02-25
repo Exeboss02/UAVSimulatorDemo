@@ -1,5 +1,6 @@
 #include "gameObjects/gun.h"
 #include <numbers>
+#include "gameObjects/rayVis.h"
 
 Gun::Gun() {}
 
@@ -33,8 +34,9 @@ void Gun::Shoot() {
 
 		// rayVis
 		MeshObjData meshdata = AssetManager::GetInstance().GetMeshObjData("TexBox/TextureCube.glb:Mesh_0");
-		auto colliderobjWeak = this->factory->CreateGameObjectOfType<MeshObject>();
+		auto colliderobjWeak = this->factory->CreateGameObjectOfType<RayVis>();
 		auto colliderobj = colliderobjWeak.lock();
+		colliderobj->StartDeathTimer(0.05f);
 		colliderobj->SetMesh(meshdata);
 		colliderobj->GetMesh().SetMaterial(
 			0, AssetManager::GetInstance().GetMaterialWeakPtr("defaultUnlitMaterial").lock());
@@ -52,6 +54,8 @@ void Gun::Shoot() {
 }
 
 void Gun::Start() {
+
+	GameObject3D::Start();
 
 	this->transform.SetPosition(DirectX::XMLoadFloat3(&this->gunPosition));
 
@@ -97,6 +101,8 @@ void Gun::Start() {
 }
 
 void Gun::Tick() {
+
+	GameObject3D::Tick();
 
 	float deltaTime = Time::GetInstance().GetDeltaTime();
 	if (deltaTime < 1) // to prevent tick spam when loading scene

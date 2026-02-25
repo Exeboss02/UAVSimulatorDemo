@@ -6,6 +6,8 @@
 #include <numbers>
 #include "game/gameManager.h"
 #include "gameObjects/pistol01.h"
+#include "gameObjects/rayVis.h"
+
 
 Player::Player() : cameraRotation{0, 0, 0} { this->controllerInput = std::make_shared<ControllerInput>(0); }
 
@@ -293,8 +295,9 @@ void Player::Interact() {
 
 			// rayVis
 			MeshObjData meshdata = AssetManager::GetInstance().GetMeshObjData("TexBox/TextureCube.glb:Mesh_0");
-			auto colliderobjWeak = this->factory->CreateGameObjectOfType<MeshObject>();
+			auto colliderobjWeak = this->factory->CreateGameObjectOfType<RayVis>();
 			auto colliderobj = colliderobjWeak.lock();
+			colliderobj->StartDeathTimer(5);
 			colliderobj->SetMesh(meshdata);
 			colliderobj->GetMesh().SetMaterial(
 				0, AssetManager::GetInstance().GetMaterialWeakPtr("defaultUnlitMaterial").lock());

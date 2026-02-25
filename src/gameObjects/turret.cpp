@@ -8,6 +8,9 @@
 
 void Turret::Start() { 
 	this->SetMesh(AssetManager::GetInstance().GetMeshObjData("TexBox/TextureCube.glb:Mesh_0"));
+	auto collider = this->factory->CreateStaticGameObject<SphereCollider>();
+	collider->transform.SetScale(2, 2, 2);
+	collider->SetParent(this->GetPtr());
 	this->MeshObject::Start();
 }
 

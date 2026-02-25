@@ -121,7 +121,6 @@ void Player::Start() {
 	this->soundClips.push_back(AssetManager::GetInstance().GetSoundClip("Step1.wav"));
 	this->soundClips.push_back(AssetManager::GetInstance().GetSoundClip("Step2.wav"));
 	this->soundClips.push_back(AssetManager::GetInstance().GetSoundClip("Step3.wav"));
-	this->soundClips.push_back(AssetManager::GetInstance().GetSoundClip("Shoot3.wav"));
 
 	// Create HUD owned by player
 	this->hud = std::make_unique<HUD>(this->factory);

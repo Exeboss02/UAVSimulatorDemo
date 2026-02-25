@@ -60,6 +60,8 @@ SceneManager::SceneManager(Renderer* rend)
 
 	CreateNewScene(this->emptyScene);
 	this->emptyScene->CreateGameObjectOfType<CameraObject>();
+
+	AudioManager::GetInstance().Tick(); //for early initialization
 }
 
 SceneManager* SceneManager::GetActive() { return SceneManager::activeInstance; }

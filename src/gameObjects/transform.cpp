@@ -1,5 +1,8 @@
 #include "gameObjects/transform.h"
 
+#include "gameObjects/gameObject3D.h"
+#include <stdexcept>
+
 Transform::Transform(GameObject3D* gameObject)
 	: position({}), quaternion(DirectX::XMQuaternionIdentity()), scale({1, 1, 1}), myGameObject(gameObject) {}
 
@@ -40,25 +43,18 @@ void Transform::SetDirection(float x, float y, float z) {
 }
 
 void Transform::SetDirection(DirectX::XMVECTOR direction) {
-    direction = DirectX::XMVector3Normalize(direction);
+	direction = DirectX::XMVector3Normalize(direction);
 
-    DirectX::XMVECTOR right = DirectX::XMVector3Normalize(
-        DirectX::XMVector3Cross(DirectX::XMVectorSet(0,1,0,0), direction));
+	DirectX::XMVECTOR right =
+		DirectX::XMVector3Normalize(DirectX::XMVector3Cross(DirectX::XMVectorSet(0, 1, 0, 0), direction));
 
-    DirectX::XMVECTOR up = DirectX::XMVector3Cross(direction, right);
+	DirectX::XMVECTOR up = DirectX::XMVector3Cross(direction, right);
 
-    DirectX::XMMATRIX world =
-        DirectX::XMMATRIX(
-            right,
-            up,
-            direction,
-            DirectX::XMVectorSet(0,0,0,1)
-        );
+	DirectX::XMMATRIX world = DirectX::XMMATRIX(right, up, direction, DirectX::XMVectorSet(0, 0, 0, 1));
 
-    quaternion = DirectX::XMQuaternionNormalize(
-        DirectX::XMQuaternionRotationMatrix(world));
+	quaternion = DirectX::XMQuaternionNormalize(DirectX::XMQuaternionRotationMatrix(world));
 
-    this->myGameObject->SetHasMovedRecursive();
+	this->myGameObject->SetHasMovedRecursive();
 }
 
 void Transform::SetRotationQuaternion(DirectX::XMVECTOR quaternion) {
@@ -71,9 +67,7 @@ void Transform::SetScale(DirectX::XMVECTOR scale) {
 	this->myGameObject->SetHasMovedRecursive();
 }
 
-void Transform::SetScale(float x, float y, float z) {
-	this->SetScale(DirectX::XMVectorSet(x, y, z, 1));
-}
+void Transform::SetScale(float x, float y, float z) { this->SetScale(DirectX::XMVectorSet(x, y, z, 1)); }
 
 void Transform::Move(DirectX::XMVECTOR move) {
 	this->position = DirectX::XMVectorAdd(this->position, move);

@@ -105,8 +105,11 @@ void SpaceShip::Start() {
 	CreateRoom(31, 0);
 	auto room = this->GetRoom(31, 0);
 	auto nodes = room.lock()->GetPathfindingNodes();
-	this->pathfinder->SetGoal(nodes[0]);
+	this->pathfinder->SetGoal(nodes[5]);
 
+	this->pathfinder->RemoveVertex(nodes[0]);
+
+	CreateRoom(31, 1);
 }
 
 void SpaceShip::CreateFloorColider() {
@@ -120,7 +123,7 @@ void SpaceShip::CreateFloorColider() {
 							(this->SHIP_MAX_SIZE_Y) * this->ROOM_SIZE + this->ROOM_SIZE/2);
 	colliderobj->transform.SetScale(DirectX::XMLoadFloat3(&scale));
 	colliderobj->SetParent(this->GetPtr());
-	colliderobj->tag = Tag::FLOOR;
+	colliderobj->SetTag(Tag::FLOOR);
 	//colliderobj->ignoreTag = Tag::DISTANCE;
 
 }

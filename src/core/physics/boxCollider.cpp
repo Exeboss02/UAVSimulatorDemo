@@ -6,7 +6,7 @@
 
 BoxCollider::BoxCollider()
 {
-	this->type = ColliderType::BOX;
+	this->SetType(ColliderType::BOX);
 	this->satData.positionData = new DirectX::XMFLOAT3[8];
 
 	this->satData.center = DirectX::XMFLOAT3(0, 0, 0);
@@ -39,7 +39,7 @@ void BoxCollider::Tick()
 	+ vExtents.m128_f32[2] * vExtents.m128_f32[2];
 	this->SetExtraCullingDistance(extraCullingDistanceSquared);
 
-	if(!this->dynamic) return;
+	if(!this->GetDynamic()) return;
 
 	//update normals
 	DirectX::XMStoreFloat3(&this->axis[0], this->transform.GetGlobalRight());
@@ -83,8 +83,8 @@ void BoxCollider::LoadFromJson(const nlohmann::json& data)
 
 	 if(data.contains("tag"))
 	 {
-	 	this->tag = static_cast<Tag>(data.at("tag").get<int>()); //write enum as integer in json
-	 	Logger::Log("tag was found in json: " + std::to_string(this->tag));
+	 	this->SetTag(static_cast<Tag>(data.at("tag").get<int>())); //write enum as integer in json
+	 	Logger::Log("tag was found in json: " + std::to_string(this->GetTag()));
 	 }
 	 else
 	 {
@@ -93,20 +93,20 @@ void BoxCollider::LoadFromJson(const nlohmann::json& data)
 
 	 if(data.contains("ignoreTag"))
 	 {
-	 	this->ignoreTag = (Tag)data.at("ignoreTag").get<int>(); //write enum as integer in json
-	 	Logger::Log("ignoreTag was found in json: " + std::to_string(this->ignoreTag));
+	 	this->SetIgnoreTag((Tag)data.at("ignoreTag").get<int>()); //write enum as integer in json
+	 	Logger::Log("ignoreTag was found in json: " + std::to_string(this->GetIgnoreTag()));
 	 }
 
 	 if(data.contains("solid"))
 	 {
-	 	this->solid = data.at("solid").get<bool>(); //write enum as integer in json
-	 	Logger::Log("solid was found in json: " + std::to_string(this->solid));
+	 	this->SetSolid(data.at("solid").get<bool>()); //write enum as integer in json
+	 	Logger::Log("solid was found in json: " + std::to_string(this->GetSolid()));
 	 }
 
 	 if(data.contains("dynamic"))
 	 {
-	 	this->dynamic = data.at("dynamic").get<bool>(); //write enum as integer in json
-	 	Logger::Log("dynamic was found in json: " + std::to_string(this->dynamic));
+	 	this->SetDynamic(data.at("dynamic").get<bool>()); //write enum as integer in json
+	 	Logger::Log("dynamic was found in json: " + std::to_string(this->GetDynamic()));
 	 }
 }
 
@@ -114,10 +114,10 @@ void BoxCollider::SaveToJson(nlohmann::json& data)
 {
 	this->GameObject3D::SaveToJson(data);
 
-	data["tag"] = this->tag;
-	data["ignoreTag"] = this->ignoreTag;
-	data["solid"] = this->solid;
-	data["dynamic"] = this->dynamic;
+	data["tag"] = this->GetTag();
+	data["ignoreTag"] = this->GetIgnoreTag();
+	data["solid"] = this->GetSolid();
+	data["dynamic"] = this->GetDynamic();
 }
 
 bool BoxCollider::CollidesWithBox(class BoxCollider* box, DirectX::XMFLOAT3& resolveAxis, float& resolveDistance)

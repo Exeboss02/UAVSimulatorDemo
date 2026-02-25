@@ -26,6 +26,19 @@ public:
 	void SetOnHover(std::function<void()> callback);
 	void SetOnUnhover(std::function<void()> callback);
 
+	// Event ID helpers
+	void SetOnClickEventID(int id);
+	int GetOnClickEventID() const;
+	void SetOnPressedEventID(int id);
+	int GetOnPressedEventID() const;
+	void SetOnReleasedEventID(int id);
+	int GetOnReleasedEventID() const;
+
+	// Wired setters: set the ID and attempt to wire callbacks immediately
+	void SetOnClickEventID_Wire(int id);
+	void SetOnPressedEventID_Wire(int id);
+	void SetOnReleasedEventID_Wire(int id);
+
 	bool IsHovered() const;
 	bool isPressed() const;
 	// Serialization helpers
@@ -50,6 +63,11 @@ private:
 	std::function<void()> onReleased;
 	std::function<void()> onHover;
 	std::function<void()> onUnhover;
+
+	// Optional event IDs for wiring to EventManager (0 = none)
+	int onClickEventID = 0;
+	int onPressedEventID = 0;
+	int onReleasedEventID = 0;
 
 	DirectX::XMFLOAT4 color{1.0f, 1.0f, 1.0f, 1.0f};
 

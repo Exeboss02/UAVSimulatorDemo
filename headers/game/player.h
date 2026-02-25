@@ -10,6 +10,7 @@
 #include "core/assetManager.h"
 #include "core/tools.h"
 #include "gameObjects/gun.h"
+#include "game/resourceManager.h"
 
 class Player : public RigidBody
 {
@@ -41,6 +42,7 @@ public:
 	void UpdateCamera();
 
 	void SetCameraRotation(float r, float p, float y);
+	void OnCollision(std::weak_ptr<GameObject3D> gameObject3D);
 
 	bool isPlayingMusic = false;
 	bool canShoot = false;
@@ -48,6 +50,8 @@ public:
 	Timer musicTimer;
 	Timer sfxTimer;
 	Timer shootCoolDown;
+
+	ResourceManager resources;
 
 private:
 	float input[2] = {};

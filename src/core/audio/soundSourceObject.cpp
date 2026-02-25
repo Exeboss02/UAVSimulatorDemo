@@ -122,8 +122,6 @@ void SoundSourceObject::SetSourcePosition(float x, float y, float z)
 
 void SoundSourceObject::SetRandomPitch(float minPitch, float maxPitch)
 {
-	srand(time(0)); //this seed sucks, we need to fix this
-
 	int tempMin = minPitch * 1000;
 	int tempMax = maxPitch * 1000;
 	int tempPitch = tempMin + rand() % (tempMax - tempMin);

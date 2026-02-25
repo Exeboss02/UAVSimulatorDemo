@@ -12,6 +12,7 @@ class Image;
 } // namespace UI
 
 class Crosshair;
+class Health;
 
 class HUD {
 public:
@@ -22,7 +23,7 @@ public:
 	void Start();
 
 	// Update displayed values from the player's health and resource
-	void Update(const ResourceManager& resources, const uint8_t& playerHealth);
+	void Update(const ResourceManager& resources, const Health& playerHealth);
 
 	// Clean up (queue deletes) if needed
 	void OnDestroy();

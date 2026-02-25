@@ -155,7 +155,7 @@ void HUD::Start() {
 	}
 }
 
-void HUD::Update(const ResourceManager& resources, const uint8_t& playerHealth) {
+void HUD::Update(const ResourceManager& resources, const Health& playerHealth) {
 	auto safeSet = [](std::weak_ptr<UI::Text> w, const std::string& s) {
 		if (w.expired()) return;
 		auto p = w.lock();
@@ -167,7 +167,7 @@ void HUD::Update(const ResourceManager& resources, const uint8_t& playerHealth) 
 	safeSet(this->lubricantText, std::to_string(resources.lubricant.GetAmount()));
 	safeSet(this->carbonFiberText, std::to_string(resources.carbonFiber.GetAmount()));
 	safeSet(this->circuitText, std::to_string(resources.circuit.GetAmount()));
-	safeSet(this->playerHealthText, std::to_string(playerHealth));
+	safeSet(this->playerHealthText, std::to_string(playerHealth.Get()));
 }
 
 void HUD::OnDestroy() {

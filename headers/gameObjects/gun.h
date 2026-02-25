@@ -15,6 +15,18 @@ public:
 
 	void Start() override;
 
+protected:
+
+	std::string gunVisualPath = "";
+	std::string soundClipShootPath = "";
+	float damage = 20;
+	float fireRate = 0.3f;
+	DirectX::XMFLOAT3 muzzlePosition = DirectX::XMFLOAT3(0,0,0);
+	DirectX::XMFLOAT3 visualPosition = DirectX::XMFLOAT3(0, 0, 0);
+	DirectX::XMFLOAT3 visualScale = DirectX::XMFLOAT3(1, 1, 1);
+	DirectX::XMFLOAT3 visualRotationRPY = DirectX::XMFLOAT3(0, 0, 0);
+	DirectX::XMFLOAT3 gunPosition = DirectX::XMFLOAT3(0, 0, 0);
+
 
 private:
 
@@ -23,10 +35,7 @@ private:
 	std::vector<SoundClip*> soundClips;
 	std::weak_ptr<SoundSourceObject> speaker;
 	std::weak_ptr<GameObject3D> muzzle;
-
 	Timer musicTimer;
 	Timer sfxTimer;
 	Timer shootCoolDown;
-
-	float damage = 20;
 };

@@ -13,6 +13,7 @@
 #include "gameObjects/gun.h"
 #include "gameObjects/meshObject.h"
 #include <memory>
+#include "game/health.h"
 
 class Player : public RigidBody {
 public:
@@ -45,9 +46,9 @@ public:
 	void SetCameraRotation(float r, float p, float y);
 	void OnCollision(std::weak_ptr<GameObject3D> gameObject3D);
 
-	void DecrementHealth(uint8_t hp);
-	void IncrementHealth(uint8_t hp);
-	uint8_t GetHealth() const;
+	void DecrementHealth(int hp);
+	void IncrementHealth(int hp);
+	int GetHealth() const;
 
 	bool isPlayingMusic = false;
 	bool canShoot = false;
@@ -63,16 +64,15 @@ private:
 	float input[2] = {};
 	bool showCursor = true;
 
-	uint8_t health;
+	Health health;
 
 	float cameraRotation[3];
 
-	void shootRay();
 	void Interact();
 
-	void checkForTriggerPress();
+	void CheckForTriggerPress();
 
-	void aim();
+	void Aim();
 
 	std::weak_ptr<Gun> gun;
 };

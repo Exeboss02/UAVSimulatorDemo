@@ -9,6 +9,7 @@ namespace UI {
 class CanvasObject;
 class Text;
 class Image;
+class InteractionPrompt;
 } // namespace UI
 
 class Crosshair;
@@ -49,4 +50,7 @@ private:
 	std::weak_ptr<UI::Text> playerHealthText;
 
 	std::weak_ptr<Crosshair> crosshair;
+
+	// Shared prompt created once and reused for interactions
+	std::weak_ptr<UI::InteractionPrompt> interactionPrompt;
 };

@@ -1,11 +1,11 @@
 #include "game/player.h"
+#include "UI/interactionPrompt.h"
 #include "core/physics/sphereCollider.h"
 #include "game/gameManager.h"
 #include "game/hud.h"
 #include "gameObjects/meshObject.h"
-#include <numbers>
-#include "game/gameManager.h"
 #include "gameObjects/pistol01.h"
+#include <numbers>
 
 Player::Player() : cameraRotation{0, 0, 0} { this->controllerInput = std::make_shared<ControllerInput>(0); }
 
@@ -154,7 +154,7 @@ void Player::Tick() {
 		this->sfxTimer.Reset();
 	}
 
-	//this->aim();
+	// this->aim();
 	this->CheckForTriggerPress();
 
 	// Update HUD with current resources
@@ -278,6 +278,53 @@ void Player::Interact() {
 
 	const DirectX::XMVECTOR lookVec = this->camera.lock()->transform.GetGlobalForward();
 	const DirectX::XMVECTOR posVec = this->camera.lock()->transform.GetGlobalPosition();
+
+	{
+		Ray ray{Vector3D{posVec}, Vector3D{lookVec}};
+		RayCastData rayCastData;
+
+		bool didHit = PhysicsQueue::GetInstance().castRay(ray, rayCastData);
+		std::string hitString;
+		if (didHit) {
+
+			auto hitCollider = rayCastData.hitColider.lock();
+			if (hitCollider && (hitCollider->GetTag() & Tag::INTERACTABLE)) {
+				hitCollider->Hover();
+				hitString = "hit";
+			} else {
+				hitString = "miss";
+				// Hide any shared interaction prompt when nothing is hovered
+				try {
+					auto promptWeak = this->factory->FindObjectOfType<UI::InteractionPrompt>();
+					if (!promptWeak.expired()) {
+						auto prompt = promptWeak.lock();
+						if (prompt) prompt->Hide();
+					}
+				} catch (const std::exception &e) {
+					Logger::Error("Player::Interact failed to hide prompt: ", e.what());
+				} catch (...) {
+					Logger::Error("Player::Interact failed to hide prompt (unknown exception)");
+				}
+			}
+
+		} else {
+			hitString = "miss";
+			// Hide any shared interaction prompt when nothing is hovered
+			try {
+				auto promptWeak = this->factory->FindObjectOfType<UI::InteractionPrompt>();
+				if (!promptWeak.expired()) {
+					auto prompt = promptWeak.lock();
+					if (prompt) prompt->Hide();
+				}
+			} catch (const std::exception &e) {
+				Logger::Error("Player::Interact failed to hide prompt: ", e.what());
+			} catch (...) {
+				Logger::Error("Player::Interact failed to hide prompt (unknown exception)");
+			}
+		}
+
+		// Logger::Log(hitString, " at distance: ", std::to_string(rayCastData.distance));
+	}
 
 	if (this->keyBoardInput.Interact() || this->controllerInput->Interact()) {
 

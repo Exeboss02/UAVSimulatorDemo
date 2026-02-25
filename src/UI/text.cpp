@@ -142,7 +142,6 @@ void Text::Draw() {
 		return;
 	}
 
-	// If right-aligned with a max width, measure the text and shift position so the text is right-aligned
 	UI::Vec2 pos = this->GetPosition();
 	if (this->rightAligned && this->maxWidth > 0.0f) {
 		float measured = UI::TextRenderer::GetInstance().MeasureString(this->text, this->GetFontSize(), this->font);

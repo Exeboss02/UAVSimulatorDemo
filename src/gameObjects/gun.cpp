@@ -53,9 +53,11 @@ void Gun::Shoot() {
 
 void Gun::Start() {
 
+	this->transform.SetPosition(DirectX::XMLoadFloat3(&this->gunPosition));
+
 	this->musicTimer.Initialize(2);
 	this->sfxTimer.Initialize(0.4f);
-	this->shootCoolDown.Initialize(0.3f);
+	this->shootCoolDown.Initialize(this->fireRate);
 
 	// SFX
 	/*this->speaker = this->factory->CreateGameObjectOfType<SoundSourceObject>();
@@ -72,11 +74,11 @@ void Gun::Start() {
 
 		meshobj->SetParent(this->GetPtr());
 
-		MeshObjData meshdata = AssetManager::GetInstance().GetMeshObjData("guns/pistol01.glb:Mesh_0");
+		MeshObjData meshdata = AssetManager::GetInstance().GetMeshObjData(this->gunVisualPath);
 		meshobj->SetMesh(meshdata);
-		DirectX::XMFLOAT3 scale(0.01f, 0.01f, 0.01f);
-		meshobj->transform.SetScale(DirectX::XMLoadFloat3(&scale));
-		meshobj->transform.SetRotationRPY(0, 0, std::numbers::pi / 2);
+		meshobj->transform.SetScale(DirectX::XMLoadFloat3(&this->visualScale));
+		meshobj->transform.SetRotationRPY(this->visualRotationRPY.x, this->visualRotationRPY.y,
+										  this->visualRotationRPY.z);
 		this->gunVisual = meshobj;
 	}
 
@@ -85,8 +87,7 @@ void Gun::Start() {
 
 		auto muzzle = muzzleWeak.lock();
 
-		DirectX::XMFLOAT3 pos(0.0f, 0.15f, 0.04f);
-		muzzle->transform.SetPosition(DirectX::XMLoadFloat3(&pos));
+		muzzle->transform.SetPosition(DirectX::XMLoadFloat3(&this->muzzlePosition));
 
 		muzzle->SetParent(this->GetPtr());
 

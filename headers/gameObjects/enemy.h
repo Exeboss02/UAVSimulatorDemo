@@ -7,7 +7,6 @@
 #include "core/physics/boxCollider.h"
 #include "utilities/aStar.h"
 #include "utilities/time.h"
-#include "game/health.h"
 
 enum MoveSpeedMode { 
 	NORMAL, 
@@ -25,7 +24,7 @@ public:
 
 	void SetPath(const std::vector<std::shared_ptr<AStarVertex>>& newPath);
 private:
-	Health health;
+	int health;
 	float movementSpeed;
 	DirectX::XMVECTOR direction;
 	DirectX::XMVECTOR targetRotation;

@@ -115,6 +115,7 @@ void Room::SetWallState(Room::WallIndex wallindex, Room::WallState wallState) {
 void Room::SetParent(std::weak_ptr<GameObject> parentWeak) {
 	if (auto basePtr = parentWeak.lock()) {
 		if (auto shipPtr = std::dynamic_pointer_cast<SpaceShip>(basePtr)) {
+
 			this->GameObject3D::SetParent(parentWeak);
 		} else {
 			Logger::Error("Trying to set non SpaceShip obj as parent to Room");

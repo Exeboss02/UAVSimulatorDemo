@@ -91,7 +91,7 @@ void Player::Start() {
 		colliderobj->transform.SetScale(DirectX::XMLoadFloat3(&scale));
 		colliderobj->SetParent(this->GetPtr());
 		colliderobj->SetTag(Tag::PLAYER);
-		colliderobj->SetIgnoreTag(~Tag::FLOOR);
+		//colliderobj->SetIgnoreTag(~Tag::FLOOR);
 		colliderobj->SetName("PlayerCollider " + std::to_string(this->factory->GetNextID()));
 	}
 
@@ -299,8 +299,9 @@ void Player::OnCollision(std::weak_ptr<GameObject3D> gameObject3D) {
 	std::string name = gameObject3D.lock()->GetName();
 	std::shared_ptr<SpaceShip> spaceShip = std::dynamic_pointer_cast<SpaceShip>(gameObject3D.lock());
 
-	if (spaceShip) {
-	this->isGrounded = true;
+	if (spaceShip)
+	{
+		this->isGrounded = true;
 	}
 }
 

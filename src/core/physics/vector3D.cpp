@@ -62,3 +62,6 @@ void Vector3D::Normalize() {
 std::string Vector3D::GetString() { 
 	return "(" + std::to_string(this->x) + ", " + std::to_string(this->y) + ", " + std::to_string(this->z) + ")";
 }
+
+DirectX::XMVECTOR Vector3D::getXMVector() { 
+	return DirectX::XMVECTOR({this->GetX(), this->GetY(), this->GetZ()}); }

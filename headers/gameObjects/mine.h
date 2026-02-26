@@ -25,6 +25,4 @@ private:
     float range = 10;
 
     std::weak_ptr<SphereCollider> collider;
-
-    std::weak_ptr<SoundSourceObject> speaker;
 };

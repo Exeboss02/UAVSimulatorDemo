@@ -44,6 +44,24 @@ void SoundSourceObject::Tick()
 	{
 		alSource3f(this->sources[i], AL_POSITION, (ALfloat)pos.m128_f32[0], (ALfloat)pos.m128_f32[1], (ALfloat)pos.m128_f32[2]);
 	}
+
+	if(this->deleteWhenFinnished && this->isPlaying)
+	{
+		bool somethingIsPlaying = false;
+
+		for (int i = 0; i < this->nrOfSources; i++)
+		{
+			ALint state = -1;
+			this->GetSourceState(i, state);
+			if(state == AL_PLAYING) somethingIsPlaying = true;
+		}
+		
+		if(!somethingIsPlaying)
+		{
+			float masterVolume = AudioManager::GetInstance().GetMasterSoundEffectsVolume();
+			this->factory->QueueDeleteGameObject(this->GetPtr());
+		}
+	}
 }
 
 void SoundSourceObject::Play(SoundClip* soundClip) //pointer referece?
@@ -53,6 +71,8 @@ void SoundSourceObject::Play(SoundClip* soundClip) //pointer referece?
 		Logger::Error("SoundSourceObject tried to play nullptr SoundClip");
 		return;
 	}
+
+	this->isPlaying = true;
 
 	for (int i = 0; i < this->nrOfSources; i++)
 	{
@@ -120,8 +140,17 @@ void SoundSourceObject::SetSourcePosition(float x, float y, float z)
 	}
 }
 
-void SoundSourceObject::SetRandomPitch(float minPitch, float maxPitch)
+void SoundSourceObject::SetDeleteWhenFinnished(bool del)
 {
+	this->deleteWhenFinnished = del;
+}
+
+bool SoundSourceObject::GetDeleteWhenFinnished()
+{
+	return this->deleteWhenFinnished;
+}
+
+void SoundSourceObject::SetRandomPitch(float minPitch, float maxPitch) {
 	int tempMin = minPitch * 1000;
 	int tempMax = maxPitch * 1000;
 	int tempPitch = tempMin + rand() % (tempMax - tempMin);

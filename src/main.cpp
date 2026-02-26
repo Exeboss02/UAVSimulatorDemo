@@ -16,6 +16,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 	//_CrtDumpMemoryLeaks();
 	//_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 
+	srand(time(0));
+
 	std::unique_ptr<Game> game = std::unique_ptr<Game>(new Game());
 
 	Logger::Log("Starting game...");

@@ -29,6 +29,7 @@ void Player::Start() {
 		auto gunWeak = this->factory->CreateGameObjectOfType<Pistol01>();
 		auto gun = gunWeak.lock();
 		gun->SetParent(this->camera.lock()->GetPtr());
+		gun->setParentToShootFrom(cameraShared);
 		this->gun = gun;
 	}
 

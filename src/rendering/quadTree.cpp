@@ -126,8 +126,8 @@ void QuadTree::SubdivideNode(std::unique_ptr<Node>& node) {
 void QuadTree::CheckNode(DirectX::BoundingFrustum& frustum, std::unique_ptr<Node>& node,
 						 std::vector<std::weak_ptr<MeshObject>>& out, std::unordered_set<MeshObject*>& found) {
 	
-	bool isLeaf = (node->children[0] == nullptr);	
-	if (!isLeaf && node->children.size() <= 0) {
+	bool isLeaf = (node->children[0] == nullptr);
+	if (isLeaf && node->elements.size() <= 0) {
 		return;
 	}
 

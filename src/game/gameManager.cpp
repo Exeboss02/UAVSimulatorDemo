@@ -7,7 +7,7 @@
 std::weak_ptr<GameManager> GameManager::instance;
 
 GameManager::GameManager()
-	: playerSpawnPoint(DirectX::XMVectorSet(310.0, 5.0, 0.0, 0.0)), currentRound(0), inCombat(false),
+	: playerSpawnPoint(DirectX::XMVectorSet(70.0, 5.0, 0.0, 0.0)), currentRound(0), inCombat(false),
 	  enemySpawnTimer(1), unspawnedEnemies(0), enemySpawnDelay(2), idleTime(30), idleTimeTimer(0) 
 {}
 
@@ -227,6 +227,8 @@ const std::vector<std::weak_ptr<Enemy>>& GameManager::GetEnemies() { return this
 const float& GameManager::GetSpawnDelay() { return this->enemySpawnDelay; }
 
 void GameManager::SetSpawnDelay(float& newSpawnDelay) { this->enemySpawnDelay = newSpawnDelay; }
+
+DirectX::XMVECTOR GameManager::GetPlayerSpawnPoint() { return this->playerSpawnPoint; }
 
 void GameManager::SaveToJson(nlohmann::json& data) {
 	this->GameObject::SaveToJson(data);

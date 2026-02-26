@@ -9,12 +9,17 @@
 #include <chrono>
 #include <cmath>
 #include <memory>
+#include "gameObjects/SpaceShipObj.h"
 
 // #define DEBUG_TIMER
 
 Renderer::Renderer()
 	: viewport(), currentPixelShader(nullptr), currentVertexShader(nullptr), currentRasterizerState(nullptr),
-	  currentMaterial(nullptr), maximumSpotlights(16), staticObjectsTree({-10, -10, -10}, {10 * 64, 20, 10 * 64}, 5, 4),
+	  currentMaterial(nullptr), maximumSpotlights(16),
+	  staticObjectsTree({-SpaceShip::ROOM_SIZE, -20, -SpaceShip::ROOM_SIZE},
+						{SpaceShip::ROOM_SIZE * (SpaceShip::SHIP_MAX_SIZE_X + 1), 20,
+						 SpaceShip::ROOM_SIZE * (SpaceShip::SHIP_MAX_SIZE_Y + 1)},
+						5, 4),
 	  renderQueue(this->meshRenderQueue, this->spotLightRenderQueue, this->pointLightRenderQueue,
 				  this->staticObjectsTree, this->uiRenderQueue) {
 	this->renderQueue.newSkyboxCallback = [this](std::string filename) { this->ChangeSkybox(filename); };
@@ -81,14 +86,14 @@ std::vector<std::weak_ptr<MeshObject>> Renderer::GetVisibleObjects(CameraObject&
 			continue;
 		}
 
-		// This should NOT be done every frame, very expensive matrix operations
-		float distance;
-		DirectX::XMStoreFloat(&distance,
-							  DirectX::XMVector3LengthSq(DirectX::XMVectorSubtract(
-								  cameraGlobalPos, this->meshRenderQueue[i].lock()->transform.GetGlobalPosition())));
+		float farPlane = camera.GetFarPlane();
+		if (farPlane < 100) {
+			float distance = DirectX::XMVectorGetX(DirectX::XMVector3LengthSq(DirectX::XMVectorSubtract(
+				cameraGlobalPos, this->meshRenderQueue[i].lock()->transform.GetGlobalPosition())));
 
-		if (distance > std::powf(camera.GetFarPlane(), 2.0f)) {
-			continue;
+			if (distance > std::powf(camera.GetFarPlane(), 2.0f) + 9) {
+				continue;
+			}
 		}
 
 		visible.emplace_back(this->meshRenderQueue[i]);

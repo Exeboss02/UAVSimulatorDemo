@@ -184,3 +184,7 @@ void RenderQueue::ChangeSkybox(std::string filename) {
 		throw std::runtime_error("Fatal error in RenderQueue.");
 	}
 }
+
+void RenderQueue::RecalculateStatic() {}
+
+void RenderQueue::RecalculateDynamic() {}

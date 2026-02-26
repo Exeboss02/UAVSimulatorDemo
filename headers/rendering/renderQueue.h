@@ -71,6 +71,9 @@ public:
 
 	static void ChangeSkybox(std::string filename);
 
+	static void RecalculateStatic();
+	static void RecalculateDynamic();
+
 private:
 	static RenderQueue* instance;
 

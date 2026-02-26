@@ -1,5 +1,6 @@
 #include "gameObjects/gun.h"
 #include <numbers>
+#include "gameObjects/rayVis.h"
 
 Gun::Gun() {}
 
@@ -14,8 +15,8 @@ void Gun::Shoot() {
 	this->shootCoolDown.Reset();
 
 
-	//std::shared_ptr<SoundSourceObject> lockedSpeaker = this->speaker.lock();
-	//lockedSpeaker->Play(this->soundClips[0]); // shoot sound
+	std::shared_ptr<SoundSourceObject> lockedSpeaker = this->speaker.lock();
+	lockedSpeaker->Play(this->soundClips[0]); // shoot sound
 	
 
 	const DirectX::XMVECTOR lookVec = this->muzzle.lock()->transform.GetGlobalForward();
@@ -33,8 +34,9 @@ void Gun::Shoot() {
 
 		// rayVis
 		MeshObjData meshdata = AssetManager::GetInstance().GetMeshObjData("TexBox/TextureCube.glb:Mesh_0");
-		auto colliderobjWeak = this->factory->CreateGameObjectOfType<MeshObject>();
+		auto colliderobjWeak = this->factory->CreateGameObjectOfType<RayVis>();
 		auto colliderobj = colliderobjWeak.lock();
+		colliderobj->StartDeathTimer(0.05f);
 		colliderobj->SetMesh(meshdata);
 		colliderobj->GetMesh().SetMaterial(
 			0, AssetManager::GetInstance().GetMaterialWeakPtr("defaultUnlitMaterial").lock());
@@ -53,18 +55,18 @@ void Gun::Shoot() {
 
 void Gun::Start() {
 
+	GameObject3D::Start();
+
 	this->transform.SetPosition(DirectX::XMLoadFloat3(&this->gunPosition));
 
-	this->musicTimer.Initialize(2);
-	this->sfxTimer.Initialize(0.4f);
 	this->shootCoolDown.Initialize(this->fireRate);
 
 	// SFX
-	/*this->speaker = this->factory->CreateGameObjectOfType<SoundSourceObject>();
+	this->speaker = this->factory->CreateGameObjectOfType<SoundSourceObject>();
 	this->speaker.lock()->SetParent(this->GetPtr());
 	this->speaker.lock()->SetGain(1.0f);
 
-	this->soundClips.push_back(AssetManager::GetInstance().GetSoundClip("Shoot3.wav"));*/
+	this->soundClips.push_back(AssetManager::GetInstance().GetSoundClip("Shoot3.wav"));
 
 
 	{
@@ -97,6 +99,8 @@ void Gun::Start() {
 }
 
 void Gun::Tick() {
+
+	GameObject3D::Tick();
 
 	float deltaTime = Time::GetInstance().GetDeltaTime();
 	if (deltaTime < 1) // to prevent tick spam when loading scene

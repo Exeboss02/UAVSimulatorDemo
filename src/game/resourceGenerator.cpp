@@ -23,6 +23,8 @@ void ResourceGenerator::Start() {
 	interactCollider->SetOnHover([&] { this->Hover(); });
 	interactCollider->transform.SetScale(2, 2, 2);
 
+	this->lastGenerated = Time::GetInstance().GetSessionTime();
+
 	this->MeshObject::Start();
 }
 

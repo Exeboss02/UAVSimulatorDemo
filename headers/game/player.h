@@ -23,6 +23,11 @@ public:
 	std::vector<SoundClip*> soundClips;
 	std::weak_ptr<SoundSourceObject> speaker;
 
+	bool jumpInput = false;
+	bool isGrounded = false;
+	bool isJumping = false;
+	float jumpForce = 12;
+
 	float speed = 12;
 	float mouseSensitivity = 0.05f;
 	float stickSensitivity = 1100.0f;
@@ -55,7 +60,6 @@ public:
 
 	Timer musicTimer;
 	Timer sfxTimer;
-	Timer shootCoolDown;
 
 	ResourceManager resources;
 	std::unique_ptr<HUD> hud;

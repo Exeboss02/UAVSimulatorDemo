@@ -13,7 +13,7 @@ SoundSourceObject::SoundSourceObject()
 	this->sources = new ALuint[this->nrOfSources]; //owns its own sources
 	alGenSources(this->nrOfSources, this->sources);
 
-	DirectX::XMVECTOR pos = this->transform.GetPosition();
+	DirectX::XMVECTOR pos = this->transform.GetGlobalPosition();
 
 	for (int i = 0; i < this->nrOfSources; i++)
 	{
@@ -39,7 +39,7 @@ void SoundSourceObject::Tick()
 {
 	this->GameObject3D::Tick();
 
-	DirectX::XMVECTOR pos = this->transform.GetPosition();
+	DirectX::XMVECTOR pos = this->transform.GetGlobalPosition();
 	for (int i = 0; i < this->nrOfSources; i++)
 	{
 		alSource3f(this->sources[i], AL_POSITION, (ALfloat)pos.m128_f32[0], (ALfloat)pos.m128_f32[1], (ALfloat)pos.m128_f32[2]);
@@ -122,8 +122,6 @@ void SoundSourceObject::SetSourcePosition(float x, float y, float z)
 
 void SoundSourceObject::SetRandomPitch(float minPitch, float maxPitch)
 {
-	srand(time(0)); //this seed sucks, we need to fix this
-
 	int tempMin = minPitch * 1000;
 	int tempMax = maxPitch * 1000;
 	int tempPitch = tempMin + rand() % (tempMax - tempMin);

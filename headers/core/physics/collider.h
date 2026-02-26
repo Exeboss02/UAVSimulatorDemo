@@ -6,6 +6,7 @@
 #include <functional>
 #include <memory>
 
+
 static const DirectX::XMFLOAT3 localBoxCorners[8] = {{-1, -1, -1}, {+1, -1, -1}, {-1, +1, -1}, {+1, +1, -1},
 													 {-1, -1, +1}, {+1, -1, +1}, {-1, +1, +1}, {+1, +1, +1}};
 /// <summary>

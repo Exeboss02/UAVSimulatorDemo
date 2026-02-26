@@ -79,6 +79,22 @@ void Player::Start() {
 		colliderobj->SetName("PlayerCollider " + std::to_string(this->factory->GetNextID()));
 	}
 
+	// GroundCheck
+	{
+		auto colliderobjWeak = this->factory->CreateGameObjectOfType<SphereCollider>();
+		auto colliderobj = colliderobjWeak.lock();
+		colliderobj->SetDynamic(true);
+		colliderobj->SetSolid(false);
+		DirectX::XMFLOAT3 pos(0.0f, -0.3, 0.0f);
+		colliderobj->transform.SetPosition(DirectX::XMLoadFloat3(&pos));
+		DirectX::XMFLOAT3 scale(0.5f, 0.5f, 0.5f);
+		colliderobj->transform.SetScale(DirectX::XMLoadFloat3(&scale));
+		colliderobj->SetParent(this->GetPtr());
+		colliderobj->SetTag(Tag::PLAYER);
+		colliderobj->SetIgnoreTag(~Tag::FLOOR);
+		colliderobj->SetName("PlayerCollider " + std::to_string(this->factory->GetNextID()));
+	}
+
 	std::function<void(std::weak_ptr<GameObject3D>)> function = [&](std::weak_ptr<GameObject3D> gameObject3D) {
 		this->OnCollision(gameObject3D);
 
@@ -90,7 +106,6 @@ void Player::Start() {
 
 	this->musicTimer.Initialize(2);
 	this->sfxTimer.Initialize(0.4f);
-	this->shootCoolDown.Initialize(0.3f);
 
 	// Master Volume
 	AudioManager::GetInstance().SetMasterMusicVolume(0.4f);
@@ -111,7 +126,6 @@ void Player::Start() {
 	this->soundClips.push_back(AssetManager::GetInstance().GetSoundClip("Step1.wav"));
 	this->soundClips.push_back(AssetManager::GetInstance().GetSoundClip("Step2.wav"));
 	this->soundClips.push_back(AssetManager::GetInstance().GetSoundClip("Step3.wav"));
-	this->soundClips.push_back(AssetManager::GetInstance().GetSoundClip("Shoot3.wav"));
 
 	// Create HUD owned by player
 	this->hud = std::make_unique<HUD>(this->factory);
@@ -123,14 +137,18 @@ void Player::Tick() {
 
 	InputManager::GetInstance().ReadControllerInput(this->controllerInput->GetControllerIndex());
 
-	DirectX::XMVECTOR position = this->transform.GetPosition();
+	DirectX::XMVECTOR position = this->transform.GetGlobalPosition();
 	AudioManager::GetInstance().SetListenerPosition(position.m128_f32[0], position.m128_f32[1], position.m128_f32[2]);
-	this->speaker.lock()->SetSourcePosition(position.m128_f32[0], position.m128_f32[1], position.m128_f32[2]);
 
-	this->input[0] =
-		this->keyBoardInput.GetMovementVector().data()[0] + this->controllerInput->GetMovementVector().data()[0];
-	this->input[1] =
-		this->keyBoardInput.GetMovementVector().data()[1] + this->controllerInput->GetMovementVector().data()[1];
+	this->input[0] = this->keyBoardInput.GetMovementVector().data()[0] + this->controllerInput->GetMovementVector().data()[0];
+	this->input[1] = this->keyBoardInput.GetMovementVector().data()[1] + this->controllerInput->GetMovementVector().data()[1];
+	this->jumpInput = this->keyBoardInput.Jump() || this->controllerInput->Jump();
+
+	if (this->jumpInput && this->isGrounded)
+	{
+		this->isJumping = true;
+	}
+
 	this->UpdateCamera();
 	this->Interact();
 
@@ -138,9 +156,8 @@ void Player::Tick() {
 	if (deltaTime < 1) // to prevent tick spam when loading scene
 	{
 		this->musicTimer.Tick(deltaTime);
-		this->shootCoolDown.Tick(deltaTime);
 
-		if (DirectX::XMVectorGetX(DirectX::XMVector3Length(this->moveVector)) > 0.01f) {
+		if (this->isGrounded && DirectX::XMVectorGetX(DirectX::XMVector3Length(this->moveVector)) > 0.01f) {
 			this->sfxTimer.Tick(deltaTime);
 		}
 	}
@@ -183,6 +200,9 @@ void Player::Tick() {
 void Player::PhysicsTick() {
 	float fixedDeltaTime = Time::GetInstance().GetFixedDeltaTime();
 
+	//Logger::Log(std::to_string(this->linearVelocity.x), ", ", std::to_string(this->linearVelocity.y), ", ",
+	//			std::to_string(this->linearVelocity.z));
+
 	std::shared_ptr<CameraObject> cam = this->camera.lock();
 
 	if (!cam) {
@@ -190,16 +210,37 @@ void Player::PhysicsTick() {
 		return;
 	}
 
+	this->linearVelocity.x = 0;
+	this->linearVelocity.z = 0;
+	if (this->isGrounded) {
+		this->linearVelocity.y = 0;
+	}
+
 	this->moveVector = {};
-	this->moveVector = DirectX::XMVectorAdd(
-		moveVector, DirectX::XMVectorScale(this->transform.GetGlobalRight(),
+	this->moveVector = DirectX::XMVectorAdd(moveVector, DirectX::XMVectorScale(this->transform.GetGlobalRight(),
 										   this->input[0] * this->speed * fixedDeltaTime)); // Add x-input
-	this->moveVector = DirectX::XMVectorAdd(
-		moveVector, DirectX::XMVectorScale(this->transform.GetGlobalForward(),
+	this->moveVector = DirectX::XMVectorAdd(moveVector, DirectX::XMVectorScale(this->transform.GetGlobalForward(),
 										   this->input[1] * this->speed * fixedDeltaTime)); // Add z-input
 
-	DirectX::XMStoreFloat3(&this->linearVelocity, this->moveVector);
+	if (this->isJumping) {
+		DirectX::XMVECTOR jumpVector = {};
+		jumpVector.m128_f32[0] = 0;
+		jumpVector.m128_f32[1] = this->jumpForce * fixedDeltaTime;
+		jumpVector.m128_f32[2] = 0;
+
+		this->moveVector = DirectX::XMVectorAdd(this->moveVector, jumpVector);
+		this->isJumping = false;
+	}
+
+	DirectX::XMVECTOR linearVelocityVector = {};
+	linearVelocityVector = DirectX::XMLoadFloat3(&this->linearVelocity);
+	linearVelocityVector = DirectX::XMVectorAdd(linearVelocityVector, moveVector);
+
+	DirectX::XMStoreFloat3(&this->linearVelocity, linearVelocityVector);
 	this->RigidBody::PhysicsTick(); // has to be last because of gravity
+
+	// reset isGrounded, this gets set to true in OnCollision
+	this->isGrounded = false;
 }
 
 void Player::UpdateCamera() {
@@ -253,9 +294,14 @@ void Player::IncrementHealth(int hp) { this->health.Increment(hp); }
 int Player::GetHealth() const { return this->health.Get(); }
 
 void Player::OnCollision(std::weak_ptr<GameObject3D> gameObject3D) {
-	std::string name = gameObject3D.lock()->GetName();
+	if (gameObject3D.expired()) return;
 
-	// Logger::Log("COLLIDED WITH ", name);
+	std::string name = gameObject3D.lock()->GetName();
+	std::shared_ptr<SpaceShip> spaceShip = std::dynamic_pointer_cast<SpaceShip>(gameObject3D.lock());
+
+	if (spaceShip) {
+	this->isGrounded = true;
+	}
 }
 
 void Player::LoadFromJson(const nlohmann::json& data) {

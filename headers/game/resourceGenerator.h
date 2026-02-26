@@ -1,7 +1,12 @@
 #pragma once
-#include "gameObjects/meshObject.h"
 #include "core/physics/sphereCollider.h"
 #include "game/player.h"
+#include "gameObjects/meshObject.h"
+
+// Forward-declare UI::Text to avoid extra include in header
+namespace UI {
+class Text;
+}
 
 class ResourceGenerator : public MeshObject {
 public:
@@ -19,7 +24,10 @@ private:
 	ResourceType resourceType = ResourceType::Titanium;
 
 	void Interact(std::shared_ptr<Player> player);
+	void Hover();
 	float lastGenerated = 0;
+	// time until Hover() is allowed to show prompt again (session time)
+	float hoverDisabledUntil = 0.0f;
 
 	float generatedPerSecond = 1;
 

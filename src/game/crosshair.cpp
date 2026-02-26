@@ -31,7 +31,8 @@ void Crosshair::Update(float dt) {
 					}
 				}
 			}
-		} catch (...) {
+		} catch (const std::exception& e) {
+			Logger::Error("Crosshair::Update parent canvas lookup failed: ", e.what());
 			// Fallback: compute a reasonable canvas size from main camera aspect
 			try {
 				auto& cam = CameraObject::GetMainCamera();
@@ -41,8 +42,26 @@ void Crosshair::Update(float dt) {
 				auto s = this->GetSize();
 				UI::Vec2 pos{(width - s.x) * 0.5f, (height - s.y) * 0.5f};
 				this->SetPosition(pos);
+			} catch (const std::exception& e2) {
+				Logger::Error("Crosshair::Update fallback failed: ", e2.what());
 			} catch (...) {
-				// Give up silently
+				Logger::Error("Crosshair::Update fallback unknown exception");
+			}
+		} catch (...) {
+			Logger::Error("Crosshair::Update unknown exception");
+			// Fallback: compute a reasonable canvas size from main camera aspect
+			try {
+				auto& cam = CameraObject::GetMainCamera();
+				float aspect = cam.GetAspectRatio();
+				float height = 1080.0f;
+				float width = aspect * height;
+				auto s = this->GetSize();
+				UI::Vec2 pos{(width - s.x) * 0.5f, (height - s.y) * 0.5f};
+				this->SetPosition(pos);
+			} catch (const std::exception& e2) {
+				Logger::Error("Crosshair::Update fallback failed: ", e2.what());
+			} catch (...) {
+				Logger::Error("Crosshair::Update fallback unknown exception");
 			}
 		}
 	}

@@ -17,7 +17,7 @@ public:
 	/// <summary>
 	/// Sets the turret to target the closest entity in potentialTargets
 	/// </summary>
-	void SetTargetClosest(const std::vector<std::weak_ptr<GameObject3D>> potentialTargets);
+	void SetTargetClosest();
 
 	/// <summary>
 	/// Sets how many rounds per minute are fired.
@@ -29,8 +29,12 @@ public:
 	bool HasTarget() const;
 
 	std::weak_ptr<GameObject3D> GetTarget() const;
-	void Fire();
+	virtual void Fire();
 private:
+
+	float lastAttemptedTargeting = 0;
+	float retargetTime = 0.5;
+
 
 	void SetDirection(DirectX::XMVECTOR newDirection);
 

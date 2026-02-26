@@ -116,7 +116,7 @@
       },
       "type": "BoxCollider",
       "tag": 0,
-      "ignoreTag": 1024,
+      "ignoreTag": 0,
       "solid": true,
       "dynamic": false
     },
@@ -190,7 +190,7 @@
       },
       "type": "BoxCollider",
       "tag": 1,
-      "ignoreTag": 1024,
+      "ignoreTag": 0,
       "solid": true,
       "dynamic": false
     },

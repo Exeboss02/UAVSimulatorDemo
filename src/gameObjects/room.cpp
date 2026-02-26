@@ -5,6 +5,7 @@
 #include "gameObjects/turret.h"
 #include "game/resourceGenerator.h"
 #include "gameObjects/mine.h"
+#include "game/gameManager.h"
 #include <numbers>
 
 static const std::array<std::array<int, 2>, 4> wallpositions = {
@@ -83,14 +84,14 @@ void Room::Start() {
 	// Maybe tweak positionW
 	this->buildSlot = buildCollider;
 	buildCollider->SetOnInteract([&](std::shared_ptr<Player> p) {
-		if (this->builtObject.expired()) {
-			auto turret = this->factory->CreateStaticGameObject<Turret>();
+		if (this->builtObject.expired() && !GameManager::GetInstance()->GetInCombat()) {
+			auto turret = this->factory->CreateStaticGameObject<Mine>();
 			turret->SetParent(this->GetPtr());
 			turret->transform.SetPosition({0, 1.5, 0});
+			this->factory->QueueDeleteGameObject(this->buildSlot);
+			auto& pathfinder = std::static_pointer_cast<SpaceShip>(this->GetParent().lock())->GetPathfinder();
+			pathfinder->RemoveVertex(this->GetPathfindingNodes()[0]);
 		}
-		this->factory->QueueDeleteGameObject(this->buildSlot);
-		auto& pathfinder = std::static_pointer_cast<SpaceShip>(this->GetParent().lock())->GetPathfinder();
-		pathfinder->RemoveVertex(this->GetPathfindingNodes()[0]);
 	});
 
 	auto spotLight = this->factory->CreateGameObjectOfType<SpotlightObject>().lock();

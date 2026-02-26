@@ -7,6 +7,7 @@
 #include "game/gameManager.h"
 #include "gameObjects/pistol01.h"
 #include "gameObjects/rayVis.h"
+#include "gameObjects/mine.h"
 
 
 Player::Player() : cameraRotation{0, 0, 0} { this->controllerInput = std::make_shared<ControllerInput>(0); }
@@ -80,6 +81,10 @@ void Player::Start() {
 
 	std::function<void(std::weak_ptr<GameObject3D>)> function = [&](std::weak_ptr<GameObject3D> gameObject3D) {
 		this->OnCollision(gameObject3D);
+
+		if (auto mine = dynamic_pointer_cast<Mine>(gameObject3D.lock())) {
+			Logger::Log("Hit Mine");
+		}
 	};
 	this->SetAllOnCollisionFunction(function);
 

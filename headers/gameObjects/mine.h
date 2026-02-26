@@ -19,9 +19,9 @@ private:
 
     std::function<void()> postExplosion = [] {};
 
-    float damage = 1000;
+    float damage = 500;
 
-    float range = 100;
+    float range = 10;
 
     std::weak_ptr<SphereCollider> collider;
 };

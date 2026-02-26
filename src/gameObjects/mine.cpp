@@ -11,6 +11,8 @@ void Mine::Start() {
         this->OnExplode();
     });
 	collider->SetOnHit([&](float damadge) { this->OnExplode(); });
+	this->SetMesh(AssetManager::GetInstance().GetMeshObjData("TexBox/TextureCube.glb:Mesh_0"));
+	this->MeshObject::Start();
 }
 
 void Mine::SetRange(float range) { this->range = range; }

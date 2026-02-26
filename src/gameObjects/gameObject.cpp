@@ -123,6 +123,8 @@ void GameObject::ShowInHierarchy() {
 	ImGui::Separator();
 	ImGui::Text("Object details.");
 
+	ImGui::Text(std::format("Static: {}", this->GetIsStatic() ? "true" : "false").c_str());
+
 	if (ImGui::Checkbox("Is Active", &this->imguiIsActive)) {
 		SetActive(this->imguiIsActive);
 	}

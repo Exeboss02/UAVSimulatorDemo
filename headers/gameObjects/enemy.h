@@ -49,6 +49,7 @@ private:
 	bool canShoot;
 	const float shotCooldown;
 	float timeSinceLastShot;
+	float playerHitAccuracy;
 	void UpdateShootCooldown(const float deltaTime);
 
 	// Slow effect

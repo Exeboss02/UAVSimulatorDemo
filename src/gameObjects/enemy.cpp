@@ -13,10 +13,12 @@
 
 #include "gameObjects/rayVis.h"
 
+#include <random>
+
 Enemy::Enemy()
 	: GameObject3D(), health(100), path({}), maxPathIndex(0), currentPathIndex(0), hasFinishedPath(false),
 	  canShoot(true), shotCooldown(1.5f), timeSinceLastShot(0.0f), isSlowed(false), slowDuration(0.0f), timeSinceSlowed(0.0f), 
-		timeStuck(0.f), stuckCheckInterval(4.f) {
+		playerHitAccuracy(0.6f), timeStuck(0.f), stuckCheckInterval(4.f) {
 	this->direction = DirectX::XMVectorSet(0, 0, 1, 0);
 	this->targetRotation = DirectX::XMQuaternionIdentity();
 	this->SetMoveSpeedMode(MoveSpeedMode::NORMAL);
@@ -247,8 +249,6 @@ void Enemy::ShootAtPlayer() {
 	Vector3D adjustedPos = enemyPosition + rayDirection * 1.5f;
 	float maxDistance = rayLength + 1.f; // Subtract offset, add small bias
 
-	DirectX::XMVECTOR pos = DirectX::XMVectorSet(adjustedPos.GetX(), adjustedPos.GetY(), adjustedPos.GetZ(), 1.0f);
-	DirectX::XMVECTOR dir = DirectX::XMVectorSet(rayDirection.GetX(), rayDirection.GetY(), rayDirection.GetZ(), 0.0f);
 	Ray ray{adjustedPos, rayDirection};
 	RayCastData rayCastData = {};
 
@@ -257,10 +257,20 @@ void Enemy::ShootAtPlayer() {
 	if (didHit) {
 		if (auto hitCollider = rayCastData.hitColider.lock()) {
 			if (hitCollider->GetParent().lock().get() == player.get()) {
-				rayCastData.hitColider.lock()->Hit(this->damage);
-				Logger::Log("Enemy shooting at player");
-				this->canShoot = false;
+				DirectX::XMVECTOR pos = DirectX::XMVectorSet(adjustedPos.GetX(), adjustedPos.GetY(), adjustedPos.GetZ(), 1.0f);
+				DirectX::XMVECTOR dir = DirectX::XMVectorSet(rayDirection.GetX(), rayDirection.GetY(), rayDirection.GetZ(), 0.0f);
 
+				float randomValue = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+				if (this->playerHitAccuracy < randomValue) {
+					Logger::Log("Enemy shooting at player - MISSED!");
+					this->canShoot = false;
+					this->VisualizeRay(pos, dir, rayCastData.distance);
+					return;
+				}
+
+				rayCastData.hitColider.lock()->Hit(this->damage);
+				Logger::Log("Enemy shooting at player - HIT!");
+				this->canShoot = false;
 				this->VisualizeRay(pos, dir, rayCastData.distance);
 			}
 		}

@@ -22,7 +22,7 @@ void Turret::Tick() {
 		float distanceSquared = DirectX::XMVectorGetX(DirectX::XMVector3Dot(betweenVec, betweenVec));
 
 		if (!(distanceSquared > this->range * this->range)) {
-			this->transform.SetDirection(betweenVec);
+			this->SetDirection(betweenVec);
 			float currentTime = Time::GetInstance().GetSessionTime();
 			float delta = currentTime - this->lastFired;
 			if (delta > (60 / this->rpm)) {
@@ -101,4 +101,29 @@ void Turret::Fire() {
 	}
 
 	Logger::Log(hitString, " at distance: ", std::to_string(rayCastData.distance));
+}
+
+void Turret::SetDirection(DirectX::XMVECTOR newDirection) {
+	DirectX::XMVECTOR desiredDir = DirectX::XMVector3Normalize(newDirection);
+	DirectX::XMVECTOR currentDir = DirectX::XMVector3Normalize(this->transform.GetGlobalForward());
+	float deltaTime = Time::GetInstance().GetDeltaTime();
+
+	float dot = DirectX::XMVectorGetX(DirectX::XMVector3Dot(currentDir, desiredDir));
+	dot = std::clamp(dot, -1.0f, 1.0f);
+
+	float angle = acosf(dot);
+
+	float maxStep = this->turnSpeedRPS * deltaTime;
+
+	if (angle > 0.001f) {
+		float step = std::min(angle, maxStep);
+
+		DirectX::XMVECTOR axis = DirectX::XMVector3Normalize(DirectX::XMVector3Cross(currentDir, desiredDir));
+
+		DirectX::XMMATRIX rot = DirectX::XMMatrixRotationAxis(axis, step);
+
+		DirectX::XMVECTOR newDir = DirectX::XMVector3Normalize(XMVector3TransformNormal(currentDir, rot));
+
+		this->transform.SetDirection(newDir);
+	}
 }

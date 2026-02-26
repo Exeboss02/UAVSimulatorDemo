@@ -31,7 +31,12 @@ public:
 	std::weak_ptr<GameObject3D> GetTarget() const;
 	void Fire();
 private:
+
+	void SetDirection(DirectX::XMVECTOR newDirection);
+
 	std::weak_ptr<GameObject3D> target;
+
+	float turnSpeedRPS = 3.14;
 	float lastFired = 0;
 	float rpm = 60;
 	float range = 20;

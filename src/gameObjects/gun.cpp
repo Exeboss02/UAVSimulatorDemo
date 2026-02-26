@@ -3,6 +3,7 @@
 #include "gameObjects/rayVis.h"
 #include "gameObjects/cameraObject.h"
 #include "utilities/logger.h"
+#include "core/physics/vector3D"
 #include <memory>
 
 Gun::Gun() {}
@@ -16,13 +17,22 @@ void Gun::Shoot() {
 		return;
 	}
 	this->shootCoolDown.Reset();
-
+	
 
 	std::shared_ptr<SoundSourceObject> lockedSpeaker = this->speaker.lock();
 	lockedSpeaker->Play(this->soundClips[0]); // shoot sound
 	
-	const DirectX::XMVECTOR lookVec = this->parentCamera.lock()->transform.GetGlobalForward();
-	const DirectX::XMVECTOR posVec = this->parentCamera.lock()->transform.GetGlobalPosition();
+	DirectX::XMVECTOR lookVec;
+	DirectX::XMVECTOR posVec; 
+
+	if (auto parentCameraShared  = this->parentCamera.lock()) {
+		lookVec = this->parentCamera.lock()->transform.GetGlobalForward();
+		posVec = this->parentCamera.lock()->transform.GetGlobalPosition();
+	} else{
+		lookVec = this->muzzle.lock()->transform.GetGlobalForward();
+		posVec = this->muzzle.lock()->transform.GetGlobalPosition();
+	}
+	
 
 	Ray ray{Vector3D{posVec}, Vector3D{lookVec}};
 	RayCastData rayCastData;
@@ -33,6 +43,9 @@ void Gun::Shoot() {
 
 		rayCastData.hitColider.lock()->Hit(this->damage);
 		hitString = "hit";
+
+
+		Vector3D hitPos(DirectX::XMVectorAdd(posVec, DirectX::XMVectorScale(lookVec, rayCastData.distance / 2)));
 
 		// rayVis
 		MeshObjData meshdata = AssetManager::GetInstance().GetMeshObjData("TexBox/TextureCube.glb:Mesh_0");
@@ -98,15 +111,6 @@ void Gun::Start() {
 		this->muzzle = muzzle;
 	}
 
-	if (this->GetParent().expired()) {
-		Logger::Error("gun has no parent, will not know where to shoot from");
-	}
-	if (auto parent = std::dynamic_pointer_cast<GameObject3D>(this->GetParent().lock())) {
-		this->parentCamera = parent;
-	} else {
-		Logger::Error("guns parrent is not gameObject3D wont know where to shoot from");
-	}
-
 }
 
 void Gun::Tick() {
@@ -121,3 +125,5 @@ void Gun::Tick() {
 
 
 }
+
+void Gun::setParentToShootFrom(std::shared_ptr<GameObject3D> parentCamera) { this->parentCamera = parentCamera; }

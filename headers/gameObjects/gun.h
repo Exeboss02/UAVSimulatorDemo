@@ -15,6 +15,8 @@ public:
 
 	void Start() override;
 
+	void setParentToShootFrom(std::shared_ptr<GameObject3D> parentCamera);
+
 protected:
 
 	std::string gunVisualPath = "";

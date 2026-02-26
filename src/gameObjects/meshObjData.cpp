@@ -14,6 +14,11 @@ void MeshObjData::SetMaterial(size_t index, std::shared_ptr<BaseMaterial> materi
 		return;
 	}
 
+	// Don't really know if the object is static or not here
+	// so just do both
+	RenderQueue::RecalculateDynamic();
+	RenderQueue::RecalculateStatic();
+
 	this->materials.at(index) = material;
 };
 std::string MeshObjData::GetMeshIdentifier() {

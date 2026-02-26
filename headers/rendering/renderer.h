@@ -174,6 +174,8 @@ private:
 	std::unique_ptr<StructuredBuffer<PointLightObject::PointLightContainer>> pointlightBuffer;
 	std::unique_ptr<ConstantBuffer> pointlightCountBuffer;
 
+	std::vector<std::vector<std::weak_ptr<MeshObject>>> staticObjectsForLights;
+
 	DepthBufferArray spotLightShadows;
 	D3D11_VIEWPORT spotLightViewPort;
 

@@ -14,7 +14,8 @@ RenderQueue::RenderQueue(std::vector<std::weak_ptr<MeshObject>>& meshRenderQueue
 						 std::vector<std::weak_ptr<PointLightObject>>& pointLightRenderQueue, QuadTree& staticObjects,
 						 std::vector<std::weak_ptr<UI::Widget>>& uiRenderQueue)
 	: meshRenderQueue(meshRenderQueue), lightRenderQueue(lightRenderQueue),
-	  pointLightRenderQueue(pointLightRenderQueue), staticObjects(staticObjects), uiRenderQueue(uiRenderQueue) {
+	  pointLightRenderQueue(pointLightRenderQueue), staticObjects(staticObjects), uiRenderQueue(uiRenderQueue),
+	  recalculateStatic(true), recalculateDynamic(true) {
 	Logger::Log("Initializing RenderQueue.");
 
 	if (instance) {
@@ -185,6 +186,12 @@ void RenderQueue::ChangeSkybox(std::string filename) {
 	}
 }
 
-void RenderQueue::RecalculateStatic() {}
+void RenderQueue::RecalculateStatic() {
+	instance->recalculateStatic = true;
+	//Logger::Log("Static");
+}
 
-void RenderQueue::RecalculateDynamic() {}
+void RenderQueue::RecalculateDynamic() {
+	instance->recalculateDynamic = true;
+	//Logger::Log("Dynamic");
+}

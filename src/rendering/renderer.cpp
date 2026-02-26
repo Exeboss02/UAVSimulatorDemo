@@ -11,7 +11,7 @@
 #include <memory>
 #include "gameObjects/SpaceShipObj.h"
 
-// #define DEBUG_TIMER
+#define DEBUG_TIMER
 
 Renderer::Renderer()
 	: viewport(), currentPixelShader(nullptr), currentVertexShader(nullptr), currentRasterizerState(nullptr),

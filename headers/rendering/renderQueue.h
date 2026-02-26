@@ -75,14 +75,18 @@ public:
 	static void RecalculateDynamic();
 
 private:
+	friend Renderer;
+
 	static RenderQueue* instance;
 
 	std::function<void(std::string)> newSkyboxCallback;
 
-	friend Renderer;
 	std::vector<std::weak_ptr<MeshObject>>& meshRenderQueue;
 	std::vector<std::weak_ptr<SpotlightObject>>& lightRenderQueue;
 	std::vector<std::weak_ptr<PointLightObject>>& pointLightRenderQueue;
 	QuadTree& staticObjects;
 	std::vector<std::weak_ptr<UI::Widget>>& uiRenderQueue;
+
+	bool recalculateStatic;
+	bool recalculateDynamic;
 };

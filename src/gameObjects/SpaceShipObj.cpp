@@ -88,6 +88,7 @@ void SpaceShip::Tick() {
 		Logger::Log("Spawned Enemy");
 		if (auto enemyPtr = enemy.lock()) {
 			enemyPtr->SetPath(this->path);
+			enemyPtr->SlowDownEnemy(5.0f);
 		}
 	}
 	ImGui::End();

@@ -15,7 +15,7 @@
 
 Enemy::Enemy()
 	: GameObject3D(), health(100), path({}), maxPathIndex(0), currentPathIndex(0), hasFinishedPath(false),
-	  canShoot(true), shotCooldown(1.5f), timeSinceLastShot(0.0f) {
+	  canShoot(true), shotCooldown(1.5f), timeSinceLastShot(0.0f), isSlowed(false), slowDuration(0.0f), timeSinceSlowed(0.0f) {
 	this->direction = DirectX::XMVectorSet(0, 0, 1, 0);
 	this->targetRotation = DirectX::XMQuaternionIdentity();
 	this->SetMoveSpeedMode(MoveSpeedMode::NORMAL);
@@ -45,12 +45,33 @@ void Enemy::Start() {
 
 void Enemy::Tick() {
 	this->UpdateShootCooldown();
+	this->UpdateSlowEffect();
 	
 	if (this->maxPathIndex != 0 && !this->hasFinishedPath) {
 		this->MoveAlongPath();
 		this->ShootAtPlayer();
 	} else {
 		this->ShootAtCore();
+	}
+}
+
+void Enemy::SlowDownEnemy(float durationInSec) {
+	this->SetMoveSpeedMode(MoveSpeedMode::SLOWED);
+	this->isSlowed = true;
+	this->slowDuration = durationInSec;
+	this->timeSinceSlowed = 0.0f;
+}
+
+void Enemy::UpdateSlowEffect() {
+	if (this->isSlowed) {
+		float deltaTime = Time::GetInstance().GetDeltaTime();
+		this->timeSinceSlowed += deltaTime;
+
+		if (this->timeSinceSlowed >= this->slowDuration) {
+			this->SetMoveSpeedMode(MoveSpeedMode::NORMAL);
+			this->isSlowed = false;
+			this->timeSinceSlowed = 0.0f;
+		}
 	}
 }
 

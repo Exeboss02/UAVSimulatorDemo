@@ -18,7 +18,7 @@ public:
 	void Start() override;
 	void Tick() override;
 
-	void SetMoveSpeedMode(MoveSpeedMode mode);
+	void SlowDownEnemy(float durationInSec);
 
 	void SetPath(const std::vector<std::shared_ptr<AStarVertex>>& newPath);
 
@@ -43,11 +43,17 @@ private:
 	bool canShoot;
 	const float shotCooldown;
 	float timeSinceLastShot;
+	void UpdateShootCooldown();
 
+	// Slow effect
+	bool isSlowed;
+	float slowDuration;
+	float timeSinceSlowed;
+	void UpdateSlowEffect();
+
+	void SetMoveSpeedMode(MoveSpeedMode mode);
 	void MoveAlongPath();
 	bool IsAtCurrentPathNode();
-
-	void UpdateShootCooldown();
 
 	void ShootAtCore();
 	void ShootAtPlayer();

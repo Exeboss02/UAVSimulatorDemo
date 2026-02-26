@@ -51,6 +51,12 @@ public:
 	void SetCameraRotation(float r, float p, float y);
 	void OnCollision(std::weak_ptr<GameObject3D> gameObject3D);
 
+	// Show or hide the OS cursor and enable UI interaction
+	void SetShowCursor(bool visible);
+
+	// Enable or disable player movement/input (used when UI menus are open)
+	void SetInputEnabled(bool enabled);
+
 	void DecrementHealth(int hp);
 	void IncrementHealth(int hp);
 	int GetHealth() const;
@@ -66,6 +72,7 @@ public:
 
 private:
 	float input[2] = {};
+	bool inputEnabled = true;
 	bool showCursor = true;
 
 	Health health;

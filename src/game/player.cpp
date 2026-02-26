@@ -134,11 +134,20 @@ void Player::Tick() {
 	DirectX::XMVECTOR position = this->transform.GetGlobalPosition();
 	AudioManager::GetInstance().SetListenerPosition(position.m128_f32[0], position.m128_f32[1], position.m128_f32[2]);
 
-	this->input[0] =
-		this->keyBoardInput.GetMovementVector().data()[0] + this->controllerInput->GetMovementVector().data()[0];
-	this->input[1] =
-		this->keyBoardInput.GetMovementVector().data()[1] + this->controllerInput->GetMovementVector().data()[1];
-	this->jumpInput = this->keyBoardInput.Jump() || this->controllerInput->Jump();
+	if (this->inputEnabled) {
+		this->input[0] =
+			this->keyBoardInput.GetMovementVector().data()[0] + this->controllerInput->GetMovementVector().data()[0];
+		this->input[1] =
+			this->keyBoardInput.GetMovementVector().data()[1] + this->controllerInput->GetMovementVector().data()[1];
+	} else {
+		this->input[0] = 0.0f;
+		this->input[1] = 0.0f;
+	}
+	if (this->inputEnabled) {
+		this->jumpInput = this->keyBoardInput.Jump() || this->controllerInput->Jump();
+	} else {
+		this->jumpInput = false;
+	}
 
 	if (this->jumpInput && this->isGrounded) {
 		this->isJumping = true;
@@ -282,6 +291,22 @@ void Player::SetCameraRotation(float r, float p, float y) {
 	this->cameraRotation[0] = r;
 	this->cameraRotation[1] = p;
 	this->cameraRotation[2] = y;
+}
+
+void Player::SetShowCursor(bool visible) {
+	this->showCursor = visible;
+	ShowCursor(visible);
+	// when showing cursor, disable shooting
+	this->canShoot = !visible;
+}
+
+void Player::SetInputEnabled(bool enabled) {
+	this->inputEnabled = enabled;
+	if (!enabled) {
+		this->input[0] = 0.0f;
+		this->input[1] = 0.0f;
+		this->canShoot = false;
+	}
 }
 
 void Player::DecrementHealth(int hp) { this->health.Decrement(hp); }

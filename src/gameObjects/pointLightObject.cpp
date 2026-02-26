@@ -98,6 +98,12 @@ void PointLightObject::ShowInHierarchy() {
 	this->data.intensity = intensity;
 }
 
+void PointLightObject::OnDestroy() {
+	this->GameObject3D::OnDestroy();
+	Logger::Error("You can't destroy lights atm :)");
+	throw std::runtime_error("Fatal error in PointLight");
+}
+
 void SetCameraOrientation(CameraObject* cam, DirectX::XMFLOAT3 forwardF, DirectX::XMFLOAT3 upF) {
     using namespace DirectX;
     XMVECTOR forward = XMVector3Normalize(XMLoadFloat3(&forwardF));

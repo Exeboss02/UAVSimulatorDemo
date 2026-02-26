@@ -143,7 +143,7 @@ bool AssetManager::LoadTextureFromFile(std::string identifier) {
 		return false;
 	}
 	auto tex = std::make_shared<Texture>(srv, key);
-	this->textures.emplace(key, tex);
+	this->textures.emplace(identifier, tex);
 	Logger::Log("AssetManager: Loaded texture:", key);
 	return true;
 }
@@ -263,10 +263,10 @@ std::string AssetManager::ResolveTexturePath(const std::string& identifier) {
 	return std::string();
 }
 
-void AssetManager::PreloadTexturesInFolder(const std::string& path, bool recursive) {
+void AssetManager::PreloadTexturesInFolder(const std::filesystem::path& path, bool recursive) {
 	namespace fs = std::filesystem;
 	try {
-		fs::path p(path);
+		fs::path p(FilepathHolder::GetAssetsDirectory() / path);
 		if (!fs::exists(p)) {
 			Logger::Warn("AssetManager: Preload path not found:", path);
 			return;
@@ -278,7 +278,7 @@ void AssetManager::PreloadTexturesInFolder(const std::string& path, bool recursi
 				std::string ext = entry.path().extension().string();
 				std::transform(ext.begin(), ext.end(), ext.begin(), [](unsigned char c) { return std::tolower(c); });
 				if (ext == ".png") {
-					this->GetTexture(entry.path().string());
+					this->GetTexture(std::filesystem::relative(entry.path(), path).string());
 				}
 			}
 		} else {
@@ -287,7 +287,7 @@ void AssetManager::PreloadTexturesInFolder(const std::string& path, bool recursi
 				std::string ext = entry.path().extension().string();
 				std::transform(ext.begin(), ext.end(), ext.begin(), [](unsigned char c) { return std::tolower(c); });
 				if (ext == ".png") {
-					this->GetTexture(entry.path().string());
+					this->GetTexture(std::filesystem::relative(entry.path(), path).string());
 				}
 			}
 		}

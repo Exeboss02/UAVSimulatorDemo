@@ -2,6 +2,7 @@
 
 #include "utilities/logger.h"
 #include <memory>
+#include "rendering/renderQueue.h"
 
 class GameObject;
 
@@ -104,6 +105,7 @@ inline std::weak_ptr<T> GameObjectFactory::CreateGameObjectOfType() {
 	// Make sure it is a gameObject (compiler assert)
 	static_assert(std::is_base_of_v<GameObject, T>, "T must derive from GameObject");
 
+	RenderQueue::RecalculateDynamic();
 	auto obj = std::make_shared<T>();
 	RegisterGameObject(obj);
 	return obj;
@@ -130,6 +132,7 @@ public:
 			std::static_pointer_cast<GameObject>(object)->SetIsStatic(true);
 			this->factory->RegisterGameObject(this->object);
 			started = true;
+			RenderQueue::RecalculateStatic();
 		}
 	}
 

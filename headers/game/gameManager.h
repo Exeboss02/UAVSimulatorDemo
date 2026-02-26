@@ -38,6 +38,8 @@ public:
 	const float& GetSpawnDelay();
 	void SetSpawnDelay(float& newSpawnDelay);
 
+	DirectX::XMVECTOR GetPlayerSpawnPoint();
+
 	virtual void SaveToJson(nlohmann::json& data) override;
 
 	/// <summary>

@@ -86,7 +86,7 @@ public:
 	IDXGISwapChain* GetSwapChain() const;
 
 	// Draw quads for text rendering (positions in screen space, using current UI camera)
-	void DrawTextQuads(const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices,
+	void DrawTextQuads(const std::vector<Vertex>& vertices,
 					   ID3D11ShaderResourceView* srv, const DirectX::XMFLOAT4& color = {1.0f, 1.0f, 1.0f, 1.0f},
 					   bool useLinearFilter = true);
 
@@ -130,6 +130,11 @@ private:
 	std::unique_ptr<RasterizerState> uiRasterizerState;
 	RasterizerState* currentRasterizerState;
 
+	std::unique_ptr<VertexBuffer> uiVertexBuffer;
+	std::unique_ptr<IndexBuffer> uiIndexBuffer;
+
+	void CreateUIBuffers();
+
 	// Default stuff
 	// Avoids calling the assetmanager every frame
 
@@ -160,7 +165,8 @@ private:
 	RenderMap standardRenderMap;
 
 	QuadTree staticObjectsTree;
-	std::vector<std::weak_ptr<MeshObject>> GetVisibleObjects(CameraObject& camera);
+	std::vector<std::weak_ptr<MeshObject>> GetVisibleObjects(CameraObject& camera, bool checkIndividualObjects = true, bool allStatic = false);
+	std::vector<std::weak_ptr<MeshObject>> GetVisibleDynamicObjects(CameraObject& camera);
 
 	// Constant buffers:
 	// The renderer keeps these constant buffers since only one is ever required
@@ -173,6 +179,8 @@ private:
 
 	std::unique_ptr<StructuredBuffer<PointLightObject::PointLightContainer>> pointlightBuffer;
 	std::unique_ptr<ConstantBuffer> pointlightCountBuffer;
+
+	std::vector<std::vector<std::weak_ptr<MeshObject>>> staticObjectsForSpotlights;
 
 	DepthBufferArray spotLightShadows;
 	D3D11_VIEWPORT spotLightViewPort;
@@ -197,7 +205,8 @@ private:
 	void CreateRasterizerStates();
 
 	void CreateRenderMap(RenderMap& renderMap, CameraObject& camera);
-	void CreateCheapRenderMap(CheapRenderMap& renderMap, CameraObject& camera);
+	void CreateCheapRenderMap(CheapRenderMap& renderMap, CameraObject& camera, std::vector<std::weak_ptr<MeshObject>>& objects);
+	void CreateSpotlightRenderMap(CheapRenderMap& renderMap, CameraObject& camera, size_t index);
 
 	// Doesn't work
 	size_t FillRenderMap(RenderMap& renderMap, CameraObject& camera);

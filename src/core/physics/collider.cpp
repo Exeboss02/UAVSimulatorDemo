@@ -87,11 +87,20 @@ void Collider::Start()
 	}
 
 	meshData.SetMaterial(0, material.lock());
-	auto visualMeshObject = this->factory->CreateGameObjectOfType<MeshObject>().lock();
-	visualMeshObject->SetMesh(meshData);
-	visualMeshObject->transform.SetScale(scale);
-	visualMeshObject->SetParent(std::static_pointer_cast<Collider>(this->GetPtr()));
-	visualMeshObject->SetActive(false);
+	if (this->GetIsStatic()) {
+		auto visualMeshObject = this->factory->CreateStaticGameObject<MeshObject>();
+		visualMeshObject->SetMesh(meshData);
+		visualMeshObject->transform.SetScale(scale);
+		visualMeshObject->SetParent(std::static_pointer_cast<Collider>(this->GetPtr()));
+		visualMeshObject->SetActive(false);
+
+	} else {
+		auto visualMeshObject = this->factory->CreateGameObjectOfType<MeshObject>().lock();
+		visualMeshObject->SetMesh(meshData);
+		visualMeshObject->transform.SetScale(scale);
+		visualMeshObject->SetParent(std::static_pointer_cast<Collider>(this->GetPtr()));
+		visualMeshObject->SetActive(false);
+	}
 	#endif
 }
 

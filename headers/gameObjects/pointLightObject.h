@@ -32,6 +32,8 @@ public:
 
 	virtual void ShowInHierarchy() override;
 
+	virtual void OnDestroy() override;
+
 private:
 
 	PointLightContainer data;

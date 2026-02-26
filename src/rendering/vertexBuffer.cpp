@@ -1,12 +1,12 @@
 #include "rendering/vertexBuffer.h"
 
-void VertexBuffer::Init(ID3D11Device* device, UINT sizeOfVertex, UINT nrOfVerticesInBuffer, void* vertexData)
+void VertexBuffer::Init(ID3D11Device* device, UINT sizeOfVertex, UINT nrOfVerticesInBuffer, void* vertexData, bool needToUpdate)
 {
 	D3D11_BUFFER_DESC bufferDesc;
 	bufferDesc.ByteWidth = sizeOfVertex * nrOfVerticesInBuffer;
-	bufferDesc.Usage = D3D11_USAGE_IMMUTABLE;
+	bufferDesc.Usage = needToUpdate ? D3D11_USAGE_DYNAMIC : D3D11_USAGE_IMMUTABLE;
 	bufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-	bufferDesc.CPUAccessFlags = 0;
+	bufferDesc.CPUAccessFlags = needToUpdate ? D3D11_CPU_ACCESS_WRITE : 0;
 	bufferDesc.MiscFlags = 0;
 	bufferDesc.StructureByteStride = 0;
 
@@ -22,7 +22,31 @@ void VertexBuffer::Init(ID3D11Device* device, UINT sizeOfVertex, UINT nrOfVertic
 
 	this->vertexSize = sizeOfVertex;
 	this->nrOfVertices = nrOfVerticesInBuffer;
+
+	this->initialized = true;
 }
+
+void VertexBuffer::Update(ID3D11DeviceContext* context, void* vertexData) {
+	D3D11_MAPPED_SUBRESOURCE mappedResource;
+
+	if (!this->IsInitialized()) {
+		Logger::Error("Unitiliazed buffer");
+		throw std::runtime_error("Fatal error in Vertex Buffer");
+	}
+
+	// Turn off GPU access
+	HRESULT hr = context->Map(this->buffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+	if (FAILED(hr)) {
+		Logger::Error(std::format("Failed to map, error: 0x{:08X}", static_cast<unsigned long>(hr)).c_str());
+	}
+
+	memcpy(mappedResource.pData, vertexData, this->nrOfVertices * this->vertexSize);
+
+	context->Unmap(this->buffer.Get(), 0);
+	// Turn on GPU access
+}
+
+bool VertexBuffer::IsInitialized() { return this->initialized; }
 
 UINT VertexBuffer::GetNrOfVertices() const
 {

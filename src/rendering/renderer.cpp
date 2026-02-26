@@ -9,14 +9,19 @@
 #include <chrono>
 #include <cmath>
 #include <memory>
+#include "gameObjects/SpaceShipObj.h"
 
-// #define DEBUG_TIMER
+//#define DEBUG_TIMER
 
 Renderer::Renderer()
 	: viewport(), currentPixelShader(nullptr), currentVertexShader(nullptr), currentRasterizerState(nullptr),
-	  currentMaterial(nullptr), maximumSpotlights(16), staticObjectsTree({-10, -10, -20}, {10 * 64, 20, 10 * 64}, 4, 4),
+	  currentMaterial(nullptr), maximumSpotlights(16),
+	  staticObjectsTree({-SpaceShip::ROOM_SIZE, -20, -SpaceShip::ROOM_SIZE},
+						{SpaceShip::ROOM_SIZE * (SpaceShip::SHIP_MAX_SIZE_X + 1), 20,
+						 SpaceShip::ROOM_SIZE * (SpaceShip::SHIP_MAX_SIZE_Y + 1)},
+						3, 4),
 	  renderQueue(this->meshRenderQueue, this->spotLightRenderQueue, this->pointLightRenderQueue,
-				  this->staticObjectsTree, this->uiRenderQueue) {
+				  this->staticObjectsTree, this->uiRenderQueue), pointLightViewPort(), spotLightViewPort() {
 	this->renderQueue.newSkyboxCallback = [this](std::string filename) { this->ChangeSkybox(filename); };
 }
 
@@ -57,6 +62,8 @@ void Renderer::SetAllDefaults() {
 
 	LoadShaders();
 
+	CreateUIBuffers();
+
 	this->skybox = std::make_unique<Skybox>();
 
 	this->skybox->Init(this->device.Get(), this->immediateContext.Get(),
@@ -65,9 +72,43 @@ void Renderer::SetAllDefaults() {
 	// FW1FontWrapper handles font loading at runtime; no atlas preload needed
 }
 
-std::vector<std::weak_ptr<MeshObject>> Renderer::GetVisibleObjects(CameraObject& camera) {
-	std::vector<std::weak_ptr<MeshObject>> visible = this->staticObjectsTree.GetVisibleElements(camera);
+void Renderer::CreateUIBuffers() { 
+	std::vector<uint32_t> indices; 
+	
+	indices.push_back(0);
+	indices.push_back(2);
+	indices.push_back(3);
 
+	indices.push_back(0);
+	indices.push_back(3);
+	indices.push_back(1);
+
+	std::vector<Vertex> vertices(4);
+
+
+
+	// Create transient vertex and index buffers
+	this->uiVertexBuffer = std::make_unique<VertexBuffer>();
+	this->uiVertexBuffer->Init(this->device.Get(), sizeof(Vertex), static_cast<UINT>(vertices.size()), (void*) vertices.data(), true);
+
+	this->uiIndexBuffer = std::make_unique<IndexBuffer>();
+	this->uiIndexBuffer->Init(this->device.Get(), indices.size(), (uint32_t*) indices.data());
+}
+
+std::vector<std::weak_ptr<MeshObject>> Renderer::GetVisibleObjects(CameraObject& camera, bool checkIndividualObjects, bool allStatic) {
+	std::vector<std::weak_ptr<MeshObject>> visible =
+		allStatic ? this->staticObjectsTree.GetAllElements() : this->staticObjectsTree.GetVisibleElements(camera, checkIndividualObjects);
+
+	visible.reserve(this->meshRenderQueue.size());
+
+	std::vector<std::weak_ptr<MeshObject>> dynamicObjects = GetVisibleDynamicObjects(camera);
+	std::move(dynamicObjects.begin(), dynamicObjects.end(), std::back_inserter(visible));
+
+	return visible;
+}
+
+std::vector<std::weak_ptr<MeshObject>> Renderer::GetVisibleDynamicObjects(CameraObject& camera) {
+	std::vector<std::weak_ptr<MeshObject>> visible;
 	visible.reserve(this->meshRenderQueue.size());
 
 	DirectX::XMVECTOR cameraGlobalPos = camera.transform.GetGlobalPosition();
@@ -81,14 +122,14 @@ std::vector<std::weak_ptr<MeshObject>> Renderer::GetVisibleObjects(CameraObject&
 			continue;
 		}
 
-		// This should NOT be done every frame, very expensive matrix operations
-		float distance;
-		DirectX::XMStoreFloat(&distance,
-							  DirectX::XMVector3LengthSq(DirectX::XMVectorSubtract(
-								  cameraGlobalPos, this->meshRenderQueue[i].lock()->transform.GetGlobalPosition())));
+		float farPlane = camera.GetFarPlane();
+		if (farPlane < 100) {
+			float distance = DirectX::XMVectorGetX(DirectX::XMVector3LengthSq(DirectX::XMVectorSubtract(
+				cameraGlobalPos, this->meshRenderQueue[i].lock()->transform.GetGlobalPosition())));
 
-		if (distance > std::powf(camera.GetFarPlane(), 2.0f)) {
-			continue;
+			if (distance > std::powf(camera.GetFarPlane(), 2.0f) + 9) {
+				continue;
+			}
 		}
 
 		visible.emplace_back(this->meshRenderQueue[i]);
@@ -309,16 +350,16 @@ void Renderer::CreateRasterizerStates() {
 }
 
 void Renderer::CreateRenderMap(RenderMap& renderMap, CameraObject& camera) {
-#ifdef DEBUG_TIMER
-	const auto start{std::chrono::steady_clock::now()};
-#endif // DEBUG_TIMER
+	#ifdef DEBUG_TIMER
+		const auto start{std::chrono::steady_clock::now()};
+	#endif // DEBUG_TIMER
 
 	//// Removes dead gameobjects
 	// this->meshRenderQueue.erase(std::remove_if(this->meshRenderQueue.begin(), this->meshRenderQueue.end(),
 	//									 [](const std::weak_ptr<MeshObject>& w) { return w.expired(); }),
 	//							this->meshRenderQueue.end());
 
-	auto renderQueue = GetVisibleObjects(camera);
+	auto renderQueue = GetVisibleObjects(camera, false, true);
 
 	renderMap.meshes.clear();
 
@@ -374,7 +415,8 @@ void Renderer::CreateRenderMap(RenderMap& renderMap, CameraObject& camera) {
 #endif // DEBUG_TIMER
 }
 
-void Renderer::CreateCheapRenderMap(CheapRenderMap& renderMap, CameraObject& camera) {
+void Renderer::CreateCheapRenderMap(CheapRenderMap& renderMap, CameraObject& camera,
+									std::vector<std::weak_ptr<MeshObject>>& objects) {
 #ifdef DEBUG_TIMER
 	const auto start{std::chrono::steady_clock::now()};
 #endif // DEBUG_TIMER
@@ -383,10 +425,8 @@ void Renderer::CreateCheapRenderMap(CheapRenderMap& renderMap, CameraObject& cam
 
 	if (this->renderAllWireframe) return;
 
-	auto renderQueue = GetVisibleObjects(camera);
-
-	for (size_t i = 0; i < renderQueue.size(); i++) {
-		std::shared_ptr<MeshObject> meshObject = renderQueue[i].lock();
+	for (size_t i = 0; i < objects.size(); i++) {
+		std::shared_ptr<MeshObject> meshObject = objects[i].lock();
 
 		if (!meshObject->IsActive() || meshObject->IsHidden()) continue;
 
@@ -419,10 +459,37 @@ void Renderer::CreateCheapRenderMap(CheapRenderMap& renderMap, CameraObject& cam
 #ifdef DEBUG_TIMER
 	const auto finsihedRenderMap{std::chrono::steady_clock::now()};
 	const std::chrono::duration<double> elapsedSeconds{finsihedRenderMap - start};
-	ImGui::Text(
-		("Cheap Render map: " + std::to_string(elapsedSeconds.count()) + " : " + std::to_string(renderQueue.size()))
+	ImGui::Text(("Cheap Render map: " + std::to_string(elapsedSeconds.count()) + " : " + std::to_string(objects.size()))
 			.c_str());
 #endif // DEBUG_TIMER
+}
+
+void Renderer::CreateSpotlightRenderMap(CheapRenderMap& renderMap, CameraObject& camera, size_t index) {
+	#ifdef DEBUG_TIMER
+	const auto start{std::chrono::steady_clock::now()};
+	#endif // DEBUG_TIMER
+
+
+	if (this->renderQueue.instance->recalculateStatic) {
+		this->staticObjectsForSpotlights[index] = this->staticObjectsTree.GetVisibleElements(camera);
+	}
+
+	std::vector<std::weak_ptr<MeshObject>> visible;
+
+	visible.reserve(this->staticObjectsForSpotlights[index].size());
+	std::copy(this->staticObjectsForSpotlights[index].begin(), this->staticObjectsForSpotlights[index].end(), std::back_inserter(visible));
+
+	auto dynamicObjects = GetVisibleDynamicObjects(camera);
+	visible.reserve(dynamicObjects.size());
+	std::move(dynamicObjects.begin(), dynamicObjects.end(), std::back_inserter(visible));
+
+	CreateCheapRenderMap(renderMap, camera, visible);
+
+	#ifdef DEBUG_TIMER
+	const auto finsihedRenderMap{std::chrono::steady_clock::now()};
+	const std::chrono::duration<double> elapsedSeconds{finsihedRenderMap - start};
+	ImGui::Text(("Spotlight Render map: " + std::to_string(elapsedSeconds.count())).c_str());
+	#endif // DEBUG_TIMER
 }
 
 size_t Renderer::FillRenderMap(RenderMap& renderMap, CameraObject& camera) {
@@ -567,6 +634,9 @@ void Renderer::Render() {
 	ImGui::Text(("Entire Render function: " + std::to_string(elapsed_seconds3.count())).c_str());
 	ImGui::End();
 #endif // DEBUG_TIMER
+
+	this->renderQueue.recalculateDynamic = false;
+	this->renderQueue.recalculateStatic = false;
 }
 
 void Renderer::Present() { this->swapChain->Present(this->isVSyncEnabled ? 1 : 0, 0); }
@@ -716,7 +786,6 @@ void Renderer::RenderUI() {
 
 					// Build quad vertices matching widget position/size (top-left origin)
 					std::vector<Vertex> vertices;
-					std::vector<uint32_t> indices;
 					float x0 = img->GetPosition().x;
 					float y0 = img->GetPosition().y;
 					float x1 = x0 + img->GetSize().x;
@@ -763,14 +832,6 @@ void Renderer::RenderUI() {
 					vertices.push_back(vBL);
 					vertices.push_back(vBR);
 
-					indices.push_back(0);
-					indices.push_back(2);
-					indices.push_back(3);
-
-					indices.push_back(0);
-					indices.push_back(3);
-					indices.push_back(1);
-
 					// Use image tint
 					DirectX::XMFLOAT4 color = img->GetTint();
 
@@ -779,7 +840,7 @@ void Renderer::RenderUI() {
 					this->immediateContext->OMSetBlendState(this->alphaBlendState.Get(), blendFactor, 0xffffffff);
 					this->BindRasterizerState(this->uiRasterizerState.get());
 
-					this->DrawTextQuads(vertices, indices, srv, color, false);
+					this->DrawTextQuads(vertices, srv, color, false);
 				}
 			}
 		}
@@ -832,6 +893,12 @@ void Renderer::ShadowPass() {
 }
 
 void Renderer::SpotLightShadowPass() {
+	if (this->staticObjectsForSpotlights.size() < this->spotLightRenderQueue.size()) {
+		size_t diff = this->spotLightRenderQueue.size() - this->staticObjectsForSpotlights.size();
+		for (size_t j = 0; j < diff; j++) {
+			this->staticObjectsForSpotlights.emplace_back();
+		}
+	}
 
 	const uint32_t lightCount = std::min<uint32_t>(this->spotLightRenderQueue.size(), this->maximumSpotlights);
 
@@ -865,7 +932,7 @@ void Renderer::SpotLightShadowPass() {
 
 		// Draw all objects to depthstencil
 		CheapRenderMap thisCameraRenderMap;
-		this->CreateCheapRenderMap(thisCameraRenderMap, camera);
+		this->CreateSpotlightRenderMap(thisCameraRenderMap, camera, i);
 		this->RenderCheapRenderMap(thisCameraRenderMap);
 	}
 }
@@ -906,7 +973,8 @@ void Renderer::PointLightShadowPass() {
 
 			// Draw all objects to depthstencil
 			CheapRenderMap thisCameraRenderMap;
-			this->CreateCheapRenderMap(thisCameraRenderMap, camera);
+			auto visible = this->GetVisibleObjects(camera);
+			this->CreateCheapRenderMap(thisCameraRenderMap, camera, visible);
 			this->RenderCheapRenderMap(thisCameraRenderMap);
 		}
 	}
@@ -1239,22 +1307,17 @@ void Renderer::RenderMeshObject(MeshObject* meshObject, bool renderMaterial) {
 	}
 }
 
-void Renderer::DrawTextQuads(const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices,
+void Renderer::DrawTextQuads(const std::vector<Vertex>& vertices,
 							 ID3D11ShaderResourceView* srv, const DirectX::XMFLOAT4& color, bool useLinearFilter) {
-	if (vertices.empty() || indices.empty()) {
+	if (vertices.empty()) {
 		Logger::Warn("Renderer::DrawTextQuads: no vertices or no indices");
 		return;
 	}
 
-	// Create transient vertex and index buffers
-	VertexBuffer vbuf;
-	vbuf.Init(this->device.Get(), sizeof(Vertex), static_cast<UINT>(vertices.size()), (void*) vertices.data());
-
-	IndexBuffer ibuf;
-	ibuf.Init(this->device.Get(), indices.size(), (uint32_t*) indices.data());
-
 	// Bind buffers
-	this->immediateContext->IASetIndexBuffer(ibuf.GetBuffer(), DXGI_FORMAT_R32_UINT, 0);
+	this->immediateContext->IASetIndexBuffer(this->uiIndexBuffer->GetBuffer(), DXGI_FORMAT_R32_UINT, 0);
+
+	this->uiVertexBuffer->Update(this->immediateContext.Get(), (void*) vertices.data());
 
 	// Set world matrix identity
 	DirectX::XMFLOAT4X4 worldMatrix;
@@ -1270,13 +1333,13 @@ void Renderer::DrawTextQuads(const std::vector<Vertex>& vertices, const std::vec
 	unsigned int offsets[2];
 	ID3D11Buffer* bufferPointers[2];
 
-	strides[0] = vbuf.GetVertexSize();
+	strides[0] = this->uiVertexBuffer->GetVertexSize();
 	strides[1] = instanceBuffer->GetInstanceSize();
 
 	offsets[0] = 0;
 	offsets[1] = 0;
 
-	bufferPointers[0] = vbuf.GetBuffer();
+	bufferPointers[0] = this->uiVertexBuffer->GetBuffer();
 	bufferPointers[1] = instanceBuffer->GetBuffer();
 
 	this->immediateContext->IASetVertexBuffers(0, 2, bufferPointers, strides, offsets);
@@ -1307,7 +1370,7 @@ void Renderer::DrawTextQuads(const std::vector<Vertex>& vertices, const std::vec
 
 	// Bind material and draw
 	BindMaterial(tempMat.get());
-	this->immediateContext->DrawIndexedInstanced(static_cast<UINT>(indices.size()), 1, 0, 0, 0);
+	this->immediateContext->DrawIndexedInstanced(static_cast<UINT>(6), 1, 0, 0, 0);
 	// Prevent renderer from caching pointer to this ephemeral material
 	this->currentMaterial = nullptr;
 

@@ -114,3 +114,10 @@ void SpotlightObject::ShowInHierarchy()
 	ImGui::SliderFloat("Intensity", &intensity, 0.0f, 200.0f);
 	this->data.intensity = intensity;
 }
+
+void SpotlightObject::OnDestroy() {
+	this->GameObject3D::OnDestroy();
+	Logger::Error("You can't destroy lights atm :)");
+	Logger::Error("It would break the renderer.");
+	throw std::runtime_error("Fatal error in Spotlight");
+}

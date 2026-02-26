@@ -15,7 +15,9 @@ public:
 	void AddElement(std::weak_ptr<MeshObject> object);
 
 
-	std::vector<std::weak_ptr<MeshObject>> GetVisibleElements(CameraObject& camera);
+	std::vector<std::weak_ptr<MeshObject>> GetVisibleElements(CameraObject& camera, bool checkIndividualObjects = true);
+
+	std::vector<std::weak_ptr<MeshObject>> GetAllElements();
 
 private:
 	struct Node {
@@ -29,7 +31,12 @@ private:
 	void CheckNode(DirectX::BoundingFrustum& frustum, std::unique_ptr<Node>& node,
 				   std::vector<std::weak_ptr<MeshObject>>& out, std::unordered_set<MeshObject*>& found);
 
+	std::vector<std::weak_ptr<MeshObject>> allElements;
+	
 	size_t maxDepth;
 	size_t maxElements;
 	std::unique_ptr<Node> root;
+
+	size_t collisionChecks = 0;
+	bool checkIndividual = true;
 };

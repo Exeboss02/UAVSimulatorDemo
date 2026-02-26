@@ -22,6 +22,12 @@ public:
 
 	void SetPath(const std::vector<std::shared_ptr<AStarVertex>>& newPath);
 
+	void KillSelf();
+
+	void DecrementHealth(size_t amount);
+
+	void IncrementHealth(size_t amount);
+
 private:
 	Health health;
 	float movementSpeed;

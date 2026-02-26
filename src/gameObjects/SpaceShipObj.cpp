@@ -59,8 +59,6 @@ void SpaceShip::CreateRoom(size_t x, size_t y) {
 			}
 		}
 
-		this->path = pathfinder->FindPath(roomMesh->GetPathfindingNodes()[0]);
-
 		Logger::Log("Created Room");
 	}
 }

@@ -26,7 +26,7 @@ enum Tag
     INTERACTABLE   = 1 << 8,  // 256
     DISTANCE       = 1 << 9,  // 512
     NOIGNORE       = 1 << 10  // 1024
- };
+};
 
 enum ColliderType { BOX, SPHERE, NONE };
 

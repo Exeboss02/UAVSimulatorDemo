@@ -13,7 +13,7 @@ void Pistol01::Start() {
 	this->fireRate = 0.3f;
 	this->visualScale = DirectX::XMFLOAT3(0.01f, 0.01f, 0.01f);
 	this->visualRotationRPY = DirectX::XMFLOAT3(0, 0, std::numbers::pi / 2);
-	this->muzzlePosition = DirectX::XMFLOAT3(0.0f, 0.15f, 0.04f);
+	this->muzzlePosition = DirectX::XMFLOAT3(0.0f, 0.15f, 0.5f);
 	this->damage = 25;
 	
 	this->gunPosition = DirectX::XMFLOAT3(-0.4f, -0.4f, 0.7f);

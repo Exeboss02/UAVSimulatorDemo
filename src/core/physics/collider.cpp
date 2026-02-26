@@ -72,6 +72,7 @@ void Collider::Start()
 	{
 		scale = DirectX::XMVectorScale(scale, 0.5f);
 		meshData = AssetManager::GetInstance().GetMeshObjData("meshes/indicatorSphere05.glb:Mesh_0");
+		
 	}
 	else
 	{
@@ -98,6 +99,11 @@ void Collider::Start()
 		visualMeshObject->transform.SetScale(scale);
 		visualMeshObject->SetParent(std::static_pointer_cast<Collider>(this->GetPtr()));
 	}
+	auto visualMeshObject = this->factory->CreateGameObjectOfType<MeshObject>().lock();
+	visualMeshObject->SetMesh(meshData);
+	visualMeshObject->transform.SetScale(scale);
+	visualMeshObject->SetParent(std::static_pointer_cast<Collider>(this->GetPtr()));
+	visualMeshObject->SetActive(false);
 	#endif
 }
 
@@ -305,16 +311,29 @@ bool Collider::CollisionHandling(Collider* otherCollider, DirectX::XMFLOAT3& mtv
 
 	if (!collision) return false;
 
-	std::weak_ptr<GameObject> parent = otherCollider->GetParent();
-	if(parent.expired())
+	std::weak_ptr<GameObject> thisParent = this->GetParent();
+	std::weak_ptr<GameObject> otherParent = otherCollider->GetParent();
+
+	if(otherParent.expired())
 	{
-		std::shared_ptr<GameObject3D> other = std::static_pointer_cast<GameObject3D>(otherCollider->GetPtr());
-		this->OnCollision(other);
+		std::shared_ptr<GameObject3D> otherObject = std::static_pointer_cast<GameObject3D>(otherCollider->GetPtr());
+		this->OnCollision(otherObject);
 	}
 	else
 	{
-		std::shared_ptr<GameObject3D> parent3D = std::static_pointer_cast<GameObject3D>(parent.lock());
-		this->OnCollision(parent3D);
+		std::shared_ptr<GameObject3D> otherParent3D = std::static_pointer_cast<GameObject3D>(otherParent.lock());
+		this->OnCollision(otherParent3D);
+	}
+
+	if(thisParent.expired())
+	{
+		std::shared_ptr<GameObject3D> thisObject = std::static_pointer_cast<GameObject3D>(this->GetPtr());
+		otherCollider->OnCollision(thisObject);
+	}
+	else
+	{
+		std::shared_ptr<GameObject3D> thisParent3D = std::static_pointer_cast<GameObject3D>(thisParent.lock());
+		otherCollider->OnCollision(thisParent3D);
 	}
 
 	if (!this->solid || !otherCollider->solid) return collision;

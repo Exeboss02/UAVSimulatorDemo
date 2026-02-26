@@ -59,8 +59,6 @@ void SpaceShip::CreateRoom(size_t x, size_t y) {
 			}
 		}
 
-		this->path = pathfinder->FindPath(roomMesh->GetPathfindingNodes()[0]);
-
 		Logger::Log("Created Room");
 	}
 }
@@ -82,18 +80,6 @@ void SpaceShip::Tick() {
 	bool roomCreator = ImGui::Button("Create Room");
 	ImGui::End();
 
-	ImGui::Begin("Spawn enemy");
-	if (ImGui::Button("Spawn")) {
-		auto enemy = this->factory->CreateGameObjectOfType<Enemy>();
-		Logger::Log("Spawned Enemy");
-		if (auto enemyPtr = enemy.lock()) {
-			enemyPtr->SetPath(this->path);
-		}
-	}
-	ImGui::End();
-
-	
-
 	if (roomCreator) {
 		this->CreateRoom(pos[0], pos[1]);
 	}
@@ -105,8 +91,21 @@ void SpaceShip::Start() {
 
 	CreateRoom(this->START_ROOM_X, this->START_ROOM_Y);
 	auto room = this->GetRoom(this->START_ROOM_X, this->START_ROOM_Y);
+	// Create cockpit first to set the pathfinding goal
+	auto cockpit = this->factory->CreateStaticGameObject<Cockpit>();
+	cockpit->transform.SetPosition(SpaceShip::ROOM_SIZE * (SpaceShip::SHIP_MAX_SIZE_X / 2), 0,
+								   -SpaceShip::ROOM_SIZE);
+	cockpit->SetParent(this->GetPtr());
+	cockpit->SetupPathfindingNodes(std::dynamic_pointer_cast<SpaceShip>(this->GetPtr()));
+
+	// Now create the room - FindPath will work correctly
+	CreateRoom(31, 0);
+	auto room = this->GetRoom(31, 0);
 	auto nodes = room.lock()->GetPathfindingNodes();
-	this->pathfinder->SetGoal(nodes[0]);
+
+	// Connect cockpit to room
+	room.lock()->SetWallState(Room::WallIndex::South, Room::WallState::door);
+	this->pathfinder->AddEdge(nodes[Room::WallIndex::South * 2 + 1], cockpit->GetPathfindingNodes()[1], 1);
 }
 
 void SpaceShip::CreateFloorColider() {

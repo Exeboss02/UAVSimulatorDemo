@@ -72,6 +72,7 @@ void Collider::Start()
 	{
 		scale = DirectX::XMVectorScale(scale, 0.5f);
 		meshData = AssetManager::GetInstance().GetMeshObjData("meshes/indicatorSphere05.glb:Mesh_0");
+		
 	}
 	else
 	{
@@ -90,6 +91,7 @@ void Collider::Start()
 	visualMeshObject->SetMesh(meshData);
 	visualMeshObject->transform.SetScale(scale);
 	visualMeshObject->SetParent(std::static_pointer_cast<Collider>(this->GetPtr()));
+	visualMeshObject->SetActive(false);
 	#endif
 }
 

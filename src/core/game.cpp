@@ -18,7 +18,7 @@ void Game::Run(HINSTANCE hInstance, int nCmdShow) {
 	AssetManager::GetInstance().CreateDefaultAssets();
 
 	// Preload images folder via AssetManager (loads each file only once)
-	AssetManager::GetInstance().PreloadTexturesInFolder((FilepathHolder::GetAssetsDirectory() / "images").string());
+	AssetManager::GetInstance().PreloadTexturesInFolder("images");
 	this->renderer.SetAllDefaults();
 	this->sceneManager = std::make_unique<SceneManager>(&renderer);
 

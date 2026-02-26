@@ -86,7 +86,7 @@ public:
 	IDXGISwapChain* GetSwapChain() const;
 
 	// Draw quads for text rendering (positions in screen space, using current UI camera)
-	void DrawTextQuads(const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices,
+	void DrawTextQuads(const std::vector<Vertex>& vertices,
 					   ID3D11ShaderResourceView* srv, const DirectX::XMFLOAT4& color = {1.0f, 1.0f, 1.0f, 1.0f},
 					   bool useLinearFilter = true);
 
@@ -129,6 +129,11 @@ private:
 	std::unique_ptr<RasterizerState> skyboxRasterizerState;
 	std::unique_ptr<RasterizerState> uiRasterizerState;
 	RasterizerState* currentRasterizerState;
+
+	std::unique_ptr<VertexBuffer> uiVertexBuffer;
+	std::unique_ptr<IndexBuffer> uiIndexBuffer;
+
+	void CreateUIBuffers();
 
 	// Default stuff
 	// Avoids calling the assetmanager every frame

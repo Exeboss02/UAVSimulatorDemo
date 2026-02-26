@@ -62,12 +62,37 @@ void Renderer::SetAllDefaults() {
 
 	LoadShaders();
 
+	CreateUIBuffers();
+
 	this->skybox = std::make_unique<Skybox>();
 
 	this->skybox->Init(this->device.Get(), this->immediateContext.Get(),
 					   (FilepathHolder::GetAssetsDirectory() / "skybox" / "bright_asteroid.dds").string());
 
 	// FW1FontWrapper handles font loading at runtime; no atlas preload needed
+}
+
+void Renderer::CreateUIBuffers() { 
+	std::vector<uint32_t> indices; 
+	
+	indices.push_back(0);
+	indices.push_back(2);
+	indices.push_back(3);
+
+	indices.push_back(0);
+	indices.push_back(3);
+	indices.push_back(1);
+
+	std::vector<Vertex> vertices(4);
+
+
+
+	// Create transient vertex and index buffers
+	this->uiVertexBuffer = std::make_unique<VertexBuffer>();
+	this->uiVertexBuffer->Init(this->device.Get(), sizeof(Vertex), static_cast<UINT>(vertices.size()), (void*) vertices.data(), true);
+
+	this->uiIndexBuffer = std::make_unique<IndexBuffer>();
+	this->uiIndexBuffer->Init(this->device.Get(), indices.size(), (uint32_t*) indices.data());
 }
 
 std::vector<std::weak_ptr<MeshObject>> Renderer::GetVisibleObjects(CameraObject& camera) {
@@ -760,7 +785,6 @@ void Renderer::RenderUI() {
 
 					// Build quad vertices matching widget position/size (top-left origin)
 					std::vector<Vertex> vertices;
-					std::vector<uint32_t> indices;
 					float x0 = img->GetPosition().x;
 					float y0 = img->GetPosition().y;
 					float x1 = x0 + img->GetSize().x;
@@ -807,14 +831,6 @@ void Renderer::RenderUI() {
 					vertices.push_back(vBL);
 					vertices.push_back(vBR);
 
-					indices.push_back(0);
-					indices.push_back(2);
-					indices.push_back(3);
-
-					indices.push_back(0);
-					indices.push_back(3);
-					indices.push_back(1);
-
 					// Use image tint
 					DirectX::XMFLOAT4 color = img->GetTint();
 
@@ -823,7 +839,7 @@ void Renderer::RenderUI() {
 					this->immediateContext->OMSetBlendState(this->alphaBlendState.Get(), blendFactor, 0xffffffff);
 					this->BindRasterizerState(this->uiRasterizerState.get());
 
-					this->DrawTextQuads(vertices, indices, srv, color, false);
+					this->DrawTextQuads(vertices, srv, color, false);
 				}
 			}
 		}
@@ -1290,22 +1306,17 @@ void Renderer::RenderMeshObject(MeshObject* meshObject, bool renderMaterial) {
 	}
 }
 
-void Renderer::DrawTextQuads(const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices,
+void Renderer::DrawTextQuads(const std::vector<Vertex>& vertices,
 							 ID3D11ShaderResourceView* srv, const DirectX::XMFLOAT4& color, bool useLinearFilter) {
-	if (vertices.empty() || indices.empty()) {
+	if (vertices.empty()) {
 		Logger::Warn("Renderer::DrawTextQuads: no vertices or no indices");
 		return;
 	}
 
-	// Create transient vertex and index buffers
-	VertexBuffer vbuf;
-	vbuf.Init(this->device.Get(), sizeof(Vertex), static_cast<UINT>(vertices.size()), (void*) vertices.data());
-
-	IndexBuffer ibuf;
-	ibuf.Init(this->device.Get(), indices.size(), (uint32_t*) indices.data());
-
 	// Bind buffers
-	this->immediateContext->IASetIndexBuffer(ibuf.GetBuffer(), DXGI_FORMAT_R32_UINT, 0);
+	this->immediateContext->IASetIndexBuffer(this->uiIndexBuffer->GetBuffer(), DXGI_FORMAT_R32_UINT, 0);
+
+	this->uiVertexBuffer->Update(this->immediateContext.Get(), (void*) vertices.data());
 
 	// Set world matrix identity
 	DirectX::XMFLOAT4X4 worldMatrix;
@@ -1321,13 +1332,13 @@ void Renderer::DrawTextQuads(const std::vector<Vertex>& vertices, const std::vec
 	unsigned int offsets[2];
 	ID3D11Buffer* bufferPointers[2];
 
-	strides[0] = vbuf.GetVertexSize();
+	strides[0] = this->uiVertexBuffer->GetVertexSize();
 	strides[1] = instanceBuffer->GetInstanceSize();
 
 	offsets[0] = 0;
 	offsets[1] = 0;
 
-	bufferPointers[0] = vbuf.GetBuffer();
+	bufferPointers[0] = this->uiVertexBuffer->GetBuffer();
 	bufferPointers[1] = instanceBuffer->GetBuffer();
 
 	this->immediateContext->IASetVertexBuffers(0, 2, bufferPointers, strides, offsets);
@@ -1358,7 +1369,7 @@ void Renderer::DrawTextQuads(const std::vector<Vertex>& vertices, const std::vec
 
 	// Bind material and draw
 	BindMaterial(tempMat.get());
-	this->immediateContext->DrawIndexedInstanced(static_cast<UINT>(indices.size()), 1, 0, 0, 0);
+	this->immediateContext->DrawIndexedInstanced(static_cast<UINT>(6), 1, 0, 0, 0);
 	// Prevent renderer from caching pointer to this ephemeral material
 	this->currentMaterial = nullptr;
 

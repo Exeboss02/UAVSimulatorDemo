@@ -40,4 +40,13 @@ private:
 	std::weak_ptr<SoundSourceObject> speaker;
 	std::weak_ptr<GameObject3D> muzzle;
 	Timer shootCoolDown;
+	/// <summary>
+	/// used when the gun shoots from the camera origin
+	/// </summary>
+	void VisualizeShootBasedOnCameraParent(DirectX::XMVECTOR lookVec, DirectX::XMVECTOR posVec, float distance);
+	/// <summary>
+	/// used when gun shoots from muzzle
+	/// </summary>
+	void VisulalizeShootBasedOnMuzzle(DirectX::XMVECTOR lookVec, DirectX::XMVECTOR posVec, float distance);
+
 };

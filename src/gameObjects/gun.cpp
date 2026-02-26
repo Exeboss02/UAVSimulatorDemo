@@ -3,7 +3,7 @@
 #include "gameObjects/rayVis.h"
 #include "gameObjects/cameraObject.h"
 #include "utilities/logger.h"
-#include "core/physics/vector3D"
+#include "core/physics/vector3D.h"
 #include <memory>
 
 Gun::Gun() {}
@@ -45,22 +45,13 @@ void Gun::Shoot() {
 		hitString = "hit";
 
 
-		Vector3D hitPos(DirectX::XMVectorAdd(posVec, DirectX::XMVectorScale(lookVec, rayCastData.distance / 2)));
-
-		// rayVis
-		MeshObjData meshdata = AssetManager::GetInstance().GetMeshObjData("TexBox/TextureCube.glb:Mesh_0");
-		auto colliderobjWeak = this->factory->CreateGameObjectOfType<RayVis>();
-		auto colliderobj = colliderobjWeak.lock();
-		colliderobj->StartDeathTimer(0.05f);
-		colliderobj->SetMesh(meshdata);
-		colliderobj->GetMesh().SetMaterial(
-			0, AssetManager::GetInstance().GetMaterialWeakPtr("defaultUnlitMaterial").lock());
-		colliderobj->transform.SetPosition(
-			DirectX::XMVectorAdd(posVec, DirectX::XMVectorScale(lookVec, rayCastData.distance / 2)));
-		colliderobj->transform.SetRotationQuaternion(this->muzzle.lock()->transform.GetGlobalRotation());
-		DirectX::XMFLOAT3 scale(0.01f, 0.01f, rayCastData.distance / 2);
-		colliderobj->transform.SetScale(DirectX::XMLoadFloat3(&scale));
-		// end of rayVis
+		
+		if (this->parentCamera.expired()) {
+			this->VisulalizeShootBasedOnMuzzle(lookVec, posVec, rayCastData.distance);
+		} else {
+			this->VisualizeShootBasedOnCameraParent(lookVec, posVec, rayCastData.distance);
+		}
+		
 	} else {
 		hitString = "miss";
 	}
@@ -127,3 +118,58 @@ void Gun::Tick() {
 }
 
 void Gun::setParentToShootFrom(std::shared_ptr<GameObject3D> parentCamera) { this->parentCamera = parentCamera; }
+
+
+void Gun::VisualizeShootBasedOnCameraParent(DirectX::XMVECTOR lookVec, DirectX::XMVECTOR posVec, float distance) {
+	Vector3D hitPos(DirectX::XMVectorAdd(posVec, DirectX::XMVectorScale(lookVec, distance)));
+	Vector3D muzzlePos = Vector3D(this->muzzle.lock()->transform.GetGlobalPosition());
+	Vector3D muzzleToHit = hitPos - muzzlePos;
+
+	MeshObjData meshdata = AssetManager::GetInstance().GetMeshObjData("TexBox/TextureCube.glb:Mesh_0");
+	auto colliderobjWeak = this->factory->CreateGameObjectOfType<RayVis>();
+	auto colliderobj = colliderobjWeak.lock();
+	colliderobj->StartDeathTimer(0.05f);
+	colliderobj->SetMesh(meshdata);
+	colliderobj->GetMesh().SetMaterial(0, AssetManager::GetInstance().GetMaterialWeakPtr("defaultUnlitMaterial").lock());
+
+	colliderobj->transform.SetPosition(
+		DirectX::XMVectorAdd(muzzlePos.getXMVector(), DirectX::XMVectorScale(muzzleToHit.getXMVector(), 0.5)));
+
+	//create rotation
+	DirectX::XMVECTOR direction = DirectX::XMVector3Normalize(muzzleToHit.getXMVector());
+
+	DirectX::XMVECTOR up = DirectX::XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
+
+	float dot = DirectX::XMVectorGetX(DirectX::XMVector3Dot(direction, up));
+	if (fabsf(dot) > 0.99f) {
+		up = DirectX::XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f);
+	}
+
+	DirectX::XMMATRIX lookAtMat = DirectX::XMMatrixLookToLH(DirectX::XMVectorZero(), direction, up);
+	DirectX::XMMATRIX worldRotMat = XMMatrixTranspose(lookAtMat);
+
+	DirectX::XMVECTOR quat = XMQuaternionRotationMatrix(worldRotMat);
+	//create rotation end
+
+	colliderobj->transform.SetRotationQuaternion(quat);
+
+	DirectX::XMFLOAT3 scale(0.01f, 0.01f, muzzleToHit.Length() / 2);
+	colliderobj->transform.SetScale(DirectX::XMLoadFloat3(&scale));
+
+}
+
+void Gun::VisulalizeShootBasedOnMuzzle(DirectX::XMVECTOR lookVec, DirectX::XMVECTOR posVec, float distance) {
+	// rayVis
+	MeshObjData meshdata = AssetManager::GetInstance().GetMeshObjData("TexBox/TextureCube.glb:Mesh_0");
+	auto colliderobjWeak = this->factory->CreateGameObjectOfType<RayVis>();
+	auto colliderobj = colliderobjWeak.lock();
+	colliderobj->StartDeathTimer(0.05f);
+	colliderobj->SetMesh(meshdata);
+	colliderobj->GetMesh().SetMaterial(0,
+									   AssetManager::GetInstance().GetMaterialWeakPtr("defaultUnlitMaterial").lock());
+	colliderobj->transform.SetPosition(DirectX::XMVectorAdd(posVec, DirectX::XMVectorScale(lookVec, distance / 2)));
+	colliderobj->transform.SetRotationQuaternion(this->muzzle.lock()->transform.GetGlobalRotation());
+	DirectX::XMFLOAT3 scale(0.01f, 0.01f, distance / 2);
+	colliderobj->transform.SetScale(DirectX::XMLoadFloat3(&scale));
+	// end of rayVis
+}

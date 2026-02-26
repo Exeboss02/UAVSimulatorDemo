@@ -30,6 +30,7 @@ public:
 	float GetX() const;
 	float GetY() const;
 	float GetZ() const;
+	DirectX::XMVECTOR getXMVector();
 	/// <summary>
 	/// returns the lenght of the vector
 	/// </summary>

@@ -348,19 +348,13 @@ void Room::ShowBuildMenu(std::shared_ptr<Player> player) {
 }
 
 void Room::HideBuildMenu() {
-	try {
-		if (this->buildMenu.expired()) return;
-		auto menu = this->buildMenu.lock();
-		if (!menu) return;
-		// Clear children and queue delete for the canvas object
-		menu->Clear();
-		this->factory->QueueDeleteGameObject(menu);
-		this->buildMenu.reset();
-	} catch (const std::exception& e) {
-		Logger::Error("Room::HideBuildMenu exception: ", e.what());
-	} catch (...) {
-		Logger::Error("Room::HideBuildMenu unknown exception");
-	}
+	if (this->buildMenu.expired()) return;
+	auto menu = this->buildMenu.lock();
+	// Clear children and queue delete for the canvas object
+	menu->Clear();
+	this->factory->QueueDeleteGameObject(menu);
+	this->buildMenu.reset();
+
 }
 
 void Room::Hover() {
@@ -383,11 +377,7 @@ void Room::Hover() {
 }
 
 bool Room::IsBuildMenuOpen() {
-	try {
-		return !this->buildMenu.expired();
-	} catch (...) {
-		return false;
-	}
+	return !this->buildMenu.expired();
 }
 
 bool Room::TryBuildGenerator() {
@@ -414,23 +404,13 @@ bool Room::TryBuildGenerator() {
 		}
 		auto slot = slotWeak.lock();
 
-		auto genWeak = this->factory->CreateGameObjectOfType<ResourceGenerator>();
-		if (genWeak.expired()) {
-			Logger::Log(
-				"TryBuildGenerator failed: CreateGameObjectOfType<ResourceGenerator> returned expired weak_ptr");
-			return false;
-		}
-		auto gen = std::dynamic_pointer_cast<ResourceGenerator>(genWeak.lock());
-		if (!gen) {
-			Logger::Log("TryBuildGenerator failed: dynamic_pointer_cast<ResourceGenerator> returned null");
-			return false;
-		}
+		auto gen = this->factory->CreateStaticGameObject<ResourceGenerator>();
+
 
 		gen->SetParent(this->GetPtr());
-		// Place generator at the build slot's local position
-		gen->transform.SetPosition(slot->transform.GetPosition());
+		gen->transform.SetPosition(0, 1.5, 0);
 
-		this->builtObject = gen;
+		this->builtObject = static_pointer_cast<GameObject3D>(gen.Get());
 
 		if (!this->GetParent().expired()) {
 			auto spaceship = static_pointer_cast<SpaceShip>(GetParent().lock());
@@ -478,21 +458,12 @@ bool Room::TryBuildTurret() {
 		}
 		auto slot = slotWeak.lock();
 
-		auto turretWeak = this->factory->CreateGameObjectOfType<Turret>();
-		if (turretWeak.expired()) {
-			Logger::Log("TryBuildTurret failed: CreateGameObjectOfType<Turret> returned expired weak_ptr");
-			return false;
-		}
-		auto turret = std::dynamic_pointer_cast<Turret>(turretWeak.lock());
-		if (!turret) {
-			Logger::Log("TryBuildTurret failed: dynamic_pointer_cast<Turret> returned null");
-			return false;
-		}
+		auto turret = this->factory->CreateStaticGameObject<Turret>();
 
 		turret->SetParent(this->GetPtr());
-		turret->transform.SetPosition(slot->transform.GetPosition());
+		turret->transform.SetPosition(0, 1.5, 0);
 
-		this->builtObject = turret;
+		this->builtObject = static_pointer_cast<GameObject3D>(turret.Get());
 
 		if (!this->GetParent().expired()) {
 			auto spaceship = static_pointer_cast<SpaceShip>(GetParent().lock());
@@ -540,33 +511,28 @@ bool Room::TryBuildMine() {
 		}
 		auto slot = slotWeak.lock();
 
-		// No dedicated Mine class exists yet; create a simple MeshObject placeholder
-		auto meshWeak = this->factory->CreateGameObjectOfType<MeshObject>();
-		if (meshWeak.expired()) {
-			Logger::Log("TryBuildMine failed: CreateGameObjectOfType<MeshObject> returned expired weak_ptr");
-			return false;
-		}
-		auto meshObj = std::dynamic_pointer_cast<MeshObject>(meshWeak.lock());
-		if (!meshObj) {
-			Logger::Log("TryBuildMine failed: dynamic_pointer_cast<MeshObject> returned null");
-			return false;
-		}
+		auto mine = this->factory->CreateStaticGameObject<Mine>();
 
-		// Give the placeholder a safe default mesh to avoid crashes
-		try {
-			MeshObjData meshData = AssetManager::GetInstance().GetMeshObjData("TexBox/TextureCube.glb:Mesh_0");
-			meshObj->SetMesh(meshData);
-		} catch (...) {
-			Logger::Error("Failed to set default mesh on mine");
-		}
+		mine->SetParent(this->GetPtr());
+		mine->transform.SetPosition(slot->transform.GetPosition());
+		mine->SetName("Mine");
 
-		meshObj->SetParent(this->GetPtr());
-		meshObj->transform.SetPosition(slot->transform.GetPosition());
-		meshObj->SetName("Mine");
+		// Make the interact collider work again after the mine explodes
+		mine->SetPostExplosion([&] {
+			if (this->buildSlot.expired()) return;
 
-		this->builtObject = meshObj;
+			auto build = this->buildSlot.lock();
+			build->SetOnInteract([&](std::shared_ptr<Player> p) {
+				if (this->builtObject.expired() && !GameManager::GetInstance()->GetInCombat()) {
+					this->ShowBuildMenu(p);
+				}
+			});
+			build->SetOnHover([&] { this->Hover(); });
+			});
+
+		this->builtObject = static_pointer_cast<GameObject3D>(mine.Get());
 		// Disable hover on the build slot now that something is built here
-		auto slotForHover = this->buildSlot;
+		auto& slotForHover = this->buildSlot;
 		if (!slotForHover.expired()) {
 			auto slotPtr = slotForHover.lock();
 			if (slotPtr) {

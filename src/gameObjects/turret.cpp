@@ -94,7 +94,7 @@ void Turret::Fire() {
 	Ray ray{Vector3D{posVec}, Vector3D{lookVec}};
 	RayCastData rayCastData;
 
-	bool didHit = PhysicsQueue::GetInstance().castRay(ray, rayCastData, Tag::ENEMY, Tag::PLAYER);
+	bool didHit = PhysicsQueue::GetInstance().castRay(ray, rayCastData, Tag::ENEMY, Tag::PLAYER | Tag::INTERACTABLE);
 	std::string hitString;
 	if (didHit) {
 

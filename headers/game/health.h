@@ -7,6 +7,7 @@ public:
 	void Decrement(int hp) {
 		currentHealth -= hp;
 		if (currentHealth < 0) currentHealth = 0;
+		Logger::Log(currentHealth);
 	}
 
 	void Increment(int hp) {

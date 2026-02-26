@@ -218,6 +218,8 @@ void GameManager::EndRound() {
 	}
 }
 
+bool GameManager::GetInCombat() const { return this->inCombat; }
+
 const size_t& GameManager::GetCurrentRound() { return this->currentRound; }
 
 std::shared_ptr<Player> GameManager::GetPlayer() { return this->player.lock(); }

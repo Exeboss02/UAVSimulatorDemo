@@ -4,7 +4,7 @@
 #include "core/physics/rigidBody.h"
 #include "core/physics/physicsQueue.h" //are here to prevent circular dependecies
 
-//#define SHOW_COLLIDER
+#define SHOW_COLLIDER
 
 Collider::Collider()
 {
@@ -92,18 +92,15 @@ void Collider::Start()
 		visualMeshObject->SetMesh(meshData);
 		visualMeshObject->transform.SetScale(scale);
 		visualMeshObject->SetParent(std::static_pointer_cast<Collider>(this->GetPtr()));
+		visualMeshObject->SetActive(false);
 
 	} else {
 		auto visualMeshObject = this->factory->CreateGameObjectOfType<MeshObject>().lock();
 		visualMeshObject->SetMesh(meshData);
 		visualMeshObject->transform.SetScale(scale);
 		visualMeshObject->SetParent(std::static_pointer_cast<Collider>(this->GetPtr()));
+		visualMeshObject->SetActive(false);
 	}
-	auto visualMeshObject = this->factory->CreateGameObjectOfType<MeshObject>().lock();
-	visualMeshObject->SetMesh(meshData);
-	visualMeshObject->transform.SetScale(scale);
-	visualMeshObject->SetParent(std::static_pointer_cast<Collider>(this->GetPtr()));
-	visualMeshObject->SetActive(false);
 	#endif
 }
 

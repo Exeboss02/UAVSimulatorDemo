@@ -30,7 +30,7 @@ void SpaceShip::CreateRoom(size_t x, size_t y) {
 		this->rooms[x][y] = roomMesh;
 
 		// Calculations to determine which room is furthest from the cockpit
-		int xFromStart = x - 31;
+		int xFromStart = x - this->START_ROOM_X;
 		this->placedRooms.emplace(Vector2Int{(int) x, (int) y}, static_cast<float>(xFromStart * xFromStart + y * y));
 		
 		roomMesh.Init();
@@ -88,9 +88,7 @@ void SpaceShip::Tick() {
 void SpaceShip::Start() {
 	this->GameObject3D::Start();
 	this->CreateFloorColider();
-
-	CreateRoom(this->START_ROOM_X, this->START_ROOM_Y);
-	auto room = this->GetRoom(this->START_ROOM_X, this->START_ROOM_Y);
+	
 	// Create cockpit first to set the pathfinding goal
 	auto cockpit = this->factory->CreateStaticGameObject<Cockpit>();
 	cockpit->transform.SetPosition(SpaceShip::ROOM_SIZE * (SpaceShip::SHIP_MAX_SIZE_X / 2), 0,
@@ -99,8 +97,8 @@ void SpaceShip::Start() {
 	cockpit->SetupPathfindingNodes(std::dynamic_pointer_cast<SpaceShip>(this->GetPtr()));
 
 	// Now create the room - FindPath will work correctly
-	CreateRoom(31, 0);
-	auto room = this->GetRoom(31, 0);
+	CreateRoom(this->START_ROOM_X, this->START_ROOM_Y);
+	auto room = this->GetRoom(this->START_ROOM_X, this->START_ROOM_Y);
 	auto nodes = room.lock()->GetPathfindingNodes();
 
 	// Connect cockpit to room

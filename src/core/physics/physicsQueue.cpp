@@ -194,12 +194,12 @@ void PhysicsQueue::SolveCollisions() {
     this->nrOfCollisionTestOnTick = 0;
 }
 
-bool PhysicsQueue::castRay(Ray& ray, RayCastData& rayCastData, float maxDistance) {
-	//not ok but done elsewhere so if fps no good, fix this everywhere 
+bool PhysicsQueue::castRay(Ray& ray, RayCastData& rayCastData, size_t targetTag, size_t tagsToIgnore, float maxDistance)
+{
     for (int i = allColiders.size() - 1; i >= 0; i--) {
 		if (this->allColiders[i].expired()) {
 			this->allColiders.erase(this->allColiders.begin() + i);
 		}
 	}
-   return this->rayCaster.castRay(ray, rayCastData, this->allColiders, maxDistance);
+	return this->rayCaster.castRay(ray, rayCastData, targetTag, tagsToIgnore, this->allColiders, maxDistance);
 }

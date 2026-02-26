@@ -103,10 +103,21 @@ void SpaceShip::Start() {
 	this->GameObject3D::Start();
 	this->CreateFloorColider();
 
+	// Create cockpit first to set the pathfinding goal
+	auto cockpit = this->factory->CreateStaticGameObject<Cockpit>();
+	cockpit->transform.SetPosition(SpaceShip::ROOM_SIZE * (SpaceShip::SHIP_MAX_SIZE_X / 2), 0,
+								   -SpaceShip::ROOM_SIZE);
+	cockpit->SetParent(this->GetPtr());
+	cockpit->SetupPathfindingNodes(std::dynamic_pointer_cast<SpaceShip>(this->GetPtr()));
+
+	// Now create the room - FindPath will work correctly
 	CreateRoom(31, 0);
 	auto room = this->GetRoom(31, 0);
 	auto nodes = room.lock()->GetPathfindingNodes();
-	this->pathfinder->SetGoal(nodes[0]);
+
+	// Connect cockpit to room
+	room.lock()->SetWallState(Room::WallIndex::South, Room::WallState::door);
+	this->pathfinder->AddEdge(nodes[Room::WallIndex::South * 2 + 1], cockpit->GetPathfindingNodes()[1], 1);
 }
 
 void SpaceShip::CreateFloorColider() {
@@ -118,6 +129,7 @@ void SpaceShip::CreateFloorColider() {
 	colliderobj->transform.SetPosition(DirectX::XMLoadFloat3(&pos));
 	DirectX::XMFLOAT3 scale((this->SHIP_MAX_SIZE_Y) * this->ROOM_SIZE + this->ROOM_SIZE / 2, 0.5f,
 							(this->SHIP_MAX_SIZE_Y) * this->ROOM_SIZE + this->ROOM_SIZE/2);
+
 	colliderobj->transform.SetScale(DirectX::XMLoadFloat3(&scale));
 	colliderobj->SetParent(this->GetPtr());
 	colliderobj->SetTag(Tag::FLOOR);

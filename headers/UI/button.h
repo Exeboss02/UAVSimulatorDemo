@@ -52,6 +52,18 @@ public:
 	virtual void LoadFromJson(const nlohmann::json& data) override;
 	virtual void SaveToJson(nlohmann::json& data) override;
 
+	// Draw override to render label text
+	void Draw() override;
+
+	enum class HorizontalAlign { LEFT = 0, CENTER = 1, RIGHT = 2 };
+	enum class VerticalAlign { TOP = 0, MIDDLE = 1, BOTTOM = 2 };
+
+	void SetHorizontalAlign(HorizontalAlign a) { this->hAlign = a; }
+	HorizontalAlign GetHorizontalAlign() const { return this->hAlign; }
+
+	void SetVerticalAlign(VerticalAlign a) { this->vAlign = a; }
+	VerticalAlign GetVerticalAlign() const { return this->vAlign; }
+
 private:
 	bool hovered = false;
 	bool pressed = false;
@@ -73,6 +85,10 @@ private:
 
 	// Per-button material (kept alive by AssetManager as well)
 	std::shared_ptr<UnlitMaterial> material;
+
+	// Label alignment (defaults: left, middle)
+	HorizontalAlign hAlign = HorizontalAlign::LEFT;
+	VerticalAlign vAlign = VerticalAlign::MIDDLE;
 };
 
 } // namespace UI

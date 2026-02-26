@@ -74,7 +74,11 @@ void CanvasObject::Start() {
 				float height = 1080.0f;
 				float width = aspect * height;
 				this->canvas->SetSize(UI::Vec2{width, height});
+			} catch (const std::exception &e) {
+				Logger::Error("UI::CanvasObject::Start failed to get main camera aspect: ", e.what());
+				this->canvas->SetSize(UI::Vec2{1920.0f, 1080.0f});
 			} catch (...) {
+				Logger::Error("UI::CanvasObject::Start failed to get main camera aspect (unknown exception)");
 				this->canvas->SetSize(UI::Vec2{1920.0f, 1080.0f});
 			}
 		}

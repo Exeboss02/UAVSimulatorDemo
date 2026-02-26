@@ -8,11 +8,10 @@
 #include "game/crosshair.h"
 #include "game/events.h"
 #include "game/gameManager.h"
+#include "gameObjects/enemy.h"
 #include "gameObjects/pointLightObject.h"
 #include "gameObjects/room.h"
 #include "gameObjects/turret.h"
-#include "gameObjects/enemy.h"
-#include "game/gameManager.h"
 
 // std
 #include <Windows.h>
@@ -61,7 +60,7 @@ SceneManager::SceneManager(Renderer* rend)
 	CreateNewScene(this->emptyScene);
 	this->emptyScene->CreateGameObjectOfType<CameraObject>();
 
-	AudioManager::GetInstance().Tick(); //for early initialization
+	AudioManager::GetInstance().Tick(); // for early initialization
 }
 
 SceneManager* SceneManager::GetActive() { return SceneManager::activeInstance; }

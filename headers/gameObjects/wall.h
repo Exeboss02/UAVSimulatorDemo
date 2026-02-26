@@ -1,10 +1,10 @@
 #pragma once
+#include "core/physics/boxCollider.h"
 #include "gameObjects/gameObject3D.h"
 #include "gameObjects/meshObject.h"
-#include "core/physics/boxCollider.h"
-#include <vector>
 #include <array>
 #include <memory>
+#include <vector>
 
 class Wall : public MeshObject {
 public:
@@ -17,11 +17,15 @@ public:
 
 	void SetWallState(int wallState);
 
+	void Hover();
+
 private:
-	inline static const std::array<std::string, 3> wallMeshIdentifiers{"SpaceShip/room2.glb:Mesh_3", "SpaceShip/room2.glb:Mesh_1",
-									   "SpaceShip/room2.glb:Mesh_2"};
+	inline static const std::array<std::string, 3> wallMeshIdentifiers{
+		"SpaceShip/room2.glb:Mesh_3", "SpaceShip/room2.glb:Mesh_1", "SpaceShip/room2.glb:Mesh_2"};
 
 	std::weak_ptr<BoxCollider> interactable;
+
+	float hoverDisabledUntil = 0.0f;
 
 	std::vector<std::weak_ptr<BoxCollider>> wallColliders;
 

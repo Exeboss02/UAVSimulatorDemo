@@ -7,7 +7,10 @@
 #include "rendering/unlitMaterial.h"
 #include "utilities/logger.h"
 
+#include "UI/textRenderer.h"
 #include "scene/sceneManager.h"
+
+#include <DirectXMath.h>
 
 // json
 #include <nlohmann/json.hpp>
@@ -191,6 +194,22 @@ void UI::Button::ShowInHierarchy() {
 	if (ImGui::InputInt("OnReleased Event ID", &releasedId)) {
 		SetOnReleasedEventID_Wire(releasedId);
 	}
+
+	ImGui::Separator();
+	// Alignment controls
+	ImGui::Text("Label alignment:");
+	// Horizontal
+	const char* hItems[] = {"Left", "Center", "Right"};
+	int hCur = static_cast<int>(this->GetHorizontalAlign());
+	if (ImGui::Combo("Horizontal", &hCur, hItems, IM_ARRAYSIZE(hItems))) {
+		this->SetHorizontalAlign(static_cast<Button::HorizontalAlign>(hCur));
+	}
+	// Vertical
+	const char* vItems[] = {"Top", "Middle", "Bottom"};
+	int vCur = static_cast<int>(this->GetVerticalAlign());
+	if (ImGui::Combo("Vertical", &vCur, vItems, IM_ARRAYSIZE(vItems))) {
+		this->SetVerticalAlign(static_cast<Button::VerticalAlign>(vCur));
+	}
 }
 
 void UI::Button::SetOnClickEventID(int id) { this->onClickEventID = id; }
@@ -245,6 +264,26 @@ void UI::Button::LoadFromJson(const nlohmann::json& data) {
 		this->onPressedEventID = data["onPressedEvent"].get<int>();
 	if (data.contains("onReleasedEvent") && data["onReleasedEvent"].is_number())
 		this->onReleasedEventID = data["onReleasedEvent"].get<int>();
+
+	// Alignment
+	if (data.contains("hAlign") && data["hAlign"].is_string()) {
+		std::string s = data["hAlign"].get<std::string>();
+		if (s == "left")
+			this->hAlign = Button::HorizontalAlign::LEFT;
+		else if (s == "center")
+			this->hAlign = Button::HorizontalAlign::CENTER;
+		else if (s == "right")
+			this->hAlign = Button::HorizontalAlign::RIGHT;
+	}
+	if (data.contains("vAlign") && data["vAlign"].is_string()) {
+		std::string s = data["vAlign"].get<std::string>();
+		if (s == "top")
+			this->vAlign = Button::VerticalAlign::TOP;
+		else if (s == "middle")
+			this->vAlign = Button::VerticalAlign::MIDDLE;
+		else if (s == "bottom")
+			this->vAlign = Button::VerticalAlign::BOTTOM;
+	}
 }
 
 void UI::Button::SaveToJson(nlohmann::json& data) {
@@ -257,6 +296,31 @@ void UI::Button::SaveToJson(nlohmann::json& data) {
 	if (this->onClickEventID != 0) data["onClickEvent"] = this->onClickEventID;
 	if (this->onPressedEventID != 0) data["onPressedEvent"] = this->onPressedEventID;
 	if (this->onReleasedEventID != 0) data["onReleasedEvent"] = this->onReleasedEventID;
+
+	// Alignment
+	switch (this->hAlign) {
+	case Button::HorizontalAlign::LEFT:
+		data["hAlign"] = "left";
+		break;
+	case Button::HorizontalAlign::CENTER:
+		data["hAlign"] = "center";
+		break;
+	case Button::HorizontalAlign::RIGHT:
+		data["hAlign"] = "right";
+		break;
+	}
+
+	switch (this->vAlign) {
+	case Button::VerticalAlign::TOP:
+		data["vAlign"] = "top";
+		break;
+	case Button::VerticalAlign::MIDDLE:
+		data["vAlign"] = "middle";
+		break;
+	case Button::VerticalAlign::BOTTOM:
+		data["vAlign"] = "bottom";
+		break;
+	}
 }
 
 void UI::Button::SetTint(const DirectX::XMFLOAT4& c) {
@@ -270,3 +334,64 @@ void UI::Button::SetTint(const DirectX::XMFLOAT4& c) {
 }
 
 DirectX::XMFLOAT4 UI::Button::GetTint() const { return this->color; }
+
+void UI::Button::Draw() {
+	if (!this->IsVisible()) return;
+
+	// Draw children first
+	Widget::Draw();
+
+	// Render label text centered inside the button
+	if (this->label.empty()) return;
+
+		// Choose font size relative to button height so measured width matches render size.
+		UI::Vec2 pos = this->GetPosition();
+		UI::Vec2 sz = this->GetSize();
+
+		float fontSize = std::max(10.0f, sz.y * 0.6f);
+		std::string font = "assets/fonts/lucon.ttf";
+		float measured = UI::TextRenderer::GetInstance().MeasureString(this->label, fontSize, font);
+
+		// Horizontal alignment
+		float paddingX = 8.0f;
+		float x = pos.x + paddingX; // default left
+		switch (this->hAlign) {
+		case Button::HorizontalAlign::LEFT:
+			x = pos.x + paddingX;
+			break;
+		case Button::HorizontalAlign::CENTER: {
+			float centerX = pos.x + sz.x * 0.5f;
+			x = centerX - measured * 0.5f; // midpoint of string at button center
+			break;
+		}
+		case Button::HorizontalAlign::RIGHT:
+			x = pos.x + sz.x - measured - paddingX;
+			break;
+		}
+
+		// Vertical alignment
+		float paddingY = 4.0f;
+		float y = pos.y + paddingY; // top
+		switch (this->vAlign) {
+		case Button::VerticalAlign::TOP:
+			y = pos.y + paddingY;
+			break;
+		case Button::VerticalAlign::MIDDLE:
+			y = pos.y + (sz.y - fontSize) * 0.5f;
+			break;
+		case Button::VerticalAlign::BOTTOM:
+			y = pos.y + sz.y - fontSize - paddingY;
+			break;
+		}
+
+	// Pick contrasting text color against button tint
+	float r = this->color.x;
+	float g = this->color.y;
+	float b = this->color.z;
+	float lum = 0.2126f * r + 0.7152f * g + 0.0722f * b;
+	DirectX::XMFLOAT4 textCol =
+		(lum > 0.6f) ? DirectX::XMFLOAT4{0.0f, 0.0f, 0.0f, 1.0f} : DirectX::XMFLOAT4{1.0f, 1.0f, 1.0f, 1.0f};
+
+	UI::TextRenderer::GetInstance().SubmitText(this->label, UI::Vec2{x, y}, fontSize, textCol, font,
+											   this->GetZIndex() + 1);
+}

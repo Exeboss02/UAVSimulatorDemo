@@ -30,10 +30,11 @@ void Enemy::Start() {
 		AssetManager::GetInstance().GetMeshObjData("TexBox/TextureCube.glb:Mesh_0"); // TODO: Add enemy mesh
 	meshObj->SetMesh(meshData);
 
-	auto collider = this->factory->CreateGameObjectOfType<BoxCollider>().lock();
-	collider->transform.SetScale({1, 1, 1});
+	auto collider = this->factory->CreateGameObjectOfType<SphereCollider>().lock();
+	collider->transform.SetScale({2, 2, 2});
 	collider->SetParent(this->GetPtr());
 	collider->SetTag(Tag::ENEMY);
+	collider->SetDynamic(true);
 
 	collider->SetOnHit([&](float damage) {
 		this->health.Decrement(damage);
@@ -101,7 +102,7 @@ void Enemy::SetPath(const std::vector<std::shared_ptr<AStarVertex>>& newPath) {
 void Enemy::KillSelf() { this->factory->QueueDeleteGameObject(this->GetPtr()); }
 
 void Enemy::DecrementHealth(size_t amount) {
-	this->health.Increment(static_cast<int>(amount));
+	this->health.Decrement(static_cast<int>(amount));
 	if (this->health.IsDead()) {
 		this->KillSelf();
 	}

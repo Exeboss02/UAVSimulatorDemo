@@ -180,7 +180,7 @@ void PhysicsQueue::SolveCollisions() {
                 i--;
                 continue;
             }
-
+            
             rigidBody->Collision(collider, this->nrOfCollisionTestOnTick);
         }
     }

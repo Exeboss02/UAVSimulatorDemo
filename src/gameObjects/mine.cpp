@@ -10,7 +10,9 @@ void Mine::Start() {
 	collider->SetOnCollision([&](std::weak_ptr<GameObject> trigger) { 
         this->OnExplode();
     });
-	collider->SetOnHit([&](float damadge) { this->OnExplode(); });
+	collider->SetOnHit([&](float damadge) { this->OnExplode();
+       });
+	collider->transform.SetScale(2, 2, 2);
 	this->SetMesh(AssetManager::GetInstance().GetMeshObjData("TexBox/TextureCube.glb:Mesh_0"));
 	this->MeshObject::Start();
 }
@@ -26,6 +28,7 @@ float Mine::GetRange() const { return this->range; }
 void Mine::SetPostExplosion(std::function<void()> func) { this->postExplosion = func; }
 
 void Mine::OnExplode() { 
+    Logger::Log("Mine Exploded");
     auto& enemies = GameManager::GetInstance()->GetEnemies();
 	float rangeSquared = this->range * this->range;
 

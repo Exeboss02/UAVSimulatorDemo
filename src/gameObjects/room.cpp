@@ -85,12 +85,12 @@ void Room::Start() {
 	this->buildSlot = buildCollider;
 	buildCollider->SetOnInteract([&](std::shared_ptr<Player> p) {
 		if (this->builtObject.expired() && !GameManager::GetInstance()->GetInCombat()) {
-			auto turret = this->factory->CreateStaticGameObject<Turret>();
+			auto turret = this->factory->CreateStaticGameObject<Mine>();
 			turret->SetParent(this->GetPtr());
 			turret->transform.SetPosition({0, 1.5, 0});
 			this->factory->QueueDeleteGameObject(this->buildSlot);
-			auto& pathfinder = std::static_pointer_cast<SpaceShip>(this->GetParent().lock())->GetPathfinder();
-			pathfinder->RemoveVertex(this->GetPathfindingNodes()[0]);
+			//auto& pathfinder = std::static_pointer_cast<SpaceShip>(this->GetParent().lock())->GetPathfinder();
+			//pathfinder->RemoveVertex(this->GetPathfindingNodes()[0]);
 		}
 	});
 

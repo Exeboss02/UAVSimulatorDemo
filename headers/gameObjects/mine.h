@@ -1,6 +1,7 @@
 #pragma once
 #include "gameObjects/meshObject.h"
 #include "core/physics/sphereCollider.h"
+#include "core/audio/soundEngine.h"
 
 class Mine : public MeshObject {
 public:
@@ -24,4 +25,6 @@ private:
     float range = 10;
 
     std::weak_ptr<SphereCollider> collider;
+
+    std::weak_ptr<SoundSourceObject> speaker;
 };

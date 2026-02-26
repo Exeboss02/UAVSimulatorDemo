@@ -15,6 +15,10 @@ void Mine::Start() {
 	collider->transform.SetScale(2, 2, 2);
 	this->SetMesh(AssetManager::GetInstance().GetMeshObjData("TexBox/TextureCube.glb:Mesh_0"));
 	this->MeshObject::Start();
+
+    this->speaker = this->factory->CreateGameObjectOfType<SoundSourceObject>();
+    this->speaker.lock()->SetParent(this->GetPtr());
+    this->speaker.lock()->SetPitch(0.7f);
 }
 
 void Mine::SetRange(float range) { this->range = range; }
@@ -29,6 +33,9 @@ void Mine::SetPostExplosion(std::function<void()> func) { this->postExplosion = 
 
 void Mine::OnExplode() { 
     Logger::Log("Mine Exploded");
+    SoundClip* explosionClip = AssetManager::GetInstance().GetSoundClip("Shoot3.wav"); //tempoorary clip
+    this->speaker.lock()->Play(explosionClip);
+
     auto& enemies = GameManager::GetInstance()->GetEnemies();
 	float rangeSquared = this->range * this->range;
 

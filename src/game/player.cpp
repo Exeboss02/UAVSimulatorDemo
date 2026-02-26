@@ -136,9 +136,14 @@ void Player::Tick() {
 	this->RigidBody::Tick();
 
 	InputManager::GetInstance().ReadControllerInput(this->controllerInput->GetControllerIndex());
-
 	DirectX::XMVECTOR position = this->transform.GetGlobalPosition();
+
 	AudioManager::GetInstance().SetListenerPosition(position.m128_f32[0], position.m128_f32[1], position.m128_f32[2]);
+	DirectX::XMVECTOR forward = this->transform.GetGlobalForward();
+	DirectX::XMVECTOR up = this->transform.GetGlobalUp();
+	ALfloat listenerOrientation[6] = { -forward.m128_f32[0], -forward.m128_f32[1], -forward.m128_f32[2],
+		 up.m128_f32[0], up.m128_f32[1], up.m128_f32[2] };
+	AudioManager::GetInstance().SetListenerOrientation(listenerOrientation);
 
 	this->input[0] = this->keyBoardInput.GetMovementVector().data()[0] + this->controllerInput->GetMovementVector().data()[0];
 	this->input[1] = this->keyBoardInput.GetMovementVector().data()[1] + this->controllerInput->GetMovementVector().data()[1];
@@ -164,7 +169,7 @@ void Player::Tick() {
 
 	if (this->musicTimer.TimeIsUp() && !isPlayingMusic) {
 		// AudioManager::GetInstance().FadeInPlay("contact", 0, 6);
-		AudioManager::GetInstance().Play("contact");
+		//AudioManager::GetInstance().Play("contact");
 		this->isPlayingMusic = true;
 	}
 

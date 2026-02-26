@@ -44,7 +44,6 @@ void Player::Start() {
 		colliderobj->transform.SetScale(DirectX::XMLoadFloat3(&scale));
 		colliderobj->SetParent(this->GetPtr());
 		colliderobj->SetTag(Tag::PLAYER);
-		colliderobj->SetIgnoreTag(Tag::INTERACTABLE);
 		colliderobj->SetName("PlayerCollider " + std::to_string(this->factory->GetNextID()));
 	}
 
@@ -59,7 +58,6 @@ void Player::Start() {
 		colliderobj->transform.SetScale(DirectX::XMLoadFloat3(&scale));
 		colliderobj->SetParent(this->GetPtr());
 		colliderobj->SetTag(Tag::PLAYER);
-		colliderobj->SetIgnoreTag(Tag::INTERACTABLE);
 		colliderobj->SetName("PlayerCollider " + std::to_string(this->factory->GetNextID()));
 	}
 
@@ -74,7 +72,6 @@ void Player::Start() {
 		colliderobj->transform.SetScale(DirectX::XMLoadFloat3(&scale));
 		colliderobj->SetParent(this->GetPtr());
 		colliderobj->SetTag(Tag::PLAYER);
-		colliderobj->SetIgnoreTag(Tag::INTERACTABLE);
 		colliderobj->SetName("PlayerCollider " + std::to_string(this->factory->GetNextID()));
 	}
 
@@ -363,7 +360,8 @@ void Player::Interact() {
 		Ray ray{Vector3D{posVec}, Vector3D{lookVec}};
 		RayCastData rayCastData;
 
-		bool didHit = PhysicsQueue::GetInstance().castRay(ray, rayCastData, this->interactDistance);
+		bool didHit = PhysicsQueue::GetInstance().castRay(ray, rayCastData, Tag::INTERACTABLE, Tag::PLAYER,
+														  this->interactDistance);
 		std::string hitString;
 		if (didHit) {
 

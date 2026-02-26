@@ -18,7 +18,7 @@ void ResourceGenerator::Start() {
 	auto interactCollider = this->factory->CreateStaticGameObject<SphereCollider>();
 	interactCollider->SetParent(this->GetPtr());
 	// mark this collider as interactable so player raycasts can filter hits
-	interactCollider->SetTag(Tag::INTERACTABLE);
+	interactCollider->SetTag(Tag::INTERACTABLE | Tag::OBJECT);
 	interactCollider->SetOnInteract([&](std::shared_ptr<Player> player) { this->Interact(player); });
 	interactCollider->SetOnHover([&] { this->Hover(); });
 	interactCollider->transform.SetScale(2, 2, 2);

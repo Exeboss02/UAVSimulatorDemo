@@ -90,6 +90,7 @@ void Room::Start() {
 	buildCollider->SetSolid(false);
 	buildCollider->SetName("BuildCollider" + std::to_string(this->factory->GetNextID()));
 	buildCollider->SetTag(Tag::INTERACTABLE);
+	buildCollider->SetIgnoreTag(Tag::PLAYER);
 	// Maybe tweak positionW
 	this->buildSlot = buildCollider;
 	buildCollider->SetOnInteract([&](std::shared_ptr<Player> p) {
@@ -430,6 +431,12 @@ bool Room::TryBuildGenerator() {
 		gen->transform.SetPosition(slot->transform.GetPosition());
 
 		this->builtObject = gen;
+
+		if (!this->GetParent().expired()) {
+			auto spaceship = static_pointer_cast<SpaceShip>(GetParent().lock());
+			spaceship->GetPathfinder()->RemoveVertex(this->pathfindingNodes[0]);
+		}
+
 		// Disable hover on the build slot now that something is built here
 		auto slotForHover = this->buildSlot;
 		if (!slotForHover.expired()) {
@@ -486,6 +493,12 @@ bool Room::TryBuildTurret() {
 		turret->transform.SetPosition(slot->transform.GetPosition());
 
 		this->builtObject = turret;
+
+		if (!this->GetParent().expired()) {
+			auto spaceship = static_pointer_cast<SpaceShip>(GetParent().lock());
+			spaceship->GetPathfinder()->RemoveVertex(this->pathfindingNodes[0]);
+		}
+
 		// Disable hover on the build slot now that something is built here
 		auto slotForHover = this->buildSlot;
 		if (!slotForHover.expired()) {

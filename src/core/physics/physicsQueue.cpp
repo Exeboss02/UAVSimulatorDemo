@@ -196,5 +196,5 @@ bool PhysicsQueue::castRay(Ray& ray, RayCastData& rayCastData, size_t targetTag,
 			this->allColiders.erase(this->allColiders.begin() + i);
 		}
 	}
-   return this->rayCaster.castRay(ray, rayCastData, this->allColiders, maxDistance);
+	return this->rayCaster.castRay(ray, rayCastData, targetTag, tagsToIgnore, this->allColiders, maxDistance);
 }

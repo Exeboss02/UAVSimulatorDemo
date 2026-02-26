@@ -38,6 +38,8 @@ private:
 
 	void SetDirection(DirectX::XMVECTOR newDirection);
 
+	SoundClip* shootSound;
+	std::weak_ptr<SoundSourceObject> speaker;
 	std::weak_ptr<GameObject3D> target;
 
 	float turnSpeedRPS = 3.14;

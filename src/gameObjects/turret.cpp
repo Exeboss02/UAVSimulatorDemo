@@ -12,6 +12,11 @@ void Turret::Start() {
 	collider->transform.SetScale(2, 2, 2);
 	collider->SetParent(this->GetPtr());
 	collider->SetTag(Tag::PLAYER);
+	/*this->shootSound = SoundSourceManager::*/
+	auto speaker = this->factory->CreateStaticGameObject<SoundSourceObject>();
+	speaker->SetParent(this->GetParent());
+	this->speaker = speaker;
+	this->shootSound = AssetManager::GetInstance().GetSoundClip("Laser1.wav");
 	this->MeshObject::Start();
 }
 
@@ -36,13 +41,14 @@ void Turret::Tick() {
 			}
 			return;
 		}
-	} else {
-		float currentTime = Time::GetInstance().GetSessionTime();
-		float timePast = currentTime - this->lastAttemptedTargeting;
-		if (timePast > this->retargetTime) {
-			this->SetTargetClosest();
-		}
 	}
+
+	float currentTime = Time::GetInstance().GetSessionTime();
+	float timePast = currentTime - this->lastAttemptedTargeting;
+	if (timePast > this->retargetTime) {
+		this->SetTargetClosest();
+	}
+	
 }
 
 void Turret::SetTarget(std::weak_ptr<GameObject3D> target) { this->target = target; }
@@ -92,6 +98,11 @@ void Turret::Fire() {
 	bool didHit = PhysicsQueue::GetInstance().castRay(ray, rayCastData, Tag::ENEMY, Tag::PLAYER);
 	std::string hitString;
 	if (didHit) {
+
+		if (!this->speaker.expired()) {
+			this->speaker.lock()->SetRandomPitch(0.5, 1.5);
+			this->speaker.lock()->Play(this->shootSound);
+		}
 
 		rayCastData.hitColider.lock()->Hit(this->damage);
 

@@ -36,7 +36,7 @@ private:
 	const float rotationSpeed = 5.0f;
 
 	// Collider
-	std::weak_ptr<BoxCollider> hitbox;
+	std::weak_ptr<SphereCollider> hitbox;
 
 	// Pathfinding
 	std::vector<std::shared_ptr<AStarVertex>> path;

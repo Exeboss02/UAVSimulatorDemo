@@ -75,6 +75,16 @@ std::vector<std::weak_ptr<MeshObject>> Renderer::GetVisibleObjects(CameraObject&
 
 	visible.reserve(this->meshRenderQueue.size());
 
+	std::vector<std::weak_ptr<MeshObject>> dynamicObjects = GetVisibleDynamicObjects(camera);
+	std::move(dynamicObjects.begin(), dynamicObjects.end(), std::back_inserter(visible));
+
+	return visible;
+}
+
+std::vector<std::weak_ptr<MeshObject>> Renderer::GetVisibleDynamicObjects(CameraObject& camera) {
+	std::vector<std::weak_ptr<MeshObject>> visible;
+	visible.reserve(this->meshRenderQueue.size());
+
 	DirectX::XMVECTOR cameraGlobalPos = camera.transform.GetGlobalPosition();
 
 	for (size_t i = 0; i < this->meshRenderQueue.size(); i++) {
@@ -379,7 +389,8 @@ void Renderer::CreateRenderMap(RenderMap& renderMap, CameraObject& camera) {
 #endif // DEBUG_TIMER
 }
 
-void Renderer::CreateCheapRenderMap(CheapRenderMap& renderMap, CameraObject& camera) {
+void Renderer::CreateCheapRenderMap(CheapRenderMap& renderMap, CameraObject& camera,
+									std::vector<std::weak_ptr<MeshObject>>& objects) {
 #ifdef DEBUG_TIMER
 	const auto start{std::chrono::steady_clock::now()};
 #endif // DEBUG_TIMER
@@ -388,10 +399,8 @@ void Renderer::CreateCheapRenderMap(CheapRenderMap& renderMap, CameraObject& cam
 
 	if (this->renderAllWireframe) return;
 
-	auto renderQueue = GetVisibleObjects(camera);
-
-	for (size_t i = 0; i < renderQueue.size(); i++) {
-		std::shared_ptr<MeshObject> meshObject = renderQueue[i].lock();
+	for (size_t i = 0; i < objects.size(); i++) {
+		std::shared_ptr<MeshObject> meshObject = objects[i].lock();
 
 		if (!meshObject->IsActive() || meshObject->IsHidden()) continue;
 
@@ -424,10 +433,37 @@ void Renderer::CreateCheapRenderMap(CheapRenderMap& renderMap, CameraObject& cam
 #ifdef DEBUG_TIMER
 	const auto finsihedRenderMap{std::chrono::steady_clock::now()};
 	const std::chrono::duration<double> elapsedSeconds{finsihedRenderMap - start};
-	ImGui::Text(
-		("Cheap Render map: " + std::to_string(elapsedSeconds.count()) + " : " + std::to_string(renderQueue.size()))
+	ImGui::Text(("Cheap Render map: " + std::to_string(elapsedSeconds.count()) + " : " + std::to_string(objects.size()))
 			.c_str());
 #endif // DEBUG_TIMER
+}
+
+void Renderer::CreateSpotlightRenderMap(CheapRenderMap& renderMap, CameraObject& camera, size_t index) {
+	#ifdef DEBUG_TIMER
+	const auto start{std::chrono::steady_clock::now()};
+	#endif // DEBUG_TIMER
+
+
+	if (this->renderQueue.instance->recalculateStatic) {
+		this->staticObjectsForSpotlights[index] = this->staticObjectsTree.GetVisibleElements(camera);
+	}
+
+	std::vector<std::weak_ptr<MeshObject>> visible;
+
+	visible.reserve(this->staticObjectsForSpotlights[index].size());
+	std::copy(this->staticObjectsForSpotlights[index].begin(), this->staticObjectsForSpotlights[index].end(), std::back_inserter(visible));
+
+	auto dynamicObjects = GetVisibleDynamicObjects(camera);
+	visible.reserve(dynamicObjects.size());
+	std::move(dynamicObjects.begin(), dynamicObjects.end(), std::back_inserter(visible));
+
+	CreateCheapRenderMap(renderMap, camera, visible);
+
+	#ifdef DEBUG_TIMER
+	const auto finsihedRenderMap{std::chrono::steady_clock::now()};
+	const std::chrono::duration<double> elapsedSeconds{finsihedRenderMap - start};
+	ImGui::Text(("Spotlight Render map: " + std::to_string(elapsedSeconds.count())).c_str());
+	#endif // DEBUG_TIMER
 }
 
 size_t Renderer::FillRenderMap(RenderMap& renderMap, CameraObject& camera) {
@@ -572,6 +608,9 @@ void Renderer::Render() {
 	ImGui::Text(("Entire Render function: " + std::to_string(elapsed_seconds3.count())).c_str());
 	ImGui::End();
 #endif // DEBUG_TIMER
+
+	this->renderQueue.recalculateDynamic = false;
+	this->renderQueue.recalculateStatic = false;
 }
 
 void Renderer::Present() { this->swapChain->Present(this->isVSyncEnabled ? 1 : 0, 0); }
@@ -837,6 +876,12 @@ void Renderer::ShadowPass() {
 }
 
 void Renderer::SpotLightShadowPass() {
+	if (this->staticObjectsForSpotlights.size() < this->spotLightRenderQueue.size()) {
+		size_t diff = this->spotLightRenderQueue.size() - this->staticObjectsForSpotlights.size();
+		for (size_t j = 0; j < diff; j++) {
+			this->staticObjectsForSpotlights.emplace_back();
+		}
+	}
 
 	const uint32_t lightCount = std::min<uint32_t>(this->spotLightRenderQueue.size(), this->maximumSpotlights);
 
@@ -870,7 +915,7 @@ void Renderer::SpotLightShadowPass() {
 
 		// Draw all objects to depthstencil
 		CheapRenderMap thisCameraRenderMap;
-		this->CreateCheapRenderMap(thisCameraRenderMap, camera);
+		this->CreateSpotlightRenderMap(thisCameraRenderMap, camera, i);
 		this->RenderCheapRenderMap(thisCameraRenderMap);
 	}
 }
@@ -911,7 +956,8 @@ void Renderer::PointLightShadowPass() {
 
 			// Draw all objects to depthstencil
 			CheapRenderMap thisCameraRenderMap;
-			this->CreateCheapRenderMap(thisCameraRenderMap, camera);
+			auto visible = this->GetVisibleObjects(camera);
+			this->CreateCheapRenderMap(thisCameraRenderMap, camera, visible);
 			this->RenderCheapRenderMap(thisCameraRenderMap);
 		}
 	}

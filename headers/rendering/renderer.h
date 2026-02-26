@@ -161,6 +161,7 @@ private:
 
 	QuadTree staticObjectsTree;
 	std::vector<std::weak_ptr<MeshObject>> GetVisibleObjects(CameraObject& camera);
+	std::vector<std::weak_ptr<MeshObject>> GetVisibleDynamicObjects(CameraObject& camera);
 
 	// Constant buffers:
 	// The renderer keeps these constant buffers since only one is ever required
@@ -174,7 +175,7 @@ private:
 	std::unique_ptr<StructuredBuffer<PointLightObject::PointLightContainer>> pointlightBuffer;
 	std::unique_ptr<ConstantBuffer> pointlightCountBuffer;
 
-	std::vector<std::vector<std::weak_ptr<MeshObject>>> staticObjectsForLights;
+	std::vector<std::vector<std::weak_ptr<MeshObject>>> staticObjectsForSpotlights;
 
 	DepthBufferArray spotLightShadows;
 	D3D11_VIEWPORT spotLightViewPort;
@@ -199,7 +200,8 @@ private:
 	void CreateRasterizerStates();
 
 	void CreateRenderMap(RenderMap& renderMap, CameraObject& camera);
-	void CreateCheapRenderMap(CheapRenderMap& renderMap, CameraObject& camera);
+	void CreateCheapRenderMap(CheapRenderMap& renderMap, CameraObject& camera, std::vector<std::weak_ptr<MeshObject>>& objects);
+	void CreateSpotlightRenderMap(CheapRenderMap& renderMap, CameraObject& camera, size_t index);
 
 	// Doesn't work
 	size_t FillRenderMap(RenderMap& renderMap, CameraObject& camera);

@@ -142,13 +142,13 @@ void QuadTree::CheckNode(DirectX::BoundingFrustum& frustum, std::unique_ptr<Node
 			if (!elementWeak.expired()) {
 				std::shared_ptr<MeshObject> element = elementWeak.lock();
 				if (found.find(element.get()) == found.end()) {
-					out.emplace_back(element);
-					found.insert(element.get());
-					/*bool inView = frustum.Intersects(element->GetBoundingBox());
+					//out.emplace_back(element);
+					//found.insert(element.get());
+					bool inView = frustum.Intersects(element->GetBoundingBox());
 					if (inView) {
 						out.emplace_back(element);
 						found.insert(element.get());
-					}*/
+					}
 				}
 			}
 		}

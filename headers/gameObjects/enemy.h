@@ -44,6 +44,8 @@ private:
 	size_t currentPathIndex;
 	bool hasFinishedPath;
 
+	std::weak_ptr<SoundSourceObject> speaker;
+
 	// Shooting
 	const float damage = 5.f;
 	bool canShoot;

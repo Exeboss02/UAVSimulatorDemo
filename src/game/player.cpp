@@ -109,7 +109,7 @@ void Player::Start() {
 	this->sfxTimer.Initialize(0.4f);
 
 	// Master Volume
-	AudioManager::GetInstance().SetMasterMusicVolume(0.4f);
+	AudioManager::GetInstance().SetMasterMusicVolume(0.3f);
 	AudioManager::GetInstance().SetMasterSoundEffectsVolume(1);
 
 	// Music
@@ -170,7 +170,7 @@ void Player::Tick() {
 
 	if (this->musicTimer.TimeIsUp() && !isPlayingMusic) {
 		// AudioManager::GetInstance().FadeInPlay("contact", 0, 6);
-		//AudioManager::GetInstance().Play("contact");
+		AudioManager::GetInstance().Play("contact");
 		this->isPlayingMusic = true;
 	}
 

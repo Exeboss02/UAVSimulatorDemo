@@ -181,6 +181,11 @@ void PhysicsQueue::SolveCollisions() {
                 continue;
             }
 
+            if(GetAsyncKeyState('I') && collider->GetTag() == Tag::INTERACTABLE)
+            {
+                int a = 0;
+            }
+
             rigidBody->Collision(collider, this->nrOfCollisionTestOnTick);
         }
     }

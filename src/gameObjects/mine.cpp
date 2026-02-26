@@ -14,6 +14,7 @@ void Mine::Start() {
        });
 	collider->transform.SetScale(2, 2, 2);
 	this->SetMesh(AssetManager::GetInstance().GetMeshObjData("TexBox/TextureCube.glb:Mesh_0"));
+
 	this->MeshObject::Start();
 }
 
@@ -29,6 +30,16 @@ void Mine::SetPostExplosion(std::function<void()> func) { this->postExplosion = 
 
 void Mine::OnExplode() { 
     Logger::Log("Mine Exploded");
+
+    //When mine gets the destroyed it creates a soundSourceObject that keeps living after
+    //the mine stops existing that plays the sound, it gets deleted once it finnishes playing
+    SoundClip* explosionClip = AssetManager::GetInstance().GetSoundClip("Shoot1.wav"); //temporary clip
+    std::weak_ptr<SoundSourceObject> speaker = this->factory->CreateGameObjectOfType<SoundSourceObject>();
+    speaker.lock()->SetDeleteWhenFinnished(true);
+    speaker.lock()->SetPitch(0.7f);
+    speaker.lock()->transform.SetPosition(this->transform.GetGlobalPosition());
+    speaker.lock()->Play(explosionClip);
+
     auto& enemies = GameManager::GetInstance()->GetEnemies();
 	float rangeSquared = this->range * this->range;
 

@@ -116,7 +116,7 @@ void Player::Start() {
 	this->sfxTimer.Initialize(0.4f);
 
 	// Master Volume
-	AudioManager::GetInstance().SetMasterMusicVolume(0.4f);
+	AudioManager::GetInstance().SetMasterMusicVolume(0.3f);
 	AudioManager::GetInstance().SetMasterSoundEffectsVolume(1);
 
 	// Music
@@ -144,9 +144,14 @@ void Player::Tick() {
 	this->RigidBody::Tick();
 
 	InputManager::GetInstance().ReadControllerInput(this->controllerInput->GetControllerIndex());
-
 	DirectX::XMVECTOR position = this->transform.GetGlobalPosition();
+
 	AudioManager::GetInstance().SetListenerPosition(position.m128_f32[0], position.m128_f32[1], position.m128_f32[2]);
+	DirectX::XMVECTOR forward = this->transform.GetGlobalForward();
+	DirectX::XMVECTOR up = this->transform.GetGlobalUp();
+	ALfloat listenerOrientation[6] = { -forward.m128_f32[0], -forward.m128_f32[1], -forward.m128_f32[2],
+		 up.m128_f32[0], up.m128_f32[1], up.m128_f32[2] };
+	AudioManager::GetInstance().SetListenerOrientation(listenerOrientation);
 
 	if (this->inputEnabled) {
 		this->input[0] =

@@ -1,6 +1,7 @@
 #pragma once
 #include "gameObjects/meshObject.h"
 #include "core/physics/sphereCollider.h"
+#include "core/audio/soundEngine.h"
 
 class Mine : public MeshObject {
 public:

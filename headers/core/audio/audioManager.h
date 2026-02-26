@@ -27,6 +27,11 @@ public:
 	/// </summary>/// <param name="x"></param>/// <param name="y"></param>/// <param name="z"></param>
 	void SetListenerPosition(float x, float y, float z);
 
+	/// <summary>
+	/// Sets the listener orientation/// 
+	/// </summary>/// <param name="listenerOrientation"></param>///
+	void SetListenerOrientation(ALfloat listenerOrientation[6]);
+
 	//MusicTrackManager Functions
 
 	/// <summary>

@@ -93,12 +93,21 @@ public:
 	/// @param position 
 	void SetSourcePosition(float x, float y, float z);
 
+	/// @brief If true, soundSourceObject will delete itself when it has finnished playing its sound clip
+	/// @param del 
+	void SetDeleteWhenFinnished(bool del);
+
+	bool GetDeleteWhenFinnished();
+
 private:
 	int id = -1;
 	int nrOfSources = 6;
 	int sourceIndex = 0;
 	ALuint* sources;
 	AudioInstruction currentInstructionSet;
+
+	bool deleteWhenFinnished = false;
+	bool isPlaying = false;
 
 	float pitch = 1;
 	float gain = 1;

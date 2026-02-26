@@ -7,13 +7,13 @@
 #include "core/physics/collision.h"
 #include "core/physics/physicsQueue.h"
 #include "core/tools.h"
+#include "game/health.h"
 #include "game/hud.h"
 #include "game/resourceManager.h"
 #include "gameObjects/cameraObject.h"
 #include "gameObjects/gun.h"
 #include "gameObjects/meshObject.h"
 #include <memory>
-#include "game/health.h"
 
 class Player : public RigidBody {
 public:
@@ -73,6 +73,8 @@ private:
 	float cameraRotation[3];
 
 	void Interact();
+
+	int interactDistance = 5;
 
 	void CheckForTriggerPress();
 

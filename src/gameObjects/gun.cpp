@@ -1,6 +1,9 @@
 #include "gameObjects/gun.h"
 #include <numbers>
 #include "gameObjects/rayVis.h"
+#include "gameObjects/cameraObject.h"
+#include "utilities/logger.h"
+#include <memory>
 
 Gun::Gun() {}
 
@@ -18,9 +21,8 @@ void Gun::Shoot() {
 	std::shared_ptr<SoundSourceObject> lockedSpeaker = this->speaker.lock();
 	lockedSpeaker->Play(this->soundClips[0]); // shoot sound
 	
-
-	const DirectX::XMVECTOR lookVec = this->muzzle.lock()->transform.GetGlobalForward();
-	const DirectX::XMVECTOR posVec = this->muzzle.lock()->transform.GetGlobalPosition();
+	const DirectX::XMVECTOR lookVec = this->parentCamera.lock()->transform.GetGlobalForward();
+	const DirectX::XMVECTOR posVec = this->parentCamera.lock()->transform.GetGlobalPosition();
 
 	Ray ray{Vector3D{posVec}, Vector3D{lookVec}};
 	RayCastData rayCastData;
@@ -94,6 +96,15 @@ void Gun::Start() {
 		muzzle->SetParent(this->GetPtr());
 
 		this->muzzle = muzzle;
+	}
+
+	if (this->GetParent().expired()) {
+		Logger::Error("gun has no parent, will not know where to shoot from");
+	}
+	if (auto parent = std::dynamic_pointer_cast<GameObject3D>(this->GetParent().lock())) {
+		this->parentCamera = parent;
+	} else {
+		Logger::Error("guns parrent is not gameObject3D wont know where to shoot from");
 	}
 
 }

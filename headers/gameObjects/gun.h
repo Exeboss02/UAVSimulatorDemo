@@ -30,6 +30,8 @@ protected:
 
 private:
 
+	std::weak_ptr<GameObject3D> parentCamera;
+
 	std::weak_ptr<MeshObject> gunVisual;
 
 	std::vector<SoundClip*> soundClips;

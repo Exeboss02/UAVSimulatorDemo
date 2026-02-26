@@ -44,7 +44,7 @@ void Player::Start() {
 		colliderobj->transform.SetScale(DirectX::XMLoadFloat3(&scale));
 		colliderobj->SetParent(this->GetPtr());
 		colliderobj->SetTag(Tag::PLAYER);
-		//colliderobj->SetIgnoreTag(Tag::INTERACTABLE);
+		colliderobj->SetIgnoreTag(Tag::INTERACTABLE);
 		colliderobj->SetName("PlayerCollider " + std::to_string(this->factory->GetNextID()));
 	}
 
@@ -59,7 +59,7 @@ void Player::Start() {
 		colliderobj->transform.SetScale(DirectX::XMLoadFloat3(&scale));
 		colliderobj->SetParent(this->GetPtr());
 		colliderobj->SetTag(Tag::PLAYER);
-		//colliderobj->SetIgnoreTag(Tag::INTERACTABLE);
+		colliderobj->SetIgnoreTag(Tag::INTERACTABLE);
 		colliderobj->SetName("PlayerCollider " + std::to_string(this->factory->GetNextID()));
 	}
 
@@ -74,7 +74,7 @@ void Player::Start() {
 		colliderobj->transform.SetScale(DirectX::XMLoadFloat3(&scale));
 		colliderobj->SetParent(this->GetPtr());
 		colliderobj->SetTag(Tag::PLAYER);
-		//colliderobj->SetIgnoreTag(Tag::INTERACTABLE);
+		colliderobj->SetIgnoreTag(Tag::INTERACTABLE);
 		colliderobj->SetName("PlayerCollider " + std::to_string(this->factory->GetNextID()));
 	}
 

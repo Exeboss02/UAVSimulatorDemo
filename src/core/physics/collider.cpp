@@ -4,7 +4,7 @@
 #include "core/physics/rigidBody.h"
 #include "core/physics/physicsQueue.h" //are here to prevent circular dependecies
 
-#define SHOW_COLLIDER
+//#define SHOW_COLLIDER
 
 Collider::Collider()
 {

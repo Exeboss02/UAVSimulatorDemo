@@ -165,7 +165,7 @@ private:
 	RenderMap standardRenderMap;
 
 	QuadTree staticObjectsTree;
-	std::vector<std::weak_ptr<MeshObject>> GetVisibleObjects(CameraObject& camera);
+	std::vector<std::weak_ptr<MeshObject>> GetVisibleObjects(CameraObject& camera, bool checkIndividualObjects = true, bool allStatic = false);
 	std::vector<std::weak_ptr<MeshObject>> GetVisibleDynamicObjects(CameraObject& camera);
 
 	// Constant buffers:

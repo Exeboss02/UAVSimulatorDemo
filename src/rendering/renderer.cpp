@@ -19,9 +19,9 @@ Renderer::Renderer()
 	  staticObjectsTree({-SpaceShip::ROOM_SIZE, -20, -SpaceShip::ROOM_SIZE},
 						{SpaceShip::ROOM_SIZE * (SpaceShip::SHIP_MAX_SIZE_X + 1), 20,
 						 SpaceShip::ROOM_SIZE * (SpaceShip::SHIP_MAX_SIZE_Y + 1)},
-						5, 4),
+						3, 4),
 	  renderQueue(this->meshRenderQueue, this->spotLightRenderQueue, this->pointLightRenderQueue,
-				  this->staticObjectsTree, this->uiRenderQueue) {
+				  this->staticObjectsTree, this->uiRenderQueue), pointLightViewPort(), spotLightViewPort() {
 	this->renderQueue.newSkyboxCallback = [this](std::string filename) { this->ChangeSkybox(filename); };
 }
 
@@ -95,8 +95,9 @@ void Renderer::CreateUIBuffers() {
 	this->uiIndexBuffer->Init(this->device.Get(), indices.size(), (uint32_t*) indices.data());
 }
 
-std::vector<std::weak_ptr<MeshObject>> Renderer::GetVisibleObjects(CameraObject& camera) {
-	std::vector<std::weak_ptr<MeshObject>> visible = this->staticObjectsTree.GetVisibleElements(camera);
+std::vector<std::weak_ptr<MeshObject>> Renderer::GetVisibleObjects(CameraObject& camera, bool checkIndividualObjects, bool allStatic) {
+	std::vector<std::weak_ptr<MeshObject>> visible =
+		allStatic ? this->staticObjectsTree.GetAllElements() : this->staticObjectsTree.GetVisibleElements(camera, checkIndividualObjects);
 
 	visible.reserve(this->meshRenderQueue.size());
 
@@ -349,16 +350,16 @@ void Renderer::CreateRasterizerStates() {
 }
 
 void Renderer::CreateRenderMap(RenderMap& renderMap, CameraObject& camera) {
-#ifdef DEBUG_TIMER
-	const auto start{std::chrono::steady_clock::now()};
-#endif // DEBUG_TIMER
+	#ifdef DEBUG_TIMER
+		const auto start{std::chrono::steady_clock::now()};
+	#endif // DEBUG_TIMER
 
 	//// Removes dead gameobjects
 	// this->meshRenderQueue.erase(std::remove_if(this->meshRenderQueue.begin(), this->meshRenderQueue.end(),
 	//									 [](const std::weak_ptr<MeshObject>& w) { return w.expired(); }),
 	//							this->meshRenderQueue.end());
 
-	auto renderQueue = GetVisibleObjects(camera);
+	auto renderQueue = GetVisibleObjects(camera, false, true);
 
 	renderMap.meshes.clear();
 

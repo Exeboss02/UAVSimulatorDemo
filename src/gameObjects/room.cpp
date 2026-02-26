@@ -85,7 +85,7 @@ void Room::Start() {
 	this->buildSlot = buildCollider;
 	buildCollider->SetOnInteract([&](std::shared_ptr<Player> p) {
 		if (this->builtObject.expired() && !GameManager::GetInstance()->GetInCombat()) {
-			auto turret = this->factory->CreateStaticGameObject<Mine>();
+			auto turret = this->factory->CreateStaticGameObject<Turret>();
 			turret->SetParent(this->GetPtr());
 			turret->transform.SetPosition({0, 1.5, 0});
 			this->factory->QueueDeleteGameObject(this->buildSlot);

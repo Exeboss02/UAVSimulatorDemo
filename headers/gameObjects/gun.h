@@ -15,6 +15,8 @@ public:
 
 	void Start() override;
 
+	void setParentToShootFrom(std::shared_ptr<GameObject3D> parentCamera);
+
 protected:
 
 	std::string gunVisualPath = "";
@@ -30,10 +32,21 @@ protected:
 
 private:
 
+	std::weak_ptr<GameObject3D> parentCamera;
+
 	std::weak_ptr<MeshObject> gunVisual;
 
 	std::vector<SoundClip*> soundClips;
 	std::weak_ptr<SoundSourceObject> speaker;
 	std::weak_ptr<GameObject3D> muzzle;
 	Timer shootCoolDown;
+	/// <summary>
+	/// used when the gun shoots from the camera origin
+	/// </summary>
+	void VisualizeShootBasedOnCameraParent(DirectX::XMVECTOR lookVec, DirectX::XMVECTOR posVec, float distance);
+	/// <summary>
+	/// used when gun shoots from muzzle
+	/// </summary>
+	void VisulalizeShootBasedOnMuzzle(DirectX::XMVECTOR lookVec, DirectX::XMVECTOR posVec, float distance);
+
 };

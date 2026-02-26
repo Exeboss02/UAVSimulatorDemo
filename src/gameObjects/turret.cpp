@@ -47,6 +47,7 @@ void Turret::Tick() {
 	float timePast = currentTime - this->lastAttemptedTargeting;
 	if (timePast > this->retargetTime) {
 		this->SetTargetClosest();
+		this->lastAttemptedTargeting = Time::GetInstance().GetSessionTime();
 	}
 	
 }
@@ -56,7 +57,6 @@ void Turret::SetTarget(std::weak_ptr<GameObject3D> target) { this->target = targ
 std::weak_ptr<GameObject3D> Turret::GetTarget() const { return this->target; }
 
 void Turret::SetTargetClosest() {
-
 	auto& potentialTargets = GameManager::GetInstance()->GetEnemies();
 	std::weak_ptr<GameObject3D> currentTarget;
 
@@ -75,7 +75,6 @@ void Turret::SetTargetClosest() {
 		}
 	}
 	this->SetTarget(currentTarget);
-	this->retargetTime = Time::GetInstance().GetSessionTime();
 }
 void Turret::SetRPM(float rpm) { this->rpm = rpm; }
 
@@ -100,7 +99,7 @@ void Turret::Fire() {
 	if (didHit) {
 
 		if (!this->speaker.expired()) {
-			this->speaker.lock()->SetRandomPitch(0.5, 1.5);
+			this->speaker.lock()->SetRandomPitch(0.8, 1.5);
 			this->speaker.lock()->Play(this->shootSound);
 		}
 

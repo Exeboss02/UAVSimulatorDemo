@@ -4,6 +4,7 @@
 #include "game/gameManager.h"
 #include "game/hud.h"
 #include "gameObjects/meshObject.h"
+#include "gameObjects/mine.h"
 #include "gameObjects/pistol01.h"
 #include "gameObjects/rayVis.h"
 #include <numbers>
@@ -89,12 +90,16 @@ void Player::Start() {
 		colliderobj->transform.SetScale(DirectX::XMLoadFloat3(&scale));
 		colliderobj->SetParent(this->GetPtr());
 		colliderobj->SetTag(Tag::PLAYER);
-		colliderobj->SetIgnoreTag(~Tag::FLOOR);
+		// colliderobj->SetIgnoreTag(~Tag::FLOOR);
 		colliderobj->SetName("PlayerCollider " + std::to_string(this->factory->GetNextID()));
 	}
 
 	std::function<void(std::weak_ptr<GameObject3D>)> function = [&](std::weak_ptr<GameObject3D> gameObject3D) {
 		this->OnCollision(gameObject3D);
+
+		if (auto mine = dynamic_pointer_cast<Mine>(gameObject3D.lock())) {
+			Logger::Log("Hit Mine");
+		}
 	};
 	this->SetAllOnCollisionFunction(function);
 
@@ -406,7 +411,8 @@ void Player::Interact() {
 		Ray ray{Vector3D{posVec}, Vector3D{lookVec}};
 		RayCastData rayCastData;
 
-		bool didHit = PhysicsQueue::GetInstance().castRay(ray, rayCastData, this->interactDistance);
+		bool didHit =
+			PhysicsQueue::GetInstance().castRay(ray, rayCastData, ~Tag::NOIGNORE, Tag::PLAYER, this->interactDistance);
 		std::string hitString;
 		if (didHit) {
 

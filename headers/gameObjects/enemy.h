@@ -18,9 +18,15 @@ public:
 	void Start() override;
 	void Tick() override;
 
-	void SetMoveSpeedMode(MoveSpeedMode mode);
+	void SlowDownEnemy(float durationInSec);
 
 	void SetPath(const std::vector<std::shared_ptr<AStarVertex>>& newPath);
+
+	void KillSelf();
+
+	void DecrementHealth(size_t amount);
+
+	void IncrementHealth(size_t amount);
 
 private:
 	Health health;
@@ -30,7 +36,7 @@ private:
 	const float rotationSpeed = 5.0f;
 
 	// Collider
-	std::weak_ptr<BoxCollider> hitbox;
+	std::weak_ptr<SphereCollider> hitbox;
 
 	// Pathfinding
 	std::vector<std::shared_ptr<AStarVertex>> path;
@@ -43,11 +49,26 @@ private:
 	bool canShoot;
 	const float shotCooldown;
 	float timeSinceLastShot;
+	float playerHitAccuracy;
+	void UpdateShootCooldown(const float deltaTime);
 
-	void MoveAlongPath();
+	// Slow effect
+	bool isSlowed;
+	float slowDuration;
+	float timeSinceSlowed;
+	void UpdateSlowEffect(const float deltaTime);
+
+	void SetMoveSpeedMode(MoveSpeedMode mode);
+	void MoveAlongPath(const float deltaTime);
 	bool IsAtCurrentPathNode();
 
-	void UpdateShootCooldown();
+	void CalulateDirectionToTarget();
+	void CalulateTargetRotation();
+
+	// Stuck detection
+	float timeStuck;
+	float stuckCheckInterval;
+	void IsStuckOnPath(const float deltaTime);
 
 	void ShootAtCore();
 	void ShootAtPlayer();

@@ -42,7 +42,11 @@ void ResourceGenerator::SetResourceType(ResourceType type) { this->resourceType 
 
 void ResourceGenerator::Interact(std::shared_ptr<Player> player) {
 	float currentTime = Time::GetInstance().GetSessionTime();
-	size_t amountGenerated = static_cast<size_t>((currentTime - this->lastGenerated) * this->generatedPerSecond);
+	float amountGenerated = (currentTime - this->lastGenerated) * this->generatedPerSecond + this->change;
+
+	size_t amountGained = static_cast<size_t>(amountGenerated);
+
+	this->change = amountGenerated - amountGained;
 
 	this->lastGenerated = currentTime;
 

@@ -3,9 +3,15 @@
 #include "core/physics/ray.h"
 #include "core/physics/rayCaster.h"
 #include "utilities/time.h"
+#include "game/gameManager.h"
+#include "gameObjects/rayVis.h"
 
 void Turret::Start() { 
 	this->SetMesh(AssetManager::GetInstance().GetMeshObjData("TexBox/TextureCube.glb:Mesh_0"));
+	auto collider = this->factory->CreateStaticGameObject<SphereCollider>();
+	collider->transform.SetScale(2, 2, 2);
+	collider->SetParent(this->GetPtr());
+	collider->SetTag(Tag::PLAYER);
 	this->MeshObject::Start();
 }
 
@@ -30,17 +36,26 @@ void Turret::Tick() {
 			}
 			return;
 		}
+	} else {
+		float currentTime = Time::GetInstance().GetSessionTime();
+		float timePast = currentTime - this->lastAttemptedTargeting;
+		if (timePast > this->retargetTime) {
+			this->SetTargetClosest();
+		}
 	}
-	this->target = std::weak_ptr<GameObject3D>();
 }
 
 void Turret::SetTarget(std::weak_ptr<GameObject3D> target) { this->target = target; }
 
 std::weak_ptr<GameObject3D> Turret::GetTarget() const { return this->target; }
 
-void Turret::SetTargetClosest(const std::vector<std::weak_ptr<GameObject3D>> potentialTargets) {
+void Turret::SetTargetClosest() {
+
+	auto& potentialTargets = GameManager::GetInstance()->GetEnemies();
 	std::weak_ptr<GameObject3D> currentTarget;
+
 	float currentDistanceSquared = this->range * this->range;
+
 	for (const auto& objectWeak : potentialTargets) {
 		const auto& object = objectWeak.lock();
 		DirectX::XMVECTOR betweenVec =
@@ -54,6 +69,7 @@ void Turret::SetTargetClosest(const std::vector<std::weak_ptr<GameObject3D>> pot
 		}
 	}
 	this->SetTarget(currentTarget);
+	this->retargetTime = Time::GetInstance().GetSessionTime();
 }
 void Turret::SetRPM(float rpm) { this->rpm = rpm; }
 
@@ -67,26 +83,23 @@ void Turret::Fire() {
 	Logger::Log("Boom");
 	this->lastFired = Time::GetInstance().GetSessionTime();
 
-	const DirectX::XMVECTOR lookVec = DirectX::XMVector3Normalize(this->transform.GetDirectionVector());
-	const DirectX::XMVECTOR posVec = this->transform.GetPosition();
+	const DirectX::XMVECTOR lookVec = this->transform.GetGlobalForward();
+	const DirectX::XMVECTOR posVec = this->transform.GetGlobalPosition();
 
 	Ray ray{Vector3D{posVec}, Vector3D{lookVec}};
 	RayCastData rayCastData;
-	Logger::Log("shooting ray");
 
-	bool didHit = PhysicsQueue::GetInstance().castRay(ray, rayCastData);
+	bool didHit = PhysicsQueue::GetInstance().castRay(ray, rayCastData, Tag::ENEMY, Tag::PLAYER);
 	std::string hitString;
 	if (didHit) {
 
-		auto collider = rayCastData.hitColider.lock();
-		collider->Hit(this->damage);
-
-		hitString = "hit";
+		rayCastData.hitColider.lock()->Hit(this->damage);
 
 		// rayVis
 		MeshObjData meshdata = AssetManager::GetInstance().GetMeshObjData("TexBox/TextureCube.glb:Mesh_0");
-		auto colliderobjWeak = this->factory->CreateGameObjectOfType<MeshObject>();
+		auto colliderobjWeak = this->factory->CreateGameObjectOfType<RayVis>();
 		auto colliderobj = colliderobjWeak.lock();
+		colliderobj->StartDeathTimer(0.05f);
 		colliderobj->SetMesh(meshdata);
 		colliderobj->GetMesh().SetMaterial(
 			0, AssetManager::GetInstance().GetMaterialWeakPtr("defaultUnlitMaterial").lock());
@@ -96,9 +109,5 @@ void Turret::Fire() {
 		DirectX::XMFLOAT3 scale(0.01f, 0.01f, rayCastData.distance / 2);
 		colliderobj->transform.SetScale(DirectX::XMLoadFloat3(&scale));
 		// end of rayVis
-	} else {
-		hitString = "miss";
 	}
-
-	Logger::Log(hitString, " at distance: ", std::to_string(rayCastData.distance));
 }

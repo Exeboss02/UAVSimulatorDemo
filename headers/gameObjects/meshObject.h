@@ -30,6 +30,7 @@ public:
 
 	virtual void ShowInHierarchy() override;
 
+	void Hide(bool hidden);
 	bool IsHidden();
 
 private:
@@ -40,5 +41,6 @@ private:
 
 	int tempId;
 
+	bool imguiHide;
 	bool hide;
 };

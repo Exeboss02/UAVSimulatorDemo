@@ -27,7 +27,7 @@ void GameObject::SetParent(std::weak_ptr<GameObject> newParent) {
 
 
 	this->SetHasMovedRecursive();
-	Logger::Log("Set Parent.");
+	//Logger::Log("Set Parent.");
 }
 
 void GameObject::AddChild(std::weak_ptr<GameObject> newChild) {
@@ -123,6 +123,8 @@ void GameObject::ShowInHierarchy() {
 	ImGui::Separator();
 	ImGui::Text("Object details.");
 
+	ImGui::Text(std::format("Static: {}", this->GetIsStatic() ? "true" : "false").c_str());
+
 	if (ImGui::Checkbox("Is Active", &this->imguiIsActive)) {
 		SetActive(this->imguiIsActive);
 	}
@@ -167,10 +169,23 @@ void GameObject::SetActive(bool isActive) {
 	this->isActive = isActive;
 	SetActiveOverride(!this->isActive);
 	this->isActiveOverride = false;
+
+	if (this->GetIsStatic()) {
+		RenderQueue::RecalculateStatic();
+	} else {
+		RenderQueue::RecalculateDynamic();
+	}
 }
 
 void GameObject::SetActiveOverride(bool isActive) { 
 	this->isActiveOverride = isActive;
+
+	if (this->GetIsStatic()) {
+		RenderQueue::RecalculateStatic();
+	} else {
+		RenderQueue::RecalculateDynamic();
+	}
+
 	for (auto& child : this->children) {
 		child.lock()->SetActiveOverride(isActive);
 	}

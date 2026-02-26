@@ -1,6 +1,6 @@
 #include "gameObjects/meshObject.h"
 
-MeshObject::MeshObject() : mesh(), imguiNewMeshIdent("\0"), imguiNewMatIdent("\0"), hide(false) {
+MeshObject::MeshObject() : mesh(), imguiNewMeshIdent("\0"), imguiNewMatIdent("\0"), hide(false), imguiHide(false) {
 	static int id = 0;
 	this->tempId = id++;
 	Logger::Log("Created a MeshObject.");
@@ -9,7 +9,11 @@ MeshObject::MeshObject() : mesh(), imguiNewMeshIdent("\0"), imguiNewMatIdent("\0
 void MeshObject::SetMesh(MeshObjData newMesh) {
 	this->mesh = newMesh;
 
-	// Should do a check to make sure it isn't already in render queue
+	if (this->GetIsStatic()) {
+		RenderQueue::RecalculateStatic();
+	} else {
+		RenderQueue::RecalculateDynamic();
+	}
 }
 
 MeshObjData& MeshObject::GetMesh() { return this->mesh; }
@@ -67,7 +71,9 @@ void MeshObject::ShowInHierarchy() {
 
 	ImGui::Text("MeshObject");
 
-	ImGui::Checkbox("Hide", &this->hide);
+	if (ImGui::Checkbox("Hide", &this->imguiHide)) {
+		this->Hide(this->imguiHide);
+	}
 
 	if (!this->GetMesh().GetMesh().expired()) {
 		std::string meshText = std::format("Mesh: {}", this->GetMesh().GetMeshIdentifier());
@@ -118,6 +124,15 @@ void MeshObject::ShowInHierarchy() {
 		}
 
 		ImGui::EndPopup();
+	}
+}
+
+void MeshObject::Hide(bool hidden) { 
+	this->hide = hidden;
+	if (this->GetIsStatic()) {
+		RenderQueue::RecalculateStatic();
+	} else {
+		RenderQueue::RecalculateDynamic();
 	}
 }
 

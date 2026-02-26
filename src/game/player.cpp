@@ -16,12 +16,23 @@ Player::~Player() {}
 
 void Player::Start() {
 	this->RigidBody::Start();
+
+	// Set player to spawn point
+	DirectX::XMVECTOR spawnPoint = GameManager::GetInstance()->GetPlayerSpawnPoint();
+	this->transform.SetPosition(spawnPoint);
+	this->transform.SetRotationRPY(0, 0, 0);
+	this->SetCameraRotation(0, 0, 0);
+	this->SetPhysicsPosition(spawnPoint);
+	this->SetPreviousPhysicsPosition(spawnPoint);
+
+
 	// adding camera
 	auto cameraWeak = this->factory->CreateGameObjectOfType<CameraObject>();
 	auto cameraShared = cameraWeak.lock();
 	DirectX::XMFLOAT3 pos(0.0f, 1.5f, 0.0f);
 	cameraShared->transform.SetPosition(DirectX::XMLoadFloat3(&pos));
 	cameraShared->SetParent(this->GetPtr());
+	cameraShared->SetFarPlane(200);
 
 	this->camera = cameraShared;
 

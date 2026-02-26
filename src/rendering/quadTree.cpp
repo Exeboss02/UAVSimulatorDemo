@@ -15,7 +15,7 @@ QuadTree::QuadTree(DirectX::XMVECTOR volume, size_t maxDepth, size_t maxElements
 }
 
 QuadTree::QuadTree(std::array<float, 3> pos1, std::array<float, 3> pos2, size_t maxDepth, size_t maxElements)
-	: maxDepth(maxDepth), root(std::make_unique<QuadTree::Node>()) {
+	: maxDepth(maxDepth), root(std::make_unique<QuadTree::Node>()), maxElements(maxElements) {
 	DirectX::XMVECTOR minPoint = DirectX::XMVectorSet(pos1[0], pos1[1], pos1[2], 0.0f);
 	DirectX::XMVECTOR maxPoint = DirectX::XMVectorSet(pos2[0], pos2[1], pos2[2], 0.0f);
 
@@ -28,10 +28,11 @@ void QuadTree::AddElement(std::weak_ptr<MeshObject> object) {
 		return;
 	}
 
+	this->allElements.push_back(object);
 	this->AddToNode(object.lock(), this->root, 0);
 }
 
-std::vector<std::weak_ptr<MeshObject>> QuadTree::GetVisibleElements(CameraObject& camera) {
+std::vector<std::weak_ptr<MeshObject>> QuadTree::GetVisibleElements(CameraObject& camera, bool checkIndividualObjects) {
 	std::vector<std::weak_ptr<MeshObject>> out;
 	std::unordered_set<MeshObject*> found;
 
@@ -43,9 +44,24 @@ std::vector<std::weak_ptr<MeshObject>> QuadTree::GetVisibleElements(CameraObject
 	DirectX::XMMATRIX world = DirectX::XMMatrixInverse(nullptr, view);
 	viewFrustrum.Transform(viewFrustrum, world);
 
+	this->checkIndividual = checkIndividualObjects;
+	this->collisionChecks = 0;
 	this->CheckNode(viewFrustrum, this->root, out, found);
 
+	//ImGui::Begin("QuadTree Debug");
+	//ImGui::Text(std::format("intersections tests {}", this->collisionChecks).c_str());
+	//ImGui::End();
+
 	return out;
+}
+
+std::vector<std::weak_ptr<MeshObject>> QuadTree::GetAllElements() { 
+		// Removes dead gameobjects
+	this->allElements.erase(std::remove_if(this->allElements.begin(), this->allElements.end(),
+										 [](const std::weak_ptr<MeshObject>& w) { return w.expired(); }),
+								this->allElements.end());
+
+	return this->allElements; 
 }
 
 void QuadTree::AddToNode(std::shared_ptr<MeshObject> element, std::unique_ptr<QuadTree::Node>& node,
@@ -120,21 +136,33 @@ void QuadTree::SubdivideNode(std::unique_ptr<Node>& node) {
 
 void QuadTree::CheckNode(DirectX::BoundingFrustum& frustum, std::unique_ptr<Node>& node,
 						 std::vector<std::weak_ptr<MeshObject>>& out, std::unordered_set<MeshObject*>& found) {
+	
+	bool isLeaf = (node->children[0] == nullptr);
+	if (isLeaf && node->elements.size() <= 0) {
+		return;
+	}
+
 	bool collision = frustum.Intersects(node->boundingBox);
+	this->collisionChecks++;
 	if (!collision) {
 		return;
 	}
 
-	bool isLeaf = (node->children[0] == nullptr);
 	if (isLeaf) {
 		for (auto& elementWeak : node->elements) {
 			if (!elementWeak.expired()) {
 				std::shared_ptr<MeshObject> element = elementWeak.lock();
 				if (found.find(element.get()) == found.end()) {
-					bool inView = frustum.Intersects(element->GetBoundingBox());
-					if (inView) {
-						out.emplace_back(element);
-						found.insert(element.get());
+					if (this->checkIndividual) {
+						bool inView = frustum.Intersects(element->GetBoundingBox());
+						this->collisionChecks++;
+						if (inView) {
+							out.emplace_back(element);
+							found.insert(element.get());
+						}
+					} else {
+						 out.emplace_back(element);
+						 found.insert(element.get());
 					}
 				}
 			}

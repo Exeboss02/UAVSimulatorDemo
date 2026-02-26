@@ -58,10 +58,17 @@ public:
 
 	std::unique_ptr<AStar>& GetPathfinder() { return this->pathfinder; }
 
-private:
+	
+	
+	// These have to be public so other scripts (such as QuadTree) can use them for checks
+
 	inline static const float ROOM_SIZE = 10.0f;
-	static const size_t SHIP_MAX_SIZE_X = 63;
-	static const size_t SHIP_MAX_SIZE_Y = 63;
+	static const size_t SHIP_MAX_SIZE_X = 15;
+	static const size_t SHIP_MAX_SIZE_Y = 15;
+	static const size_t START_ROOM_X = 7;
+	static const size_t START_ROOM_Y = 0;
+
+private:
 	std::array<std::array<std::weak_ptr<Room>, SHIP_MAX_SIZE_Y>, SHIP_MAX_SIZE_X> rooms{};
 	std::weak_ptr<Cockpit> cockpit;
 	std::unordered_map<Vector2Int, float> placedRooms;

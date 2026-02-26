@@ -67,6 +67,5 @@ private:
 	std::unordered_map<Vector2Int, float> placedRooms;
 
 	std::unique_ptr<AStar> pathfinder;
-	std::vector<std::shared_ptr<AStarVertex>> path;
 	void CreateFloorColider();
 };

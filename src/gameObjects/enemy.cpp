@@ -33,6 +33,7 @@ void Enemy::Start() {
 	auto collider = this->factory->CreateGameObjectOfType<BoxCollider>().lock();
 	collider->transform.SetScale({1, 1, 1});
 	collider->SetParent(this->GetPtr());
+	collider->SetTag(Tag::ENEMY);
 
 	collider->SetOnHit([&](float damage) {
 		this->health.Decrement(damage);

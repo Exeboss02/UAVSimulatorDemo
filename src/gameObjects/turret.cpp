@@ -11,6 +11,7 @@ void Turret::Start() {
 	auto collider = this->factory->CreateStaticGameObject<SphereCollider>();
 	collider->transform.SetScale(2, 2, 2);
 	collider->SetParent(this->GetPtr());
+	collider->SetTag(Tag::PLAYER);
 	this->MeshObject::Start();
 }
 
@@ -88,12 +89,11 @@ void Turret::Fire() {
 	Ray ray{Vector3D{posVec}, Vector3D{lookVec}};
 	RayCastData rayCastData;
 
-	bool didHit = PhysicsQueue::GetInstance().castRay(ray, rayCastData);
+	bool didHit = PhysicsQueue::GetInstance().castRay(ray, rayCastData, Tag::ENEMY, Tag::PLAYER);
 	std::string hitString;
 	if (didHit) {
 
 		rayCastData.hitColider.lock()->Hit(this->damage);
-		hitString = "hit";
 
 		// rayVis
 		MeshObjData meshdata = AssetManager::GetInstance().GetMeshObjData("TexBox/TextureCube.glb:Mesh_0");
@@ -109,7 +109,5 @@ void Turret::Fire() {
 		DirectX::XMFLOAT3 scale(0.01f, 0.01f, rayCastData.distance / 2);
 		colliderobj->transform.SetScale(DirectX::XMLoadFloat3(&scale));
 		// end of rayVis
-	} else {
-		hitString = "miss";
 	}
 }

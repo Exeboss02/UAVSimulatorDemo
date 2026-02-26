@@ -49,17 +49,25 @@ private:
 	bool canShoot;
 	const float shotCooldown;
 	float timeSinceLastShot;
-	void UpdateShootCooldown();
+	void UpdateShootCooldown(const float deltaTime);
 
 	// Slow effect
 	bool isSlowed;
 	float slowDuration;
 	float timeSinceSlowed;
-	void UpdateSlowEffect();
+	void UpdateSlowEffect(const float deltaTime);
 
 	void SetMoveSpeedMode(MoveSpeedMode mode);
-	void MoveAlongPath();
+	void MoveAlongPath(const float deltaTime);
 	bool IsAtCurrentPathNode();
+
+	void CalulateDirectionToTarget();
+	void CalulateTargetRotation();
+
+	// Stuck detection
+	float timeStuck;
+	float stuckCheckInterval;
+	void IsStuckOnPath(const float deltaTime);
 
 	void ShootAtCore();
 	void ShootAtPlayer();

@@ -174,7 +174,7 @@ void GameManager::SpawnRound(size_t roundIndex) {
 
 			this->paths.push_back(Path());
 			this->paths[i].path = spaceshipLock->GetPathfinder()->FindPath(
-				spaceshipLock->GetRoom(selectedRoom.x, selectedRoom.y).lock()->GetPathfindingNodes()[0]);
+				spaceshipLock->GetRoom(selectedRoom.x, selectedRoom.y).lock()->GetPathfindingNodes()[1]);
 		}
 
 	} else {
@@ -217,6 +217,8 @@ void GameManager::EndRound() {
 		Win();
 	}
 }
+
+bool GameManager::GetInCombat() const { return this->inCombat; }
 
 const size_t& GameManager::GetCurrentRound() { return this->currentRound; }
 

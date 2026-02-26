@@ -24,4 +24,6 @@ private:
 	float generatedPerSecond = 1;
 
 	std::weak_ptr<SphereCollider> interactCollider;
+
+	float change = 0;
 };

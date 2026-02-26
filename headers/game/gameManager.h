@@ -28,6 +28,8 @@ public:
 	void SpawnEnemy(size_t atBreachpoint);
 	void EndRound();
 
+	bool GetInCombat() const;
+
 	const size_t& GetCurrentRound();
 
 	std::shared_ptr<Player> GetPlayer();

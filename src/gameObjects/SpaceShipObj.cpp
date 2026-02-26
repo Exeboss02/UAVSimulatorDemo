@@ -59,8 +59,6 @@ void SpaceShip::CreateRoom(size_t x, size_t y) {
 			}
 		}
 
-		this->path = pathfinder->FindPath(roomMesh->GetPathfindingNodes()[0]);
-
 		Logger::Log("Created Room");
 	}
 }
@@ -81,18 +79,6 @@ void SpaceShip::Tick() {
 	ImGui::InputInt2("cords", pos);
 	bool roomCreator = ImGui::Button("Create Room");
 	ImGui::End();
-
-	ImGui::Begin("Spawn enemy");
-	if (ImGui::Button("Spawn")) {
-		auto enemy = this->factory->CreateGameObjectOfType<Enemy>();
-		Logger::Log("Spawned Enemy");
-		if (auto enemyPtr = enemy.lock()) {
-			enemyPtr->SetPath(this->path);
-		}
-	}
-	ImGui::End();
-
-	
 
 	if (roomCreator) {
 		this->CreateRoom(pos[0], pos[1]);

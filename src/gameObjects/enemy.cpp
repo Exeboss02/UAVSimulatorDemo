@@ -33,6 +33,7 @@ void Enemy::Start() {
 	auto collider = this->factory->CreateGameObjectOfType<BoxCollider>().lock();
 	collider->transform.SetScale({1, 1, 1});
 	collider->SetParent(this->GetPtr());
+	collider->SetTag(Tag::ENEMY);
 
 	collider->SetOnHit([&](float damage) {
 		this->health.Decrement(damage);
@@ -75,6 +76,18 @@ void Enemy::SetPath(const std::vector<std::shared_ptr<AStarVertex>>& newPath) {
 	this->hasFinishedPath = false;
 	this->transform.SetPosition(this->path[0]->transform.GetGlobalPosition());
 }
+
+void Enemy::KillSelf() { this->factory->QueueDeleteGameObject(this->GetPtr()); }
+
+void Enemy::DecrementHealth(size_t amount) {
+	this->health.Increment(static_cast<int>(amount));
+	if (this->health.IsDead()) {
+		this->KillSelf();
+	}
+}
+
+void Enemy::IncrementHealth(size_t amount) { this->health.Increment(static_cast<int>(amount)); }
+
 
 void Enemy::MoveAlongPath() {
 	if (this->currentPathIndex >= this->maxPathIndex) { // Stop on node before core.

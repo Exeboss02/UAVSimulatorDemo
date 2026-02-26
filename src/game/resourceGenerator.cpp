@@ -46,11 +46,27 @@ void ResourceGenerator::Interact(std::shared_ptr<Player> player) {
 
 	player->resources.GetResource(this->resourceType).IncrementAmount(amountGenerated);
 
-	Logger::Log("Player has ", player->resources.titanium.GetAmount(), " of currently generated resource");
+	// hide interaction prompt for a short time so text disappears when interacting
+	try {
+		auto promptWeak = this->factory->FindObjectOfType<UI::InteractionPrompt>();
+		if (!promptWeak.expired()) {
+			auto prompt = promptWeak.lock();
+			if (prompt) prompt->Hide();
+		}
+	} catch (const std::exception& e) {
+		Logger::Error("ResourceGenerator::Interact Hide prompt exception: ", e.what());
+	} catch (...) {
+		Logger::Error("ResourceGenerator::Interact Hide prompt unknown exception");
+	}
+
+	// disable showing the prompt for 1 second
+	this->hoverDisabledUntil = currentTime + 0.5f;
 }
 
 void ResourceGenerator::Hover() {
 	try {
+		float currentTime = Time::GetInstance().GetSessionTime();
+		if (currentTime < this->hoverDisabledUntil) return;
 		auto promptWeak = this->factory->FindObjectOfType<UI::InteractionPrompt>();
 		if (promptWeak.expired()) return;
 		auto prompt = promptWeak.lock();

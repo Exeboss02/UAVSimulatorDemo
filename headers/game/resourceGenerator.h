@@ -26,6 +26,8 @@ private:
 	void Interact(std::shared_ptr<Player> player);
 	void Hover();
 	float lastGenerated = 0;
+	// time until Hover() is allowed to show prompt again (session time)
+	float hoverDisabledUntil = 0.0f;
 
 	float generatedPerSecond = 1;
 

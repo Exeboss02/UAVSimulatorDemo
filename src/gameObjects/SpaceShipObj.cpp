@@ -80,19 +80,6 @@ void SpaceShip::Tick() {
 	bool roomCreator = ImGui::Button("Create Room");
 	ImGui::End();
 
-	ImGui::Begin("Spawn enemy");
-	if (ImGui::Button("Spawn")) {
-		auto enemy = this->factory->CreateGameObjectOfType<Enemy>();
-		Logger::Log("Spawned Enemy");
-		if (auto enemyPtr = enemy.lock()) {
-			enemyPtr->SetPath(this->path);
-			enemyPtr->SlowDownEnemy(5.0f);
-		}
-	}
-	ImGui::End();
-
-	
-
 	if (roomCreator) {
 		this->CreateRoom(pos[0], pos[1]);
 	}

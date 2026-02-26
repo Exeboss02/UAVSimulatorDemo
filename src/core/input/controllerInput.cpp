@@ -48,3 +48,11 @@ bool ControllerInput::Interact() const { return InputManager::GetInstance().WasC
 bool ControllerInput::FullscreenToggle() const { return InputManager::GetInstance().WasControllerButtonPressed(this->controllerIndex, static_cast<int>(CONTROLLER_FULLSCREEN_TOGGLE)); }
 
 bool ControllerInput::Quit() const { return InputManager::GetInstance().WasControllerButtonPressed(this->controllerIndex, static_cast<int>(CONTROLLER_QUIT)); }
+
+bool ControllerInput::RightDown() const {
+	return InputManager::GetInstance().IsRightBackTriggerDown(this->controllerIndex);
+}
+
+bool ControllerInput::LeftDown() const {
+	return InputManager::GetInstance().IsLeftBackTriggerDown(this->controllerIndex);
+}

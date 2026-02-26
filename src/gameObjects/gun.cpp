@@ -10,7 +10,25 @@ Gun::Gun() {}
 
 Gun::~Gun() {}
 
-void Gun::Shoot() {
+void Gun::Shoot(bool pressedTrigger, bool triggerDown) {
+
+	switch (this->fireMode) {
+	case (FireMode::SEMIAUTOMATIC):
+		if (pressedTrigger == false) {
+			return;
+		}
+		break;
+	case (FireMode::AUTOMATIC):
+		if (triggerDown == false) {
+			return;
+		}
+		break;
+
+	default:
+		break;
+	}
+
+	
 
 	if (!this->shootCoolDown.TimeIsUp()) {
 		Logger::Log("cooldown not down");
@@ -37,7 +55,7 @@ void Gun::Shoot() {
 	Ray ray{Vector3D{posVec}, Vector3D{lookVec}};
 	RayCastData rayCastData;
 
-	bool didHit = PhysicsQueue::GetInstance().castRay(ray, rayCastData);
+	bool didHit = PhysicsQueue::GetInstance().castRay(ray, rayCastData, ~Tag::NOIGNORE, Tag::PLAYER);
 	std::string hitString;
 	if (didHit) {
 

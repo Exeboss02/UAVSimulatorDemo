@@ -32,28 +32,28 @@ void Cockpit::Start() {
 
 void Cockpit::SetOnDeath(std::function<void()> func) { this->onDeath = func; }
 
-void Cockpit::SetupPathfindingNodes(std::shared_ptr<SpaceShip> spaceShip, std::shared_ptr<Cockpit> cockpitPtr) {
+void Cockpit::SetupPathfindingNodes(std::shared_ptr<SpaceShip> spaceShip) {
 	
 	size_t nodeCount = this->pathfindingNodes.size();
 
 	// Core node
 	auto vertex = this->factory->CreateGameObjectOfType<AStarVertex>().lock();
+	vertex->SetParent(this->GetPtr());
+	
+	DirectX::XMVECTOR localCorePosition = DirectX::XMVectorSet(0, 2, 0, 0);
 	vertex->Initialize(this->corePosition);
-	vertex->transform.SetPosition(this->corePosition);
-
-	vertex->SetParent(cockpitPtr);
+	vertex->transform.SetPosition(localCorePosition);
 
 	this->pathfindingNodes[0] = vertex;
 	spaceShip->GetPathfinder()->AddVertex(vertex);
 
 	// Door node
 	auto doorVertex = this->factory->CreateGameObjectOfType<AStarVertex>().lock();
-	DirectX::XMVECTOR doorPosition =
-		DirectX::XMVectorAdd(this->pathfindingNodes[0]->transform.GetPosition(), DirectX::XMVectorSet(0, 2, 3, 0));
-	doorVertex->Initialize(DirectX::XMVectorAdd(this->corePosition, doorPosition));
-	doorVertex->transform.SetPosition(doorPosition);
+	doorVertex->SetParent(this->GetPtr());
 
-	doorVertex->SetParent(cockpitPtr);
+	DirectX::XMVECTOR doorPosition = DirectX::XMVectorSet(0, 2, 3, 0); 
+	doorVertex->Initialize(DirectX::XMVectorAdd(this->corePosition, DirectX::XMVectorSet(0, 0, 3, 0)));
+	doorVertex->transform.SetPosition(doorPosition);
 
 	this->pathfindingNodes[1] = doorVertex;
 	spaceShip->GetPathfinder()->AddVertex(doorVertex);

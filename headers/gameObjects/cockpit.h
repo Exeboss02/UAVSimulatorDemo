@@ -11,7 +11,7 @@ public:
 	/// </summary>
 	/// <param name="spaceShip"></param>
 	/// <param name="roomPtr"></param>
-	void SetupPathfindingNodes(std::shared_ptr<SpaceShip> spaceShip, std::shared_ptr<Cockpit> cockpitPtr);
+	void SetupPathfindingNodes(std::shared_ptr<SpaceShip> spaceShip);
 
 	std::array<std::shared_ptr<AStarVertex>, 2>& GetPathfindingNodes() { return this->pathfindingNodes; }
 

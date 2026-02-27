@@ -1,8 +1,8 @@
 #include "game/gameManager.h"
-#include "core/filepathHolder.h"
+#include "UI/canvasObject.h"
 #include "UI/image.h"
 #include "UI/text.h"
-#include "UI/canvasObject.h"
+#include "core/filepathHolder.h"
 #include "rendering/renderQueue.h"
 #include "scene/sceneManager.h"
 #include <cstdlib>
@@ -53,39 +53,32 @@ void GameManager::Start() {
 }
 
 void GameManager::Tick() {
-	// If win screen is visible, wait for the unlock timer then detect any key to jump to main menu
+	// If win screen is visible
 	if (this->winScreenVisible) {
 		float currentTime = Time::GetInstance().GetSessionTime();
-		// Enforce at least 5 seconds before allowing return to menu
+		// Auto-transition to main menu after 5 seconds
 		if (currentTime - this->winStartTime >= 5.0f) {
-			ImGuiIO& io = ImGui::GetIO();
-			for (int i = 0; i < IM_ARRAYSIZE(io.KeysDown); i++) {
-				if (ImGui::IsKeyPressed(i)) {
-					// Ensure the OS cursor is shown and player input is disabled so
-					// the Main Menu receives mouse events after scene change.
-					if (auto playerPtr = this->player.lock()) {
-						playerPtr->SetShowCursor(true);
-						playerPtr->SetInputEnabled(false);
-					}
+			if (auto playerPtr = this->player.lock()) {
+				playerPtr->SetShowCursor(true);
+				playerPtr->SetInputEnabled(false);
+			}
 
-					// Clean up win UI widgets so they don't linger after scene unload
-					if (!this->winBackground.expired()) {
-						if (auto bg = this->winBackground.lock()) this->factory->QueueDeleteGameObject(std::weak_ptr<GameObject>(bg));
-					}
-					if (!this->winTitle.expired()) {
-						if (auto t = this->winTitle.lock()) this->factory->QueueDeleteGameObject(std::weak_ptr<GameObject>(t));
-					}
-					if (!this->winPrompt.expired()) {
-						if (auto p = this->winPrompt.lock()) this->factory->QueueDeleteGameObject(std::weak_ptr<GameObject>(p));
-					}
-					this->winScreenVisible = false;
+			// Clean up win UI widgets so they don't linger after scene unload
+			if (!this->winBackground.expired()) {
+				if (auto bg = this->winBackground.lock())
+					this->factory->QueueDeleteGameObject(std::weak_ptr<GameObject>(bg));
+			}
+			if (!this->winTitle.expired()) {
+				if (auto t = this->winTitle.lock()) this->factory->QueueDeleteGameObject(std::weak_ptr<GameObject>(t));
+			}
+			if (!this->winPrompt.expired()) {
+				if (auto p = this->winPrompt.lock()) this->factory->QueueDeleteGameObject(std::weak_ptr<GameObject>(p));
+			}
+			this->winScreenVisible = false;
 
-					if (auto sm = SceneManager::GetActive()) {
-						auto path = (FilepathHolder::GetAssetsDirectory() / "scenes" / "MainMenu.scene").string();
-						sm->QueueLoadSceneFile(path);
-					}
-					break;
-				}
+			if (auto sm = SceneManager::GetActive()) {
+				auto path = (FilepathHolder::GetAssetsDirectory() / "scenes" / "MainMenu.scene").string();
+				sm->QueueLoadSceneFile(path);
 			}
 		}
 		return;
@@ -152,7 +145,7 @@ void GameManager::ReloadScene() {
 	}
 }
 
-void GameManager::Win() { 
+void GameManager::Win() {
 	Logger::Log("You won!");
 
 	// Try to find the main HUD canvas to place the win overlay on top
@@ -211,7 +204,7 @@ void GameManager::Win() {
 			float tw = 800.0f;
 			float th = 120.0f;
 			title->SetSize(UI::Vec2{tw, th});
-			title->SetPosition(UI::Vec2{(canvasWidth - tw) * 0.5f, (canvasHeight - th) * 0.5f - 40.0f});
+			title->SetPosition(UI::Vec2{(canvasWidth - tw) * 0.5f + 260, (canvasHeight - th) * 0.5f - 200.0f});
 			title->SetVisible(true);
 			title->SetZIndex(1);
 			std::weak_ptr<GameObject> me = canvasShared->GetPtr();
@@ -219,28 +212,6 @@ void GameManager::Win() {
 			canvasShared->AddChild(std::static_pointer_cast<UI::Widget>(title));
 			RenderQueue::AddUIWidget(title);
 			this->winTitle = title;
-		}
-	}
-
-	// Prompt text: "Press any key to continue"
-	{
-		auto promptWeak = this->factory->CreateGameObjectOfType<UI::Text>();
-		if (!promptWeak.expired()) {
-			auto prompt = promptWeak.lock();
-			prompt->SetName("Win_Prompt");
-			prompt->SetText("Press any key to continue");
-			prompt->SetFontSize(32.0f);
-			float pw = 600.0f;
-			float ph = 48.0f;
-			prompt->SetSize(UI::Vec2{pw, ph});
-			prompt->SetPosition(UI::Vec2{(canvasWidth - pw) * 0.5f, (canvasHeight - ph) * 0.5f + 60.0f});
-			prompt->SetVisible(true);
-			prompt->SetZIndex(1);
-			std::weak_ptr<GameObject> me = canvasShared->GetPtr();
-			prompt->SetParent(me);
-			canvasShared->AddChild(std::static_pointer_cast<UI::Widget>(prompt));
-			RenderQueue::AddUIWidget(prompt);
-			this->winPrompt = prompt;
 		}
 	}
 

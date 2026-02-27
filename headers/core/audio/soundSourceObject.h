@@ -99,12 +99,15 @@ public:
 
 	bool GetDeleteWhenFinnished();
 
-	/// @brief Loops a soundClip specified nr of times, 0 = loops until set to false or until soundSource is destroyed
+	/// @brief Loops a soundClip specified nr of times, 0 or less = loops until set to false or until soundSource is destroyed
 	/// @param nrOfTimes 
 	void LoopSoundEffect(int nrOfTimes);
 
 	/// @brief Stops looping sound effects on this soundSourceObject
 	void StopLoopingSoundEffect();
+
+	/// @brief Returns true if the soundSourceObject is set to looping, false if it's not
+	bool GetLoopSoundEffect();
 
 private:
 	int id = -1;
@@ -112,6 +115,7 @@ private:
 	int sourceIndex = 0;
 	ALuint* sources;
 	AudioInstruction currentInstructionSet;
+	std::vector<ALint> lastSampleOffsets;
 
 	int loopCount = 0;
 	bool shouldLoop = false;

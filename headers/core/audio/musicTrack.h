@@ -29,6 +29,7 @@ public:
 	void UpdateBufferStream();
 	bool LoadTrack();
 	void SetPitch(float pitch);
+	float GetGain();
 	void SetGain(float gain);
 	void SetAudioInstruction(AudioInstruction audioInstruction);
 	void GetSourceState(ALint& sourceState);

@@ -52,10 +52,13 @@ void GameManager::Start() {
 	AudioManager::GetInstance().SetMasterMusicVolume(0.3f);
 	AudioManager::GetInstance().SetMasterSoundEffectsVolume(1);
 
-	// Music
-	this->musicTimer.Initialize(2);
+	// Audio
+	this->buildMusicWaitTimer.Initialize(5);
 	AudioManager::GetInstance().AddMusicTrackStandardFolder("LethalContact.wav", "contact");
 	AudioManager::GetInstance().LoopMusicTrack("contact", true);
+
+	this->shipSpeaker = this->factory->CreateGameObjectOfType<SoundSourceObject>();
+	this->shipSpeaker.lock()->transform.SetPosition(this->GetPlayerSpawnPoint());
 }
 
 void GameManager::Tick() {
@@ -110,15 +113,7 @@ void GameManager::Tick() {
 	}
 	ImGui::End();
 
-	float deltaTime = Time::GetInstance().GetDeltaTime();
-	if(deltaTime < 1.0f)
-	{
-		this->musicTimer.Tick(deltaTime);
-	}
-
-	if (this->musicTimer.TimeIsUp() && !this->inCombat) {
-		AudioManager::GetInstance().Play("contact");
-	}
+	this->AudioHandling();
 }
 
 void GameManager::ReloadScene() {
@@ -238,9 +233,71 @@ void GameManager::EndRound() {
 	}
 }
 
+void GameManager::AudioHandling()
+{	
+	float deltaTime = Time::GetInstance().GetDeltaTime();
+
+	if(this->inCombat)
+	{
+		if (!this->isPlayingCombatMusic)
+		{
+			AudioManager::GetInstance().Play("contact");
+			Logger::Warn("MUSIC VOLUME: ", std::to_string(AudioManager::GetInstance().GetMusicTrackGain("contact")));
+			this->isPlayingCombatMusic = true;
+			this->isFading = false;
+			this->isPlayingBuildMusic = false;
+		}
+	}
+	else
+	{
+		if(this->currentRound > 0)
+		{
+			if(!this->isFading && !this->isPlayingBuildMusic)
+			{
+				AudioManager::GetInstance().FadeOutStop("contact", 6);
+				this->isFading = true;
+				this->isPlayingCombatMusic = false;
+				this->isPlayingBuildMusic = false;
+				this->shipSpeaker.lock()->SetGain(1);
+			}
+
+			if(!this->isPlayingBuildMusic)
+			{
+				this->buildMusicWaitTimer.Tick(deltaTime);
+
+				if(this->buildMusicWaitTimer.TimeIsUp())
+				{
+					this->isPlayingBuildMusic = true;
+					this->isFading = false;
+					this->isPlayingCombatMusic = false;
+					this->shipSpeaker.lock()->SetGain(1);
+					this->buildMusicWaitTimer.Reset();
+
+					SoundClip* buildMusic = AssetManager::GetInstance().GetSoundClip("WaitingForActionRadio.wav");
+					this->shipSpeaker.lock()->Play(buildMusic);
+				}
+			}
+
+			if(this->idleTimeTimer <= 8)
+			{
+				float gain = this->shipSpeaker.lock()->GetGain();
+				gain -= (deltaTime / 5);
+				this->shipSpeaker.lock()->SetGain(gain);
+
+				if(this->idleTimeTimer <= 0.01f)
+				{
+
+				}
+			}
+		}
+	}
+}
+
 bool GameManager::GetInCombat() const { return this->inCombat; }
 
-const size_t& GameManager::GetCurrentRound() { return this->currentRound; }
+const size_t& GameManager::GetCurrentRound() {
+	return this->currentRound;
+}
 
 std::shared_ptr<Player> GameManager::GetPlayer() { return this->player.lock(); }
 

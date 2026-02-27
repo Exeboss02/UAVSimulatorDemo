@@ -61,6 +61,8 @@ private:
 
 	DirectX::XMVECTOR playerSpawnPoint;
 
+	void AudioHandling();
+	std::weak_ptr<SoundSourceObject> shipSpeaker;
 
 	// Round stuff:
 
@@ -84,5 +86,8 @@ private:
 
 	size_t unspawnedEnemies;
 
-	Timer musicTimer;
+	bool isPlayingCombatMusic = false;
+	bool isPlayingBuildMusic = false;
+	bool isFading = false;
+	Timer buildMusicWaitTimer;
 };

@@ -73,6 +73,7 @@ void MusicTrack::Play()
 void MusicTrack::Stop()
 {
 	alSourceStop(this->source);
+	sf_seek(this->sndfile, 0, SEEK_SET); //Rewind
 
 	if (alGetError() != AL_NO_ERROR)
 	{
@@ -148,6 +149,11 @@ void MusicTrack::SetPitch(float pitch)
 {
 	this->pitch = pitch;
 	alSourcef(this->source, AL_PITCH, this->pitch);
+}
+
+float MusicTrack::GetGain()
+{
+	return this->targetGain;
 }
 
 void MusicTrack::SetGain(float gain)

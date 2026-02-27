@@ -93,13 +93,14 @@ void Collider::Start()
 		visualMeshObject->transform.SetScale(scale);
 		visualMeshObject->SetParent(std::static_pointer_cast<Collider>(this->GetPtr()));
 		visualMeshObject->SetActive(false);
-
+		visualMeshObject->SetCastShadow(false);
 	} else {
 		auto visualMeshObject = this->factory->CreateGameObjectOfType<MeshObject>().lock();
 		visualMeshObject->SetMesh(meshData);
 		visualMeshObject->transform.SetScale(scale);
 		visualMeshObject->SetParent(std::static_pointer_cast<Collider>(this->GetPtr()));
 		visualMeshObject->SetActive(false);
+		visualMeshObject->SetCastShadow(false);
 	}
 	#endif
 }

@@ -105,7 +105,16 @@ void Scene::RegisterGameObject(std::shared_ptr<GameObject> gameObject) {
 	}
 }
 
-void Scene::QueueDeleteGameObject(std::weak_ptr<GameObject> gameObject) { this->deleteQueue.push_back(gameObject); }
+void Scene::QueueDeleteGameObject(std::weak_ptr<GameObject> gameObject) { 
+	this->deleteQueue.push_back(gameObject); 
+	
+	auto lock = gameObject.lock();
+	if (lock->GetIsStatic()) {
+		RenderQueue::RecalculateStatic();
+	} else {
+		RenderQueue::RecalculateDynamic();
+	}
+}
 
 size_t Scene::GetNumberOfGameObjects() { return this->gameObjects.size(); }
 

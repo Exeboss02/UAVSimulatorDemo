@@ -150,6 +150,7 @@ void Gun::VisualizeShootBasedOnCameraParent(DirectX::XMVECTOR lookVec, DirectX::
 	colliderobj->StartDeathTimer(0.05f);
 	colliderobj->SetMesh(meshdata);
 	colliderobj->GetMesh().SetMaterial(0, AssetManager::GetInstance().GetMaterialWeakPtr("defaultUnlitMaterial").lock());
+	colliderobj->SetCastShadow(false);
 
 	colliderobj->transform.SetPosition(
 		DirectX::XMVectorAdd(muzzlePos.getXMVector(), DirectX::XMVectorScale(muzzleToHit.getXMVector(), 0.5)));
@@ -186,6 +187,7 @@ void Gun::VisulalizeShootBasedOnMuzzle(DirectX::XMVECTOR lookVec, DirectX::XMVEC
 	colliderobj->SetMesh(meshdata);
 	colliderobj->GetMesh().SetMaterial(0,
 									   AssetManager::GetInstance().GetMaterialWeakPtr("defaultUnlitMaterial").lock());
+	colliderobj->SetCastShadow(false);
 	colliderobj->transform.SetPosition(DirectX::XMVectorAdd(posVec, DirectX::XMVectorScale(lookVec, distance / 2)));
 	colliderobj->transform.SetRotationQuaternion(this->muzzle.lock()->transform.GetGlobalRotation());
 	DirectX::XMFLOAT3 scale(0.01f, 0.01f, distance / 2);

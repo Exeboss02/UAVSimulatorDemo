@@ -34,7 +34,10 @@ public:
 		fifth = 16,
 	};
 
-	BaseMaterial(ID3D11Device* device) {}
+	BaseMaterial(ID3D11Device* device) {
+		static size_t index = 0;
+		this->materialIndex = index++;
+	}
 	virtual RenderData GetRenderData(ID3D11DeviceContext* context) = 0;
 
 	std::string GetIdentifier() { return this->identifier; }
@@ -42,6 +45,9 @@ public:
 
 	bool wireframe = false;
 
+	size_t GetMaterialIndex() { return this->materialIndex; };
+
 private:
 	std::string identifier;
+	size_t materialIndex; // Faster indexing for render map
 };

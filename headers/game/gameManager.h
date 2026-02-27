@@ -5,6 +5,7 @@
 #include "gameObjects/SpaceShipObj.h"
 #include "gameObjects/testEnemy.h"
 #include "gameObjects/enemy.h"
+#include "core/tools.h"
 
 struct Round {
 	size_t enemyCount;
@@ -82,4 +83,6 @@ private:
 	const float idleTime;
 
 	size_t unspawnedEnemies;
+
+	Timer musicTimer;
 };

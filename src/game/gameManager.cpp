@@ -46,6 +46,16 @@ void GameManager::Start() {
 	this->rounds.push_back(Round{80, 3});
 
 	this->idleTimeTimer = this->idleTime;
+
+
+	// Master Volume
+	AudioManager::GetInstance().SetMasterMusicVolume(0.3f);
+	AudioManager::GetInstance().SetMasterSoundEffectsVolume(1);
+
+	// Music
+	this->musicTimer.Initialize(2);
+	AudioManager::GetInstance().AddMusicTrackStandardFolder("LethalContact.wav", "contact");
+	AudioManager::GetInstance().LoopMusicTrack("contact", true);
 }
 
 void GameManager::Tick() {
@@ -99,6 +109,16 @@ void GameManager::Tick() {
 		SpawnNextRound();
 	}
 	ImGui::End();
+
+	float deltaTime = Time::GetInstance().GetDeltaTime();
+	if(deltaTime < 1.0f)
+	{
+		this->musicTimer.Tick(deltaTime);
+	}
+
+	if (this->musicTimer.TimeIsUp() && !this->inCombat) {
+		AudioManager::GetInstance().Play("contact");
+	}
 }
 
 void GameManager::ReloadScene() {

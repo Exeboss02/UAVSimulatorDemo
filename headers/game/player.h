@@ -64,7 +64,6 @@ public:
 	bool isPlayingMusic = false;
 	bool canShoot = false;
 
-	Timer musicTimer;
 	Timer sfxTimer;
 
 	ResourceManager resources;

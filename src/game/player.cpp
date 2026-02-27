@@ -37,13 +37,7 @@ void Player::Start() {
 	this->camera = cameraShared;
 
 	// adding gun
-	{
-		auto gunWeak = this->factory->CreateGameObjectOfType<Rifle01>();
-		auto gun = gunWeak.lock();
-		gun->SetParent(this->camera.lock()->GetPtr());
-		gun->setParentToShootFrom(cameraShared);
-		this->gun = gun;
-	}
+	this->addGun(Guns::pistol);
 
 	// adding body colliders
 	{
@@ -424,6 +418,16 @@ void Player::Interact() {
 
 	if (this->keyBoardInput.Interact() || this->controllerInput->Interact()) {
 
+		static int x = 0;
+		if (x % 2 == 0) {
+			this->addGun(Guns::rifle);
+			x++;
+
+		} else {
+			this->addGun(Guns::pistol);
+			x++;
+		}
+
 		Ray ray{Vector3D{posVec}, Vector3D{lookVec}};
 		RayCastData rayCastData;
 
@@ -478,4 +482,29 @@ void Player::Aim() {
 		this->gun.lock()->transform.SetPosition(DirectX::XMLoadFloat3(&pos));
 		isAiming = false;
 	}
+}
+
+void Player::addGun(Guns gunType) {
+	
+
+	if (!this->gun.expired()) {
+		this->factory->QueueDeleteGameObject(this->gun);
+	}
+
+	std::weak_ptr<Gun> gunWeak;
+
+	switch (gunType) {
+	case Guns::pistol:
+		gunWeak = this->factory->CreateGameObjectOfType<Pistol01>();
+		break;
+	case Guns::rifle:
+		gunWeak = this->factory->CreateGameObjectOfType<Rifle01>();
+		break;
+	default:
+		break;
+	}
+	auto gun = gunWeak.lock();
+	gun->SetParent(this->camera.lock()->GetPtr());
+	gun->setParentToShootFrom(this->camera.lock());
+	this->gun = gun;
 }

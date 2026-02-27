@@ -29,7 +29,13 @@ public:
 	// Clean up (queue deletes) if needed
 	void OnDestroy();
 
+	void SetStoryText(const std::string& text);
+	
+	void SetStoryTextVisibility(bool visible);
+
 private:
+	void SafeTextSet(std::weak_ptr<UI::Text> textObject, const std::string& text);
+
 	GameObjectFactory* factory = nullptr;
 
 	std::weak_ptr<UI::CanvasObject> canvasObj;
@@ -48,6 +54,8 @@ private:
 
 	std::weak_ptr<UI::Image> playerHealthIcon;
 	std::weak_ptr<UI::Text> playerHealthText;
+
+	std::weak_ptr<UI::Text> storyText;
 
 	std::weak_ptr<Crosshair> crosshair;
 

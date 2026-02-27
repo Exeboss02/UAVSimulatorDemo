@@ -143,6 +143,11 @@ void HUD::Start() {
 	}
 
 	{
+		auto [ix, iy, tx, ty] = makeLeftAlignedPositions(5);
+		this->playerHealthText = makeText("HUD_Player_Story_Text", "", tx, ty, textWidth, false);
+	}
+
+	{
 		auto crossWeak = this->factory->CreateGameObjectOfType<Crosshair>();
 		if (!crossWeak.expired()) {
 			auto crossShared = crossWeak.lock();
@@ -174,18 +179,11 @@ void HUD::Start() {
 }
 
 void HUD::Update(const ResourceManager& resources, const Health& playerHealth) {
-	auto safeSet = [](std::weak_ptr<UI::Text> w, const std::string& s) {
-		if (w.expired()) return;
-		auto p = w.lock();
-		if (!p) return;
-		p->SetText(s);
-	};
-
-	safeSet(this->titaniumText, std::to_string(resources.titanium.GetAmount()));
-	safeSet(this->lubricantText, std::to_string(resources.lubricant.GetAmount()));
-	safeSet(this->carbonFiberText, std::to_string(resources.carbonFiber.GetAmount()));
-	safeSet(this->circuitText, std::to_string(resources.circuit.GetAmount()));
-	safeSet(this->playerHealthText, std::to_string(playerHealth.Get()));
+	this->SafeTextSet(this->titaniumText, std::to_string(resources.titanium.GetAmount()));
+	this->SafeTextSet(this->lubricantText, std::to_string(resources.lubricant.GetAmount()));
+	this->SafeTextSet(this->carbonFiberText, std::to_string(resources.carbonFiber.GetAmount()));
+	this->SafeTextSet(this->circuitText, std::to_string(resources.circuit.GetAmount()));
+	this->SafeTextSet(this->playerHealthText, std::to_string(playerHealth.Get()));
 }
 
 void HUD::OnDestroy() {
@@ -195,4 +193,18 @@ void HUD::OnDestroy() {
 	if (!canvasShared) return;
 
 	canvasShared->Clear();
+}
+
+void HUD::SetStoryText(const std::string& text) { this->SafeTextSet(this->storyText, text); }
+
+void HUD::SetStoryTextVisibility(bool visible) {
+	if (auto storyText = this->storyText.lock()) {
+		storyText->SetVisible(visible);
+	}
+}
+
+void HUD::SafeTextSet(std::weak_ptr<UI::Text> textObjectWeak, const std::string& text) {
+	if (textObjectWeak.expired()) return;
+	auto textObject = textObjectWeak.lock();
+	textObject->SetText(text);
 }

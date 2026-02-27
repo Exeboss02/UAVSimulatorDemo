@@ -1,14 +1,13 @@
-#pragma once 
-#include "game/player.h"
-#include <filesystem>
+#pragma once
 #include "core/audio/soundClip.h"
+#include "game/player.h"
 #include "gameObjects/gameObject.h"
-#include <string_view>
+#include <filesystem>
 
 class TextPart {
 public:
 	TextPart(std::string text, float displayTime);
-	std::string_view GetText() const;
+	const std::string& GetText() const;
 	float GetDisplayTime() const;
 
 private:
@@ -19,24 +18,32 @@ private:
 class StoryPart {
 public:
 	StoryPart(std::vector<TextPart> textParts, SoundClip* soundClip);
-	void PlayStoryPart() const;
+	bool PlayStoryPart(std::shared_ptr<Player> player);
 
 private:
+	bool playing = false;
+	size_t currentTextPart;
+	float currentPartTime;
 	std::vector<TextPart> textParts;
 	SoundClip* soundClip;
 };
 
-class StoryManager : GameObject {
+class StoryManager : public GameObject {
 public:
+	StoryManager();
 	void LoadStory(std::filesystem::path path);
 	void PlayNextStoryPart();
-	
+
 	void Tick() override;
 	void Start() override;
 
 private:
-	std::vector<StoryPart> storyParts;
 
+	bool playing = false;
+	size_t currentStoryPart = 0;
+
+
+	std::vector<StoryPart> storyParts;
+	std::weak_ptr<Player> player;
 	size_t currentStoryIndex = 0;
 };
-

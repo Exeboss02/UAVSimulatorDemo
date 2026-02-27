@@ -5,6 +5,7 @@
 #include "gameObjects/SpaceShipObj.h"
 #include "gameObjects/testEnemy.h"
 #include "gameObjects/enemy.h"
+#include "game/storyManager.h"
 
 struct Round {
 	size_t enemyCount;
@@ -53,6 +54,8 @@ public:
 	float GetRandom(float startValue, float endValue);
 
 private:
+	std::weak_ptr<StoryManager> storyManager;
+
 	static std::weak_ptr<GameManager> instance;
 
 	std::weak_ptr<Player> player;

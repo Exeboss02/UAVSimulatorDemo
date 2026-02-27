@@ -120,7 +120,7 @@ void Player::Start() {
 	AudioManager::GetInstance().SetMasterSoundEffectsVolume(1);
 
 	// Music
-	AudioManager::GetInstance().AddMusicTrackStandardFolder("LethalContact.wav", "contact");
+	AudioManager::GetInstance().AddMusicTrackStandardFolder("Announcement.wav", "Announcement.wav");
 
 	// SFX
 	this->speaker = this->factory->CreateGameObjectOfType<SoundSourceObject>();
@@ -187,7 +187,7 @@ void Player::Tick() {
 
 	if (this->musicTimer.TimeIsUp() && !isPlayingMusic) {
 		// AudioManager::GetInstance().FadeInPlay("contact", 0, 6);
-		AudioManager::GetInstance().Play("contact");
+		AudioManager::GetInstance().Play("Announcement.wav");
 		this->isPlayingMusic = true;
 	}
 

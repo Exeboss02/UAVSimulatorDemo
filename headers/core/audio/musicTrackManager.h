@@ -35,6 +35,19 @@ public:
 	void SetPitch(std::string id, float pitch);
 	MusicTrack* GetMusicTrack(std::string id);
 
+	/// <summary>
+	/// Loops a music track specified nr of times. 0 or less = loops until stopped or destroyed
+	/// </summary>
+	/// <param name="id"></param>
+	/// <param name="nrOfTimes"></param>
+	void LoopMusicTrack(std::string id, int nrOfTimes);
+
+	/// <summary>
+	/// Stops looping a music track
+	/// <param name="id"></param>
+	/// </summary>
+	void StopLoopingMusicTrack(std::string id);
+
 	void Tick();
 
 private:

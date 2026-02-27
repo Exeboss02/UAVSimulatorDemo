@@ -132,8 +132,17 @@ MusicTrack* MusicTrackManager::GetMusicTrack(std::string id)
 	return track;
 }
 
-void MusicTrackManager::Tick()
+void MusicTrackManager::LoopMusicTrack(std::string id, int nrOfTimes)
 {
+	this->
+}
+
+void MusicTrackManager::StopLoopingMusicTrack(std::string id)
+{
+
+}
+
+void MusicTrackManager::Tick() {
 	for (int i = this->activeTracks.size() - 1; i >= 0; i--)
 	{
 		ALint sourceState = 0;

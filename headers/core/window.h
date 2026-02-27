@@ -25,16 +25,18 @@ public:
 	void Resize(UINT width, UINT height);
 	void ToggleFullscreen(bool fullscreen);
 
-	void SetResizeCallback(std::function<void(UINT, UINT)> callback);
+	void SetResizeCallback(std::function<void(UINT, UINT, UINT)> callback);
 
 	// Global accessors for the current client size (updated when a Window is resized)
 	static UINT GetCurrentWidth();
 	static UINT GetCurrentHeight();
+	static UINT GetCurrentDPI();
 
 private:
 	HWND hWnd;
 	UINT width;
 	UINT height;
+	UINT DPI;
 	HINSTANCE instance;
 	RECT windowedRect{};
 	bool isFullscreen;
@@ -47,10 +49,13 @@ private:
 	void UpdateClientSize();
 	void ApplyFullscreenResolution(UINT width, UINT height);
 
-	std::function<void(UINT, UINT)> resizeCallback;
+	std::function<void(UINT, UINT, UINT)> resizeCallback;
 	static UINT currentWidth;
 	static UINT currentHeight;
+	static UINT currentDPI;
 };
 
 inline UINT Window::GetCurrentWidth() { return Window::currentWidth; }
 inline UINT Window::GetCurrentHeight() { return Window::currentHeight; }
+
+inline UINT Window::GetCurrentDPI() { return Window::currentDPI; }

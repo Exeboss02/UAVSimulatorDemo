@@ -8,7 +8,6 @@ using namespace UI;
 void Text::SetText(const std::string& t) { 
 	this->text = t; 
 	this->CalculateTruePosition();
-	Logger::Log("Text position: ", this->GetPosition().x);
 }
 std::string Text::GetText() const { return this->text; }
 
@@ -22,7 +21,8 @@ void Text::SetColor(const DirectX::XMFLOAT4& c) { this->color = c; }
 DirectX::XMFLOAT4 Text::GetColor() const { return this->color; }
 
 Vec2 UI::Text::GetSize() const { 
-	return Vec2(UI::TextRenderer::GetInstance().MeasureString(this->text, this->GetFontSize(), this->font), this->GetFontSize());
+	Vec2 size = Vec2(UI::TextRenderer::GetInstance().MeasureString(this->text, this->GetFontSize(), this->font), this->GetFontSize());
+	return size;
 }
 
 void Text::ShowInHierarchy() {
@@ -84,10 +84,10 @@ void Text::ShowInHierarchy() {
 	if (this->fontEditBuffer.empty()) {
 		this->fontEditBuffer.resize(128);
 		std::fill(this->fontEditBuffer.begin(), this->fontEditBuffer.end(), 0);
-		const char* initial = this->font.empty() ? "assets/fonts/lucon.ttf" : this->font.c_str();
+		const char* initial = this->font.empty() ? "Lucida Console" : this->font.c_str();
 		std::strncpy(this->fontEditBuffer.data(), initial, this->fontEditBuffer.size() - 1);
 		// if font member was empty, set it to default so renderer uses it
-		if (this->font.empty()) this->font = "assets/fonts/lucon.ttf";
+		if (this->font.empty()) this->font = "Lucida Console";
 	}
 
 	ImGuiInputTextFlags fontFlags = ImGuiInputTextFlags_None;

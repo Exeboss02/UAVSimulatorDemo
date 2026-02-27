@@ -94,57 +94,57 @@ void HUD::Start() {
 		Logger::Error("HUD::Start canvas size query failed (unknown exception)");
 	}
 
-	auto makeRightAlignedPositions = [&](int row) {
-		float iconX = canvasWidth - padding - iconSize;
-		float iconY = padding + row * lineHeight;
-		float textX = iconX - 8.0f - textWidth;
-		// Vertically center the text next to the (now larger) icon
-		float textY = iconY + (iconSize - 32.0f) * 0.5f;
-		return std::tuple<float, float, float, float>(iconX, iconY, textX, textY);
-	};
+	//auto makeRightAlignedPositions = [&](int row) {
+	//	float iconX = canvasWidth - padding - iconSize;
+	//	float iconY = padding + row * lineHeight;
+	//	float textX = iconX - 8.0f - textWidth;
+	//	// Vertically center the text next to the (now larger) icon
+	//	float textY = iconY + (iconSize - 32.0f) * 0.5f;
+	//	return std::tuple<float, float, float, float>(iconX, iconY, textX, textY);
+	//};
 
-	auto makeLeftAlignedPositions = [&](int row) {
-		float iconX = padding;
-		float iconY = padding + row * lineHeight;
-		float textX = iconX + iconSize + 8.0f;
-		float textY = iconY + (iconSize - 32.0f) * 0.5f;
-		return std::tuple<float, float, float, float>(iconX, iconY, textX, textY);
-	};
+	//auto makeLeftAlignedPositions = [&](int row) {
+	//	float iconX = padding;
+	//	float iconY = padding + row * lineHeight;
+	//	float textX = iconX + iconSize + 8.0f;
+	//	float textY = iconY + (iconSize - 32.0f) * 0.5f;
+	//	return std::tuple<float, float, float, float>(iconX, iconY, textX, textY);
+	//};
 
-	// Titanium
-	{
-		auto [ix, iy, tx, ty] = makeRightAlignedPositions(0);
-		this->titaniumIcon = makeIcon("HUD_Titanium_Icon", "assets/images/metal.png", ix, iy, iconSize);
-		this->titaniumText = makeText("HUD_Titanium", "0", tx, ty, textWidth, true);
-	}
-	// Lubricant
-	{
-		auto [ix, iy, tx, ty] = makeRightAlignedPositions(1);
-		this->lubricantIcon = makeIcon("HUD_Lubricant_Icon", "assets/images/lubricant.png", ix, iy, iconSize);
-		this->lubricantText = makeText("HUD_Lubricant", "0", tx, ty, textWidth, true);
-	}
-	// Carbon
-	{
-		auto [ix, iy, tx, ty] = makeRightAlignedPositions(2);
-		this->carbonFiberIcon = makeIcon("HUD_Carbon_Icon", "assets/images/carbon_fiber.png", ix, iy, iconSize);
-		this->carbonFiberText = makeText("HUD_Carbon", "0", tx, ty, textWidth, true);
-	}
-	// Circuit
-	{
-		auto [ix, iy, tx, ty] = makeRightAlignedPositions(3);
-		this->circuitIcon = makeIcon("HUD_Circuit_Icon", "assets/images/circuit_board.png", ix, iy, iconSize);
-		this->circuitText = makeText("HUD_Circuit", "0", tx, ty, textWidth, true);
-	}
-	// Player health
-	{
-		auto [ix, iy, tx, ty] = makeLeftAlignedPositions(0);
-		this->playerHealthIcon = makeIcon("HUD_Player_Health_Icon", "assets/images/health.png", ix, iy, iconSize);
-		this->playerHealthText = makeText("HUD_Player_Health", "0", tx, ty, textWidth, false);
-	}
+	//// Titanium
+	//{
+	//	auto [ix, iy, tx, ty] = makeRightAlignedPositions(0);
+	//	this->titaniumIcon = makeIcon("HUD_Titanium_Icon", "assets/images/metal.png", ix, iy, iconSize);
+	//	this->titaniumText = makeText("HUD_Titanium", "0", tx, ty, textWidth, true);
+	//}
+	//// Lubricant
+	//{
+	//	auto [ix, iy, tx, ty] = makeRightAlignedPositions(1);
+	//	this->lubricantIcon = makeIcon("HUD_Lubricant_Icon", "assets/images/lubricant.png", ix, iy, iconSize);
+	//	this->lubricantText = makeText("HUD_Lubricant", "0", tx, ty, textWidth, true);
+	//}
+	//// Carbon
+	//{
+	//	auto [ix, iy, tx, ty] = makeRightAlignedPositions(2);
+	//	this->carbonFiberIcon = makeIcon("HUD_Carbon_Icon", "assets/images/carbon_fiber.png", ix, iy, iconSize);
+	//	this->carbonFiberText = makeText("HUD_Carbon", "0", tx, ty, textWidth, true);
+	//}
+	//// Circuit
+	//{
+	//	auto [ix, iy, tx, ty] = makeRightAlignedPositions(3);
+	//	this->circuitIcon = makeIcon("HUD_Circuit_Icon", "assets/images/circuit_board.png", ix, iy, iconSize);
+	//	this->circuitText = makeText("HUD_Circuit", "0", tx, ty, textWidth, true);
+	//}
+	//// Player health
+	//{
+	//	auto [ix, iy, tx, ty] = makeLeftAlignedPositions(0);
+	//	this->playerHealthIcon = makeIcon("HUD_Player_Health_Icon", "assets/images/health.png", ix, iy, iconSize);
+	//	this->playerHealthText = makeText("HUD_Player_Health", "0", tx, ty, textWidth, false);
+	//}
 
 	{
-		auto [ix, iy, tx, ty] = makeLeftAlignedPositions(0);
-		this->storyText = this->MakeText("HUD_Player_Story_Text", "", 0, 0, 0, UI::Anchor::TopCenter);
+		//auto [ix, iy, tx, ty] = makeLeftAlignedPositions(0);
+		this->storyText = this->MakeText("HUD_Player_Story_Text", " ", 0, 0, 0, UI::Anchor::BottomCenter);
 	}
 
 	{
@@ -214,6 +214,7 @@ std::weak_ptr<UI::Text> HUD::MakeText(const std::string& name, const std::string
 	textShared->SetPosition(UI::Vec2{x, y});
 	textShared->SetSize(UI::Vec2{width, 32.0f});
 	textShared->SetFontSize(24.0f);
+	textShared->SetFont("Lucida Console");
 
 	// Alignment: use right-aligned behavior only when requested
 	textShared->SetAnchor(anchor);

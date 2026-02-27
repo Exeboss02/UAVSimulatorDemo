@@ -74,7 +74,7 @@ protected:
 	Vec2 position{};
 	Vec2 truePosition{};
 
-	Vec2 size{};
+	Vec2 size{0, 0};
 
 	Vec2 canvasSize{};
 

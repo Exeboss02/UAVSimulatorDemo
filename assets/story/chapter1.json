@@ -4,11 +4,11 @@
       "textParts": [
         {
           "text": "test",
-          "displayTime": 2.0
+          "displayTime": 30.0
         },
         {
           "text": "test2",
-          "displayTime": 4.0
+          "displayTime": 40.0
         }
       ],
       "soundClipPath": "WaitingForActionRadio.wav"

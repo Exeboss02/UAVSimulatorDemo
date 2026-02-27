@@ -74,29 +74,33 @@ void UI::Widget::SetCanvasSize(Vec2 size) {
 }
 
 void UI::Widget::CalculateTruePosition() {
+	const float DPI = Window::GetCurrentDPI();
+	const float canvasSizeX = this->canvasSize.x * 96. / DPI;
+	const float canvasSizeY = this->canvasSize.y * 96. / DPI;
+
 	switch (this->anchor) {
 		case (Anchor::TopLeft):
 			this->truePosition = this->position;
 			break;
 		case (Anchor::TopRight):
-			this->truePosition = Vec2(this->position.x + this->canvasSize.x - this->GetSize().x, this->position.y);
+			this->truePosition = Vec2(this->position.x + canvasSizeX - this->GetSize().x, this->position.y);
 			break;
 		case (Anchor::TopCenter):
-			this->truePosition = Vec2(this->position.x + this->canvasSize.x / 2 - this->GetSize().x / 2, this->position.y);
+			this->truePosition = Vec2(this->position.x + canvasSizeX / 2 - this->GetSize().x / 2, this->position.y);
 			break;
 		case (Anchor::BottomLeft):
-			this->truePosition = Vec2(this->position.x, this->position.y + this->canvasSize.y);
+			this->truePosition = Vec2(this->position.x, this->position.y + canvasSizeY);
 			break;
 		case (Anchor::BottomRight):
 			this->truePosition =
-				Vec2(this->position.x + this->canvasSize.x - this->GetSize().x, this->position.y + this->canvasSize.y);
+				Vec2(this->position.x + canvasSizeX - this->GetSize().x, this->position.y + canvasSizeY);
 			break;
 		case (Anchor::BottomCenter):
-			this->truePosition = Vec2(this->position.x + this->canvasSize.x / 2 - this->GetSize().x / 2,
-									  this->position.y + this->canvasSize.y);
+			this->truePosition =
+				Vec2(this->position.x + canvasSizeX / 2 - this->GetSize().x / 2, this->position.y + canvasSizeY);
 			break;
 	}
-	this->position;
+	//Logger::Log(this->truePosition.x, ":", this->truePosition.y);
 }
 
 void UI::Widget::ShowInHierarchy() {

@@ -418,7 +418,15 @@ void Player::Interact() {
 
 	if (this->keyBoardInput.Interact() || this->controllerInput->Interact()) {
 
-		this->addGun(Guns::rifle);
+		static int x = 0;
+		if (x % 2 == 0) {
+			this->addGun(Guns::rifle);
+			x++;
+
+		} else {
+			this->addGun(Guns::pistol);
+			x++;
+		}
 
 		Ray ray{Vector3D{posVec}, Vector3D{lookVec}};
 		RayCastData rayCastData;

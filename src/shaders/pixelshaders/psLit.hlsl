@@ -65,7 +65,7 @@ SamplerState shadowSampler : register(s1);
 float3 ComputeNormal(float3 fragmentpos, float2 fragmentUV, float3 camPos, float3 fragmentNormal, float3 normalSample);
 
 float4 main(PixelShaderInput input) : SV_TARGET
-{    
+{
     const float bias = 0.001f;
     float3 normal = normalize(input.normal);
     
@@ -83,12 +83,12 @@ float4 main(PixelShaderInput input) : SV_TARGET
     if (hasNormal)
     {
         float4 normalSample = normalTexture.Sample(mainSampler, inputUV);
-        normal = ComputeNormal(input.worldPosition.xyz, inputUV, input.cameraPosition, input.normal, normalSample.xyz);
+        normal = ComputeNormal(input.worldPosition.xyz, inputUV, input.cameraPosition, normal, normalSample.xyz);
     }
         
     // Seems structured buffer might be made larger than the number of lights, as such we do need to use ugly constant buffer
     for (int i = 0; i < spotlightCount; i++)
-    {      
+    {
         Spotlight lightdata = spotlightBuffer[i];
                 
         float4 lightClip = mul(float4(input.worldPosition.xyz, 1), lightdata.vpMatrix);
@@ -156,7 +156,7 @@ float4 main(PixelShaderInput input) : SV_TARGET
         // that was used to render the corresponding cubemap face and compare
         // the resulting depth (z/w) with the sampled depth from the cubemap.
         float4 lightClip = mul(float4(input.worldPosition.xyz, 1), lightdata.vpMatrix[faceIndex]);
-        float sceneDepth = lightClip.z / lightClip.w;        
+        float sceneDepth = lightClip.z / lightClip.w;
         
         float mapDepth = pointLightShadowMaps.SampleLevel(shadowSampler, float4(sampleDir, i), 0).r;
         bool islit = (mapDepth + bias) >= sceneDepth;
@@ -198,7 +198,7 @@ float4 main(PixelShaderInput input) : SV_TARGET
 
     // Ambient falls back to diffuse if there is no dedicated ambient texture
     float4 ambientTextureColor =
-    lerp(diffuseTextureColor, ambientSample, hasAmbient); 
+    lerp(diffuseTextureColor, ambientSample, hasAmbient);
 
     float4 specularTextureColor =
     lerp(float4(1, 1, 1, 1), specularSample, hasSpecular);
@@ -206,6 +206,7 @@ float4 main(PixelShaderInput input) : SV_TARGET
     float4 color = diffuseTextureColor * diffuseColor + ambientTextureColor * ambientColor + specularTextureColor * specularColor;
     
     return color;
+    //return float4(normal, 1);
 }
 
 float3 ComputeNormal(float3 fragmentpos, float2 fragmentUV, float3 camPos, float3 fragmentNormal, float3 normalSample)
@@ -216,15 +217,20 @@ float3 ComputeNormal(float3 fragmentpos, float2 fragmentUV, float3 camPos, float
     float2 dUVdx = ddx(fragmentUV);
     float2 dUVdy = ddy(fragmentUV);
 
-    float3 tangent = normalize(dUVdy.y * dPdx - dUVdx.y * dPdy);
-    tangent = normalize(tangent - fragmentNormal.xyz * dot(fragmentNormal.xyz, tangent));
-        
-    float3 bitangent = cross(fragmentNormal.xyz, tangent);
-        
-        // Convert view direction to tangent space
+    float determinant = dUVdx.x * dUVdy.y - dUVdx.y * dUVdy.x;
+
+    float3 tangent = (dPdx * dUVdy.y - dPdy * dUVdx.y) / determinant;
+    float3 bitangent = (dPdy * dUVdx.x - dPdx * dUVdy.x) / determinant;
+
+    tangent = normalize(tangent);
+    bitangent = normalize(bitangent);
+    
+    // Convert view direction to tangent space
     float3 viewDir = normalize(fragmentpos.xyz - camPos);
     float3x3 TBN = float3x3(tangent, bitangent, fragmentNormal.xyz);
     float3 viewDirTangent = normalize(mul(TBN, viewDir));
+    
+    normalSample = normalSample * 2.0 - 1.0;
     
     float3 worldNormal = normalize(
             normalSample.x * tangent +

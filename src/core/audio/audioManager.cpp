@@ -96,10 +96,12 @@ void AudioManager::SetPitch(std::string id, float pitch)
 	this->musicTrackManager.SetPitch(id, pitch);
 }
 
-MusicTrack* AudioManager::GetMusicTrack(std::string id)
+void AudioManager::LoopMusicTrack(std::string id, bool shouldLoop)
 {
-	return this->musicTrackManager.GetMusicTrack(id);
+	this->musicTrackManager.LoopMusicTrack(id, shouldLoop);
 }
+
+MusicTrack* AudioManager::GetMusicTrack(std::string id) { return this->musicTrackManager.GetMusicTrack(id); }
 
 void AudioManager::Tick() { this->musicTrackManager.Tick(); }
 

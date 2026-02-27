@@ -271,11 +271,24 @@ void Enemy::ShootAtPlayer() {
 				DirectX::XMVECTOR pos = DirectX::XMVectorSet(adjustedPos.GetX(), adjustedPos.GetY(), adjustedPos.GetZ(), 1.0f);
 				DirectX::XMVECTOR dir = DirectX::XMVectorSet(rayDirection.GetX(), rayDirection.GetY(), rayDirection.GetZ(), 0.0f);
 
-				float randomValue = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
-				if (this->playerHitAccuracy < randomValue) {
+				std::random_device rd;
+				std::mt19937 gen(rd());
+				std::uniform_real_distribution<float> dist(0.0f, 1.0f);
+				float random = dist(gen);
+				if (this->playerHitAccuracy < random) {
 					Logger::Log("Enemy shooting at player - MISSED!");
 					this->canShoot = false;
-					this->VisualizeRay(pos, dir, rayCastData.distance);
+
+					// Alter the ray direction to visually indicate a miss
+					std::uniform_real_distribution<float> dist2(0.1f, 0.17f);
+					float rX = dist2(gen);
+					float rY = dist2(gen);
+					float rZ = dist2(gen);
+
+					DirectX::XMVECTOR missDir = DirectX::XMVectorAdd(
+						dir, DirectX::XMVectorSet(rX, rY, rZ, 0.0f)); // Add some random offset
+
+					this->VisualizeRay(pos, missDir, rayCastData.distance);
 					return;
 				}
 

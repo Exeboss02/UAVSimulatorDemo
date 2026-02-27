@@ -5,9 +5,26 @@
         {
           "text": "test",
           "displayTime": 2.0
+        },
+        {
+          "text": "test2",
+          "displayTime": 4.0
         }
       ],
-      "soundClipPath":  "somePath"
+      "soundClipPath": "WaitingForActionRadio.wav"
+    },
+    {
+      "textParts": [
+        {
+          "text": "test3",
+          "displayTime": 3.0
+        },
+        {
+          "text": "test4",
+          "displayTime": 1.0
+        }
+      ],
+      "soundClipPath":  "WaitingForActionRadio.wav"
     }
   ]
 }

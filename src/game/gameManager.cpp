@@ -59,6 +59,8 @@ void GameManager::Start() {
 
 	this->shipSpeaker = this->factory->CreateGameObjectOfType<SoundSourceObject>();
 	this->shipSpeaker.lock()->transform.SetPosition(this->GetPlayerSpawnPoint());
+	SoundClip* announcement = AssetManager::GetInstance().GetSoundClip("Announcement.wav");
+	this->shipSpeaker.lock()->Play(announcement);
 }
 
 void GameManager::Tick() {
@@ -242,6 +244,8 @@ void GameManager::AudioHandling()
 		if (!this->isPlayingCombatMusic)
 		{
 			AudioManager::GetInstance().Play("contact");
+			ALint state = 0;
+			AudioManager::GetInstance().GetMusicTrackSourceState("contact", state);
 			Logger::Warn("MUSIC VOLUME: ", std::to_string(AudioManager::GetInstance().GetMusicTrackGain("contact")));
 			this->isPlayingCombatMusic = true;
 			this->isFading = false;
@@ -250,6 +254,9 @@ void GameManager::AudioHandling()
 	}
 	else
 	{
+		ALint state = 0;
+		AudioManager::GetInstance().GetMusicTrackSourceState("contact", state);
+
 		if(this->currentRound > 0)
 		{
 			if(!this->isFading && !this->isPlayingBuildMusic)
@@ -283,11 +290,6 @@ void GameManager::AudioHandling()
 				float gain = this->shipSpeaker.lock()->GetGain();
 				gain -= (deltaTime / 5);
 				this->shipSpeaker.lock()->SetGain(gain);
-
-				if(this->idleTimeTimer <= 0.01f)
-				{
-
-				}
 			}
 		}
 	}

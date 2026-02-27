@@ -36,11 +36,7 @@ bool MusicTrack::Initialize(std::string filepath, std::string id)
 void MusicTrack::Play()
 {
 	alGetError();
-	alSourceRewind(this->source);
-	alSourcei(this->source, AL_BUFFER, 0);
-
-	//this->playTime = 0; ???
-
+	this->currentGain = this->targetGain;
 	alSourcef(this->source, AL_GAIN, this->currentGain * AudioManager::GetInstance().GetMasterMusicVolume());
 
 	for (int i = 0; i < NUM_BUFFERS; i++)
@@ -73,12 +69,24 @@ void MusicTrack::Play()
 void MusicTrack::Stop()
 {
 	alSourceStop(this->source);
-	sf_seek(this->sndfile, 0, SEEK_SET); //Rewind
+	alSourceRewind(this->source);
+	alSourcei(this->source, AL_BUFFER, 0);
+
+	// Stop the source and unqueue all buffers
+    ALint queued;
+    alGetSourcei(this->source, AL_BUFFERS_QUEUED, &queued);
+    if (queued > 0)
+    {
+        std::vector<ALuint> unqueuedBuffers(queued);
+        alSourceUnqueueBuffers(this->source, queued, unqueuedBuffers.data());
+    }
 
 	if (alGetError() != AL_NO_ERROR)
 	{
 		Logger::Error("error while stopping music track " + this->id);
 	}
+
+	sf_seek(this->sndfile, 0, SEEK_SET); //Rewind
 }
 
 void MusicTrack::FadeIn(float startGain, float seconds)
@@ -153,7 +161,7 @@ void MusicTrack::SetPitch(float pitch)
 
 float MusicTrack::GetGain()
 {
-	return this->targetGain;
+	return this->currentGain;
 }
 
 void MusicTrack::SetGain(float gain)

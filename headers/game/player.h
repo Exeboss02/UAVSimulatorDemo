@@ -71,6 +71,16 @@ public:
 	ResourceManager resources;
 	std::unique_ptr<HUD> hud;
 
+	enum Guns {
+		pistol,
+		rifle
+	};
+	/// <summary>
+	/// add gun based on enum, add to switch case to add more
+	/// </summary>
+	/// <param name="gun"></param>
+	void addGun(Guns gunType);
+
 private:
 	float input[2] = {};
 	bool inputEnabled = true;

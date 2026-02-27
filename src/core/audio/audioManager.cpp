@@ -116,6 +116,11 @@ void AudioManager::SetListenerPosition(float x, float y, float z)
 	alListenerfv(AL_ORIENTATION, listenerOrient);
 }
 
+void AudioManager::SetListenerOrientation(ALfloat listenerOrientation[6])
+{
+	alListenerfv(AL_ORIENTATION, listenerOrientation);
+}
+
 float AudioManager::GetMasterMusicVolume() const
 {
 	return this->masterVolume.GetMusicGain();

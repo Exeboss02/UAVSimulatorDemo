@@ -38,6 +38,7 @@ void Gun::Shoot(bool pressedTrigger, bool triggerDown) {
 	
 
 	std::shared_ptr<SoundSourceObject> lockedSpeaker = this->speaker.lock();
+	lockedSpeaker->SetRandomPitch(0.92f, 1.0f);
 	lockedSpeaker->Play(this->soundClips[0]); // shoot sound
 	
 	DirectX::XMVECTOR lookVec;

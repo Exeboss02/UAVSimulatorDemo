@@ -3,27 +3,22 @@
 #include "gameObjects/meshObject.h"
 // Forward declaration to fix C2955 error
 class SpaceShip;
+#include "UI/canvasObject.h"
 #include "gameObjects/spaceShipObj.h"
-#include "utilities/aStar.h"
 #include "gameObjects/wall.h"
-
-
+#include "utilities/aStar.h"
 
 class Room : public GameObject3D {
 public:
 	enum WallIndex {
 		North,
 		East,
-		South, 
+		South,
 		West,
 	};
-	enum WallState {
-		solid,
-		window,
-		door
-	};
-	std::string wallMeshIdentifiers[3]{"SpaceShip/room.glb:Mesh_3", "SpaceShip/room.glb:Mesh_1", 
-		"SpaceShip/room.glb:Mesh_2"};
+	enum WallState { solid, window, door };
+	std::string wallMeshIdentifiers[3]{"SpaceShip/room.glb:Mesh_3", "SpaceShip/room.glb:Mesh_1",
+									   "SpaceShip/room.glb:Mesh_2"};
 
 	/// <summary>
 	/// Helper function that returns a index offset for the selected neighbor.
@@ -34,7 +29,7 @@ public:
 	static std::array<int, 2> GetNeighborOffset(WallIndex wallIndex);
 
 	/// <summary>
-	/// Sets the size of all rooms, should generally not be touched except by SpaceShip at 
+	/// Sets the size of all rooms, should generally not be touched except by SpaceShip at
 	/// SpaceShip construction
 	/// </summary>
 	/// <param name="size"></param>
@@ -48,7 +43,7 @@ public:
 	void Tick() override;
 
 	/// <summary>
-	/// Creates a room in the specified direction, 
+	/// Creates a room in the specified direction,
 	/// </summary>
 	/// <param name="wallIndex"></param>
 	void CreateRoom(WallIndex wallIndex);
@@ -86,6 +81,13 @@ public:
 	/// Order: center, N, NE, E, SE, S, SW, W, NW
 	/// </summary>
 	std::array<std::shared_ptr<AStarVertex>, 9>& GetPathfindingNodes() { return this->pathfindingNodes; }
+
+	// Build helpers used by UI callbacks
+	bool IsBuildMenuOpen();
+	bool TryBuildGenerator();
+	bool TryBuildTurret();
+	bool TryBuildMine();
+
 private:
 	std::weak_ptr<GameObject3D> builtObject;
 	std::weak_ptr<BoxCollider> buildSlot;
@@ -97,4 +99,14 @@ private:
 	std::array<std::shared_ptr<AStarVertex>, 9> pathfindingNodes;
 
 	std::array<std::weak_ptr<Wall>, 4> walls;
+
+	// UI for build menu
+	std::weak_ptr<class UI::CanvasObject> buildMenu;
+
+	void ShowBuildMenu(std::shared_ptr<class Player> player);
+	void HideBuildMenu();
+
+	void Hover();
+
+	float hoverDisabledUntil = 0.0f;
 };

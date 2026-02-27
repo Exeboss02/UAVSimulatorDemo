@@ -1,8 +1,11 @@
 #include "game/hud.h"
+#include "UI/canvas.h"
 #include "UI/canvasObject.h"
 #include "UI/image.h"
+#include "UI/interactionPrompt.h"
 #include "UI/text.h"
 #include "game/crosshair.h"
+#include "game/health.h"
 #include "game/resourceManager.h"
 #include "gameObjects/gameObject.h"
 #include "gameObjects/gameObjectFactory.h"
@@ -85,7 +88,10 @@ void HUD::Start() {
 			if (sz.x > 0.0f) canvasWidth = sz.x;
 			if (sz.y > 0.0f) canvasHeight = sz.y;
 		}
+	} catch (const std::exception &e) {
+		Logger::Error("HUD::Start canvas size query failed: ", e.what());
 	} catch (...) {
+		Logger::Error("HUD::Start canvas size query failed (unknown exception)");
 	}
 
 	auto makeRightAlignedPositions = [&](int row) {
@@ -150,6 +156,18 @@ void HUD::Start() {
 				canvasShared->AddChild(std::static_pointer_cast<UI::Widget>(crossShared));
 				RenderQueue::AddUIWidget(crossShared);
 				this->crosshair = crossShared;
+			}
+		}
+
+		// Create a single shared interaction prompt owned by HUD
+		{
+			auto promptWeak = this->factory->CreateGameObjectOfType<UI::InteractionPrompt>();
+			if (!promptWeak.expired()) {
+				auto promptShared = promptWeak.lock();
+				if (promptShared) {
+					promptShared->SetName("HUD_InteractionPrompt");
+					this->interactionPrompt = promptShared;
+				}
 			}
 		}
 	}

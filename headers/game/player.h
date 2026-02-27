@@ -7,13 +7,13 @@
 #include "core/physics/collision.h"
 #include "core/physics/physicsQueue.h"
 #include "core/tools.h"
+#include "game/health.h"
 #include "game/hud.h"
 #include "game/resourceManager.h"
 #include "gameObjects/cameraObject.h"
 #include "gameObjects/gun.h"
 #include "gameObjects/meshObject.h"
 #include <memory>
-#include "game/health.h"
 
 class Player : public RigidBody {
 public:
@@ -51,6 +51,12 @@ public:
 	void SetCameraRotation(float r, float p, float y);
 	void OnCollision(std::weak_ptr<GameObject3D> gameObject3D);
 
+	// Show or hide the OS cursor and enable UI interaction
+	void SetShowCursor(bool visible);
+
+	// Enable or disable player movement/input (used when UI menus are open)
+	void SetInputEnabled(bool enabled);
+
 	void DecrementHealth(int hp);
 	void IncrementHealth(int hp);
 	int GetHealth() const;
@@ -66,6 +72,7 @@ public:
 
 private:
 	float input[2] = {};
+	bool inputEnabled = true;
 	bool showCursor = true;
 
 	Health health;
@@ -73,6 +80,8 @@ private:
 	float cameraRotation[3];
 
 	void Interact();
+
+	int interactDistance = 5;
 
 	void CheckForTriggerPress();
 

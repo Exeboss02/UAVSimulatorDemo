@@ -1,11 +1,20 @@
 #include "gameObjects/room.h"
+#include "UI/button.h"
+#include "UI/canvas.h"
+#include "UI/canvasObject.h"
+#include "UI/interactionPrompt.h"
 #include "core/assetManager.h"
+#include "game/crosshair.h"
+#include "game/events.h"
+#include "game/gameManager.h"
+#include "game/player.h"
+#include "game/resourceGenerator.h"
+#include "gameObjects/mine.h"
 #include "gameObjects/spaceShipObj.h"
 #include "gameObjects/spotlightObject.h"
 #include "gameObjects/turret.h"
-#include "game/resourceGenerator.h"
-#include "gameObjects/mine.h"
-#include "game/gameManager.h"
+#include "rendering/renderQueue.h"
+#include "utilities/time.h"
 #include <numbers>
 
 static const std::array<std::array<int, 2>, 4> wallpositions = {
@@ -79,20 +88,17 @@ void Room::Start() {
 	buildCollider->transform.SetPosition({0, 1, 0});
 	buildCollider->SetParent(this->GetPtr());
 	buildCollider->SetSolid(false);
-	buildCollider->SetName("BuildCollider"	+ std::to_string(this->factory->GetNextID()));
+	buildCollider->SetName("BuildCollider" + std::to_string(this->factory->GetNextID()));
 	buildCollider->SetTag(Tag::INTERACTABLE);
+	buildCollider->SetIgnoreTag(Tag::PLAYER);
 	// Maybe tweak positionW
 	this->buildSlot = buildCollider;
 	buildCollider->SetOnInteract([&](std::shared_ptr<Player> p) {
 		if (this->builtObject.expired() && !GameManager::GetInstance()->GetInCombat()) {
-			auto turret = this->factory->CreateStaticGameObject<Turret>();
-			turret->SetParent(this->GetPtr());
-			turret->transform.SetPosition({0, 1.5, 0});
-			this->factory->QueueDeleteGameObject(this->buildSlot);
-			auto& pathfinder = std::static_pointer_cast<SpaceShip>(this->GetParent().lock())->GetPathfinder();
-			pathfinder->RemoveVertex(this->GetPathfindingNodes()[0]);
+			this->ShowBuildMenu(p);
 		}
 	});
+	buildCollider->SetOnHover([&] { this->Hover(); });
 
 	auto spotLight = this->factory->CreateGameObjectOfType<SpotlightObject>().lock();
 	spotLight->SetParent(this->GetPtr());
@@ -172,4 +178,373 @@ void Room::SetupPathfindingNodes(std::shared_ptr<SpaceShip> spaceShip, std::shar
 		size_t nextIndex = (i % 8) + 1;
 		spaceShip->GetPathfinder()->AddEdge(this->pathfindingNodes[i], this->pathfindingNodes[nextIndex], edgeCost);
 	}
+}
+
+void Room::ShowBuildMenu(std::shared_ptr<Player> player) {
+	try {
+		if (!this->factory) return;
+
+		// If something is already built here, don't open the build menu
+		if (!this->builtObject.expired()) {
+			Logger::Log("Room::ShowBuildMenu aborted: already built object present");
+			return;
+		}
+
+		// If a menu already exists, don't create another
+		if (!this->buildMenu.expired()) return;
+
+		std::shared_ptr<UI::CanvasObject> canvasObjShared;
+		try {
+			auto crossWeak = this->factory->FindObjectOfType<Crosshair>();
+			if (!crossWeak.expired()) {
+				auto cross = crossWeak.lock();
+				if (auto parentWeak = cross->GetParent(); !parentWeak.expired()) {
+					if (auto parentShared = parentWeak.lock()) {
+						if (auto canvasShared = std::dynamic_pointer_cast<UI::CanvasObject>(parentShared)) {
+							canvasObjShared = canvasShared;
+						}
+					}
+				}
+			}
+		} catch (...) {
+		}
+
+		std::shared_ptr<UI::CanvasObject> localCanvasCreated;
+		std::shared_ptr<UI::CanvasObject> canvasObj;
+		if (!canvasObjShared) {
+			auto canvasWeak = this->factory->CreateGameObjectOfType<UI::CanvasObject>();
+			if (canvasWeak.expired()) return;
+			canvasObj = std::static_pointer_cast<UI::CanvasObject>(canvasWeak.lock());
+			canvasObj->SetParent(this->GetPtr());
+			localCanvasCreated = canvasObj;
+		} else {
+			auto localCanvasWeak = this->factory->CreateGameObjectOfType<UI::CanvasObject>();
+			if (localCanvasWeak.expired()) return;
+			canvasObj = std::static_pointer_cast<UI::CanvasObject>(localCanvasWeak.lock());
+			canvasObj->SetParent(canvasObjShared->GetPtr());
+			localCanvasCreated = canvasObj;
+		}
+
+		// Create three buttons: Turret, Generator, Mine
+		struct BtnSpec {
+			std::string label;
+			std::function<void()> cb;
+			UI::Vec2 pos;
+		};
+
+		// Barebone specs: only labels. Positions will be computed to center the buttons beneath the crosshair.
+		std::vector<std::string> labels = {"Turret", "Generator", "Mine"};
+
+		// Determine canvas size (fallback to camera aspect if unavailable) and crosshair center
+		UI::Vec2 canvasSize{0.0f, 0.0f};
+		UI::Vec2 crossCenter{canvasSize.x * 0.5f, canvasSize.y * 0.5f};
+		try {
+			if (auto cvs = canvasObj->GetCanvas(); cvs) {
+				canvasSize = cvs->GetSize();
+			}
+		} catch (...) {
+		}
+		if (canvasSize.x == 0.0f || canvasSize.y == 0.0f) {
+			try {
+				auto& cam = CameraObject::GetMainCamera();
+				float aspect = cam.GetAspectRatio();
+				float height = 1080.0f;
+				float width = aspect * height;
+				canvasSize.x = width;
+				canvasSize.y = height;
+			} catch (...) {
+				canvasSize.x = 1920.0f;
+				canvasSize.y = 1080.0f;
+			}
+		}
+
+		// If we found a real Crosshair, center under it
+		try {
+			auto crossWeak = this->factory->FindObjectOfType<Crosshair>();
+			if (!crossWeak.expired()) {
+				auto cross = crossWeak.lock();
+				auto pos = cross->GetPosition();
+				auto size = cross->GetSize();
+				crossCenter.x = pos.x + size.x * 0.5f;
+				crossCenter.y = pos.y + size.y * 0.5f;
+			} else {
+				crossCenter.x = canvasSize.x * 0.5f;
+				crossCenter.y = canvasSize.y * 0.5f;
+			}
+		} catch (...) {
+			crossCenter.x = canvasSize.x * 0.5f;
+			crossCenter.y = canvasSize.y * 0.5f;
+		}
+
+		// Button layout
+		const float btnW = 150.0f;
+		const float btnH = 40.0f;
+		const float spacing = 20.0f;
+		const size_t n = labels.size();
+		const float totalW = n * btnW + (n - 1) * spacing;
+		const float centerX = crossCenter.x;
+		const float centerY = crossCenter.y;
+		const float startX = centerX - totalW * 0.5f;
+		const float yPos = centerY + (btnH * 0.5f) + 40.0f; // just below crosshair
+
+		for (size_t i = 0; i < labels.size(); ++i) {
+			const auto& label = labels[i];
+			auto btnWeak = this->factory->CreateGameObjectOfType<UI::Button>();
+			if (btnWeak.expired()) continue;
+			auto btn = std::dynamic_pointer_cast<UI::Button>(btnWeak.lock());
+			btn->SetParent(canvasObj->GetPtr());
+			btn->SetName(label);
+			btn->SetLabel(label);
+
+			btn->SetHorizontalAlign(UI::Button::HorizontalAlign::LEFT);
+			btn->SetVerticalAlign(UI::Button::VerticalAlign::TOP);
+			UI::Vec2 pos{startX + static_cast<float>(i) * (btnW + spacing), yPos};
+			btn->SetPosition(pos);
+			btn->SetSize({150, 40});
+			btn->SetVisible(true);
+			canvasObj->AddChild(std::static_pointer_cast<UI::Widget>(btn));
+			RenderQueue::AddUIWidget(btn);
+			// Hide menu and restore player input on click. Spawn directly from Room for each type.
+			std::weak_ptr<GameObject> me = this->GetPtr();
+			auto playerWeak = std::weak_ptr<Player>(player);
+			bool isGenerator = (label == "Generator");
+			bool isTurret = (label == "Turret");
+			bool isMine = (label == "Mine");
+			btn->SetOnClick([me, playerWeak, isGenerator, isTurret, isMine]() {
+				if (auto roomPtr = std::dynamic_pointer_cast<Room>(me.lock())) {
+					bool built = false;
+					if (isGenerator) {
+						built = roomPtr->TryBuildGenerator();
+					} else if (isTurret) {
+						built = roomPtr->TryBuildTurret();
+					} else if (isMine) {
+						built = roomPtr->TryBuildMine();
+					}
+					if (built) {
+						roomPtr->HideBuildMenu();
+						if (auto p = playerWeak.lock()) {
+							p->SetShowCursor(false);
+							p->SetInputEnabled(true);
+						}
+					} else {
+						Logger::Error("Bob the builder overslept");
+					}
+				}
+			});
+		}
+
+		// Remember menu, show cursor and disable player input
+		this->buildMenu = canvasObj;
+		if (player) {
+			player->SetShowCursor(true);
+			player->SetInputEnabled(false);
+		}
+
+	} catch (const std::exception& e) {
+		Logger::Error("Room::ShowBuildMenu exception: ", e.what());
+	} catch (...) {
+		Logger::Error("Room::ShowBuildMenu unknown exception");
+	}
+}
+
+void Room::HideBuildMenu() {
+	if (this->buildMenu.expired()) return;
+	auto menu = this->buildMenu.lock();
+	// Clear children and queue delete for the canvas object
+	menu->Clear();
+	this->factory->QueueDeleteGameObject(menu);
+	this->buildMenu.reset();
+
+}
+
+void Room::Hover() {
+	try {
+		float currentTime = Time::GetInstance().GetSessionTime();
+		if (currentTime < this->hoverDisabledUntil) return;
+		auto promptWeak = this->factory->FindObjectOfType<UI::InteractionPrompt>();
+		if (promptWeak.expired()) return;
+		auto prompt = promptWeak.lock();
+		if (!prompt) return;
+
+		std::string txt = "Press \"F\" to open build menu";
+		DirectX::XMVECTOR worldPos = this->transform.GetGlobalPosition();
+		prompt->Show(txt, worldPos);
+	} catch (const std::exception& e) {
+		Logger::Error("Room::Hover exception: ", e.what());
+	} catch (...) {
+		Logger::Error("Room::Hover unknown exception");
+	}
+}
+
+bool Room::IsBuildMenuOpen() {
+	return !this->buildMenu.expired();
+}
+
+bool Room::TryBuildGenerator() {
+	Logger::Log("Room::TryBuildGenerator called");
+	try {
+		// Only build if a menu is open and nothing is already built
+		if (this->buildMenu.expired()) {
+			Logger::Log("TryBuildGenerator failed: buildMenu expired");
+			return false;
+		}
+		if (!this->factory) {
+			Logger::Log("TryBuildGenerator failed: factory is null");
+			return false;
+		}
+		if (!this->builtObject.expired()) {
+			Logger::Log("TryBuildGenerator failed: builtObject already exists");
+			return false;
+		}
+
+		auto slotWeak = this->buildSlot;
+		if (slotWeak.expired()) {
+			Logger::Log("TryBuildGenerator failed: build slot expired");
+			return false;
+		}
+		auto slot = slotWeak.lock();
+
+		auto gen = this->factory->CreateStaticGameObject<ResourceGenerator>();
+
+
+		gen->SetParent(this->GetPtr());
+		gen->transform.SetPosition(0, 1.5, 0);
+
+		this->builtObject = static_pointer_cast<GameObject3D>(gen.Get());
+
+		if (!this->GetParent().expired()) {
+			auto spaceship = static_pointer_cast<SpaceShip>(GetParent().lock());
+			spaceship->GetPathfinder()->RemoveVertex(this->pathfindingNodes[0]);
+		}
+
+		// Disable hover on the build slot now that something is built here
+		auto slotForHover = this->buildSlot;
+		if (!slotForHover.expired()) {
+			auto slotPtr = slotForHover.lock();
+			if (slotPtr) {
+				slotPtr->SetOnHover([] {});
+				slotPtr->SetOnInteract([](std::shared_ptr<Player>) {});
+			}
+		}
+		return true;
+	} catch (const std::exception& e) {
+		Logger::Error("Room::TryBuildGenerator exception: ", e.what());
+	} catch (...) {
+		Logger::Error("Room::TryBuildGenerator unknown exception");
+	}
+	return false;
+}
+
+bool Room::TryBuildTurret() {
+	Logger::Log("Room::TryBuildTurret called");
+	try {
+		if (this->buildMenu.expired()) {
+			Logger::Log("TryBuildTurret failed: buildMenu expired");
+			return false;
+		}
+		if (!this->factory) {
+			Logger::Log("TryBuildTurret failed: factory is null");
+			return false;
+		}
+		if (!this->builtObject.expired()) {
+			Logger::Log("TryBuildTurret failed: builtObject already exists");
+			return false;
+		}
+
+		auto slotWeak = this->buildSlot;
+		if (slotWeak.expired()) {
+			Logger::Log("TryBuildTurret failed: build slot expired");
+			return false;
+		}
+		auto slot = slotWeak.lock();
+
+		auto turret = this->factory->CreateStaticGameObject<Turret>();
+
+		turret->SetParent(this->GetPtr());
+		turret->transform.SetPosition(0, 1.5, 0);
+
+		this->builtObject = static_pointer_cast<GameObject3D>(turret.Get());
+
+		if (!this->GetParent().expired()) {
+			auto spaceship = static_pointer_cast<SpaceShip>(GetParent().lock());
+			spaceship->GetPathfinder()->RemoveVertex(this->pathfindingNodes[0]);
+		}
+
+		// Disable hover on the build slot now that something is built here
+		auto slotForHover = this->buildSlot;
+		if (!slotForHover.expired()) {
+			auto slotPtr = slotForHover.lock();
+			if (slotPtr) {
+				slotPtr->SetOnHover([] {});
+				slotPtr->SetOnInteract([](std::shared_ptr<Player>) {});
+			}
+		}
+		return true;
+	} catch (const std::exception& e) {
+		Logger::Error("Room::TryBuildTurret exception: ", e.what());
+	} catch (...) {
+		Logger::Error("Room::TryBuildTurret unknown exception");
+	}
+	return false;
+}
+
+bool Room::TryBuildMine() {
+	Logger::Log("Room::TryBuildMine called");
+	try {
+		if (this->buildMenu.expired()) {
+			Logger::Log("TryBuildMine failed: buildMenu expired");
+			return false;
+		}
+		if (!this->factory) {
+			Logger::Log("TryBuildMine failed: factory is null");
+			return false;
+		}
+		if (!this->builtObject.expired()) {
+			Logger::Log("TryBuildMine failed: builtObject already exists");
+			return false;
+		}
+
+		auto slotWeak = this->buildSlot;
+		if (slotWeak.expired()) {
+			Logger::Log("TryBuildMine failed: build slot expired");
+			return false;
+		}
+		auto slot = slotWeak.lock();
+
+		auto mine = this->factory->CreateStaticGameObject<Mine>();
+
+		mine->SetParent(this->GetPtr());
+		mine->transform.SetPosition(slot->transform.GetPosition());
+		mine->SetName("Mine");
+
+		// Make the interact collider work again after the mine explodes
+		mine->SetPostExplosion([&] {
+			if (this->buildSlot.expired()) return;
+
+			auto build = this->buildSlot.lock();
+			build->SetOnInteract([&](std::shared_ptr<Player> p) {
+				if (this->builtObject.expired() && !GameManager::GetInstance()->GetInCombat()) {
+					this->ShowBuildMenu(p);
+				}
+			});
+			build->SetOnHover([&] { this->Hover(); });
+			});
+
+		this->builtObject = static_pointer_cast<GameObject3D>(mine.Get());
+		// Disable hover on the build slot now that something is built here
+		auto& slotForHover = this->buildSlot;
+		if (!slotForHover.expired()) {
+			auto slotPtr = slotForHover.lock();
+			if (slotPtr) {
+				slotPtr->SetOnHover([] {});
+				slotPtr->SetOnInteract([](std::shared_ptr<Player>) {});
+			}
+		}
+		return true;
+	} catch (const std::exception& e) {
+		Logger::Error("Room::TryBuildMine exception: ", e.what());
+	} catch (...) {
+		Logger::Error("Room::TryBuildMine unknown exception");
+	}
+	return false;
 }

@@ -52,6 +52,8 @@ public:
 
 	virtual void ShowInHierarchy() override;
 
+	virtual void OnDestroy() override;
+
 private:
 
 	SpotLightContainer data;

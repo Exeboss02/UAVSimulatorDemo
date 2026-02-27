@@ -26,7 +26,7 @@ public:
 
 	struct RenderMapSubmesh {
 		// Each submesh has a set of materials
-		std::unordered_map<std::string, RenderMap::RenderMapMaterial> materials;
+		std::unordered_map<size_t, RenderMap::RenderMapMaterial> materials;
 	};
 
 	struct RenderMapMesh {
@@ -37,7 +37,7 @@ public:
 	};
 
 
-	std::unordered_map<std::string, RenderMap::RenderMapMesh> meshes;
+	std::unordered_map<size_t, RenderMap::RenderMapMesh> meshes;
 };
 
 struct CheapRenderMap {
@@ -47,5 +47,5 @@ struct CheapRenderMap {
 		std::shared_ptr<Mesh> mesh;
 	};
 
-	std::unordered_map<std::string, CheapRenderMap::CheapRenderMapMesh> meshes;
+	std::unordered_map<size_t, CheapRenderMap::CheapRenderMapMesh> meshes;
 };

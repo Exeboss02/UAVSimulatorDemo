@@ -113,6 +113,7 @@ void Turret::Fire() {
 		colliderobj->SetMesh(meshdata);
 		colliderobj->GetMesh().SetMaterial(
 			0, AssetManager::GetInstance().GetMaterialWeakPtr("defaultUnlitMaterial").lock());
+		colliderobj->SetCastShadow(false);
 		colliderobj->transform.SetPosition(
 			DirectX::XMVectorAdd(posVec, DirectX::XMVectorScale(lookVec, rayCastData.distance / 2)));
 		colliderobj->transform.SetRotationQuaternion(this->transform.GetGlobalRotation());

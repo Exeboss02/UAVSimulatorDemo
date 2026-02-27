@@ -40,13 +40,7 @@ public:
 	/// </summary>
 	/// <param name="id"></param>
 	/// <param name="nrOfTimes"></param>
-	void LoopMusicTrack(std::string id, int nrOfTimes);
-
-	/// <summary>
-	/// Stops looping a music track
-	/// <param name="id"></param>
-	/// </summary>
-	void StopLoopingMusicTrack(std::string id);
+	void LoopMusicTrack(std::string id, bool shouldLoop);
 
 	void Tick();
 

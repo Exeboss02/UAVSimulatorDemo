@@ -1,5 +1,4 @@
 #include "core/audio/audioManager.h"
-#include "audioManager.h"
 
 AudioManager::AudioManager()
 {
@@ -97,14 +96,9 @@ void AudioManager::SetPitch(std::string id, float pitch)
 	this->musicTrackManager.SetPitch(id, pitch);
 }
 
-void AudioManager::LoopMusicTrack(std::string id, int nrOfTimes)
+void AudioManager::LoopMusicTrack(std::string id, bool shouldLoop)
 {
-	this->musicTrackManager.LoopMusicTrack(id, nrOfTimes);
-}
-
-void AudioManager::StopLoopingMusicTrack(std::string id)
-{
-	this->musicTrackManager.StopLoopingMusicTrack(id);
+	this->musicTrackManager.LoopMusicTrack(id, shouldLoop);
 }
 
 MusicTrack* AudioManager::GetMusicTrack(std::string id) { return this->musicTrackManager.GetMusicTrack(id); }

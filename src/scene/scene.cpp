@@ -155,7 +155,11 @@ void Scene::DeleteDeleteQueue() {
 				this->deleteQueue.push_back(child);
 			}
 		}
-
+		//if has parent remove from parent child list 
+		if (auto parent = gameObject->GetParent().lock()) {
+			auto parentIterator = std::find(parent->children.begin(), parent->children.end(), gameObject);
+			parent->children.erase(parentIterator);
+		}
 		gameObject->OnDestroy();
 		this->gameObjects.erase(iterator); // Actually deletes
 	}

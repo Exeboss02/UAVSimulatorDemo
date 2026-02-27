@@ -34,7 +34,7 @@ public:
 					const std::string& font = "", int zIndex = 0);
 
 	// Measure a string using the underlying FW1 font wrapper. Returns pixel width.
-	float MeasureString(const std::string& text, float fontSize, const std::string& font = "");
+	Vec2 MeasureString(const std::string& text, float fontSize, const std::string& font = "");
 
 	void ClearSubmissions();
 	void Render(void* context);

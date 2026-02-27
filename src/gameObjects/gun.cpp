@@ -31,7 +31,6 @@ void Gun::Shoot(bool pressedTrigger, bool triggerDown) {
 	
 
 	if (!this->shootCoolDown.TimeIsUp()) {
-		Logger::Log("cooldown not down");
 		return;
 	}
 	this->shootCoolDown.Reset();

@@ -5,14 +5,25 @@
 
 using namespace UI;
 
-void Text::SetText(const std::string& t) { this->text = t; }
+void Text::SetText(const std::string& t) {
+	this->text = t;
+	this->CalculateTruePosition();
+}
 std::string Text::GetText() const { return this->text; }
 
-void Text::SetFont(const std::string& f) { this->font = f; }
+void Text::SetFont(const std::string& f) {
+	this->font = f;
+	this->CalculateTruePosition();
+}
 std::string Text::GetFont() const { return this->font; }
 
 void Text::SetColor(const DirectX::XMFLOAT4& c) { this->color = c; }
 DirectX::XMFLOAT4 Text::GetColor() const { return this->color; }
+
+Vec2 UI::Text::GetSize() const {
+	Vec2 size = UI::TextRenderer::GetInstance().MeasureString(this->text, this->GetFontSize(), this->font);
+	return size;
+}
 
 void Text::ShowInHierarchy() {
 	// Show base GameObject inspector (name, active, delete/reparent)
@@ -73,10 +84,10 @@ void Text::ShowInHierarchy() {
 	if (this->fontEditBuffer.empty()) {
 		this->fontEditBuffer.resize(128);
 		std::fill(this->fontEditBuffer.begin(), this->fontEditBuffer.end(), 0);
-		const char* initial = this->font.empty() ? "assets/fonts/lucon.ttf" : this->font.c_str();
+		const char* initial = this->font.empty() ? "Lucida Console" : this->font.c_str();
 		std::strncpy(this->fontEditBuffer.data(), initial, this->fontEditBuffer.size() - 1);
 		// if font member was empty, set it to default so renderer uses it
-		if (this->font.empty()) this->font = "assets/fonts/lucon.ttf";
+		if (this->font.empty()) this->font = "Lucida Console";
 	}
 
 	ImGuiInputTextFlags fontFlags = ImGuiInputTextFlags_None;
@@ -98,7 +109,10 @@ void Text::ShowInHierarchy() {
 	}
 }
 
-void Text::SetFontSize(float s) { this->fontSize = s; }
+void Text::SetFontSize(float s) {
+	this->fontSize = s;
+	this->CalculateTruePosition();
+}
 float Text::GetFontSize() const { return this->fontSize; }
 
 void Text::SetRightAligned(bool v) { this->rightAligned = v; }
@@ -143,20 +157,10 @@ void Text::Draw() {
 	}
 
 	UI::Vec2 pos = this->GetPosition();
-	if (this->rightAligned && this->maxWidth > 0.0f) {
-		float measured = UI::TextRenderer::GetInstance().MeasureString(this->text, this->GetFontSize(), this->font);
-		float x = pos.x + std::max(0.0f, this->maxWidth - measured);
-		UI::Vec2 p{x, pos.y};
-		UI::TextRenderer::GetInstance().SubmitText(
-			this->text, p, this->GetFontSize(),
-			DirectX::XMFLOAT4(this->color.x, this->color.y, this->color.z, this->color.w), this->font,
-			this->GetZIndex());
-	} else {
-		UI::TextRenderer::GetInstance().SubmitText(
-			this->text, pos, this->GetFontSize(),
-			DirectX::XMFLOAT4(this->color.x, this->color.y, this->color.z, this->color.w), this->font,
-			this->GetZIndex());
-	}
+
+	UI::TextRenderer::GetInstance().SubmitText(
+		this->text, pos, this->GetFontSize(),
+		DirectX::XMFLOAT4(this->color.x, this->color.y, this->color.z, this->color.w), this->font, this->GetZIndex());
 
 	// Draw children (if any)
 	Widget::Draw();

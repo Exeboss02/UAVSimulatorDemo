@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include "UI/widget.h"
 
 class ResourceManager;
 class GameObjectFactory;
@@ -29,7 +30,19 @@ public:
 	// Clean up (queue deletes) if needed
 	void OnDestroy();
 
+	void SetStoryText(const std::string& text);
+	
+	void SetStoryTextVisibility(bool visible);
+
 private:
+	std::weak_ptr<UI::Text> MakeText(const std::string& name, const std::string& text, float x, float y, float width,
+									 UI::Anchor anchor);
+
+	std::weak_ptr<UI::Image> MakeIcon(const std::string& name, const std::string& imagePath, float x, float y,
+									  float size, UI::Anchor anchor);
+
+	void SafeTextSet(std::weak_ptr<UI::Text> textObject, const std::string& text);
+
 	GameObjectFactory* factory = nullptr;
 
 	std::weak_ptr<UI::CanvasObject> canvasObj;
@@ -48,6 +61,8 @@ private:
 
 	std::weak_ptr<UI::Image> playerHealthIcon;
 	std::weak_ptr<UI::Text> playerHealthText;
+
+	std::weak_ptr<UI::Text> storyText;
 
 	std::weak_ptr<Crosshair> crosshair;
 

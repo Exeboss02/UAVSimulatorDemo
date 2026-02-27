@@ -32,6 +32,9 @@ void GameManager::Start() {
 		Logger::Error("Failed to find spaceship, add one to the scene.");
 	}
 
+	this->storyManager = this->factory->CreateGameObjectOfType<StoryManager>();
+
+
 	// Set up rounds
 	this->rounds.reserve(10);
 	this->rounds.push_back(Round{3, 1});
@@ -215,6 +218,10 @@ void GameManager::EndRound() {
 
 	if (this->currentRound >= this->rounds.size()) {
 		Win();
+	}
+
+	if (auto sm = this->storyManager.lock()) {
+		sm->PlayNextStoryPart();
 	}
 }
 

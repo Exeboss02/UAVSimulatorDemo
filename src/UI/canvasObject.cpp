@@ -9,7 +9,9 @@
 
 namespace UI {
 
-CanvasObject::CanvasObject(const std::shared_ptr<Canvas>& canvas) : canvas(canvas) {}
+CanvasObject::CanvasObject(const std::shared_ptr<Canvas>& canvas) : canvas(canvas) {
+
+}
 
 void CanvasObject::SetCanvas(const std::shared_ptr<Canvas>& canvas) { this->canvas = canvas; }
 

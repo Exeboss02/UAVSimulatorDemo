@@ -157,8 +157,8 @@ void GameManager::SpawnRound(size_t roundIndex) {
 
 		// Set pathfinding from each breach point
 		for (size_t i = 0; i < this->rounds[roundIndex].breachPoints; i++) {
-			Vector2Int selectedRoom{31, 0};
-			float longestDistance = 0;
+			Vector2Int selectedRoom{SpaceShip::START_ROOM_X, SpaceShip::START_ROOM_Y};
+			float longestDistance = std::numeric_limits<float>::lowest();
 
 			for (auto& room : rooms) {
 				if (canUseSameBreachPoint || selectedRooms.size() <= 0 || std::find(selectedRooms.begin(), selectedRooms.end(),

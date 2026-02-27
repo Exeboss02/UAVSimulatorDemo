@@ -163,6 +163,7 @@ private:
 	std::vector<std::weak_ptr<UI::Widget>> uiRenderQueue;
 
 	RenderMap standardRenderMap;
+	std::vector<std::weak_ptr<MeshObject>> visibleObjectsMainCamera;
 
 	QuadTree staticObjectsTree;
 	std::vector<std::weak_ptr<MeshObject>> GetVisibleObjects(CameraObject& camera, bool checkIndividualObjects = true, bool allStatic = false);

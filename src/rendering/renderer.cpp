@@ -359,12 +359,14 @@ void Renderer::CreateRenderMap(RenderMap& renderMap, CameraObject& camera) {
 	//									 [](const std::weak_ptr<MeshObject>& w) { return w.expired(); }),
 	//							this->meshRenderQueue.end());
 
-	auto renderQueue = GetVisibleObjects(camera, false, true);
+	if (this->renderQueue.recalculateDynamic || this->renderQueue.recalculateStatic) {
+		this->visibleObjectsMainCamera = GetVisibleObjects(camera, false, true);
+	}
 
 	renderMap.meshes.clear();
 
-	for (size_t i = 0; i < renderQueue.size(); i++) {
-		std::shared_ptr<MeshObject> meshObject = renderQueue[i].lock();
+	for (size_t i = 0; i < this->visibleObjectsMainCamera.size(); i++) {
+		std::shared_ptr<MeshObject> meshObject = this->visibleObjectsMainCamera[i].lock();
 
 		if (!meshObject->IsActive() || meshObject->IsHidden()) continue;
 
@@ -409,8 +411,8 @@ void Renderer::CreateRenderMap(RenderMap& renderMap, CameraObject& camera) {
 #ifdef DEBUG_TIMER
 	const auto finsihedRenderMap{std::chrono::steady_clock::now()};
 	const std::chrono::duration<double> elapsedSeconds{finsihedRenderMap - start};
-	ImGui::Text(
-		("Render map creation: " + std::to_string(elapsedSeconds.count()) + " : " + std::to_string(renderQueue.size()))
+	ImGui::Text(("Render map creation: " + std::to_string(elapsedSeconds.count()) + " : " +
+				 std::to_string(this->visibleObjectsMainCamera.size()))
 			.c_str());
 #endif // DEBUG_TIMER
 }

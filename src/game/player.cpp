@@ -1,14 +1,13 @@
 #include "game/player.h"
+#include "UI/interactionPrompt.h"
 #include "core/physics/sphereCollider.h"
 #include "game/gameManager.h"
 #include "game/hud.h"
 #include "gameObjects/meshObject.h"
-#include <numbers>
-#include "game/gameManager.h"
+#include "gameObjects/mine.h"
 #include "gameObjects/pistol01.h"
 #include "gameObjects/rayVis.h"
-#include "gameObjects/mine.h"
-
+#include <numbers>
 
 Player::Player() : cameraRotation{0, 0, 0} { this->controllerInput = std::make_shared<ControllerInput>(0); }
 
@@ -57,7 +56,6 @@ void Player::Start() {
 		colliderobj->transform.SetScale(DirectX::XMLoadFloat3(&scale));
 		colliderobj->SetParent(this->GetPtr());
 		colliderobj->SetTag(Tag::PLAYER);
-		colliderobj->SetIgnoreTag(Tag::INTERACTABLE);
 		colliderobj->SetName("PlayerCollider " + std::to_string(this->factory->GetNextID()));
 	}
 
@@ -72,7 +70,6 @@ void Player::Start() {
 		colliderobj->transform.SetScale(DirectX::XMLoadFloat3(&scale));
 		colliderobj->SetParent(this->GetPtr());
 		colliderobj->SetTag(Tag::PLAYER);
-		colliderobj->SetIgnoreTag(Tag::INTERACTABLE);
 		colliderobj->SetName("PlayerCollider " + std::to_string(this->factory->GetNextID()));
 	}
 
@@ -87,7 +84,6 @@ void Player::Start() {
 		colliderobj->transform.SetScale(DirectX::XMLoadFloat3(&scale));
 		colliderobj->SetParent(this->GetPtr());
 		colliderobj->SetTag(Tag::PLAYER);
-		colliderobj->SetIgnoreTag(Tag::INTERACTABLE);
 		colliderobj->SetName("PlayerCollider " + std::to_string(this->factory->GetNextID()));
 	}
 
@@ -103,7 +99,7 @@ void Player::Start() {
 		colliderobj->transform.SetScale(DirectX::XMLoadFloat3(&scale));
 		colliderobj->SetParent(this->GetPtr());
 		colliderobj->SetTag(Tag::PLAYER);
-		//colliderobj->SetIgnoreTag(~Tag::FLOOR);
+		// colliderobj->SetIgnoreTag(~Tag::FLOOR);
 		colliderobj->SetName("PlayerCollider " + std::to_string(this->factory->GetNextID()));
 	}
 
@@ -120,7 +116,7 @@ void Player::Start() {
 	this->sfxTimer.Initialize(0.4f);
 
 	// Master Volume
-	AudioManager::GetInstance().SetMasterMusicVolume(0.4f);
+	AudioManager::GetInstance().SetMasterMusicVolume(0.3f);
 	AudioManager::GetInstance().SetMasterSoundEffectsVolume(1);
 
 	// Music
@@ -148,16 +144,31 @@ void Player::Tick() {
 	this->RigidBody::Tick();
 
 	InputManager::GetInstance().ReadControllerInput(this->controllerInput->GetControllerIndex());
-
 	DirectX::XMVECTOR position = this->transform.GetGlobalPosition();
+
 	AudioManager::GetInstance().SetListenerPosition(position.m128_f32[0], position.m128_f32[1], position.m128_f32[2]);
+	DirectX::XMVECTOR forward = this->transform.GetGlobalForward();
+	DirectX::XMVECTOR up = this->transform.GetGlobalUp();
+	ALfloat listenerOrientation[6] = { -forward.m128_f32[0], -forward.m128_f32[1], -forward.m128_f32[2],
+		 up.m128_f32[0], up.m128_f32[1], up.m128_f32[2] };
+	AudioManager::GetInstance().SetListenerOrientation(listenerOrientation);
 
-	this->input[0] = this->keyBoardInput.GetMovementVector().data()[0] + this->controllerInput->GetMovementVector().data()[0];
-	this->input[1] = this->keyBoardInput.GetMovementVector().data()[1] + this->controllerInput->GetMovementVector().data()[1];
-	this->jumpInput = this->keyBoardInput.Jump() || this->controllerInput->Jump();
+	if (this->inputEnabled) {
+		this->input[0] =
+			this->keyBoardInput.GetMovementVector().data()[0] + this->controllerInput->GetMovementVector().data()[0];
+		this->input[1] =
+			this->keyBoardInput.GetMovementVector().data()[1] + this->controllerInput->GetMovementVector().data()[1];
+	} else {
+		this->input[0] = 0.0f;
+		this->input[1] = 0.0f;
+	}
+	if (this->inputEnabled) {
+		this->jumpInput = this->keyBoardInput.Jump() || this->controllerInput->Jump();
+	} else {
+		this->jumpInput = false;
+	}
 
-	if (this->jumpInput && this->isGrounded)
-	{
+	if (this->jumpInput && this->isGrounded) {
 		this->isJumping = true;
 	}
 
@@ -190,7 +201,7 @@ void Player::Tick() {
 		this->sfxTimer.Reset();
 	}
 
-	//this->aim();
+	// this->aim();
 	this->CheckForTriggerPress();
 
 	// Update HUD with current resources
@@ -212,7 +223,7 @@ void Player::Tick() {
 void Player::PhysicsTick() {
 	float fixedDeltaTime = Time::GetInstance().GetFixedDeltaTime();
 
-	//Logger::Log(std::to_string(this->linearVelocity.x), ", ", std::to_string(this->linearVelocity.y), ", ",
+	// Logger::Log(std::to_string(this->linearVelocity.x), ", ", std::to_string(this->linearVelocity.y), ", ",
 	//			std::to_string(this->linearVelocity.z));
 
 	std::shared_ptr<CameraObject> cam = this->camera.lock();
@@ -229,9 +240,11 @@ void Player::PhysicsTick() {
 	}
 
 	this->moveVector = {};
-	this->moveVector = DirectX::XMVectorAdd(moveVector, DirectX::XMVectorScale(this->transform.GetGlobalRight(),
+	this->moveVector = DirectX::XMVectorAdd(
+		moveVector, DirectX::XMVectorScale(this->transform.GetGlobalRight(),
 										   this->input[0] * this->speed * fixedDeltaTime)); // Add x-input
-	this->moveVector = DirectX::XMVectorAdd(moveVector, DirectX::XMVectorScale(this->transform.GetGlobalForward(),
+	this->moveVector = DirectX::XMVectorAdd(
+		moveVector, DirectX::XMVectorScale(this->transform.GetGlobalForward(),
 										   this->input[1] * this->speed * fixedDeltaTime)); // Add z-input
 
 	if (this->isJumping) {
@@ -299,6 +312,22 @@ void Player::SetCameraRotation(float r, float p, float y) {
 	this->cameraRotation[2] = y;
 }
 
+void Player::SetShowCursor(bool visible) {
+	this->showCursor = visible;
+	ShowCursor(visible);
+	// when showing cursor, disable shooting
+	this->canShoot = !visible;
+}
+
+void Player::SetInputEnabled(bool enabled) {
+	this->inputEnabled = enabled;
+	if (!enabled) {
+		this->input[0] = 0.0f;
+		this->input[1] = 0.0f;
+		this->canShoot = false;
+	}
+}
+
 void Player::DecrementHealth(int hp) { this->health.Decrement(hp); }
 
 void Player::IncrementHealth(int hp) { this->health.Increment(hp); }
@@ -311,8 +340,7 @@ void Player::OnCollision(std::weak_ptr<GameObject3D> gameObject3D) {
 	std::string name = gameObject3D.lock()->GetName();
 	std::shared_ptr<SpaceShip> spaceShip = std::dynamic_pointer_cast<SpaceShip>(gameObject3D.lock());
 
-	if (spaceShip)
-	{
+	if (spaceShip) {
 		this->isGrounded = true;
 	}
 }
@@ -345,12 +373,61 @@ void Player::Interact() {
 	const DirectX::XMVECTOR lookVec = this->camera.lock()->transform.GetGlobalForward();
 	const DirectX::XMVECTOR posVec = this->camera.lock()->transform.GetGlobalPosition();
 
+	{
+		Ray ray{Vector3D{posVec}, Vector3D{lookVec}};
+		RayCastData rayCastData;
+
+		bool didHit = PhysicsQueue::GetInstance().castRay(ray, rayCastData, Tag::INTERACTABLE, Tag::PLAYER,
+														  this->interactDistance);
+		std::string hitString;
+		if (didHit) {
+
+			auto hitCollider = rayCastData.hitColider.lock();
+			if (hitCollider && (hitCollider->GetTag() & Tag::INTERACTABLE)) {
+				hitCollider->Hover();
+				hitString = "hit";
+			} else {
+				hitString = "miss";
+				// Hide any shared interaction prompt when nothing is hovered
+				try {
+					auto promptWeak = this->factory->FindObjectOfType<UI::InteractionPrompt>();
+					if (!promptWeak.expired()) {
+						auto prompt = promptWeak.lock();
+						if (prompt) prompt->Hide();
+					}
+				} catch (const std::exception& e) {
+					Logger::Error("Player::Interact failed to hide prompt: ", e.what());
+				} catch (...) {
+					Logger::Error("Player::Interact failed to hide prompt (unknown exception)");
+				}
+			}
+
+		} else {
+			hitString = "miss";
+			// Hide any shared interaction prompt when nothing is hovered
+			try {
+				auto promptWeak = this->factory->FindObjectOfType<UI::InteractionPrompt>();
+				if (!promptWeak.expired()) {
+					auto prompt = promptWeak.lock();
+					if (prompt) prompt->Hide();
+				}
+			} catch (const std::exception& e) {
+				Logger::Error("Player::Interact failed to hide prompt: ", e.what());
+			} catch (...) {
+				Logger::Error("Player::Interact failed to hide prompt (unknown exception)");
+			}
+		}
+
+		// Logger::Log(hitString, " at distance: ", std::to_string(rayCastData.distance));
+	}
+
 	if (this->keyBoardInput.Interact() || this->controllerInput->Interact()) {
 
 		Ray ray{Vector3D{posVec}, Vector3D{lookVec}};
 		RayCastData rayCastData;
 
-		bool didHit = PhysicsQueue::GetInstance().castRay(ray, rayCastData, ~Tag::NOIGNORE, Tag::PLAYER);
+		bool didHit =
+			PhysicsQueue::GetInstance().castRay(ray, rayCastData, ~Tag::NOIGNORE, Tag::PLAYER, this->interactDistance);
 		std::string hitString;
 		if (didHit) {
 

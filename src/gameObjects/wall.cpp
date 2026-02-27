@@ -1,11 +1,13 @@
 #include "gameObjects/wall.h"
-#include "utilities/logger.h"
+#include "UI/interactionPrompt.h"
 #include "gameObjects/room.h"
-void Wall::OnObserve() { }
+#include "utilities/logger.h"
+#include "utilities/time.h"
+void Wall::OnObserve() {}
 
-void Wall::OnInteract() { 
-	
-	Logger::Log("stop interacting with me!"); 
+void Wall::OnInteract() {
+
+	Logger::Log("stop interacting with me!");
 
 	auto parentWeak = this->GetParent();
 	if (parentWeak.expired()) {
@@ -15,11 +17,26 @@ void Wall::OnInteract() {
 
 	auto parent = std::static_pointer_cast<Room>(parentWeak.lock());
 
-	
 	parent->CreateRoom(static_cast<Room::WallIndex>(this->wallIndex));
+
+	// hide shared interaction prompt briefly so text disappears on interact
+	try {
+		auto promptWeak = this->factory->FindObjectOfType<UI::InteractionPrompt>();
+		if (!promptWeak.expired()) {
+			auto prompt = promptWeak.lock();
+			if (prompt) prompt->Hide();
+		}
+	} catch (const std::exception& e) {
+		Logger::Error("Wall::OnInteract Hide prompt exception: ", e.what());
+	} catch (...) {
+		Logger::Error("Wall::OnInteract Hide prompt unknown exception");
+	}
+
+	// disable showing the prompt for a short time
+	this->hoverDisabledUntil = Time::GetInstance().GetSessionTime() + 0.5f;
 }
 
-void Wall::Start(){ 
+void Wall::Start() {
 	this->MeshObject::Start();
 	Logger::Log("Wall started");
 
@@ -28,16 +45,16 @@ void Wall::Start(){
 
 void Wall::SetWAllIndex(int wallIndex) { this->wallIndex = wallIndex; }
 
-
 void Wall::SpawnInteractables() {
 	auto colliderobj = this->factory->CreateStaticGameObject<BoxCollider>();
-	
+
 	DirectX::XMFLOAT3 pos(0.0f, 3.0f, 4.5f);
 	colliderobj->transform.SetPosition(DirectX::XMLoadFloat3(&pos));
 	DirectX::XMFLOAT3 scale(0.750f, 0.750f, 0.250f);
 	colliderobj->transform.SetScale(DirectX::XMLoadFloat3(&scale));
 	colliderobj->SetParent(this->GetPtr());
 	colliderobj->SetOnInteract([&](std::shared_ptr<Player>) { this->OnInteract(); });
+	colliderobj->SetOnHover([&] { this->Hover(); });
 	colliderobj->SetTag(Tag::INTERACTABLE);
 	colliderobj->SetName("Interactable " + std::to_string(this->factory->GetNextID()));
 
@@ -45,14 +62,13 @@ void Wall::SpawnInteractables() {
 }
 
 void Wall::SpawnWallColliders(int wallStateIndex) {
-	for (auto colliders: this->wallColliders) {
+	for (auto colliders : this->wallColliders) {
 		this->factory->QueueDeleteGameObject(colliders);
 	}
 	this->wallColliders.clear();
 	Room::WallState wallState = static_cast<Room::WallState>(wallStateIndex);
 	switch (wallState) {
-	case (Room::WallState::window || Room::WallState::solid):
-		{
+	case (Room::WallState::window || Room::WallState::solid): {
 		auto colliderobj = this->factory->CreateStaticGameObject<BoxCollider>();
 		DirectX::XMFLOAT3 pos(0.0f, 3.0f, 4.75f);
 		colliderobj->transform.SetPosition(DirectX::XMLoadFloat3(&pos));
@@ -62,8 +78,7 @@ void Wall::SpawnWallColliders(int wallStateIndex) {
 		colliderobj->SetTag(Tag::WALL);
 
 		this->wallColliders.push_back(colliderobj);
-	}
-		break;
+	} break;
 
 	case (Room::WallState::door): {
 		auto colliderobj = this->factory->CreateStaticGameObject<BoxCollider>();
@@ -76,17 +91,17 @@ void Wall::SpawnWallColliders(int wallStateIndex) {
 
 		this->wallColliders.push_back(colliderobj);
 	}
-	{
-		auto colliderobj = this->factory->CreateStaticGameObject<BoxCollider>();
-		DirectX::XMFLOAT3 pos(-3.25f, 3.0f, 4.75f);
-		colliderobj->transform.SetPosition(DirectX::XMLoadFloat3(&pos));
-		DirectX::XMFLOAT3 scale(1.75f, 2.5f, 0.250f);
-		colliderobj->transform.SetScale(DirectX::XMLoadFloat3(&scale));
-		colliderobj->SetParent(this->GetPtr());
-		colliderobj->SetTag(Tag::WALL);
+		{
+			auto colliderobj = this->factory->CreateStaticGameObject<BoxCollider>();
+			DirectX::XMFLOAT3 pos(-3.25f, 3.0f, 4.75f);
+			colliderobj->transform.SetPosition(DirectX::XMLoadFloat3(&pos));
+			DirectX::XMFLOAT3 scale(1.75f, 2.5f, 0.250f);
+			colliderobj->transform.SetScale(DirectX::XMLoadFloat3(&scale));
+			colliderobj->SetParent(this->GetPtr());
+			colliderobj->SetTag(Tag::WALL);
 
-		this->wallColliders.push_back(colliderobj);
-	}
+			this->wallColliders.push_back(colliderobj);
+		}
 		break;
 
 	default:
@@ -96,8 +111,7 @@ void Wall::SpawnWallColliders(int wallStateIndex) {
 
 void Wall::SetWallState(int wallState) {
 
-	MeshObjData meshdata = AssetManager::GetInstance().GetMeshObjData(
-	Wall::wallMeshIdentifiers[wallState]);
+	MeshObjData meshdata = AssetManager::GetInstance().GetMeshObjData(Wall::wallMeshIdentifiers[wallState]);
 	this->SetMesh(meshdata);
 	this->SpawnWallColliders(wallState);
 	Room::WallState wallStateEnum = static_cast<Room::WallState>(wallState);
@@ -119,7 +133,23 @@ void Wall::SetWallState(int wallState) {
 	}
 }
 
-void Wall::RemoveInteractables() {
+void Wall::RemoveInteractables() { this->factory->QueueDeleteGameObject(this->interactable); }
 
-	this->factory->QueueDeleteGameObject(this->interactable);
+void Wall::Hover() {
+	try {
+		float currentTime = Time::GetInstance().GetSessionTime();
+		if (currentTime < this->hoverDisabledUntil) return;
+		auto promptWeak = this->factory->FindObjectOfType<UI::InteractionPrompt>();
+		if (promptWeak.expired()) return;
+		auto prompt = promptWeak.lock();
+		if (!prompt) return;
+
+		std::string txt = "Press \"F\" to build room";
+		DirectX::XMVECTOR worldPos = this->transform.GetGlobalPosition();
+		prompt->Show(txt, worldPos);
+	} catch (const std::exception& e) {
+		Logger::Error("Wall::Hover exception: ", e.what());
+	} catch (...) {
+		Logger::Error("Wall::Hover unknown exception");
+	}
 }

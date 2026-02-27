@@ -46,6 +46,10 @@ void Enemy::Start() {
 		}
 	});
 	this->hitbox = collider;
+
+	//Create speaker object
+    this->speaker = this->factory->CreateGameObjectOfType<SoundSourceObject>();
+    speaker.lock()->SetParent(this->GetPtr());
 }
 
 void Enemy::Tick() {
@@ -200,6 +204,13 @@ void Enemy::ShootAtCore() {
 		return;
 	}
 
+	if(!this->speaker.expired())
+	{
+		SoundClip* shootClip = AssetManager::GetInstance().GetSoundClip("Laser2.wav"); //temporary clip
+		this->speaker.lock()->SetRandomPitch(0.9f, 1.1f);
+		this->speaker.lock()->Play(shootClip);
+	}
+
 	Vector3D enemyPosition = this->transform.GetGlobalPosition();
 	Vector3D corePosition = this->path[this->maxPathIndex]->transform.GetGlobalPosition();
 	Vector3D rayDirection = corePosition - enemyPosition;
@@ -272,6 +283,13 @@ void Enemy::ShootAtPlayer() {
 				Logger::Log("Enemy shooting at player - HIT!");
 				this->canShoot = false;
 				this->VisualizeRay(pos, dir, rayCastData.distance);
+
+				if(!this->speaker.expired())
+				{
+					SoundClip* shootClip = AssetManager::GetInstance().GetSoundClip("Laser2.wav"); //temporary clip
+					this->speaker.lock()->SetRandomPitch(0.9f, 1.1f);
+					this->speaker.lock()->Play(shootClip);
+				}
 			}
 		}
 	}

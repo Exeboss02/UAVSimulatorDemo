@@ -31,6 +31,8 @@ public:
 	void SetColor(const DirectX::XMFLOAT4& c);
 	DirectX::XMFLOAT4 GetColor() const;
 
+	Vec2 GetSize() const override;
+
 	void SetFontSize(float s);
 	float GetFontSize() const;
 	void SetRightAligned(bool v);

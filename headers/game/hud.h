@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include "UI/widget.h"
 
 class ResourceManager;
 class GameObjectFactory;
@@ -34,6 +35,9 @@ public:
 	void SetStoryTextVisibility(bool visible);
 
 private:
+	std::weak_ptr<UI::Text> MakeText(const std::string& name, const std::string& text, float x, float y, float width,
+									 UI::Anchor anchor);
+
 	void SafeTextSet(std::weak_ptr<UI::Text> textObject, const std::string& text);
 
 	GameObjectFactory* factory = nullptr;

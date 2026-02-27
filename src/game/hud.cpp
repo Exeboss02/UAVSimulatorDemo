@@ -143,8 +143,8 @@ void HUD::Start() {
 	}
 
 	{
-		auto [ix, iy, tx, ty] = makeLeftAlignedPositions(5);
-		this->playerHealthText = makeText("HUD_Player_Story_Text", "", tx, ty, textWidth, false);
+		auto [ix, iy, tx, ty] = makeLeftAlignedPositions(0);
+		this->storyText = this->MakeText("HUD_Player_Story_Text", "", 0, 0, 0, UI::Anchor::TopCenter);
 	}
 
 	{
@@ -201,6 +201,36 @@ void HUD::SetStoryTextVisibility(bool visible) {
 	if (auto storyText = this->storyText.lock()) {
 		storyText->SetVisible(visible);
 	}
+}
+
+std::weak_ptr<UI::Text> HUD::MakeText(const std::string& name, const std::string& text, float x, float y, float width,
+									  UI::Anchor anchor) {
+	auto textWeak = this->factory->CreateGameObjectOfType<UI::Text>();
+	if (textWeak.expired()) return std::weak_ptr<UI::Text>();
+
+	auto textShared = textWeak.lock();
+	textShared->SetName(name);
+	textShared->SetText(text);
+	textShared->SetPosition(UI::Vec2{x, y});
+	textShared->SetSize(UI::Vec2{width, 32.0f});
+	textShared->SetFontSize(24.0f);
+
+	// Alignment: use right-aligned behavior only when requested
+	textShared->SetAnchor(anchor);
+
+	if (this->canvasObj.expired()) {
+		std::string error = "MakeText was called before canvas existed";
+		Logger::Error(error);
+		throw std::runtime_error(error);
+	}
+
+	auto canvasShared = this->canvasObj.lock();
+
+	std::weak_ptr<GameObject> me = canvasShared->GetPtr();
+	textShared->SetParent(me);
+	canvasShared->AddChild(std::static_pointer_cast<UI::Widget>(textShared));
+	RenderQueue::AddUIWidget(textShared);
+	return std::weak_ptr<UI::Text>(textShared);
 }
 
 void HUD::SafeTextSet(std::weak_ptr<UI::Text> textObjectWeak, const std::string& text) {

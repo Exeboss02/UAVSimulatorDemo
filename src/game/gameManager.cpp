@@ -1,5 +1,10 @@
 #include "game/gameManager.h"
 #include "core/filepathHolder.h"
+#include "UI/image.h"
+#include "UI/text.h"
+#include "UI/canvasObject.h"
+#include "rendering/renderQueue.h"
+#include "scene/sceneManager.h"
 #include <cstdlib>
 #include <format>
 #include <random>
@@ -7,9 +12,8 @@
 std::weak_ptr<GameManager> GameManager::instance;
 
 GameManager::GameManager()
-	: playerSpawnPoint(DirectX::XMVectorSet(70.0, 5.0, 0.0, 0.0)), currentRound(0), inCombat(false),
-	  enemySpawnTimer(1), unspawnedEnemies(0), enemySpawnDelay(2), idleTime(30), idleTimeTimer(0) 
-{}
+	: playerSpawnPoint(DirectX::XMVectorSet(70.0, 5.0, 0.0, 0.0)), currentRound(0), inCombat(false), enemySpawnTimer(1),
+	  unspawnedEnemies(0), enemySpawnDelay(2), idleTime(30), idleTimeTimer(0) {}
 
 void GameManager::Start() {
 	if (GameManager::instance.expired()) {
@@ -33,22 +37,59 @@ void GameManager::Start() {
 	}
 
 	// Set up rounds
-	this->rounds.reserve(10);
+	this->rounds.reserve(1);
 	this->rounds.push_back(Round{3, 1});
-	this->rounds.push_back(Round{5, 1});
-	this->rounds.push_back(Round{7, 1});
-	this->rounds.push_back(Round{10, 2});
-	this->rounds.push_back(Round{15, 2});
-	this->rounds.push_back(Round{20, 2});
-	this->rounds.push_back(Round{25, 2});
-	this->rounds.push_back(Round{35, 2});
-	this->rounds.push_back(Round{50, 3});
-	this->rounds.push_back(Round{80, 3});
+	// this->rounds.push_back(Round{5, 1});
+	// this->rounds.push_back(Round{7, 1});
+	// this->rounds.push_back(Round{10, 2});
+	// this->rounds.push_back(Round{15, 2});
+	// this->rounds.push_back(Round{20, 2});
+	// this->rounds.push_back(Round{25, 2});
+	// this->rounds.push_back(Round{35, 2});
+	// this->rounds.push_back(Round{50, 3});
+	// this->rounds.push_back(Round{80, 3});
 
 	this->idleTimeTimer = this->idleTime;
 }
 
 void GameManager::Tick() {
+	// If win screen is visible, wait for the unlock timer then detect any key to jump to main menu
+	if (this->winScreenVisible) {
+		float currentTime = Time::GetInstance().GetSessionTime();
+		// Enforce at least 5 seconds before allowing return to menu
+		if (currentTime - this->winStartTime >= 5.0f) {
+			ImGuiIO& io = ImGui::GetIO();
+			for (int i = 0; i < IM_ARRAYSIZE(io.KeysDown); i++) {
+				if (ImGui::IsKeyPressed(i)) {
+					// Ensure the OS cursor is shown and player input is disabled so
+					// the Main Menu receives mouse events after scene change.
+					if (auto playerPtr = this->player.lock()) {
+						playerPtr->SetShowCursor(true);
+						playerPtr->SetInputEnabled(false);
+					}
+
+					// Clean up win UI widgets so they don't linger after scene unload
+					if (!this->winBackground.expired()) {
+						if (auto bg = this->winBackground.lock()) this->factory->QueueDeleteGameObject(std::weak_ptr<GameObject>(bg));
+					}
+					if (!this->winTitle.expired()) {
+						if (auto t = this->winTitle.lock()) this->factory->QueueDeleteGameObject(std::weak_ptr<GameObject>(t));
+					}
+					if (!this->winPrompt.expired()) {
+						if (auto p = this->winPrompt.lock()) this->factory->QueueDeleteGameObject(std::weak_ptr<GameObject>(p));
+					}
+					this->winScreenVisible = false;
+
+					if (auto sm = SceneManager::GetActive()) {
+						auto path = (FilepathHolder::GetAssetsDirectory() / "scenes" / "MainMenu.scene").string();
+						sm->QueueLoadSceneFile(path);
+					}
+					break;
+				}
+			}
+		}
+		return;
+	}
 	if (this->inCombat) {
 
 		// Spawning enemies
@@ -57,7 +98,8 @@ void GameManager::Tick() {
 				this->enemySpawnTimer -= Time::GetInstance().GetDeltaTime();
 			} else {
 				size_t cachedUnspawnedEnemies = this->unspawnedEnemies;
-				for (size_t i = 0; i < std::min(this->rounds[this->currentRound].breachPoints, cachedUnspawnedEnemies); i++) {
+				for (size_t i = 0; i < std::min(this->rounds[this->currentRound].breachPoints, cachedUnspawnedEnemies);
+					 i++) {
 					SpawnEnemy(i);
 				}
 
@@ -110,7 +152,102 @@ void GameManager::ReloadScene() {
 	}
 }
 
-void GameManager::Win() { Logger::Log("You won!"); }
+void GameManager::Win() { 
+	Logger::Log("You won!");
+
+	// Try to find the main HUD canvas to place the win overlay on top
+	auto canvasWeak = this->factory->FindObjectOfType<UI::CanvasObject>();
+	if (canvasWeak.expired()) {
+		Logger::Error("No canvas found for win screen");
+		this->winScreenVisible = true; // still enter wait state so game stops
+		return;
+	}
+
+	auto canvasShared = canvasWeak.lock();
+	if (!canvasShared) {
+		Logger::Error("Failed to lock canvas for win screen");
+		this->winScreenVisible = true;
+		return;
+	}
+
+	float canvasWidth = 1920.0f;
+	float canvasHeight = 1080.0f;
+	try {
+		if (auto canvasPtr = canvasShared->GetCanvas()) {
+			auto sz = canvasPtr->GetSize();
+			if (sz.x > 0.0f) canvasWidth = sz.x;
+			if (sz.y > 0.0f) canvasHeight = sz.y;
+		}
+	} catch (...) {
+	}
+
+	// Semi-opaque background
+	{
+		auto bgWeak = this->factory->CreateGameObjectOfType<UI::Image>();
+		if (!bgWeak.expired()) {
+			auto bg = bgWeak.lock();
+			bg->SetName("Win_Background");
+			bg->SetSize(UI::Vec2{canvasWidth, canvasHeight});
+			bg->SetPosition(UI::Vec2{0.0f, 0.0f});
+			bg->SetTint(DirectX::XMFLOAT4{0.0f, 0.0f, 0.0f, 0.6f});
+			bg->SetVisible(true);
+			bg->SetZIndex(0);
+			std::weak_ptr<GameObject> me = canvasShared->GetPtr();
+			bg->SetParent(me);
+			canvasShared->AddChild(std::static_pointer_cast<UI::Widget>(bg));
+			RenderQueue::AddUIWidget(bg);
+			this->winBackground = bg;
+		}
+	}
+
+	// Title text: "You won!"
+	{
+		auto titleWeak = this->factory->CreateGameObjectOfType<UI::Text>();
+		if (!titleWeak.expired()) {
+			auto title = titleWeak.lock();
+			title->SetName("Win_Title");
+			title->SetText("You won!");
+			title->SetFontSize(72.0f);
+			float tw = 800.0f;
+			float th = 120.0f;
+			title->SetSize(UI::Vec2{tw, th});
+			title->SetPosition(UI::Vec2{(canvasWidth - tw) * 0.5f, (canvasHeight - th) * 0.5f - 40.0f});
+			title->SetVisible(true);
+			title->SetZIndex(1);
+			std::weak_ptr<GameObject> me = canvasShared->GetPtr();
+			title->SetParent(me);
+			canvasShared->AddChild(std::static_pointer_cast<UI::Widget>(title));
+			RenderQueue::AddUIWidget(title);
+			this->winTitle = title;
+		}
+	}
+
+	// Prompt text: "Press any key to continue"
+	{
+		auto promptWeak = this->factory->CreateGameObjectOfType<UI::Text>();
+		if (!promptWeak.expired()) {
+			auto prompt = promptWeak.lock();
+			prompt->SetName("Win_Prompt");
+			prompt->SetText("Press any key to continue");
+			prompt->SetFontSize(32.0f);
+			float pw = 600.0f;
+			float ph = 48.0f;
+			prompt->SetSize(UI::Vec2{pw, ph});
+			prompt->SetPosition(UI::Vec2{(canvasWidth - pw) * 0.5f, (canvasHeight - ph) * 0.5f + 60.0f});
+			prompt->SetVisible(true);
+			prompt->SetZIndex(1);
+			std::weak_ptr<GameObject> me = canvasShared->GetPtr();
+			prompt->SetParent(me);
+			canvasShared->AddChild(std::static_pointer_cast<UI::Widget>(prompt));
+			RenderQueue::AddUIWidget(prompt);
+			this->winPrompt = prompt;
+		}
+	}
+
+	this->winScreenVisible = true;
+	// Record the session time so we can enforce a delay before allowing menu return
+	this->winStartTime = Time::GetInstance().GetSessionTime();
+}
 
 void GameManager::PlayerDied() {
 	Logger::Log("Player died");
@@ -161,8 +298,8 @@ void GameManager::SpawnRound(size_t roundIndex) {
 			float longestDistance = 0;
 
 			for (auto& room : rooms) {
-				if (canUseSameBreachPoint || selectedRooms.size() <= 0 || std::find(selectedRooms.begin(), selectedRooms.end(),
-																	 room.first) == selectedRooms.end()) {
+				if (canUseSameBreachPoint || selectedRooms.size() <= 0 ||
+					std::find(selectedRooms.begin(), selectedRooms.end(), room.first) == selectedRooms.end()) {
 					if (room.second * GetRandom(0.1, 1.0) > longestDistance) {
 						longestDistance = room.second;
 						selectedRoom = room.first;
@@ -211,7 +348,6 @@ void GameManager::EndRound() {
 	this->inCombat = false;
 	this->currentRound++;
 	this->idleTimeTimer = this->idleTime;
-
 
 	if (this->currentRound >= this->rounds.size()) {
 		Win();

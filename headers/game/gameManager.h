@@ -6,6 +6,8 @@
 #include "gameObjects/testEnemy.h"
 #include "gameObjects/enemy.h"
 
+namespace UI { class Image; class Text; class CanvasObject; }
+
 struct Round {
 	size_t enemyCount;
 	size_t breachPoints;
@@ -82,4 +84,11 @@ private:
 	const float idleTime;
 
 	size_t unspawnedEnemies;
+
+	// Win screen UI
+	bool winScreenVisible = false;
+	std::weak_ptr<UI::Image> winBackground;
+	std::weak_ptr<UI::Text> winTitle;
+	std::weak_ptr<UI::Text> winPrompt;
+	float winStartTime = 0.0f; // session time when win screen was shown
 };

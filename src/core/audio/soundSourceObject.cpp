@@ -1,5 +1,6 @@
 #include "core/audio/soundSourceObject.h"
 #include "core/audio/audioManager.h"
+#include "soundSourceObject.h"
 
 SoundSourceObject::SoundSourceObject()
 {
@@ -148,6 +149,28 @@ void SoundSourceObject::SetDeleteWhenFinnished(bool del)
 bool SoundSourceObject::GetDeleteWhenFinnished()
 {
 	return this->deleteWhenFinnished;
+}
+
+void SoundSourceObject::LoopSoundEffect(int nrOfTimes)
+{
+	this->shouldLoop = true;
+	this->loopCount = nrOfTimes
+
+	for (int i = 0; i < this->nrOfSources; i++)
+	{
+		alSourcei(this->sources[i], AL_LOOPING, AL_TRUE);
+	}
+}
+
+void SoundSourceObject::StopLoopingSoundEffect()
+{
+	this->shouldLoop = false;
+	this->loopCount = 0;
+
+	for (int i = 0; i < this->nrOfSources; i++)
+	{
+		alSourcei(this->sources[i], AL_LOOPING, AL_FALSE);
+	}
 }
 
 void SoundSourceObject::SetRandomPitch(float minPitch, float maxPitch) {

@@ -99,12 +99,22 @@ public:
 
 	bool GetDeleteWhenFinnished();
 
+	/// @brief Loops a soundClip specified nr of times, 0 = loops until set to false or until soundSource is destroyed
+	/// @param nrOfTimes 
+	void LoopSoundEffect(int nrOfTimes);
+
+	/// @brief Stops looping sound effects on this soundSourceObject
+	void StopLoopingSoundEffect();
+
 private:
 	int id = -1;
 	int nrOfSources = 6;
 	int sourceIndex = 0;
 	ALuint* sources;
 	AudioInstruction currentInstructionSet;
+
+	int loopCount = 0;
+	bool shouldLoop = false;
 
 	bool deleteWhenFinnished = false;
 	bool isPlaying = false;

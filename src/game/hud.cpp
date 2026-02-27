@@ -31,120 +31,57 @@ void HUD::Start() {
 	canvasShared->SetName("PlayerHUD_Canvas");
 	this->canvasObj = canvasShared;
 
-	auto makeText = [&](const std::string& name, const std::string& text, float x, float y, float width,
-						bool rightAligned) {
-		auto textWeak = this->factory->CreateGameObjectOfType<UI::Text>();
-		if (textWeak.expired()) return std::weak_ptr<UI::Text>();
-
-		auto textShared = textWeak.lock();
-		textShared->SetName(name);
-		textShared->SetText(text);
-		textShared->SetPosition(UI::Vec2{x, y});
-		textShared->SetSize(UI::Vec2{width, 32.0f});
-		textShared->SetFontSize(24.0f);
-
-		// Alignment: use right-aligned behavior only when requested
-		textShared->SetRightAligned(rightAligned);
-		if (rightAligned) {
-			textShared->SetMaxWidth(width);
-		} else {
-			textShared->SetMaxWidth(0.0f);
-		}
-
-		std::weak_ptr<GameObject> me = canvasShared->GetPtr();
-		textShared->SetParent(me);
-		canvasShared->AddChild(std::static_pointer_cast<UI::Widget>(textShared));
-		RenderQueue::AddUIWidget(textShared);
-		return std::weak_ptr<UI::Text>(textShared);
-	};
-
-	auto makeIcon = [&](const std::string& name, const std::string& imagePath, float x, float y, float size) {
-		auto iconWeak = this->factory->CreateGameObjectOfType<UI::Image>();
-		if (iconWeak.expired()) return std::weak_ptr<UI::Image>();
-
-		auto iconShared = iconWeak.lock();
-		iconShared->SetName(name);
-		iconShared->SetImage(imagePath);
-		iconShared->SetPosition(UI::Vec2{x, y});
-		iconShared->SetSize(UI::Vec2{size, size});
-
-		std::weak_ptr<GameObject> me = canvasShared->GetPtr();
-		iconShared->SetParent(me);
-		canvasShared->AddChild(std::static_pointer_cast<UI::Widget>(iconShared));
-		RenderQueue::AddUIWidget(iconShared);
-		return std::weak_ptr<UI::Image>(iconShared);
-	};
-
 	const float iconSize = 96.0f;
 	const float lineHeight = iconSize - 20.0f;
 	const float padding = 10.0f;
 	const float textWidth = 48.0f;
 
-	float canvasWidth = 1920.0f;
-	float canvasHeight = 1080.0f;
-	try {
-		if (auto canvasPtr = canvasShared->GetCanvas()) {
-			auto sz = canvasPtr->GetSize();
-			if (sz.x > 0.0f) canvasWidth = sz.x;
-			if (sz.y > 0.0f) canvasHeight = sz.y;
-		}
-	} catch (const std::exception &e) {
-		Logger::Error("HUD::Start canvas size query failed: ", e.what());
-	} catch (...) {
-		Logger::Error("HUD::Start canvas size query failed (unknown exception)");
+	float startPos = 20;
+	float IconOffset = iconSize + padding;
+	float iconTextOffsetY = 40;
+	float iconTextOffsetX = -iconSize - padding;
+
+	// Titanium
+	{
+		this->titaniumIcon = this->MakeIcon("HUD_Titanium_Icon", "assets/images/metal.png", -padding, startPos,
+											iconSize, UI::Anchor::TopRight);
+		this->titaniumText = this->MakeText("HUD_Titanium", "0", iconTextOffsetX, startPos + iconTextOffsetY, textWidth,
+											UI::Anchor::TopRight);
+	}
+	// Lubricant
+	{
+		this->lubricantIcon = this->MakeIcon("HUD_Lubricant_Icon", "assets/images/lubricant.png", -padding,
+											 startPos + IconOffset * 1, iconSize, UI::Anchor::TopRight);
+		this->lubricantText =
+			this->MakeText("HUD_Lubricant", "0", iconTextOffsetX, startPos + iconTextOffsetY + IconOffset * 1,
+						   textWidth, UI::Anchor::TopRight);
+	}
+	// Carbon
+	{
+		this->lubricantIcon = this->MakeIcon("HUD_Carbon_Icon", "assets/images/carbon_fiber.png", -padding,
+											 startPos + IconOffset * 2, iconSize, UI::Anchor::TopRight);
+		this->lubricantText =
+			this->MakeText("HUD_Lubricant", "0", iconTextOffsetX, startPos + iconTextOffsetY + IconOffset * 2,
+						   textWidth, UI::Anchor::TopRight);
+	}
+	// Circuit
+	{
+		this->lubricantIcon = this->MakeIcon("HUD_Circuit_Icon", "assets/images/circuit_board.png", -padding,
+											 startPos + IconOffset * 3, iconSize, UI::Anchor::TopRight);
+		this->lubricantText =
+			this->MakeText("HUD_Lubricant", "0", iconTextOffsetX, startPos + iconTextOffsetY + IconOffset * 3,
+						   textWidth, UI::Anchor::TopRight);
+	}
+	// Player health
+	{
+		this->playerHealthIcon = this->MakeIcon("HUD_Player_Health_Icon", "assets/images/health.png", padding, padding,
+												iconSize, UI::Anchor::TopLeft);
+		this->playerHealthText = this->MakeText("HUD_Player_Health", "0", -iconTextOffsetX, padding + iconTextOffsetY,
+												textWidth, UI::Anchor::TopLeft);
 	}
 
-	//auto makeRightAlignedPositions = [&](int row) {
-	//	float iconX = canvasWidth - padding - iconSize;
-	//	float iconY = padding + row * lineHeight;
-	//	float textX = iconX - 8.0f - textWidth;
-	//	// Vertically center the text next to the (now larger) icon
-	//	float textY = iconY + (iconSize - 32.0f) * 0.5f;
-	//	return std::tuple<float, float, float, float>(iconX, iconY, textX, textY);
-	//};
-
-	//auto makeLeftAlignedPositions = [&](int row) {
-	//	float iconX = padding;
-	//	float iconY = padding + row * lineHeight;
-	//	float textX = iconX + iconSize + 8.0f;
-	//	float textY = iconY + (iconSize - 32.0f) * 0.5f;
-	//	return std::tuple<float, float, float, float>(iconX, iconY, textX, textY);
-	//};
-
-	//// Titanium
-	//{
-	//	auto [ix, iy, tx, ty] = makeRightAlignedPositions(0);
-	//	this->titaniumIcon = makeIcon("HUD_Titanium_Icon", "assets/images/metal.png", ix, iy, iconSize);
-	//	this->titaniumText = makeText("HUD_Titanium", "0", tx, ty, textWidth, true);
-	//}
-	//// Lubricant
-	//{
-	//	auto [ix, iy, tx, ty] = makeRightAlignedPositions(1);
-	//	this->lubricantIcon = makeIcon("HUD_Lubricant_Icon", "assets/images/lubricant.png", ix, iy, iconSize);
-	//	this->lubricantText = makeText("HUD_Lubricant", "0", tx, ty, textWidth, true);
-	//}
-	//// Carbon
-	//{
-	//	auto [ix, iy, tx, ty] = makeRightAlignedPositions(2);
-	//	this->carbonFiberIcon = makeIcon("HUD_Carbon_Icon", "assets/images/carbon_fiber.png", ix, iy, iconSize);
-	//	this->carbonFiberText = makeText("HUD_Carbon", "0", tx, ty, textWidth, true);
-	//}
-	//// Circuit
-	//{
-	//	auto [ix, iy, tx, ty] = makeRightAlignedPositions(3);
-	//	this->circuitIcon = makeIcon("HUD_Circuit_Icon", "assets/images/circuit_board.png", ix, iy, iconSize);
-	//	this->circuitText = makeText("HUD_Circuit", "0", tx, ty, textWidth, true);
-	//}
-	//// Player health
-	//{
-	//	auto [ix, iy, tx, ty] = makeLeftAlignedPositions(0);
-	//	this->playerHealthIcon = makeIcon("HUD_Player_Health_Icon", "assets/images/health.png", ix, iy, iconSize);
-	//	this->playerHealthText = makeText("HUD_Player_Health", "0", tx, ty, textWidth, false);
-	//}
-
 	{
-		//auto [ix, iy, tx, ty] = makeLeftAlignedPositions(0);
-		this->storyText = this->MakeText("HUD_Player_Story_Text", " ", 0, 0, 0, UI::Anchor::BottomCenter);
+		this->storyText = this->MakeText("HUD_Player_Story_Text", " ", 0, -20, 0, UI::Anchor::BottomCenter);
 	}
 
 	{
@@ -205,6 +142,11 @@ void HUD::SetStoryTextVisibility(bool visible) {
 
 std::weak_ptr<UI::Text> HUD::MakeText(const std::string& name, const std::string& text, float x, float y, float width,
 									  UI::Anchor anchor) {
+	if (this->canvasObj.expired()) {
+		std::string error = "MakeText was called before canvas existed";
+		Logger::Error(error);
+		throw std::runtime_error(error);
+	}
 	auto textWeak = this->factory->CreateGameObjectOfType<UI::Text>();
 	if (textWeak.expired()) return std::weak_ptr<UI::Text>();
 
@@ -219,6 +161,17 @@ std::weak_ptr<UI::Text> HUD::MakeText(const std::string& name, const std::string
 	// Alignment: use right-aligned behavior only when requested
 	textShared->SetAnchor(anchor);
 
+	auto canvasShared = this->canvasObj.lock();
+
+	std::weak_ptr<GameObject> me = canvasShared->GetPtr();
+	textShared->SetParent(me);
+	canvasShared->AddChild(std::static_pointer_cast<UI::Widget>(textShared));
+	RenderQueue::AddUIWidget(textShared);
+	return std::weak_ptr<UI::Text>(textShared);
+}
+
+std::weak_ptr<UI::Image> HUD::MakeIcon(const std::string& name, const std::string& imagePath, float x, float y,
+									   float size, UI::Anchor anchor) {
 	if (this->canvasObj.expired()) {
 		std::string error = "MakeText was called before canvas existed";
 		Logger::Error(error);
@@ -227,11 +180,22 @@ std::weak_ptr<UI::Text> HUD::MakeText(const std::string& name, const std::string
 
 	auto canvasShared = this->canvasObj.lock();
 
+	auto textWeak = this->factory->CreateGameObjectOfType<UI::Text>();
+	if (textWeak.expired()) return std::weak_ptr<UI::Image>();
+
+	auto iconShared = this->factory->CreateGameObjectOfType<UI::Image>().lock();
+
+	iconShared->SetName(name);
+	iconShared->SetImage(imagePath);
+	iconShared->SetPosition(UI::Vec2{x, y});
+	iconShared->SetSize(UI::Vec2{size, size});
+	iconShared->SetAnchor(anchor);
+
 	std::weak_ptr<GameObject> me = canvasShared->GetPtr();
-	textShared->SetParent(me);
-	canvasShared->AddChild(std::static_pointer_cast<UI::Widget>(textShared));
-	RenderQueue::AddUIWidget(textShared);
-	return std::weak_ptr<UI::Text>(textShared);
+	iconShared->SetParent(me);
+	canvasShared->AddChild(std::static_pointer_cast<UI::Widget>(iconShared));
+	RenderQueue::AddUIWidget(iconShared);
+	return std::weak_ptr<UI::Image>(iconShared);
 }
 
 void HUD::SafeTextSet(std::weak_ptr<UI::Text> textObjectWeak, const std::string& text) {

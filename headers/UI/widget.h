@@ -20,9 +20,12 @@ struct Vec2 {
 enum class Anchor {
 	TopLeft,
 	TopRight,
+	TopCenter,
+	MidLeft,
+	MidRight,
+	MidCenter,
 	BottomLeft,
 	BottomRight,
-	TopCenter,
 	BottomCenter
 };
 

@@ -62,33 +62,33 @@ void TextRenderer::Render(void* context) {
 		UINT color = ((UINT) (sub.color.w * 255) << 24) | ((UINT) (sub.color.z * 255) << 16) |
 					 ((UINT) (sub.color.y * 255) << 8) | ((UINT) (sub.color.x * 255));
 
-		this->MeasureString(sub.text, sub.fontSize, sub.font);
-		Logger::Log("Position: (", safeX, ":", safeY, ")");
-
 		fw1FontWrapper->DrawString(deviceContext, wtext.c_str(), wfont.c_str(), safeFontSize, safeX, safeY, color,
 								   FW1_RESTORESTATE);
 	}
 	submissions.clear();
 }
 
-float TextRenderer::MeasureString(const std::string& text, float fontSize, const std::string& font) {
-	if (!fw1Initialized || fw1FontWrapper == nullptr) return 0.0f;
-	if (text.empty()) return 0.0f;
+Vec2 TextRenderer::MeasureString(const std::string& text, float fontSize, const std::string& font) {
+	if (!fw1Initialized || fw1FontWrapper == nullptr) return Vec2(0,0);
+	if (text.empty()) return Vec2(0, 0);
 
 	std::wstring wtext(text.begin(), text.end());
 	std::wstring wfont(font.empty() ? L"Lucida Console" : std::wstring(font.begin(), font.end()));
 
+	Vec2 windowSize(Window::GetCurrentWidth(), Window::GetCurrentHeight());
+
 	FW1_RECTF layout{};
 	layout.Left = 0;
 	layout.Top = 0;
-	layout.Right = 1000.;
-	layout.Bottom = 1000.;
-	FW1_RECTF rect = fw1FontWrapper->MeasureString(wtext.c_str(), wfont.c_str(), fontSize, &layout, 0);
+	layout.Right = windowSize.x;
+	layout.Bottom = windowSize.y;
+	FW1_RECTF rect = fw1FontWrapper->MeasureString(wtext.c_str(), wfont.c_str(), fontSize, &layout, FW1_LEFT | FW1_TOP);
 
-	Logger::Log("Right: ", rect.Right, ", Left: ", rect.Left, ", Font: ", font, ", FontSize: ", fontSize, ", Text: ", text);
-
-	return rect.Right - rect.Left;
+	// Dont question 
+	return Vec2(windowSize.x + rect.Right, windowSize.y + rect.Bottom);
 }
+
+
 
 bool TextRenderer::InitializeFW1(ID3D11Device* device) {
 	if (fw1Initialized) return true;

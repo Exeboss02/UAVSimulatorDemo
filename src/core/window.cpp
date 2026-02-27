@@ -153,6 +153,7 @@ Window::Window(const HINSTANCE instance, int nCmdShow, const std::string name, c
 	}
 
 	this->Show(nCmdShow);
+	this->Resize(this->width, this->height);
 }
 
 Window::~Window() {
@@ -185,6 +186,7 @@ void Window::Resize(UINT width, UINT height) {
 	Window::currentWidth = this->width;
 	Window::currentHeight = this->height;
 	Window::currentDPI = GetDpiForWindow(this->GetHWND()); 
+	Logger::Warn(GetDpiForWindow(this->GetHWND()));
 
 	if (this->isFullscreen) {
 		this->ApplyFullscreenResolution(this->width, this->height);

@@ -19,7 +19,7 @@ public:
 	UINT GetWidth() const;
 	UINT GetHeight() const;
 	bool IsFullscreen() const;
-	void Show(int nCmdShow) const;
+	//void Show(int nCmdShow) const;
 
 	void Show(int nCmdShow);
 	void Resize(UINT width, UINT height);

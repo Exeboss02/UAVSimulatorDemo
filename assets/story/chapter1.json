@@ -3,12 +3,12 @@
     {
       "textParts": [
         {
-          "text": "test",
-          "displayTime": 30.0
+          "text": "This will be a really awesome story at some point!",
+          "displayTime": 5.0
         },
         {
-          "text": "test2",
-          "displayTime": 40.0
+          "text": "And this will be the continuation of said story.",
+          "displayTime": 4.0
         }
       ],
       "soundClipPath": "WaitingForActionRadio.wav"
@@ -16,12 +16,12 @@
     {
       "textParts": [
         {
-          "text": "test3",
-          "displayTime": 3.0
+          "text": "We can even have multiple parts of the story to play between rounds!",
+          "displayTime": 6.0
         },
         {
-          "text": "test4",
-          "displayTime": 1.0
+          "text": "And the music that currently plays could be a voiceover, maybe.",
+          "displayTime": 5.0
         }
       ],
       "soundClipPath":  "WaitingForActionRadio.wav"

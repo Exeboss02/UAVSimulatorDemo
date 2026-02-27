@@ -38,6 +38,9 @@ private:
 	std::weak_ptr<UI::Text> MakeText(const std::string& name, const std::string& text, float x, float y, float width,
 									 UI::Anchor anchor);
 
+	std::weak_ptr<UI::Image> MakeIcon(const std::string& name, const std::string& imagePath, float x, float y,
+									  float size, UI::Anchor anchor);
+
 	void SafeTextSet(std::weak_ptr<UI::Text> textObject, const std::string& text);
 
 	GameObjectFactory* factory = nullptr;

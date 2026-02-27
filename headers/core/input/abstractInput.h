@@ -16,6 +16,8 @@ public:
 	virtual bool Sprint() const = 0;
 	virtual bool LeftClick() const = 0;
 	virtual bool RightClick() const = 0;
+	virtual bool LeftDown() const = 0;
+	virtual bool RightDown() const = 0;
 	virtual bool Interact() const = 0;
 	virtual bool FullscreenToggle() const = 0;
 	virtual bool Quit() const = 0;

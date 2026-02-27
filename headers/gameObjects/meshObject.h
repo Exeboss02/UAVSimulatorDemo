@@ -33,6 +33,9 @@ public:
 	void Hide(bool hidden);
 	bool IsHidden();
 
+	void SetCastShadow(bool castShadows);
+	bool IsCastingShadows();
+
 private:
 	MeshObjData mesh;
 
@@ -43,4 +46,7 @@ private:
 
 	bool imguiHide;
 	bool hide;
+
+	bool castShadows;
+	bool imguiCastShadows;
 };

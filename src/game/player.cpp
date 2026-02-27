@@ -6,6 +6,7 @@
 #include "gameObjects/meshObject.h"
 #include "gameObjects/mine.h"
 #include "gameObjects/pistol01.h"
+#include "gameObjects/rifle01.h"
 #include "gameObjects/rayVis.h"
 #include <numbers>
 
@@ -37,7 +38,7 @@ void Player::Start() {
 
 	// adding gun
 	{
-		auto gunWeak = this->factory->CreateGameObjectOfType<Pistol01>();
+		auto gunWeak = this->factory->CreateGameObjectOfType<Rifle01>();
 		auto gun = gunWeak.lock();
 		gun->SetParent(this->camera.lock()->GetPtr());
 		gun->setParentToShootFrom(cameraShared);
@@ -442,6 +443,7 @@ void Player::Interact() {
 			colliderobj->SetMesh(meshdata);
 			colliderobj->GetMesh().SetMaterial(
 				0, AssetManager::GetInstance().GetMaterialWeakPtr("defaultUnlitMaterial").lock());
+			colliderobj->SetCastShadow(false);
 			colliderobj->transform.SetPosition(
 				DirectX::XMVectorAdd(posVec, DirectX::XMVectorScale(lookVec, rayCastData.distance / 2)));
 			colliderobj->transform.SetRotationQuaternion(this->camera.lock()->transform.GetGlobalRotation());
@@ -458,8 +460,9 @@ void Player::Interact() {
 
 void Player::CheckForTriggerPress() {
 
-	if (this->keyBoardInput.LeftClick() || this->controllerInput->RightClick() && this->canShoot) {
-		this->gun.lock()->Shoot();
+	if (this->canShoot) {
+		this->gun.lock()->Shoot((this->keyBoardInput.LeftClick() || this->controllerInput->RightClick()),
+								this->keyBoardInput.LeftDown() || this->controllerInput->RightDown());
 	}
 }
 

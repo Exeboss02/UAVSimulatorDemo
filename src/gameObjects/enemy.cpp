@@ -303,6 +303,8 @@ void Enemy::VisualizeRay(const DirectX::XMVECTOR& position, const DirectX::XMVEC
 	colliderobj->SetMesh(meshdata);
 	colliderobj->GetMesh().SetMaterial(0,
 									   AssetManager::GetInstance().GetMaterialWeakPtr("defaultUnlitMaterial").lock());
+	colliderobj->SetCastShadow(false);
+
 	colliderobj->transform.SetPosition(DirectX::XMVectorAdd(position, DirectX::XMVectorScale(direction, distance / 2)));
 
 	DirectX::XMVECTOR up = DirectX::XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);

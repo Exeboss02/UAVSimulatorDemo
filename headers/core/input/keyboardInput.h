@@ -34,5 +34,7 @@ public:
 	bool FullscreenToggle() const override;
 	bool Quit() const override;
 	bool ToggleCamera() const;
+	bool LeftDown() const override;
+	bool RightDown() const override; 
 
 };

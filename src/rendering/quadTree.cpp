@@ -32,7 +32,7 @@ void QuadTree::AddElement(std::weak_ptr<MeshObject> object) {
 	this->AddToNode(object.lock(), this->root, 0);
 }
 
-std::vector<std::weak_ptr<MeshObject>> QuadTree::GetVisibleElements(CameraObject& camera, bool checkIndividualObjects) {
+std::vector<std::weak_ptr<MeshObject>> QuadTree::GetVisibleElements(CameraObject& camera, bool checkIndividualObjects, bool onlyShadowCasters) {
 	std::vector<std::weak_ptr<MeshObject>> out;
 	std::unordered_set<MeshObject*> found;
 
@@ -46,6 +46,7 @@ std::vector<std::weak_ptr<MeshObject>> QuadTree::GetVisibleElements(CameraObject
 
 	this->checkIndividual = checkIndividualObjects;
 	this->collisionChecks = 0;
+	this->onlyShadowCasters = onlyShadowCasters;
 	this->CheckNode(viewFrustrum, this->root, out, found);
 
 	//ImGui::Begin("QuadTree Debug");
@@ -152,6 +153,8 @@ void QuadTree::CheckNode(DirectX::BoundingFrustum& frustum, std::unique_ptr<Node
 		for (auto& elementWeak : node->elements) {
 			if (!elementWeak.expired()) {
 				std::shared_ptr<MeshObject> element = elementWeak.lock();
+				if (!element->IsActive() || element->IsHidden() || (this->onlyShadowCasters && !element->IsCastingShadows())) continue;
+
 				if (found.find(element.get()) == found.end()) {
 					if (this->checkIndividual) {
 						bool inView = frustum.Intersects(element->GetBoundingBox());

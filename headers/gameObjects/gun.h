@@ -9,7 +9,7 @@ public:
 	Gun();
 	~Gun();
 
-	void Shoot();
+	void Shoot(bool pressedTrigger, bool triggerDown);
 
 	void Tick() override;
 
@@ -28,7 +28,11 @@ protected:
 	DirectX::XMFLOAT3 visualScale = DirectX::XMFLOAT3(1, 1, 1);
 	DirectX::XMFLOAT3 visualRotationRPY = DirectX::XMFLOAT3(0, 0, 0);
 	DirectX::XMFLOAT3 gunPosition = DirectX::XMFLOAT3(0, 0, 0);
-
+	enum FireMode {
+		SEMIAUTOMATIC, 
+		AUTOMATIC
+	}fireMode;
+	
 
 private:
 

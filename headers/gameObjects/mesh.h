@@ -46,9 +46,12 @@ public:
 
 	void SetIdentifier(std::string identifier);
 
+	size_t GetMeshIndex();
+
 private:
 	DirectX::BoundingBox boundingBox;
 	std::string identifier;
+	size_t meshIndex; // Used as a faster identifier
 	std::vector<SubMesh> subMeshes;
 	VertexBuffer vertexbuffer;
 	IndexBuffer indexbuffer;

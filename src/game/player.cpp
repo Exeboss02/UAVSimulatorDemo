@@ -122,7 +122,7 @@ void Player::Start() {
 
 	// Music
 	AudioManager::GetInstance().AddMusicTrackStandardFolder("LethalContact.wav", "contact");
-
+	AudioManager::GetInstance().LoopMusicTrack("contact", true);
 	// SFX
 	this->speaker = this->factory->CreateGameObjectOfType<SoundSourceObject>();
 	this->speaker.lock()->SetParent(this->GetPtr());

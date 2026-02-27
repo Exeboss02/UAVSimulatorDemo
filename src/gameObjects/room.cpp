@@ -69,6 +69,18 @@ void Room::Start() {
 
 		this->floor = meshobj;
 	}
+	Logger::Warn("i am a room at x:", this->pos[0], " y: ", this->pos[1]);
+	auto parentWeak = this->GetParent();
+	if (parentWeak.expired()) {
+		Logger::Error("Room parent is dead, how in the funk?");
+		return;
+	}
+
+	auto parent = std::static_pointer_cast<SpaceShip>(parentWeak.lock());
+
+	
+	size_t maxX = parent->SHIP_MAX_SIZE_X;
+	size_t maxY = parent->SHIP_MAX_SIZE_Y;
 	for (size_t i = 0; i < 4; i++) {
 
 		auto meshobj = this->factory->CreateStaticGameObject<Wall>();
@@ -77,7 +89,15 @@ void Room::Start() {
 
 		meshobj->transform.SetRotationRPY(0, 0, i * std::numbers::pi / 2);
 
-		meshobj->SetWallState(Room::WallState::window);
+		bool edgeWall = false;
+		if (this->pos[1] == 0 && i == 2 || this->pos[1] == maxY && i == 0) {
+			edgeWall = true;
+		}
+
+		if (this->pos[0] == maxX && i == 1 || this->pos[0] == 0 && i == 3) {
+			edgeWall = true;
+		}
+		meshobj->SetWallState(Room::WallState::window, edgeWall);
 
 		meshobj->SetWAllIndex(i);
 

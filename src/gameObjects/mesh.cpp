@@ -3,7 +3,7 @@
 Mesh::Mesh(VertexBuffer vertexbuffer, IndexBuffer indexbuffer, std::vector<SubMesh>&& submeshes,
 		   DirectX::BoundingBox boundingBox)
 	: vertexbuffer(std::move(vertexbuffer)), indexbuffer(std::move(indexbuffer)), subMeshes(std::move(submeshes)),
-	  boundingBox(boundingBox) {}
+	  boundingBox(boundingBox), meshIndex(0) {}
 
 Mesh::~Mesh() {}
 
@@ -19,6 +19,8 @@ IndexBuffer& Mesh::GetIndexBuffer() { return this->indexbuffer; }
 
 void Mesh::SetIdentifier(std::string name) { this->identifier = name; }
 
+size_t Mesh::GetMeshIndex() { return this->meshIndex; }
+
 SubMesh::SubMesh(size_t startIndex, size_t nrOfIndices) : startIndex(startIndex), nrOfIndices(nrOfIndices) {}
 SubMesh::~SubMesh() {}
 
@@ -32,4 +34,8 @@ void Mesh::Init(VertexBuffer vertexbuffer, IndexBuffer indexbuffer, std::vector<
 	this->indexbuffer = std::move(indexbuffer);
 	this->subMeshes = std::move(submeshes);
 	this->boundingBox = std::move(boundingBox);
+
+	static size_t index = 0;
+	this->meshIndex = index++;
+	Logger::Log("Index: ", this->meshIndex);
 }

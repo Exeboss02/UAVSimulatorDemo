@@ -17,6 +17,7 @@ void Pistol01::Start() {
 	this->damage = 25;
 	
 	this->gunPosition = DirectX::XMFLOAT3(-0.4f, -0.4f, 0.7f);
+	this->fireMode = FireMode::SEMIAUTOMATIC;
 	
 	Gun::Start();
 }

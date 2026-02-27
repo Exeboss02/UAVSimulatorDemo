@@ -109,12 +109,15 @@ void Wall::SpawnWallColliders(int wallStateIndex) {
 	}
 }
 
-void Wall::SetWallState(int wallState) {
+void Wall::SetWallState(int wallState, bool edgeWall) {
 
 	MeshObjData meshdata = AssetManager::GetInstance().GetMeshObjData(Wall::wallMeshIdentifiers[wallState]);
 	this->SetMesh(meshdata);
 	this->SpawnWallColliders(wallState);
 	Room::WallState wallStateEnum = static_cast<Room::WallState>(wallState);
+	if (edgeWall) {
+		return;
+	}
 	switch (wallStateEnum) {
 	case (Room::WallState::window):
 		this->SpawnInteractables();
@@ -133,7 +136,11 @@ void Wall::SetWallState(int wallState) {
 	}
 }
 
-void Wall::RemoveInteractables() { this->factory->QueueDeleteGameObject(this->interactable); }
+void Wall::RemoveInteractables() { 
+	if (!this->interactable.expired()) {
+		this->factory->QueueDeleteGameObject(this->interactable); 
+	}
+}
 
 void Wall::Hover() {
 	try {

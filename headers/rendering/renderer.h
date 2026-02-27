@@ -163,10 +163,11 @@ private:
 	std::vector<std::weak_ptr<UI::Widget>> uiRenderQueue;
 
 	RenderMap standardRenderMap;
+	std::vector<std::weak_ptr<MeshObject>> visibleObjectsMainCamera;
 
 	QuadTree staticObjectsTree;
 	std::vector<std::weak_ptr<MeshObject>> GetVisibleObjects(CameraObject& camera, bool checkIndividualObjects = true, bool allStatic = false);
-	std::vector<std::weak_ptr<MeshObject>> GetVisibleDynamicObjects(CameraObject& camera);
+	std::vector<std::weak_ptr<MeshObject>> GetVisibleDynamicObjects(CameraObject& camera, bool onlyShadowCaster = false);
 
 	// Constant buffers:
 	// The renderer keeps these constant buffers since only one is ever required

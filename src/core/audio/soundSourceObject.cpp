@@ -22,6 +22,10 @@ SoundSourceObject::SoundSourceObject()
 		alSource3f(this->sources[i], AL_POSITION, (ALfloat)pos.m128_f32[0], (ALfloat)pos.m128_f32[1], (ALfloat)pos.m128_f32[2]);
 		alSource3f(this->sources[i], AL_VELOCITY, this->velocity[0], this->velocity[1], this->velocity[2]);
 		alSourcei(this->sources[i], AL_LOOPING, this->currentInstructionSet.loopSound);
+
+		ALint sampleOffset;
+		alGetSourcei(this->sources[i], AL_SAMPLE_OFFSET, &sampleOffset);
+		this->lastSampleOffsets.push_back(sampleOffset);
 	}
 
 	//ALint state = 0;
@@ -58,9 +62,30 @@ void SoundSourceObject::Tick()
 		
 		if(!somethingIsPlaying)
 		{
-			float masterVolume = AudioManager::GetInstance().GetMasterSoundEffectsVolume();
 			this->factory->QueueDeleteGameObject(this->GetPtr());
 		}
+	}
+
+	//if loop count is 0 or negative, it loops until you stop it yourself
+	if (this->shouldLoop && this->loopCount >= 1)
+    {
+        for (int i = 0; i < this->nrOfSources; i++)
+        {
+            ALint sampleOffset;
+            alGetSourcei(this->sources[i], AL_SAMPLE_OFFSET, &sampleOffset);
+
+            // If sampleOffset resets to near 0, a loop has completed
+            if (sampleOffset < this->lastSampleOffsets[i])
+            {
+                this->loopCount--;
+                if (this->loopCount <= 1)
+                {
+					this->StopLoopingSoundEffect();
+                }
+            }
+
+            this->lastSampleOffsets[i] = sampleOffset;
+        }
 	}
 }
 
@@ -149,6 +174,31 @@ bool SoundSourceObject::GetDeleteWhenFinnished()
 {
 	return this->deleteWhenFinnished;
 }
+
+void SoundSourceObject::LoopSoundEffect(int nrOfTimes)
+{
+	this->shouldLoop = true;
+	this->loopCount = nrOfTimes;
+
+	for (int i = 0; i < this->nrOfSources; i++)
+	{
+		alSourcei(this->sources[i], AL_LOOPING, AL_TRUE);
+	}
+}
+
+void SoundSourceObject::StopLoopingSoundEffect()
+{
+	this->shouldLoop = false;
+	this->loopCount = 0;
+
+	for (int i = 0; i < this->nrOfSources; i++)
+	{
+		alSourcei(this->sources[i], AL_LOOPING, AL_FALSE);
+		this->lastSampleOffsets[i] = 0;
+	}
+}
+
+bool SoundSourceObject::GetLoopSoundEffect() { return this->shouldLoop; }
 
 void SoundSourceObject::SetRandomPitch(float minPitch, float maxPitch) {
 	int tempMin = minPitch * 1000;

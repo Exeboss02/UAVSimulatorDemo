@@ -15,7 +15,7 @@ public:
 
 	void SetWAllIndex(int wallIndex);
 
-	void SetWallState(int wallState);
+	void SetWallState(int wallState, bool edgeWall = false);
 
 	void Hover();
 

@@ -101,7 +101,10 @@ DirectX::XMMATRIX CameraObject::GetProjectionMatrix() const {
 	return projMatrix;
 }
 
-void CameraObject::SetMainCamera() { this->mainCamera = this; }
+void CameraObject::SetMainCamera() { 
+	this->mainCamera = this;
+	RenderQueue::RecalculateDynamic();
+}
 
 void CameraObject::SetFov(float fov) { this->fieldOfView = fov; }
 

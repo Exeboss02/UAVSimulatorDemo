@@ -65,6 +65,9 @@ void MusicTrack::Play()
 	{
 		Logger::Error("error buffering for playback");
 	}
+
+	ALint sampleOffset;
+	alGetSourcei(this->source, AL_SAMPLE_OFFSET, &sampleOffset);
 }
 
 void MusicTrack::Stop()
@@ -167,6 +170,11 @@ void MusicTrack::GetSourceState(ALint& sourceState)
 	alGetSourcei(this->source, AL_SOURCE_STATE, &sourceState);
 }
 
+void MusicTrack::ShouldLoop(bool shouldLoop)
+{
+	this->shouldLoop = shouldLoop;
+}
+
 void MusicTrack::UpdateBufferStream()
 {
 	ALint processed, state;
@@ -177,7 +185,7 @@ void MusicTrack::UpdateBufferStream()
 
 	if (alGetError() != AL_NO_ERROR)
 	{
-		Logger::Error("error  checking music source state");
+		Logger::Error("error checking music source state");
 	}
 
 	while (processed > 0)
@@ -188,8 +196,24 @@ void MusicTrack::UpdateBufferStream()
 		alSourceUnqueueBuffers(this->source, 1, &buffer);
 		processed--;
 
-		//Read next chunk of data and refill the buffer, and then queue it
 		slen = sf_readf_short(this->sndfile, this->membuf, BUFFER_SAMPLES);
+		if (slen == 0)
+		{
+			if(this->shouldLoop)
+			{
+				// Rewind to the start of the file
+                sf_seek(this->sndfile, 0, SEEK_SET);
+                // Read the first buffer again
+                slen = sf_readf_short(this->sndfile, this->membuf, BUFFER_SAMPLES);
+			}
+
+			else
+			{
+				this->Stop();
+				return;
+			}
+		}
+
 		if (slen > 0)
 		{
 			slen *= this->sfInfo.channels * (sf_count_t)sizeof(short);

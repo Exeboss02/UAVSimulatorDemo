@@ -15,7 +15,7 @@ public:
 	void AddElement(std::weak_ptr<MeshObject> object);
 
 
-	std::vector<std::weak_ptr<MeshObject>> GetVisibleElements(CameraObject& camera, bool checkIndividualObjects = true);
+	std::vector<std::weak_ptr<MeshObject>> GetVisibleElements(CameraObject& camera, bool checkIndividualObjects = true, bool onlyShadowCasters = true);
 
 	std::vector<std::weak_ptr<MeshObject>> GetAllElements();
 
@@ -39,4 +39,5 @@ private:
 
 	size_t collisionChecks = 0;
 	bool checkIndividual = true;
+	bool onlyShadowCasters = true;
 };

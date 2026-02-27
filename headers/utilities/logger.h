@@ -33,6 +33,9 @@ private:
 
 	inline static std::string logString = "";
 
+	inline static LogType logLevel = LogType::warning; //change here to get only logtype and higher
+
+
 	static constexpr const char* colors[3] = {"\033[0m", "\033[33m", "\033[31m"};
 	static constexpr const char* logTexts[3] = {"", "[WARNING]", "[ERROR] "};
 
@@ -60,24 +63,33 @@ private:
 public:
 	template <typename... Types>
 	static void Warn(LogMsg firstArg, Types... args) {
+		if (logLevel > LogType::warning) {
+			return;
+		}
 		std::string prefix = std::string(logTexts[LogType::warning]) + "[" +
 							 std::filesystem::path(firstArg.loc.file_name()).filename().string() + ":" +
 							 std::to_string(firstArg.loc.line()) + "] ";
-
 		createLog(prefix, firstArg.message, args...);
+		
 	}
 
 	template <typename T, typename... Types>
 	static void Log(T info, Types... infos) {
+		if (logLevel > LogType::log) {
+			return;
+		}
 		createLog(logTexts[LogType::log], info, infos...);
 	}
 
 	template <typename... Types>
 	static void Error(LogMsg firstArg, Types... args) {
+		if (logLevel > LogType::error) {
+			return;
+		}
 		std::string prefix = std::string(logTexts[LogType::error]) + "[" +
 							 std::filesystem::path(firstArg.loc.file_name()).filename().string() + ":" +
 							 std::to_string(firstArg.loc.line()) + "] ";
-
+		
 		createLog(prefix, firstArg.message, args...);
 	}
 

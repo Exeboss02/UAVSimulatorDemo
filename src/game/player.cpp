@@ -37,13 +37,7 @@ void Player::Start() {
 	this->camera = cameraShared;
 
 	// adding gun
-	{
-		auto gunWeak = this->factory->CreateGameObjectOfType<Rifle01>();
-		auto gun = gunWeak.lock();
-		gun->SetParent(this->camera.lock()->GetPtr());
-		gun->setParentToShootFrom(cameraShared);
-		this->gun = gun;
-	}
+	this->addGun(Guns::pistol);
 
 	// adding body colliders
 	{
@@ -122,7 +116,7 @@ void Player::Start() {
 
 	// Music
 	AudioManager::GetInstance().AddMusicTrackStandardFolder("LethalContact.wav", "contact");
-
+	AudioManager::GetInstance().LoopMusicTrack("contact", true);
 	// SFX
 	this->speaker = this->factory->CreateGameObjectOfType<SoundSourceObject>();
 	this->speaker.lock()->SetParent(this->GetPtr());
@@ -424,6 +418,16 @@ void Player::Interact() {
 
 	if (this->keyBoardInput.Interact() || this->controllerInput->Interact()) {
 
+		static int x = 0;
+		if (x % 2 == 0) {
+			this->addGun(Guns::rifle);
+			x++;
+
+		} else {
+			this->addGun(Guns::pistol);
+			x++;
+		}
+
 		Ray ray{Vector3D{posVec}, Vector3D{lookVec}};
 		RayCastData rayCastData;
 
@@ -443,6 +447,7 @@ void Player::Interact() {
 			colliderobj->SetMesh(meshdata);
 			colliderobj->GetMesh().SetMaterial(
 				0, AssetManager::GetInstance().GetMaterialWeakPtr("defaultUnlitMaterial").lock());
+			colliderobj->SetCastShadow(false);
 			colliderobj->transform.SetPosition(
 				DirectX::XMVectorAdd(posVec, DirectX::XMVectorScale(lookVec, rayCastData.distance / 2)));
 			colliderobj->transform.SetRotationQuaternion(this->camera.lock()->transform.GetGlobalRotation());
@@ -477,4 +482,29 @@ void Player::Aim() {
 		this->gun.lock()->transform.SetPosition(DirectX::XMLoadFloat3(&pos));
 		isAiming = false;
 	}
+}
+
+void Player::addGun(Guns gunType) {
+	
+
+	if (!this->gun.expired()) {
+		this->factory->QueueDeleteGameObject(this->gun);
+	}
+
+	std::weak_ptr<Gun> gunWeak;
+
+	switch (gunType) {
+	case Guns::pistol:
+		gunWeak = this->factory->CreateGameObjectOfType<Pistol01>();
+		break;
+	case Guns::rifle:
+		gunWeak = this->factory->CreateGameObjectOfType<Rifle01>();
+		break;
+	default:
+		break;
+	}
+	auto gun = gunWeak.lock();
+	gun->SetParent(this->camera.lock()->GetPtr());
+	gun->setParentToShootFrom(this->camera.lock());
+	this->gun = gun;
 }

@@ -105,7 +105,16 @@ void Scene::RegisterGameObject(std::shared_ptr<GameObject> gameObject) {
 	}
 }
 
-void Scene::QueueDeleteGameObject(std::weak_ptr<GameObject> gameObject) { this->deleteQueue.push_back(gameObject); }
+void Scene::QueueDeleteGameObject(std::weak_ptr<GameObject> gameObject) { 
+	this->deleteQueue.push_back(gameObject); 
+	
+	auto lock = gameObject.lock();
+	if (lock->GetIsStatic()) {
+		RenderQueue::RecalculateStatic();
+	} else {
+		RenderQueue::RecalculateDynamic();
+	}
+}
 
 size_t Scene::GetNumberOfGameObjects() { return this->gameObjects.size(); }
 
@@ -146,7 +155,21 @@ void Scene::DeleteDeleteQueue() {
 				this->deleteQueue.push_back(child);
 			}
 		}
+		//if has parent remove from parent child list 
+		if (auto parent = gameObject->GetParent().lock()) {
 
+			auto parentIterator = std::find_if(
+				parent->children.begin(), parent->children.end(),
+				[&gameObject](const std::weak_ptr<GameObject>& weakChild) { return weakChild.lock() == gameObject; });
+
+			for (auto objectWeakPtr : parent->children) {
+				
+			}
+
+			if (parentIterator != parent->children.end()) {
+				parent->children.erase(parentIterator);
+			}
+		}
 		gameObject->OnDestroy();
 		this->gameObjects.erase(iterator); // Actually deletes
 	}

@@ -1,6 +1,6 @@
 #include "gameObjects/meshObject.h"
 
-MeshObject::MeshObject() : mesh(), imguiNewMeshIdent("\0"), imguiNewMatIdent("\0"), hide(false), imguiHide(false) {
+MeshObject::MeshObject() : mesh(), imguiNewMeshIdent("\0"), imguiNewMatIdent("\0"), hide(false), imguiHide(false), castShadows(true), imguiCastShadows(true) {
 	static int id = 0;
 	this->tempId = id++;
 	Logger::Log("Created a MeshObject.");
@@ -75,6 +75,10 @@ void MeshObject::ShowInHierarchy() {
 		this->Hide(this->imguiHide);
 	}
 
+	if (ImGui::Checkbox("Cast shadows", &this->imguiCastShadows)) {
+		this->SetCastShadow(this->imguiCastShadows);
+	}
+
 	if (!this->GetMesh().GetMesh().expired()) {
 		std::string meshText = std::format("Mesh: {}", this->GetMesh().GetMeshIdentifier());
 		ImGui::Text(meshText.c_str());
@@ -129,6 +133,7 @@ void MeshObject::ShowInHierarchy() {
 
 void MeshObject::Hide(bool hidden) { 
 	this->hide = hidden;
+	
 	if (this->GetIsStatic()) {
 		RenderQueue::RecalculateStatic();
 	} else {
@@ -137,3 +142,15 @@ void MeshObject::Hide(bool hidden) {
 }
 
 bool MeshObject::IsHidden() { return this->hide; }
+
+void MeshObject::SetCastShadow(bool castShadows) {
+	this->castShadows = castShadows;
+	
+	if (this->GetIsStatic()) {
+		RenderQueue::RecalculateStatic();
+	} else {
+		RenderQueue::RecalculateDynamic();
+	}
+}
+
+bool MeshObject::IsCastingShadows() { return this->castShadows; }

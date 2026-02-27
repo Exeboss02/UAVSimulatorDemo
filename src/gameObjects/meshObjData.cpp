@@ -30,9 +30,18 @@ std::string MeshObjData::GetMeshIdentifier() {
 		return "";
 	}
 }
-std::weak_ptr<Mesh> MeshObjData::GetMesh() {
-	return this->mesh;
+
+size_t MeshObjData::GetMeshIndex() {
+	if (!this->mesh.expired()) {
+		return this->mesh.lock()->GetMeshIndex();
+	} else {
+		Logger::Warn("Called 'GetMeshIdentifier' but mesh has expired");
+		return 0;
+	}
 }
+
+std::weak_ptr<Mesh> MeshObjData::GetMesh() { return this->mesh; }
+
 std::optional<SubMeshData> MeshObjData::GetSubMeshData(size_t index) {
 	if (this->mesh.expired()) {
 		return std::make_optional<SubMeshData>();

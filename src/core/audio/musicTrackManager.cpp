@@ -34,8 +34,18 @@ void MusicTrackManager::AddMusicTrackStandardFolder(std::string filename, std::s
 
 void MusicTrackManager::Play(std::string id)
 {
-	this->musicTracks[id]->Play();
-	this->activeTracks.push_back(this->musicTracks[id]);
+	auto musicTrack = this->musicTracks.find(id);
+	if (musicTrack == this->musicTracks.end())
+	{
+		Logger::Log("couldn't play music track " + id);
+		return;
+	}
+
+	else
+	{
+		this->musicTracks[id]->Play();
+		this->activeTracks.push_back(this->musicTracks[id]);
+	}
 }
 
 void MusicTrackManager::Stop(std::string id)
@@ -132,8 +142,23 @@ MusicTrack* MusicTrackManager::GetMusicTrack(std::string id)
 	return track;
 }
 
-void MusicTrackManager::Tick()
+void MusicTrackManager::LoopMusicTrack(std::string id, bool shouldLoop)
 {
+	MusicTrack* track;
+	auto musicTrack = this->musicTracks.find(id);
+
+	if (musicTrack == musicTracks.end())
+	{
+		Logger::Warn("Couldn't find music track ", id, " for looping");
+		return;
+	}
+	else 
+	{
+		musicTrack->second->ShouldLoop(shouldLoop);
+	}
+}
+
+void MusicTrackManager::Tick() {
 	for (int i = this->activeTracks.size() - 1; i >= 0; i--)
 	{
 		ALint sourceState = 0;

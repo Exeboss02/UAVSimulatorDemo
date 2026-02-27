@@ -69,6 +69,8 @@ void Room::Start() {
 
 		this->floor = meshobj;
 	}
+	Logger::Warn("i am a room at x:", this->pos[0], " y: ", this->pos[1]);
+
 	for (size_t i = 0; i < 4; i++) {
 
 		auto meshobj = this->factory->CreateStaticGameObject<Wall>();
@@ -77,7 +79,18 @@ void Room::Start() {
 
 		meshobj->transform.SetRotationRPY(0, 0, i * std::numbers::pi / 2);
 
-		meshobj->SetWallState(Room::WallState::window);
+		bool edgeWall = false;
+		if (this->pos[1] == 0 && i == 2 || this->pos[1] == 14 && i == 0) {
+			edgeWall = true;
+			Logger::Warn("i am edge wall at wallindex: ", i);
+		}
+
+		if (this->pos[0] == 14 && i == 1 || this->pos[0] == 0 && i == 3) {
+			edgeWall = true;
+			Logger::Warn("i am edge wall at wallindex: ", i);
+
+		}
+		meshobj->SetWallState(Room::WallState::window, edgeWall);
 
 		meshobj->SetWAllIndex(i);
 

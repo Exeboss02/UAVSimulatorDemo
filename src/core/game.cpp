@@ -6,6 +6,7 @@
 #include "utilities/time.h"
 #include <chrono>
 #include <memory>
+#include "game/storyManager.h"
 
 // Game Loop
 void Game::Run(HINSTANCE hInstance, int nCmdShow) {
@@ -19,6 +20,10 @@ void Game::Run(HINSTANCE hInstance, int nCmdShow) {
 
 	// Preload images folder via AssetManager (loads each file only once)
 	AssetManager::GetInstance().PreloadTexturesInFolder("images");
+
+	StoryManager storyManager;
+	storyManager.Start();
+
 	this->renderer.SetAllDefaults();
 	this->sceneManager = std::make_unique<SceneManager>(&renderer);
 

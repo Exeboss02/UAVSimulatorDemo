@@ -1,0 +1,13 @@
+{
+  "storyParts": [
+    {
+      "textParts": [
+        {
+          "text": "test",
+          "displayTime": 2.0
+        }
+      ],
+      "soundClipPath":  "somePath"
+    }
+  ]
+}

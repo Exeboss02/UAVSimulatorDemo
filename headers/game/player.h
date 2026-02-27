@@ -57,6 +57,10 @@ public:
 	// Enable or disable player movement/input (used when UI menus are open)
 	void SetInputEnabled(bool enabled);
 
+	// Show/hide quit-to-menu prompt (forwarded to HUD)
+	void ShowQuitToMenuPrompt();
+	void HideQuitToMenuPrompt();
+
 	void DecrementHealth(int hp);
 	void IncrementHealth(int hp);
 	int GetHealth() const;

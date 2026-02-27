@@ -107,7 +107,7 @@ std::vector<std::weak_ptr<MeshObject>> Renderer::GetVisibleObjects(CameraObject&
 	return visible;
 }
 
-std::vector<std::weak_ptr<MeshObject>> Renderer::GetVisibleDynamicObjects(CameraObject& camera) {
+std::vector<std::weak_ptr<MeshObject>> Renderer::GetVisibleDynamicObjects(CameraObject& camera, bool onlyShadowCaster) {
 	std::vector<std::weak_ptr<MeshObject>> visible;
 	visible.reserve(this->meshRenderQueue.size());
 
@@ -122,10 +122,14 @@ std::vector<std::weak_ptr<MeshObject>> Renderer::GetVisibleDynamicObjects(Camera
 			continue;
 		}
 
+		auto locked = this->meshRenderQueue[i].lock();
+		if (!locked->IsActive() || locked->IsHidden() || (onlyShadowCaster && !locked->IsCastingShadows())) {
+			continue;
+		}
+
 		float farPlane = camera.GetFarPlane();
 		if (farPlane < 100) {
-			float distance = DirectX::XMVectorGetX(DirectX::XMVector3LengthSq(DirectX::XMVectorSubtract(
-				cameraGlobalPos, this->meshRenderQueue[i].lock()->transform.GetGlobalPosition())));
+			float distance = DirectX::XMVectorGetX(DirectX::XMVector3LengthSq(DirectX::XMVectorSubtract(cameraGlobalPos, locked->transform.GetGlobalPosition())));
 
 			if (distance > std::powf(camera.GetFarPlane(), 2.0f) + 9) {
 				continue;
@@ -359,18 +363,20 @@ void Renderer::CreateRenderMap(RenderMap& renderMap, CameraObject& camera) {
 	//									 [](const std::weak_ptr<MeshObject>& w) { return w.expired(); }),
 	//							this->meshRenderQueue.end());
 
-	auto renderQueue = GetVisibleObjects(camera, false, true);
+	if (this->renderQueue.recalculateDynamic || this->renderQueue.recalculateStatic) {
+		this->visibleObjectsMainCamera = GetVisibleObjects(camera, false, true);
+	}
 
 	renderMap.meshes.clear();
 
-	for (size_t i = 0; i < renderQueue.size(); i++) {
-		std::shared_ptr<MeshObject> meshObject = renderQueue[i].lock();
+	for (size_t i = 0; i < this->visibleObjectsMainCamera.size(); i++) {
+		std::shared_ptr<MeshObject> meshObject = this->visibleObjectsMainCamera[i].lock();
 
 		if (!meshObject->IsActive() || meshObject->IsHidden()) continue;
 
 		auto& meshObjData = meshObject->GetMesh();
 
-		std::string meshIdentifier = meshObjData.GetMeshIdentifier();
+		size_t meshIdentifier = meshObjData.GetMeshIndex();
 		auto [meshIterator, meshInserted] = renderMap.meshes.try_emplace(meshIdentifier);
 
 		auto& mapMesh = meshIterator->second;
@@ -392,7 +398,7 @@ void Renderer::CreateRenderMap(RenderMap& renderMap, CameraObject& camera) {
 
 		for (size_t j = 0; j < mapMesh.submeshes.size(); j++) {
 			auto material = meshObjData.GetMaterial(j).lock();
-			std::string materialIdentifier = material->GetIdentifier();
+			size_t materialIdentifier = material->GetMaterialIndex();
 			auto [materialIterator, materialInserted] = mapMesh.submeshes[j].materials.try_emplace(materialIdentifier);
 
 			auto& mapMaterial = materialIterator->second;
@@ -409,8 +415,8 @@ void Renderer::CreateRenderMap(RenderMap& renderMap, CameraObject& camera) {
 #ifdef DEBUG_TIMER
 	const auto finsihedRenderMap{std::chrono::steady_clock::now()};
 	const std::chrono::duration<double> elapsedSeconds{finsihedRenderMap - start};
-	ImGui::Text(
-		("Render map creation: " + std::to_string(elapsedSeconds.count()) + " : " + std::to_string(renderQueue.size()))
+	ImGui::Text(("Render map creation: " + std::to_string(elapsedSeconds.count()) + " : " +
+				 std::to_string(this->visibleObjectsMainCamera.size()))
 			.c_str());
 #endif // DEBUG_TIMER
 }
@@ -432,9 +438,9 @@ void Renderer::CreateCheapRenderMap(CheapRenderMap& renderMap, CameraObject& cam
 
 		auto& meshObjData = meshObject->GetMesh();
 
-		if (meshObjData.GetMaterial(0).lock()->wireframe) continue;
+		//if (meshObjData.GetMaterial(0).lock()->wireframe) continue;
 
-		std::string meshIdentifier = meshObjData.GetMeshIdentifier();
+		size_t meshIdentifier = meshObjData.GetMeshIndex();
 		auto [meshIterator, meshInserted] = renderMap.meshes.try_emplace(meshIdentifier);
 
 		auto& mapMesh = meshIterator->second;
@@ -471,7 +477,7 @@ void Renderer::CreateSpotlightRenderMap(CheapRenderMap& renderMap, CameraObject&
 
 
 	if (this->renderQueue.instance->recalculateStatic) {
-		this->staticObjectsForSpotlights[index] = this->staticObjectsTree.GetVisibleElements(camera);
+		this->staticObjectsForSpotlights[index] = this->staticObjectsTree.GetVisibleElements(camera, true, true);
 	}
 
 	std::vector<std::weak_ptr<MeshObject>> visible;
@@ -479,7 +485,7 @@ void Renderer::CreateSpotlightRenderMap(CheapRenderMap& renderMap, CameraObject&
 	visible.reserve(this->staticObjectsForSpotlights[index].size());
 	std::copy(this->staticObjectsForSpotlights[index].begin(), this->staticObjectsForSpotlights[index].end(), std::back_inserter(visible));
 
-	auto dynamicObjects = GetVisibleDynamicObjects(camera);
+	auto dynamicObjects = GetVisibleDynamicObjects(camera, true);
 	visible.reserve(dynamicObjects.size());
 	std::move(dynamicObjects.begin(), dynamicObjects.end(), std::back_inserter(visible));
 
@@ -518,7 +524,7 @@ size_t Renderer::FillRenderMap(RenderMap& renderMap, CameraObject& camera) {
 
 		auto& meshObjData = meshObject->GetMesh();
 
-		std::string meshIdentifier = meshObjData.GetMeshIdentifier();
+		size_t meshIdentifier = meshObjData.GetMeshIndex();
 
 		auto& mapMesh = renderMap.meshes[meshIdentifier];
 
@@ -533,7 +539,7 @@ size_t Renderer::FillRenderMap(RenderMap& renderMap, CameraObject& camera) {
 
 		for (size_t j = 0; j < mapMesh.submeshes.size(); j++) {
 			auto material = meshObjData.GetMaterial(j).lock();
-			std::string materialIdentifier = material->GetIdentifier();
+			size_t materialIdentifier = material->GetMaterialIndex();
 
 			auto& mapMaterial = mapMesh.submeshes[j].materials[materialIdentifier];
 
@@ -1481,8 +1487,10 @@ InstanceBuffer* Renderer::GetInstanceBuffer(size_t& instanceCount, void* data) {
 		newInstanceBuffer = this->instanceBuffers[instanceCount].get();
 		newInstanceBuffer->Init(this->device.Get(), sizeof(RenderMap::WorldMatrixBufferContainer), instanceCount, data);
 
-		if (this->instanceBuffers.size() > 100) {
+		static bool once = false;
+		if (!once && this->instanceBuffers.size() > 100) {
 			Logger::Warn("A few too many instance buffers!!");
+			once = true;
 		}
 	}
 	return newInstanceBuffer;

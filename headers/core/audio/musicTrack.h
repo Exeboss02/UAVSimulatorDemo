@@ -8,6 +8,7 @@
 #include "utilities/logger.h"
 #include "utilities/time.h"
 #include "utilities/masterVolume.h"
+#include "core/tools.h"
 
 class MusicTrack
 {
@@ -32,6 +33,8 @@ public:
 	void SetAudioInstruction(AudioInstruction audioInstruction);
 	void GetSourceState(ALint& sourceState);
 
+	void ShouldLoop(bool shouldLoop);
+
 private:
 	ALuint source;
 	ALint state = 0;
@@ -48,6 +51,8 @@ private:
 	float currentFadeInTime = 0;
 	float fadeOutTime = 0;
 	float currentFadeOutTime = 0;
+
+	bool shouldLoop = false;
 
 	static const int BUFFER_SAMPLES = 8192;
 	static const int NUM_BUFFERS = 4;

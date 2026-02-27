@@ -35,6 +35,8 @@ public:
 
 	std::string GetMeshIdentifier();
 
+	size_t GetMeshIndex();
+
 private:
 	std::weak_ptr<Mesh> mesh;
 	std::vector<std::weak_ptr<BaseMaterial>> materials;

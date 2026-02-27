@@ -31,6 +31,8 @@ public:
 	bool Interact() const override;
 	bool FullscreenToggle() const override;
 	bool Quit() const override;
+	bool LeftDown() const override;
+	bool RightDown() const override; 
 
 	DWORD GetControllerIndex() const { return this->controllerIndex; }
 

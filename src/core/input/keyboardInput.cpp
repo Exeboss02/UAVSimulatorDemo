@@ -59,3 +59,7 @@ bool KeyboardInput::FullscreenToggle() const { return InputManager::GetInstance(
 bool KeyboardInput::Quit() const { return InputManager::GetInstance().WasKeyPressed(QUIT); }
 
 bool KeyboardInput::ToggleCamera() const { return InputManager::GetInstance().WasKeyPressed(TOGGLE_CAMERA); }
+
+bool KeyboardInput::RightDown() const { return InputManager::GetInstance().IsRMDown(); }
+
+bool KeyboardInput::LeftDown() const { return InputManager::GetInstance().IsLMDown(); }

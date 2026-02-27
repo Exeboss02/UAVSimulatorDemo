@@ -210,7 +210,7 @@ void HUD::Start() {
 				float tw = 600.0f;
 				float th = 60.0f;
 				quitText->SetSize(UI::Vec2{tw, th});
-				quitText->SetPosition(UI::Vec2{(w - tw) * 0.5f, (h - th) * 0.5f - 40.0f});
+				quitText->SetPosition(UI::Vec2{((w - tw) + 120) * 0.5f, (h - th) * 0.5f - 350.0f});
 				quitText->SetVisible(false);
 				// Prompt text should be above the background but below buttons
 				quitText->SetZIndex(1);
@@ -228,7 +228,7 @@ void HUD::Start() {
 				yesBtn->SetName("HUD_Quit_Yes");
 				yesBtn->SetLabel("YES");
 				yesBtn->SetSize(UI::Vec2{200.0f, 50.0f});
-				yesBtn->SetPosition(UI::Vec2{(canvasWidth - 200.0f) * 0.5f - 120.0f, (canvasHeight) * 0.5f + 20.0f});
+				yesBtn->SetPosition(UI::Vec2{(canvasWidth - 200.0f) * 0.5f - 120.0f, (canvasHeight) * 0.5f - 200.0f});
 				yesBtn->SetVisible(false);
 				// Buttons must be top-most so they receive input events
 				yesBtn->SetZIndex(2);
@@ -253,7 +253,7 @@ void HUD::Start() {
 				noBtn->SetName("HUD_Quit_No");
 				noBtn->SetLabel("NO");
 				noBtn->SetSize(UI::Vec2{200.0f, 50.0f});
-				noBtn->SetPosition(UI::Vec2{(canvasWidth - 200.0f) * 0.5f + 120.0f, (canvasHeight) * 0.5f + 20.0f});
+				noBtn->SetPosition(UI::Vec2{(canvasWidth - 200.0f) * 0.5f + 120.0f, (canvasHeight) * 0.5f - 200.0f});
 				noBtn->SetVisible(false);
 				// Buttons must be top-most so they receive input events
 				noBtn->SetZIndex(2);

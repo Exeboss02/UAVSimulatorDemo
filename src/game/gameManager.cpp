@@ -62,7 +62,7 @@ void GameManager::Start() {
 
 	this->shipSpeaker = this->factory->CreateGameObjectOfType<SoundSourceObject>();
 	this->shipSpeaker.lock()->transform.SetPosition(this->GetPlayerSpawnPoint());
-	SoundClip* announcement = AssetManager::GetInstance().GetSoundClip("Announcement.wav");
+	SoundClip* announcement = AssetManager::GetInstance().GetDialogueSoundClip("Announcement.wav");
 	this->shipSpeaker.lock()->Play(announcement);
 }
 
@@ -284,7 +284,7 @@ void GameManager::AudioHandling()
 					this->shipSpeaker.lock()->SetGain(1);
 					this->buildMusicWaitTimer.Reset();
 
-					SoundClip* buildMusic = AssetManager::GetInstance().GetSoundClip("Announcement.wav");
+					SoundClip* buildMusic = AssetManager::GetInstance().GetDialogueSoundClip("Announcement.wav");
 					//this->shipSpeaker.lock()->Play(buildMusic); //only dialogue in between rounds?
 				}
 			}

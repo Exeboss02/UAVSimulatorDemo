@@ -28,7 +28,8 @@ public:
 	void AddSoundClipStandardFolder(std::string filename, std::string id);
 	void AddSoundClip(std::string path, std::string id);
 	std::string GetPathToSoundFolder();
-	SoundClip* GetSoundClip(std::string path);
+	SoundClip* GetSoundClip(std::string filename);
+	SoundClip* GetDialogueSoundClip(std::string filename);
 
 	void SetDevicePointer(ID3D11Device* device);
 

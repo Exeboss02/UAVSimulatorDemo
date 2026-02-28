@@ -36,8 +36,21 @@ bool MusicTrack::Initialize(std::string filepath, std::string id)
 void MusicTrack::Play()
 {
 	alGetError();
+	this->shouldFadeOut = false;
+
+	// Stop the source and unqueue all buffers
+    ALint queued;
+    alGetSourcei(this->source, AL_BUFFERS_QUEUED, &queued);
+    if (queued > 0)
+    {
+        std::vector<ALuint> unqueuedBuffers(queued);
+        alSourceUnqueueBuffers(this->source, queued, unqueuedBuffers.data());
+    }
+
+	sf_seek(this->sndfile, 0, SEEK_SET); //Rewind
+
 	this->currentGain = this->targetGain;
-	alSourcef(this->source, AL_GAIN, this->currentGain * AudioManager::GetInstance().GetMasterMusicVolume());
+	alSourcef(this->source, AL_GAIN, this->currentGain * AudioManager::GetInstance().GetMasterMusicVolume()); //reset to target gain
 
 	for (int i = 0; i < NUM_BUFFERS; i++)
 	{
@@ -103,6 +116,7 @@ void MusicTrack::FadeOut(float seconds)
 {
 	this->fadeOutTime = seconds;
 	this->currentFadeOutTime = 0;
+	this->shouldFadeOut = true;
 }
 
 bool MusicTrack::LoadTrack()
@@ -272,15 +286,19 @@ void MusicTrack::UpdateBufferStream()
 			alSourcef(this->source, AL_GAIN, this->currentGain * AudioManager::GetInstance().GetMasterMusicVolume());
 		}
 
-		if (this->fadeOutTime > 0 && this->currentFadeOutTime < this->fadeOutTime)
+		if (this->shouldFadeOut)
 		{
 			this->currentFadeOutTime += deltaTime;
 			this->currentGain = ((this->fadeOutTime - this->currentFadeOutTime) / this->fadeOutTime) * this->targetGain;
 
-			if (this->currentGain <= 0.01f)
+			if (this->currentGain <= 0.001f)
 			{
-				this->currentGain = 0;
 				this->Stop();
+
+				//reset gain levels
+				this->currentGain = this->targetGain;
+				this->fadeOutTime = 0;
+				this->shouldFadeOut = false;
 			}
 
 			alSourcef(this->source, AL_GAIN, this->currentGain * AudioManager::GetInstance().GetMasterMusicVolume());

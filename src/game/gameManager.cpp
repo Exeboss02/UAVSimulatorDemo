@@ -251,9 +251,6 @@ void GameManager::AudioHandling()
 		if (!this->isPlayingCombatMusic)
 		{
 			AudioManager::GetInstance().Play("contact");
-			ALint state = 0;
-			AudioManager::GetInstance().GetMusicTrackSourceState("contact", state);
-			Logger::Warn("MUSIC VOLUME: ", std::to_string(AudioManager::GetInstance().GetMusicTrackGain("contact")));
 			this->isPlayingCombatMusic = true;
 			this->isFading = false;
 			this->isPlayingBuildMusic = false;
@@ -287,8 +284,8 @@ void GameManager::AudioHandling()
 					this->shipSpeaker.lock()->SetGain(1);
 					this->buildMusicWaitTimer.Reset();
 
-					SoundClip* buildMusic = AssetManager::GetInstance().GetSoundClip("WaitingForActionRadio.wav");
-					this->shipSpeaker.lock()->Play(buildMusic);
+					SoundClip* buildMusic = AssetManager::GetInstance().GetSoundClip("Announcement.wav");
+					//this->shipSpeaker.lock()->Play(buildMusic); //only dialogue in between rounds?
 				}
 			}
 

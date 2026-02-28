@@ -52,6 +52,7 @@ private:
 	float currentFadeInTime = 0;
 	float fadeOutTime = 0;
 	float currentFadeOutTime = 0;
+	bool shouldFadeOut = false;
 
 	bool shouldLoop = false;
 
@@ -62,8 +63,6 @@ private:
 	SF_INFO sfInfo;
 	short* membuf = nullptr;
 	ALenum format;
-
-	float* pMusicGain = nullptr;
 
 	void SetTargetGain(float gain);
 };

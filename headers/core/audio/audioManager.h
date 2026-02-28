@@ -83,6 +83,11 @@ public:
 	void GetMusicTrackSourceState(std::string id, ALint& sourceState);
 
 	/// <summary>
+	/// Gets music track volume
+	/// </summary>
+	float GetMusicTrackGain(std::string id);
+
+	/// <summary>
 	/// Sets volume for an individual music track
 	/// </summary>
 	/// <param name="id"></param>

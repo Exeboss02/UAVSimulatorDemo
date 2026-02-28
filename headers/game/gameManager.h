@@ -6,6 +6,7 @@
 #include "gameObjects/testEnemy.h"
 #include "gameObjects/enemy.h"
 #include "game/storyManager.h"
+#include "core/tools.h"
 
 struct Round {
 	size_t enemyCount;
@@ -63,6 +64,8 @@ private:
 
 	DirectX::XMVECTOR playerSpawnPoint;
 
+	void AudioHandling();
+	std::weak_ptr<SoundSourceObject> shipSpeaker;
 
 	// Round stuff:
 
@@ -85,4 +88,9 @@ private:
 	const float idleTime;
 
 	size_t unspawnedEnemies;
+
+	bool isPlayingCombatMusic = false;
+	bool isPlayingBuildMusic = false;
+	bool isFading = false;
+	Timer buildMusicWaitTimer;
 };

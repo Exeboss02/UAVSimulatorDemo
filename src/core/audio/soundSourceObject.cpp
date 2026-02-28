@@ -219,6 +219,11 @@ void SoundSourceObject::SetGain(float gain)
 	}
 }
 
+float SoundSourceObject::GetGain()
+{
+	return this->gain;
+}
+
 void SoundSourceObject::SetPitch(float pitch)
 {
 	this->pitch = pitch;

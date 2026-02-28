@@ -9,6 +9,7 @@
 // Static current client size accessible globally
 UINT Window::currentWidth = 0;
 UINT Window::currentHeight = 0;
+UINT Window::currentDPI = 0;
 
 LRESULT Window::StaticWindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) {
 	if (message == WM_NCCREATE) {
@@ -53,8 +54,10 @@ LRESULT Window::WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam
 						this->width = clientWidth;
 						this->height = clientHeight;
 
+						UINT dpi = GetDpiForWindow(this->GetHWND()); 
+
 						if (this->resizeCallback) {
-							this->resizeCallback(this->width, this->height);
+							this->resizeCallback(this->width, this->height, dpi);
 						}
 					}
 				}
@@ -150,6 +153,7 @@ Window::Window(const HINSTANCE instance, int nCmdShow, const std::string name, c
 	}
 
 	this->Show(nCmdShow);
+	this->Resize(this->width, this->height);
 }
 
 Window::~Window() {
@@ -181,6 +185,8 @@ void Window::Resize(UINT width, UINT height) {
 	this->height = height;
 	Window::currentWidth = this->width;
 	Window::currentHeight = this->height;
+	Window::currentDPI = GetDpiForWindow(this->GetHWND()); 
+	Logger::Warn(GetDpiForWindow(this->GetHWND()));
 
 	if (this->isFullscreen) {
 		this->ApplyFullscreenResolution(this->width, this->height);
@@ -194,10 +200,11 @@ void Window::Resize(UINT width, UINT height) {
 			SetWindowPos(this->hWnd, HWND_TOP, 0, 0, this->width, this->height,
 						 SWP_NOOWNERZORDER | SWP_FRAMECHANGED | SWP_NOMOVE);
 		}
+		UINT dpi = GetDpiForWindow(this->GetHWND()); 
 
 		this->UpdateClientSize();
 		if (this->resizeCallback) {
-			this->resizeCallback(this->width, this->height);
+			this->resizeCallback(this->width, this->height, dpi);
 		}
 		return;
 	}
@@ -218,8 +225,9 @@ void Window::Resize(UINT width, UINT height) {
 	}
 
 	this->UpdateClientSize();
+	UINT dpi = GetDpiForWindow(this->GetHWND()); 
 	if (this->resizeCallback) {
-		this->resizeCallback(this->width, this->height);
+		this->resizeCallback(this->width, this->height, dpi);
 	}
 }
 
@@ -244,8 +252,9 @@ void Window::ToggleFullscreen(bool fullscreen) {
 		}
 
 		this->UpdateClientSize();
+		UINT dpi = GetDpiForWindow(this->GetHWND()); 
 		if (this->resizeCallback) {
-			this->resizeCallback(this->width, this->height);
+			this->resizeCallback(this->width, this->height, dpi);
 		}
 	} else {
 		if (this->hasOriginalDisplayMode) {
@@ -259,10 +268,11 @@ void Window::ToggleFullscreen(bool fullscreen) {
 					 this->windowedRect.right - this->windowedRect.left,
 					 this->windowedRect.bottom - this->windowedRect.top, SWP_NOOWNERZORDER | SWP_FRAMECHANGED);
 		this->UpdateClientSize();
+		UINT dpi = GetDpiForWindow(this->GetHWND()); 
 		if (this->resizeCallback) {
-			this->resizeCallback(this->width, this->height);
+			this->resizeCallback(this->width, this->height, dpi);
 		}
 	}
 }
 
-void Window::SetResizeCallback(std::function<void(UINT, UINT)> callback) { this->resizeCallback = std::move(callback); }
+void Window::SetResizeCallback(std::function<void(UINT, UINT, UINT)> callback) { this->resizeCallback = std::move(callback); }

@@ -17,6 +17,18 @@ struct Vec2 {
 	float y = 0.0f;
 };
 
+enum class Anchor {
+	TopLeft,
+	TopRight,
+	TopCenter,
+	MidLeft,
+	MidRight,
+	MidCenter,
+	BottomLeft,
+	BottomRight,
+	BottomCenter
+};
+
 class Widget : public MeshObject {
 public:
 	Widget() = default;
@@ -26,7 +38,9 @@ public:
 	void SetPosition(Vec2 pos);
 	void SetSize(Vec2 size);
 	Vec2 GetPosition() const;
-	Vec2 GetSize() const;
+	virtual Vec2 GetSize() const;
+	void SetAnchor(Anchor anchor);
+	Anchor GetAnchor() const;
 
 	void SetVisible(bool visible);
 	bool IsVisible() const;
@@ -55,9 +69,19 @@ public:
 	int GetZIndex() const;
 	void SetZIndex(int z);
 
+	void SetCanvasSize(Vec2 size);
+
 protected:
+	void CalculateTruePosition();
+
 	Vec2 position{};
-	Vec2 size{};
+	Vec2 truePosition{};
+
+	Vec2 size{0, 0};
+
+	Vec2 canvasSize{};
+
+	Anchor anchor = Anchor::TopLeft;
 
 	bool visible = true;
 	bool enabled = true;

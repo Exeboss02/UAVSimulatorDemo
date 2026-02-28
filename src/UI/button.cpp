@@ -350,7 +350,7 @@ void UI::Button::Draw() {
 
 		float fontSize = std::max(10.0f, sz.y * 0.6f);
 		std::string font = "assets/fonts/lucon.ttf";
-		float measured = UI::TextRenderer::GetInstance().MeasureString(this->label, fontSize, font);
+		float measured = UI::TextRenderer::GetInstance().MeasureString(this->label, fontSize, font).x;
 
 		// Horizontal alignment
 		float paddingX = 8.0f;

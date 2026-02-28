@@ -36,6 +36,9 @@ void Player::Start() {
 
 	this->camera = cameraShared;
 
+	this->storySpeaker = this->factory->CreateGameObjectOfType<SoundSourceObject>();
+	this->storySpeaker.lock()->SetParent(this->GetPtr());
+
 	// adding gun
 	this->addGun(Guns::pistol);
 

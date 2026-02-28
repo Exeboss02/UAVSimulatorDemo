@@ -1,0 +1,30 @@
+{
+  "storyParts": [
+    {
+      "textParts": [
+        {
+          "text": "This will be a really awesome story at some point!",
+          "displayTime": 5.0
+        },
+        {
+          "text": "And this will be the continuation of said story.",
+          "displayTime": 4.0
+        }
+      ],
+      "soundClipPath": "WaitingForActionRadio.wav"
+    },
+    {
+      "textParts": [
+        {
+          "text": "We can even have multiple parts of the story to play between rounds!",
+          "displayTime": 6.0
+        },
+        {
+          "text": "And the music that currently plays could be a voiceover, maybe.",
+          "displayTime": 5.0
+        }
+      ],
+      "soundClipPath":  "WaitingForActionRadio.wav"
+    }
+  ]
+}

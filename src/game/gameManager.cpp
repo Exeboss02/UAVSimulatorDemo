@@ -52,7 +52,7 @@ void GameManager::Start() {
 
 
 	// Master Volume
-	AudioManager::GetInstance().SetMasterMusicVolume(0.3f);
+	AudioManager::GetInstance().SetMasterMusicVolume(0.4f);
 	AudioManager::GetInstance().SetMasterSoundEffectsVolume(1);
 
 	// Audio

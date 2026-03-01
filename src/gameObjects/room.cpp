@@ -46,6 +46,9 @@ void Room::SetPosition(size_t x, size_t y) { this->pos = {x, y}; }
 void Room::Start() {
 	Logger::Warn("room size ", this->size);
 
+	this->speaker = this->factory->CreateStaticGameObject<SoundSourceObject>();
+	this->speaker.lock()->SetParent(this->GetPtr());
+
 	this->SetName("ROOM " + std::to_string(this->factory->GetNextID()));
 
 	{

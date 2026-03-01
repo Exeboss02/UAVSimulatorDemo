@@ -15,6 +15,12 @@ void Mine::Start() {
 	collider->transform.SetScale(2, 2, 2);
 	this->SetMesh(AssetManager::GetInstance().GetMeshObjData("TexBox/TextureCube.glb:Mesh_0"));
 
+    SoundClip* clip = AssetManager::GetInstance().GetSoundClip("Build2.wav");
+    std::weak_ptr<SoundSourceObject> speaker = this->factory->CreateStaticGameObject<SoundSourceObject>();
+    speaker.lock()->SetParent(this->GetPtr());
+    speaker.lock()->SetRandomPitch(0.8f, 1.0f);
+	speaker.lock()->Play(clip);
+
 	this->MeshObject::Start();
 }
 

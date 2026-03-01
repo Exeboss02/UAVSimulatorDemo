@@ -33,6 +33,13 @@ void ResourceGenerator::Start() {
 	this->speaker.lock()->SetRandomPitch(0.8f, 1.1f);
 	this->speaker.lock()->Play(clip);
 
+	SoundClip* buildClip = AssetManager::GetInstance().GetSoundClip("Build2.wav");
+	std::weak_ptr<SoundSourceObject> tempSpeaker = this->factory->CreateStaticGameObject<SoundSourceObject>();
+	tempSpeaker.lock()->SetDeleteWhenFinnished(true);
+	tempSpeaker.lock()->transform.SetPosition(this->transform.GetGlobalPosition());
+	tempSpeaker.lock()->SetRandomPitch(0.8f, 1.0f);
+	tempSpeaker.lock()->Play(buildClip);
+
 	this->MeshObject::Start();
 }
 

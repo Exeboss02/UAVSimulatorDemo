@@ -113,9 +113,15 @@ void Player::Start() {
 	this->sfxTimer.Initialize(0.4f);
 
 	// SFX
-	this->speaker = this->factory->CreateGameObjectOfType<SoundSourceObject>();
-	this->speaker.lock()->SetParent(this->GetPtr());
-	this->speaker.lock()->SetGain(1.0f);
+	this->walkSpeaker = this->factory->CreateGameObjectOfType<SoundSourceObject>();
+	this->walkSpeaker.lock()->SetParent(this->GetPtr());
+	this->walkSpeaker.lock()->SetGain(1.0f);
+
+	this->jumpSpeaker = this->factory->CreateGameObjectOfType<SoundSourceObject>();
+	this->jumpSpeaker.lock()->SetParent(this->GetPtr());
+
+	this->hurtSpeaker = this->factory->CreateGameObjectOfType<SoundSourceObject>();
+	this->hurtSpeaker.lock()->SetParent(this->GetPtr());
 
 	this->soundClips.push_back(AssetManager::GetInstance().GetSoundClip("Step1.wav"));
 	this->soundClips.push_back(AssetManager::GetInstance().GetSoundClip("Step2.wav"));
@@ -172,11 +178,29 @@ void Player::Tick() {
 	if (this->sfxTimer.TimeIsUp()) {
 		int randomIndex = RandomInt(0, 2);
 
-		std::shared_ptr<SoundSourceObject> lockedSpeaker = this->speaker.lock();
+		std::shared_ptr<SoundSourceObject> lockedSpeaker = this->walkSpeaker.lock();
 		lockedSpeaker->SetRandomPitch(0.8f, 1.2f);
 		lockedSpeaker->Play(this->soundClips[randomIndex]);
 
 		this->sfxTimer.Reset();
+	}
+
+	//Landing sound handling
+	if(this->isGrounded)
+	{
+		if(!this->hasPlayedLandSound)
+		{
+			SoundClip* clip = AssetManager::GetInstance().GetSoundClip("Land.wav");
+			this->jumpSpeaker.lock()->SetRandomPitch(0.7f, 1.0f);
+			this->jumpSpeaker.lock()->SetGain(0.3f);
+			this->jumpSpeaker.lock()->Play(clip);
+			this->hasPlayedLandSound = true;
+		}
+	}
+
+	else if(!this->isGrounded)
+	{
+		this->hasPlayedLandSound = false;
 	}
 
 	// this->aim();
@@ -233,6 +257,12 @@ void Player::PhysicsTick() {
 
 		this->moveVector = DirectX::XMVectorAdd(this->moveVector, jumpVector);
 		this->isJumping = false;
+
+		//Play jump sound
+		SoundClip* clip = AssetManager::GetInstance().GetSoundClip("Jump.wav");
+		this->jumpSpeaker.lock()->SetRandomPitch(0.9f, 1.2f);
+		this->jumpSpeaker.lock()->SetGain(1.0f);
+		this->jumpSpeaker.lock()->Play(clip);
 	}
 
 	DirectX::XMVECTOR linearVelocityVector = {};

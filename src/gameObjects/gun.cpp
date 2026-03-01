@@ -88,7 +88,7 @@ void Gun::Start() {
 	// SFX
 	this->speaker = this->factory->CreateGameObjectOfType<SoundSourceObject>();
 	this->speaker.lock()->SetParent(this->GetPtr());
-	this->speaker.lock()->SetGain(1.0f);
+	this->speaker.lock()->SetGain(0.5f);
 
 	this->soundClips.push_back(AssetManager::GetInstance().GetSoundClip("Shoot3.wav"));
 

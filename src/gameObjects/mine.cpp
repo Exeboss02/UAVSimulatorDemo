@@ -33,7 +33,7 @@ void Mine::OnExplode() {
 
     //When mine gets the destroyed it creates a soundSourceObject that keeps living after
     //the mine stops existing that plays the sound, it gets deleted once it finnishes playing
-    SoundClip* explosionClip = AssetManager::GetInstance().GetSoundClip("Shoot1.wav"); //temporary clip
+    SoundClip* explosionClip = AssetManager::GetInstance().GetSoundClip("Explosion2.wav");
     std::weak_ptr<SoundSourceObject> speaker = this->factory->CreateGameObjectOfType<SoundSourceObject>();
     speaker.lock()->SetDeleteWhenFinnished(true);
     speaker.lock()->SetPitch(0.7f);

@@ -25,6 +25,13 @@ void ResourceGenerator::Start() {
 
 	this->lastGenerated = Time::GetInstance().GetSessionTime();
 
+	SoundClip* clip = AssetManager::GetInstance().GetSoundClip("SpaceshipAmbiance.wav");
+	this->speaker = this->factory->CreateStaticGameObject<SoundSourceObject>();
+	this->speaker.lock()->SetParent(this->GetPtr());
+	this->speaker.lock()->LoopSoundEffect(0); //0 = loops forever
+	this->speaker.lock()->SetGain(0.8f);
+	this->speaker.lock()->Play(clip);
+
 	this->MeshObject::Start();
 }
 

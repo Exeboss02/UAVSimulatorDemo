@@ -30,6 +30,7 @@ void ResourceGenerator::Start() {
 	this->speaker.lock()->SetParent(this->GetPtr());
 	this->speaker.lock()->LoopSoundEffect(0); //0 = loops forever
 	this->speaker.lock()->SetGain(0.8f);
+	this->speaker.lock()->SetRandomPitch(0.8f, 1.1f);
 	this->speaker.lock()->Play(clip);
 
 	this->MeshObject::Start();

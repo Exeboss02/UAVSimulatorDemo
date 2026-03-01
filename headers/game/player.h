@@ -53,6 +53,8 @@ public:
 
 	void UpdateCamera();
 
+	void GunAnimation();
+
 	void SetCameraRotation(float r, float p, float y);
 	void OnCollision(std::weak_ptr<GameObject3D> gameObject3D);
 
@@ -70,6 +72,10 @@ public:
 	bool canShoot = false;
 
 	Timer sfxTimer;
+	Timer gunAnimationTimer;
+	DirectX::XMVECTOR gunDefaultPosition = {};
+	DirectX::XMVECTOR gunBackPosition = {};
+	bool gunIsReturning = false;
 
 	ResourceManager resources;
 	std::unique_ptr<HUD> hud;

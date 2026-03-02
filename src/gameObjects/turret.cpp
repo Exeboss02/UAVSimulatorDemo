@@ -54,7 +54,6 @@ void Turret::Tick() {
 	// Maybe add some is alive check to allow existing gameObjects to be excluded
 	if (!this->target.expired()) {
 		auto target = this->target.lock();
-
 		auto turret = this->turretPart.lock();
 
 		DirectX::XMVECTOR betweenVec =
@@ -90,12 +89,14 @@ void Turret::SetTargetClosest() {
 	auto& potentialTargets = GameManager::GetInstance()->GetEnemies();
 	std::weak_ptr<GameObject3D> currentTarget;
 
+	auto turret = this->turretPart.lock();
+
 	float currentDistanceSquared = this->range * this->range;
 
 	for (const auto& objectWeak : potentialTargets) {
 		const auto& object = objectWeak.lock();
 		DirectX::XMVECTOR betweenVec =
-			DirectX::XMVectorSubtract(object->transform.GetGlobalPosition(), this->transform.GetGlobalPosition());
+			DirectX::XMVectorSubtract(object->transform.GetGlobalPosition(), turret->transform.GetGlobalPosition());
 
 		float distanceSquared = DirectX::XMVectorGetX(DirectX::XMVector3Dot(betweenVec, betweenVec));
 
@@ -160,6 +161,10 @@ void Turret::SetDirection(DirectX::XMVECTOR newDirection) {
 		Logger::Warn("No turret");
 		return;
 	}
+	if (this->framePart.expired()) {
+		Logger::Warn("No frame");
+		return;
+	}
 
 	auto turret = this->turretPart.lock();
 
@@ -174,20 +179,31 @@ void Turret::SetDirection(DirectX::XMVECTOR newDirection) {
 
 	float maxStep = this->turnSpeedRPS * deltaTime;
 
-	if (angle > 0.001f) {
+	DirectX::XMVECTOR newDir;
+
+	// If already close enough, snap to desired
+	if (angle <= maxStep) {
+		newDir = desiredDir;
+	} else {
 		float step = std::min(angle, maxStep);
 
 		DirectX::XMVECTOR axis = DirectX::XMVector3Normalize(DirectX::XMVector3Cross(currentDir, desiredDir));
 
-		DirectX::XMMATRIX rot = DirectX::XMMatrixRotationAxis(axis, step);
+		if (DirectX::XMVector3LengthSq(axis).m128_f32[0] < 0.0001f) {
+			//axis = DirectX::XMVectorSet(0, 1, 0, 0); // fallback axis
+			axis = DirectX::XMVector3Orthogonal(currentDir);
+		}
 
-		DirectX::XMVECTOR newDir = DirectX::XMVector3Normalize(XMVector3TransformNormal(currentDir, rot));
+		DirectX::XMVECTOR rot = DirectX::XMQuaternionRotationAxis(axis, step);
 
-		turret->transform.SetDirection(newDir);
-
-		DirectX::XMVECTOR frameDir{newDir.m128_f32[0], 0, newDir.m128_f32[2]};
-
-		auto frame = this->framePart.lock();
-		frame->transform.SetDirection(frameDir);
+		newDir = DirectX::XMVector3Normalize(DirectX::XMVector3Rotate(currentDir, rot));
 	}
+
+	turret->transform.SetDirection(newDir);
+
+	DirectX::XMVECTOR frameDir{newDir.m128_f32[0], 0, newDir.m128_f32[2]};
+	frameDir = DirectX::XMVector3Normalize(frameDir);
+
+	auto frame = this->framePart.lock();
+	frame->transform.SetDirection(frameDir);
 }

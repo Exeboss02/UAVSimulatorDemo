@@ -476,6 +476,10 @@ bool Room::TryBuildGenerator() {
 		gen->SetParent(this->GetPtr());
 		gen->transform.SetPosition(0, 1.5, 0);
 
+		DirectX::XMFLOAT3 shipScale;
+		DirectX::XMStoreFloat3(&shipScale, this->transform.GetGlobalScale());
+		gen->transform.SetScale(DirectX::XMVECTOR({(1.0f / shipScale.x), (1.0f / shipScale.y), (1.0f / shipScale.z)}));
+
 		this->builtObject = static_pointer_cast<GameObject3D>(gen.Get());
 
 		if (!this->GetParent().expired()) {
@@ -528,6 +532,12 @@ bool Room::TryBuildTurret() {
 
 		turret->SetParent(this->GetPtr());
 		turret->transform.SetPosition(0, 0.6, 0);
+
+		DirectX::XMFLOAT3 shipScale;
+		DirectX::XMStoreFloat3(&shipScale, this->transform.GetGlobalScale());
+		Logger::Log(shipScale.x, ", ", shipScale.y, ", ", shipScale.z);
+		turret->transform.SetScale(
+			DirectX::XMVECTOR({(1.0f / shipScale.x), (1.0f / shipScale.y), (1.0f / shipScale.z)}));
 
 		this->builtObject = static_pointer_cast<GameObject3D>(turret.Get());
 
@@ -582,6 +592,10 @@ bool Room::TryBuildMine() {
 		mine->SetParent(this->GetPtr());
 		mine->transform.SetPosition(slot->transform.GetPosition());
 		mine->SetName("Mine");
+
+		DirectX::XMFLOAT3 shipScale;
+		DirectX::XMStoreFloat3(&shipScale, this->transform.GetGlobalScale());
+		mine->transform.SetScale(DirectX::XMVECTOR({(1.0f / shipScale.x), (1.0f / shipScale.y), (1.0f / shipScale.z)}));
 
 		// Make the interact collider work again after the mine explodes
 		mine->SetPostExplosion([&] {

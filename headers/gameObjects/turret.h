@@ -50,5 +50,4 @@ private:
 	float rpm = 60;
 	float range = 20;
 	float damage = 20;
-
 };

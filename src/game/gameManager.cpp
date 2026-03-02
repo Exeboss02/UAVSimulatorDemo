@@ -312,7 +312,7 @@ void GameManager::PlayerDied() {
 	Logger::Log("Player died");
 
 	// Sorta temp
-	this->Win();
+	this->Loose();
 	return;
 	//
 

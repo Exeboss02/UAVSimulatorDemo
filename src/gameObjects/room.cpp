@@ -46,6 +46,18 @@ void Room::SetPosition(size_t x, size_t y) { this->pos = {x, y}; }
 void Room::Start() {
 	Logger::Warn("room size ", this->size);
 
+	DirectX::XMVECTOR position = this->transform.GetGlobalPosition();
+
+	if(!(position.m128_f32[0] == 70 && position.m128_f32[2] == 0)) //for not playing build sound in the starting room
+	{
+		SoundClip* buildClip = AssetManager::GetInstance().GetSoundClip("Build1.wav");
+		this->speaker = this->factory->CreateStaticGameObject<SoundSourceObject>();
+		this->speaker.lock()->SetParent(this->GetPtr());
+		this->speaker.lock()->SetRandomPitch(0.7f, 1.0f);
+		this->speaker.lock()->SetGain(0.8f);
+		this->speaker.lock()->Play(buildClip);
+	}
+
 	this->SetName("ROOM " + std::to_string(this->factory->GetNextID()));
 
 	{

@@ -2,6 +2,7 @@
 #include "core/physics/sphereCollider.h"
 #include "game/player.h"
 #include "gameObjects/meshObject.h"
+#include "core/audio/soundEngine.h"
 
 // Forward-declare UI::Text to avoid extra include in header
 namespace UI {
@@ -34,4 +35,6 @@ private:
 	std::weak_ptr<SphereCollider> interactCollider;
 
 	float change = 0;
+
+	std::weak_ptr<SoundSourceObject> speaker;
 };

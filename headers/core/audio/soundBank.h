@@ -28,6 +28,13 @@ public:
 	void AddSoundClipStandardFolder(const std::string filename, const std::string id); //filename without the path to its folder
 
 	/// <summary>
+	/// Loads and adds dialogue clip from the dialogue folder, only put filename and id for later identification
+	/// </summary>
+	/// <param name="filename"></param>
+	/// <param name="id"></param>
+	void AddDialogueSoundClipStandardFolder(const std::string filename, const std::string id); //filename without the path to its folder
+
+	/// <summary>
 	/// Loads and adds sound clip from path
 	/// </summary>
 	/// <param name="path"></param>
@@ -46,6 +53,13 @@ public:
 	/// <param name="id"></param>
 	/// <returns></returns>
 	SoundClip* GetSoundClip(const std::string id);
+
+	/// <summary>
+	/// Retrieve dialogue clip
+	/// </summary>
+	/// <param name="id"></param>
+	/// <returns></returns>
+	SoundClip* GetDialogueSoundClip(const std::string id);
 
 	/// <summary>
 	/// BETA - Removes sound clip

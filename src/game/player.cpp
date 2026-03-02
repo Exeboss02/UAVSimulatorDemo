@@ -41,6 +41,11 @@ void Player::Start() {
 	// adding gun
 	this->addGun(Guns::pistol);
 
+	//on hit function
+	std::function<void(float)> onHitFunction = [&](float value) {
+		this->OnHit(value);
+	};
+
 	// adding body colliders
 	{
 		auto colliderobjWeak = this->factory->CreateGameObjectOfType<SphereCollider>();
@@ -54,6 +59,7 @@ void Player::Start() {
 		colliderobj->SetParent(this->GetPtr());
 		colliderobj->SetTag(Tag::PLAYER);
 		colliderobj->SetName("PlayerCollider " + std::to_string(this->factory->GetNextID()));
+		colliderobj->SetOnHit(onHitFunction);
 	}
 
 	{
@@ -68,6 +74,7 @@ void Player::Start() {
 		colliderobj->SetParent(this->GetPtr());
 		colliderobj->SetTag(Tag::PLAYER);
 		colliderobj->SetName("PlayerCollider " + std::to_string(this->factory->GetNextID()));
+		colliderobj->SetOnHit(onHitFunction);
 	}
 
 	{
@@ -82,6 +89,7 @@ void Player::Start() {
 		colliderobj->SetParent(this->GetPtr());
 		colliderobj->SetTag(Tag::PLAYER);
 		colliderobj->SetName("PlayerCollider " + std::to_string(this->factory->GetNextID()));
+		colliderobj->SetOnHit(onHitFunction);
 	}
 
 	// GroundCheck
@@ -110,11 +118,20 @@ void Player::Start() {
 	this->SetAllOnCollisionFunction(function);
 	
 	this->sfxTimer.Initialize(0.4f);
+	this->gunAnimationTimer.Initialize(0.15f);
 
 	// SFX
-	this->speaker = this->factory->CreateGameObjectOfType<SoundSourceObject>();
-	this->speaker.lock()->SetParent(this->GetPtr());
-	this->speaker.lock()->SetGain(1.0f);
+	this->walkSpeaker = this->factory->CreateGameObjectOfType<SoundSourceObject>();
+	this->walkSpeaker.lock()->SetParent(this->GetPtr());
+	this->walkSpeaker.lock()->SetGain(0.85f);
+
+	this->jumpSpeaker = this->factory->CreateGameObjectOfType<SoundSourceObject>();
+	this->jumpSpeaker.lock()->SetParent(this->GetPtr());
+	this->jumpSpeaker.lock()->SetGain(0.5f);
+
+	this->hurtSpeaker = this->factory->CreateGameObjectOfType<SoundSourceObject>();
+	this->hurtSpeaker.lock()->SetParent(this->GetPtr());
+	this->hurtSpeaker.lock()->SetGain(0.3f);
 
 	this->soundClips.push_back(AssetManager::GetInstance().GetSoundClip("Step1.wav"));
 	this->soundClips.push_back(AssetManager::GetInstance().GetSoundClip("Step2.wav"));
@@ -132,6 +149,8 @@ void Player::Start() {
 
 void Player::Tick() {
 	this->RigidBody::Tick();
+
+	//this->GunAnimation(); //something is weird with this->canShoot, so do not use this yet
 
 	InputManager::GetInstance().ReadControllerInput(this->controllerInput->GetControllerIndex());
 	DirectX::XMVECTOR position = this->transform.GetGlobalPosition();
@@ -176,11 +195,29 @@ void Player::Tick() {
 	if (this->sfxTimer.TimeIsUp()) {
 		int randomIndex = RandomInt(0, 2);
 
-		std::shared_ptr<SoundSourceObject> lockedSpeaker = this->speaker.lock();
-		lockedSpeaker->SetRandomPitch(0.8f, 1.2f);
+		std::shared_ptr<SoundSourceObject> lockedSpeaker = this->walkSpeaker.lock();
+		lockedSpeaker->SetRandomPitch(0.6f, 1.0f);
 		lockedSpeaker->Play(this->soundClips[randomIndex]);
 
 		this->sfxTimer.Reset();
+	}
+
+	//Landing sound handling
+	if(this->isGrounded)
+	{
+		if(!this->hasPlayedLandSound)
+		{
+			SoundClip* clip = AssetManager::GetInstance().GetSoundClip("Land.wav");
+			this->jumpSpeaker.lock()->SetRandomPitch(0.7f, 1.0f);
+			this->jumpSpeaker.lock()->SetGain(0.15f);
+			this->jumpSpeaker.lock()->Play(clip);
+			this->hasPlayedLandSound = true;
+		}
+	}
+
+	else if(!this->isGrounded)
+	{
+		this->hasPlayedLandSound = false;
 	}
 
 	// this->aim();
@@ -237,6 +274,12 @@ void Player::PhysicsTick() {
 
 		this->moveVector = DirectX::XMVectorAdd(this->moveVector, jumpVector);
 		this->isJumping = false;
+
+		//Play jump sound
+		SoundClip* clip = AssetManager::GetInstance().GetSoundClip("Jump.wav");
+		this->jumpSpeaker.lock()->SetRandomPitch(0.9f, 1.2f);
+		this->jumpSpeaker.lock()->SetGain(0.5f);
+		this->jumpSpeaker.lock()->Play(clip);
 	}
 
 	DirectX::XMVECTOR linearVelocityVector = {};
@@ -285,6 +328,47 @@ void Player::UpdateCamera() {
 
 		cam->transform.SetRotationRPY(0.0f, this->cameraRotation[0], 0);
 		this->transform.SetRotationRPY(0.0f, 0, this->cameraRotation[1]);
+	}
+}
+
+void Player::GunAnimation()
+{
+	//if the player can shoot the gun hasn't been fired and should therefore not move
+	if(this->canShoot)
+	{
+		this->gunIsReturning = false;
+		return;
+	}
+
+	float deltaTime = Time::GetInstance().GetDeltaTime();
+	this->gunAnimationTimer.Tick(deltaTime);
+
+	if(this->gunAnimationTimer.TimeIsUp())
+	{
+		this->gunIsReturning = true;
+		this->gunAnimationTimer.Reset();
+	}
+
+	DirectX::XMFLOAT3 gunDefaultPos, gunBackPos;
+	DirectX::XMStoreFloat3(&gunDefaultPos, this->gunDefaultPosition);
+	DirectX::XMStoreFloat3(&gunBackPos, this->gunBackPosition);
+
+	//gun is flying backwards
+	if(!this->gunIsReturning)
+	{
+		float lerpValue = (this->gunAnimationTimer.startTime - this->gunAnimationTimer.currentTime) / this->gunAnimationTimer.startTime;
+		DirectX::XMFLOAT3 currentPos = FLOAT3LERP(gunDefaultPos, gunBackPos, lerpValue);
+		DirectX::XMVECTOR newPos = DirectX::XMLoadFloat3(&currentPos);
+
+		this->gun.lock()->transform.SetPosition(newPos);
+	}
+	else
+	{
+		float lerpValue = this->gunAnimationTimer.currentTime / this->gunAnimationTimer.startTime;
+		DirectX::XMFLOAT3 currentPos = FLOAT3LERP(gunDefaultPos, gunBackPos, lerpValue);
+		DirectX::XMVECTOR newPos = DirectX::XMLoadFloat3(&currentPos);
+
+		this->gun.lock()->transform.SetPosition(newPos);
 	}
 }
 
@@ -351,6 +435,13 @@ void Player::OnCollision(std::weak_ptr<GameObject3D> gameObject3D) {
 	if (spaceShip) {
 		this->isGrounded = true;
 	}
+}
+
+void Player::OnHit(float value)
+{
+	SoundClip* hurtClip = AssetManager::GetInstance().GetSoundClip("DeathScream.wav"); //temp sound clip
+	this->hurtSpeaker.lock()->SetRandomPitch(0.9f, 1.1f);
+	this->hurtSpeaker.lock()->Play(hurtClip);
 }
 
 void Player::LoadFromJson(const nlohmann::json& data) {
@@ -468,9 +559,14 @@ void Player::Interact() {
 
 void Player::CheckForTriggerPress() {
 
-	if (this->canShoot) {
+	if (this->canShoot)
+	{
 		this->gun.lock()->Shoot((this->keyBoardInput.LeftClick() || this->controllerInput->RightClick()),
 								this->keyBoardInput.LeftDown() || this->controllerInput->RightDown());
+
+		this->gunDefaultPosition = this->transform.GetPosition();
+		this->gunBackPosition.m128_f32[1] = 0.2f;
+		this->gunBackPosition.m128_f32[1] = 0.4f;
 	}
 }
 

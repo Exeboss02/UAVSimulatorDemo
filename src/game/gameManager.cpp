@@ -1,5 +1,12 @@
 #include "game/gameManager.h"
+#include "UI/canvas.h"
+#include "UI/canvasObject.h"
+#include "UI/image.h"
+#include "UI/text.h"
 #include "core/filepathHolder.h"
+#include "rendering/renderQueue.h"
+#include "scene/sceneManager.h"
+#include <algorithm>
 #include <cstdlib>
 #include <format>
 #include <random>
@@ -7,9 +14,8 @@
 std::weak_ptr<GameManager> GameManager::instance;
 
 GameManager::GameManager()
-	: playerSpawnPoint(DirectX::XMVectorSet(70.0, 5.0, 0.0, 0.0)), currentRound(0), inCombat(false),
-	  enemySpawnTimer(1), unspawnedEnemies(0), enemySpawnDelay(2), idleTime(30), idleTimeTimer(0) 
-{}
+	: playerSpawnPoint(DirectX::XMVectorSet(70.0, 5.0, 0.0, 0.0)), currentRound(0), inCombat(false), enemySpawnTimer(1),
+	  unspawnedEnemies(0), enemySpawnDelay(2), idleTime(30), idleTimeTimer(0) {}
 
 void GameManager::Start() {
 	if (GameManager::instance.expired()) {
@@ -34,7 +40,6 @@ void GameManager::Start() {
 
 	this->storyManager = this->factory->CreateGameObjectOfType<StoryManager>();
 
-
 	// Set up rounds
 	this->rounds.reserve(10);
 	this->rounds.push_back(Round{3, 1});
@@ -49,7 +54,6 @@ void GameManager::Start() {
 	this->rounds.push_back(Round{80, 3});
 
 	this->idleTimeTimer = this->idleTime;
-
 
 	// Master Volume
 	AudioManager::GetInstance().SetMasterMusicVolume(0.5f);
@@ -68,6 +72,36 @@ void GameManager::Start() {
 }
 
 void GameManager::Tick() {
+	// If win screen is visible
+	if (this->winScreenVisible) {
+		float currentTime = Time::GetInstance().GetSessionTime();
+		// Auto-transition to main menu after 5 seconds
+		if (currentTime - this->winStartTime >= 5.0f) {
+			if (auto playerPtr = this->player.lock()) {
+				playerPtr->SetShowCursor(true);
+				playerPtr->SetInputEnabled(false);
+			}
+
+			// Clean up win UI widgets so they don't linger after scene unload
+			if (!this->winBackground.expired()) {
+				if (auto bg = this->winBackground.lock())
+					this->factory->QueueDeleteGameObject(std::weak_ptr<GameObject>(bg));
+			}
+			if (!this->winTitle.expired()) {
+				if (auto t = this->winTitle.lock()) this->factory->QueueDeleteGameObject(std::weak_ptr<GameObject>(t));
+			}
+			if (!this->winPrompt.expired()) {
+				if (auto p = this->winPrompt.lock()) this->factory->QueueDeleteGameObject(std::weak_ptr<GameObject>(p));
+			}
+			this->winScreenVisible = false;
+
+			if (auto sm = SceneManager::GetActive()) {
+				auto path = (FilepathHolder::GetAssetsDirectory() / "scenes" / "MainMenu.scene").string();
+				sm->QueueLoadSceneFile(path);
+			}
+		}
+		return;
+	}
 	if (this->inCombat) {
 
 		// Spawning enemies
@@ -76,7 +110,8 @@ void GameManager::Tick() {
 				this->enemySpawnTimer -= Time::GetInstance().GetDeltaTime();
 			} else {
 				size_t cachedUnspawnedEnemies = this->unspawnedEnemies;
-				for (size_t i = 0; i < std::min(this->rounds[this->currentRound].breachPoints, cachedUnspawnedEnemies); i++) {
+				for (size_t i = 0;
+					 i < (std::min) (this->rounds[this->currentRound].breachPoints, cachedUnspawnedEnemies); i++) {
 					SpawnEnemy(i);
 				}
 
@@ -131,7 +166,76 @@ void GameManager::ReloadScene() {
 	}
 }
 
-void GameManager::Win() { Logger::Log("You won!"); }
+void GameManager::Win() {
+	// Try to find the main HUD canvas to place the win overlay on top
+	auto canvasWeak = this->factory->FindObjectOfType<UI::CanvasObject>();
+	if (canvasWeak.expired()) {
+		Logger::Error("No canvas found for win screen");
+		this->winScreenVisible = true; // still enter wait state so game stops
+		return;
+	}
+
+	auto canvasShared = canvasWeak.lock();
+	if (!canvasShared) {
+		Logger::Error("Failed to lock canvas for win screen");
+		this->winScreenVisible = true;
+		return;
+	}
+
+	float canvasWidth = static_cast<float>(Window::GetCurrentWidth());
+	float canvasHeight = static_cast<float>(Window::GetCurrentHeight());
+	try {
+		if (auto canvasPtr = canvasShared->GetCanvas()) {
+			auto sz = canvasPtr->GetSize();
+			if (sz.x > 0.0f) canvasWidth = sz.x;
+			if (sz.y > 0.0f) canvasHeight = sz.y;
+		}
+	} catch (...) {
+	}
+
+	// Semi-opaque background
+	{
+		auto bgWeak = this->factory->CreateGameObjectOfType<UI::Image>();
+		if (!bgWeak.expired()) {
+			auto bg = bgWeak.lock();
+			bg->SetName("Win_Background");
+			bg->SetSize(UI::Vec2{canvasWidth, canvasHeight});
+			bg->SetPosition(UI::Vec2{0.0f, 0.0f});
+			bg->SetTint(DirectX::XMFLOAT4{0.0f, 0.0f, 0.0f, 0.6f});
+			bg->SetVisible(true);
+			bg->SetZIndex(0);
+			std::weak_ptr<GameObject> me = canvasShared->GetPtr();
+			bg->SetParent(me);
+			canvasShared->AddChild(std::static_pointer_cast<UI::Widget>(bg));
+			RenderQueue::AddUIWidget(bg);
+			this->winBackground = bg;
+		}
+	}
+
+	// Title text: "You won!"
+	{
+		auto titleWeak = this->factory->CreateGameObjectOfType<UI::Text>();
+		if (!titleWeak.expired()) {
+			auto title = titleWeak.lock();
+			title->SetName("Win_Title");
+			title->SetText("You won!");
+			title->SetFontSize(72.0f);
+			title->SetAnchor(UI::Anchor::MidCenter);
+			title->SetPosition(UI::Vec2{0.0f, -200.0f});
+			title->SetVisible(true);
+			title->SetZIndex(1);
+			std::weak_ptr<GameObject> me = canvasShared->GetPtr();
+			title->SetParent(me);
+			canvasShared->AddChild(std::static_pointer_cast<UI::Widget>(title));
+			RenderQueue::AddUIWidget(title);
+			this->winTitle = title;
+		}
+	}
+
+	this->winScreenVisible = true;
+	// Record the session time so we can enforce a delay before allowing menu return
+	this->winStartTime = Time::GetInstance().GetSessionTime();
+}
 
 void GameManager::PlayerDied() {
 	Logger::Log("Player died");
@@ -182,8 +286,8 @@ void GameManager::SpawnRound(size_t roundIndex) {
 			float longestDistance = std::numeric_limits<float>::lowest();
 
 			for (auto& room : rooms) {
-				if (canUseSameBreachPoint || selectedRooms.size() <= 0 || std::find(selectedRooms.begin(), selectedRooms.end(),
-																	 room.first) == selectedRooms.end()) {
+				if (canUseSameBreachPoint || selectedRooms.size() <= 0 ||
+					std::find(selectedRooms.begin(), selectedRooms.end(), room.first) == selectedRooms.end()) {
 					if (room.second * GetRandom(0.1, 1.0) > longestDistance) {
 						longestDistance = room.second;
 						selectedRoom = room.first;
@@ -233,7 +337,6 @@ void GameManager::EndRound() {
 	this->currentRound++;
 	this->idleTimeTimer = this->idleTime;
 
-
 	if (this->currentRound >= this->rounds.size()) {
 		Win();
 	}
@@ -243,29 +346,22 @@ void GameManager::EndRound() {
 	}
 }
 
-void GameManager::AudioHandling()
-{	
+void GameManager::AudioHandling() {
 	float deltaTime = Time::GetInstance().GetDeltaTime();
 
-	if(this->inCombat)
-	{
-		if (!this->isPlayingCombatMusic)
-		{
+	if (this->inCombat) {
+		if (!this->isPlayingCombatMusic) {
 			AudioManager::GetInstance().Play("contact");
 			this->isPlayingCombatMusic = true;
 			this->isFading = false;
 			this->isPlayingBuildMusic = false;
 		}
-	}
-	else
-	{
+	} else {
 		ALint state = 0;
 		AudioManager::GetInstance().GetMusicTrackSourceState("contact", state);
 
-		if(this->currentRound > 0)
-		{
-			if(!this->isFading && !this->isPlayingBuildMusic)
-			{
+		if (this->currentRound > 0) {
+			if (!this->isFading && !this->isPlayingBuildMusic) {
 				AudioManager::GetInstance().FadeOutStop("contact", 6);
 				this->isFading = true;
 				this->isPlayingCombatMusic = false;
@@ -273,12 +369,10 @@ void GameManager::AudioHandling()
 				this->shipSpeaker.lock()->SetGain(0.5f);
 			}
 
-			if(!this->isPlayingBuildMusic)
-			{
+			if (!this->isPlayingBuildMusic) {
 				this->buildMusicWaitTimer.Tick(deltaTime);
 
-				if(this->buildMusicWaitTimer.TimeIsUp())
-				{
+				if (this->buildMusicWaitTimer.TimeIsUp()) {
 					this->isPlayingBuildMusic = true;
 					this->isFading = false;
 					this->isPlayingCombatMusic = false;
@@ -290,8 +384,7 @@ void GameManager::AudioHandling()
 				}
 			}
 
-			if(this->idleTimeTimer <= 8)
-			{
+			if (this->idleTimeTimer <= 8) {
 				float gain = this->shipSpeaker.lock()->GetGain();
 				gain -= (deltaTime / 5);
 				this->shipSpeaker.lock()->SetGain(gain);
@@ -302,9 +395,7 @@ void GameManager::AudioHandling()
 
 bool GameManager::GetInCombat() const { return this->inCombat; }
 
-const size_t& GameManager::GetCurrentRound() {
-	return this->currentRound;
-}
+const size_t& GameManager::GetCurrentRound() { return this->currentRound; }
 
 std::shared_ptr<Player> GameManager::GetPlayer() { return this->player.lock(); }
 

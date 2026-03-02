@@ -49,6 +49,8 @@ public:
 	/// For now this serves as a place to build scenes
 	/// </summary>
 	void LoadScene(Scenes scene);
+	// Schedule a scene file to be loaded at the end of the current scene tick
+	void QueueLoadSceneFile(const std::string& filePath);
 
 	void SaveSceneToCurrentFile();
 	void CreateNewScene(std::shared_ptr<Scene>& scene);

@@ -328,8 +328,8 @@ void Room::ShowBuildMenu(std::shared_ptr<Player> player) {
 			btn->SetName(label);
 			btn->SetLabel(label);
 
-			btn->SetHorizontalAlign(UI::Button::HorizontalAlign::LEFT);
-			btn->SetVerticalAlign(UI::Button::VerticalAlign::TOP);
+			btn->SetHorizontalAlign(UI::Button::HorizontalAlign::CENTER);
+			btn->SetVerticalAlign(UI::Button::VerticalAlign::MIDDLE);
 			UI::Vec2 pos{startX + static_cast<float>(i) * (btnW + spacing), yPos};
 			btn->SetPosition(pos);
 			btn->SetSize({150, 40});
@@ -365,6 +365,38 @@ void Room::ShowBuildMenu(std::shared_ptr<Player> player) {
 			});
 		}
 
+		// Create a Cancel button beneath the middle button
+		try {
+			float middleX = startX + static_cast<float>(1) * (btnW + spacing);
+			UI::Vec2 cancelPos{middleX, yPos + btnH + spacing};
+			auto cancelWeak = this->factory->CreateGameObjectOfType<UI::Button>();
+			if (!cancelWeak.expired()) {
+				auto cancelBtn = std::dynamic_pointer_cast<UI::Button>(cancelWeak.lock());
+				cancelBtn->SetParent(canvasObj->GetPtr());
+				cancelBtn->SetName("Cancel");
+				cancelBtn->SetLabel("Cancel");
+				cancelBtn->SetHorizontalAlign(UI::Button::HorizontalAlign::CENTER);
+				cancelBtn->SetVerticalAlign(UI::Button::VerticalAlign::MIDDLE);
+				cancelBtn->SetPosition(cancelPos);
+				cancelBtn->SetSize({150, 40});
+				cancelBtn->SetVisible(true);
+				canvasObj->AddChild(std::static_pointer_cast<UI::Widget>(cancelBtn));
+				RenderQueue::AddUIWidget(cancelBtn);
+				std::weak_ptr<GameObject> me = this->GetPtr();
+				auto playerWeak = std::weak_ptr<Player>(player);
+				cancelBtn->SetOnClick([me, playerWeak]() {
+					if (auto roomPtr = std::dynamic_pointer_cast<Room>(me.lock())) {
+						roomPtr->HideBuildMenu();
+						if (auto p = playerWeak.lock()) {
+							p->SetShowCursor(false);
+							p->SetInputEnabled(true);
+						}
+					}
+				});
+			}
+		} catch (...) {
+		}
+
 		// Remember menu, show cursor and disable player input
 		this->buildMenu = canvasObj;
 		if (player) {
@@ -386,7 +418,6 @@ void Room::HideBuildMenu() {
 	menu->Clear();
 	this->factory->QueueDeleteGameObject(menu);
 	this->buildMenu.reset();
-
 }
 
 void Room::Hover() {
@@ -408,9 +439,7 @@ void Room::Hover() {
 	}
 }
 
-bool Room::IsBuildMenuOpen() {
-	return !this->buildMenu.expired();
-}
+bool Room::IsBuildMenuOpen() { return !this->buildMenu.expired(); }
 
 bool Room::TryBuildGenerator() {
 	Logger::Log("Room::TryBuildGenerator called");
@@ -437,7 +466,6 @@ bool Room::TryBuildGenerator() {
 		auto slot = slotWeak.lock();
 
 		auto gen = this->factory->CreateStaticGameObject<ResourceGenerator>();
-
 
 		gen->SetParent(this->GetPtr());
 		gen->transform.SetPosition(0, 1.5, 0);
@@ -560,7 +588,7 @@ bool Room::TryBuildMine() {
 				}
 			});
 			build->SetOnHover([&] { this->Hover(); });
-			});
+		});
 
 		this->builtObject = static_pointer_cast<GameObject3D>(mine.Get());
 		// Disable hover on the build slot now that something is built here

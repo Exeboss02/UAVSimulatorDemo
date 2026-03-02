@@ -188,6 +188,14 @@ void SceneManager::LoadSceneFromFile(const std::string& filePath) {
 	SetMainCameraInScene(this->mainScene);
 }
 
+void SceneManager::QueueLoadSceneFile(const std::string& filePath) {
+	if (!this->mainScene) {
+		Logger::Error("QueueLoadSceneFile called without a main scene.");
+		return;
+	}
+	this->mainScene->QueueLoadScene(filePath);
+}
+
 void SceneManager::CreateObjectsFromJsonRecursively(const nlohmann::json& data, std::weak_ptr<GameObject> parent) {
 	for (const nlohmann::json& objectData : data) {
 		// Logger::Log(objectData.dump());

@@ -25,7 +25,6 @@ void Player::Start() {
 	this->SetPhysicsPosition(spawnPoint);
 	this->SetPreviousPhysicsPosition(spawnPoint);
 
-
 	// adding camera
 	auto cameraWeak = this->factory->CreateGameObjectOfType<CameraObject>();
 	auto cameraShared = cameraWeak.lock();
@@ -141,6 +140,11 @@ void Player::Start() {
 	// Create HUD owned by player
 	this->hud = std::make_unique<HUD>(this->factory);
 	this->hud->Start();
+	// Register callback so when HUD hides the quit prompt (e.g. NO), player input/cursor are restored
+	this->hud->SetOnQuitPromptHidden([this]() {
+		this->SetInputEnabled(true);
+		this->SetShowCursor(false);
+	});
 }
 
 void Player::Tick() {
@@ -154,8 +158,8 @@ void Player::Tick() {
 	AudioManager::GetInstance().SetListenerPosition(position.m128_f32[0], position.m128_f32[1], position.m128_f32[2]);
 	DirectX::XMVECTOR forward = this->transform.GetGlobalForward();
 	DirectX::XMVECTOR up = this->transform.GetGlobalUp();
-	ALfloat listenerOrientation[6] = { -forward.m128_f32[0], -forward.m128_f32[1], -forward.m128_f32[2],
-		 up.m128_f32[0], up.m128_f32[1], up.m128_f32[2] };
+	ALfloat listenerOrientation[6] = {-forward.m128_f32[0], -forward.m128_f32[1], -forward.m128_f32[2],
+									  up.m128_f32[0],		up.m128_f32[1],		  up.m128_f32[2]};
 	AudioManager::GetInstance().SetListenerOrientation(listenerOrientation);
 
 	if (this->inputEnabled) {
@@ -293,7 +297,7 @@ void Player::UpdateCamera() {
 	std::shared_ptr<CameraObject> cam = this->camera.lock();
 
 	if (this->keyBoardInput.Quit()) {
-		PostQuitMessage(0);
+		this->ShowQuitToMenuPrompt();
 	}
 
 	// Skip game input if ImGui is capturing mouse or keyboard
@@ -376,7 +380,17 @@ void Player::SetCameraRotation(float r, float p, float y) {
 
 void Player::SetShowCursor(bool visible) {
 	this->showCursor = visible;
-	ShowCursor(visible);
+	// Force OS cursor state to the requested visibility. ShowCursor uses an internal
+	// display counter; call repeatedly until the API reports the desired state.
+	if (visible) {
+		while (ShowCursor(TRUE) < 0) {
+			;
+		}
+	} else {
+		while (ShowCursor(FALSE) >= 0) {
+			;
+		}
+	}
 	// when showing cursor, disable shooting
 	this->canShoot = !visible;
 }
@@ -387,6 +401,22 @@ void Player::SetInputEnabled(bool enabled) {
 		this->input[0] = 0.0f;
 		this->input[1] = 0.0f;
 		this->canShoot = false;
+	}
+}
+
+void Player::ShowQuitToMenuPrompt() {
+	if (this->hud) {
+		this->hud->ShowQuitToMenuPrompt();
+		this->SetShowCursor(true);
+		this->SetInputEnabled(false);
+	}
+}
+
+void Player::HideQuitToMenuPrompt() {
+	if (this->hud) {
+		this->hud->HideQuitToMenuPrompt();
+		this->SetInputEnabled(true);
+		this->SetShowCursor(false);
 	}
 }
 

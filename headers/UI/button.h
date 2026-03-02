@@ -86,8 +86,8 @@ private:
 	// Per-button material (kept alive by AssetManager as well)
 	std::shared_ptr<UnlitMaterial> material;
 
-	// Label alignment (defaults: left, middle)
-	HorizontalAlign hAlign = HorizontalAlign::LEFT;
+	// Label alignment defaults
+	HorizontalAlign hAlign = HorizontalAlign::CENTER;
 	VerticalAlign vAlign = VerticalAlign::MIDDLE;
 };
 

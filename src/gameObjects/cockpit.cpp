@@ -4,6 +4,7 @@
 #include "game/gameManager.h"
 #include "gameObjects/SpaceShipObj.h"
 #include "utilities/aStar.h"
+#include <numbers>
 
 void Cockpit::Start() { 
 	auto coreCollider = this->factory->CreateStaticGameObject<SphereCollider>();
@@ -36,7 +37,11 @@ void Cockpit::Start() {
 	//tempCockpitMesh->transform.SetScale(5, 2.5, 5);
 	//tempCockpitMesh->SetMesh(AssetManager::GetInstance().GetMeshObjData("TexBox/TextureCube.glb:Mesh_0"));
 
+	
+
 	this->GameObject3D::Start(); 
+
+	this->createVisualsAndColiders();
 }
 
 void Cockpit::SetOnDeath(std::function<void()> func) { this->onDeath = func; }
@@ -72,4 +77,49 @@ void Cockpit::SetupPathfindingNodes(std::shared_ptr<SpaceShip> spaceShip) {
 
 	// Set pathfinding goal to core
 	spaceShip->GetPathfinder()->SetGoal(this->pathfindingNodes[0]);
+}
+
+void Cockpit::createVisualsAndColiders() {
+
+	{
+		auto meshobj = this->factory->CreateStaticGameObject<MeshObject>();
+
+		meshobj->SetParent(this->GetPtr());
+
+		MeshObjData meshdata = AssetManager::GetInstance().GetMeshObjData("SpaceShip/room2.glb:Mesh_0");
+
+		meshobj->SetMesh(meshdata);
+
+	}
+	{
+		auto meshobj = this->factory->CreateStaticGameObject<MeshObject>();
+
+		meshobj->SetParent(this->GetPtr());
+
+		MeshObjData meshdata = AssetManager::GetInstance().GetMeshObjData("SpaceShip/room2.glb:Mesh_4");
+		meshobj->SetMesh(meshdata);
+
+	}
+	
+	
+	for (size_t i = 0; i < 4; i++) {
+
+		auto meshobj = this->factory->CreateStaticGameObject<Wall>();
+
+		meshobj->SetParent(this->GetPtr());
+
+		meshobj->transform.SetRotationRPY(0, 0, i * std::numbers::pi / 2);
+
+		
+		meshobj->SetWallState(Room::WallState::window, true);
+
+		meshobj->SetWAllIndex(i);
+
+		this->walls[i] = meshobj;
+	}
+
+	this->walls[0].lock()->SetWallState(Room::WallState::door);
+	this->walls[1].lock()->SetWallState(Room::WallState::solid);
+	this->walls[3].lock()->SetWallState(Room::WallState::solid);
+
 }

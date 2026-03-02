@@ -113,8 +113,8 @@ void SpaceShip::CreateFloorColider() {
 	DirectX::XMFLOAT3 pos((this->SHIP_MAX_SIZE_X * this->ROOM_SIZE) * 0.5f, 0,
 						  (this->SHIP_MAX_SIZE_Y * this->ROOM_SIZE) * 0.5f);
 	colliderobj->transform.SetPosition(DirectX::XMLoadFloat3(&pos));
-	DirectX::XMFLOAT3 scale(((this->SHIP_MAX_SIZE_X) * this->ROOM_SIZE + this->ROOM_SIZE) * 0.5f, 0.5f,
-							((this->SHIP_MAX_SIZE_Y) * this->ROOM_SIZE + this->ROOM_SIZE) * 0.5f);
+	DirectX::XMFLOAT3 scale(((this->SHIP_MAX_SIZE_X) * this->ROOM_SIZE + this->ROOM_SIZE) * 0.5f + 20.0f, 0.5f,
+							((this->SHIP_MAX_SIZE_Y) * this->ROOM_SIZE + this->ROOM_SIZE) * 0.5f + 20.0f);
 	colliderobj->transform.SetScale(DirectX::XMLoadFloat3(&scale));
 	colliderobj->SetParent(this->GetPtr());
 	colliderobj->SetTag(Tag::FLOOR);

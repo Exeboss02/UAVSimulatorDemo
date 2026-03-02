@@ -1,6 +1,7 @@
 #pragma once 
 #include "gameObjects/gameObject3D.h"
 #include "game/health.h"
+#include "gameObjects/wall.h"
 
 class SpaceShip;
 struct AStarVertex;
@@ -26,4 +27,7 @@ private:
 	DirectX::XMVECTOR corePosition;
 
 	std::array<std::shared_ptr<AStarVertex>, 2> pathfindingNodes;
+
+	void createVisualsAndColiders();
+	std::array<std::weak_ptr<Wall>, 4> walls;
 };

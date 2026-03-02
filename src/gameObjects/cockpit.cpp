@@ -19,11 +19,24 @@ void Cockpit::Start() {
 		if (this->health.IsDead()) {
 			this->onDeath();
 			Logger::Log("Core Died");
+
+			//create tempspeaker
+			SoundClip* deathClip = AssetManager::GetInstance().GetSoundClip("BigExplosion2.wav");
+			std::weak_ptr<SoundSourceObject> deathSpeaker = this->factory->CreateStaticGameObject<SoundSourceObject>();
+			deathSpeaker.lock()->SetDeleteWhenFinnished(true);
+			deathSpeaker.lock()->transform.SetPosition(this->transform.GetGlobalPosition());
+			deathSpeaker.lock()->Play(deathClip);
 		}
 
 		// Update core health on hud
 		GameManager::GetInstance()->GetPlayer()->hud->SetCoreHealthText(this->health.Get());
+
+		SoundClip* damageClip = AssetManager::GetInstance().GetSoundClip("SmallExplotion.wav");
+		this->speaker.lock()->SetDeleteWhenFinnished(true);
+		this->speaker.lock()->transform.SetPosition(this->transform.GetGlobalPosition());
+		this->speaker.lock()->Play(damageClip);
 	});
+
 	coreCollider->transform.SetPosition(0, 2, 0);
 	coreCollider->transform.SetScale(2, 2, 2);
 
@@ -36,6 +49,8 @@ void Cockpit::Start() {
 	//tempCockpitMesh->transform.SetPosition(0, 3, 0);
 	//tempCockpitMesh->transform.SetScale(5, 2.5, 5);
 	//tempCockpitMesh->SetMesh(AssetManager::GetInstance().GetMeshObjData("TexBox/TextureCube.glb:Mesh_0"));
+
+	this->speaker = this->factory->CreateStaticGameObject<SoundSourceObject>();
 
 	
 

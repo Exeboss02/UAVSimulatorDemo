@@ -21,6 +21,8 @@ public:
 
 	void SetWallState(int wallState, bool edgeWall = false);
 
+	void SetWallCost(size_t titanium, size_t lubricant, size_t carbonfiber, size_t circuitboards);
+
 	void Hover();
 
 private:

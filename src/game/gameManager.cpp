@@ -41,17 +41,17 @@ void GameManager::Start() {
 	this->storyManager = this->factory->CreateGameObjectOfType<StoryManager>();
 
 	// Set up rounds
-	this->rounds.reserve(1);
+	this->rounds.reserve(10);
 	this->rounds.push_back(Round{3, 1});
-	// this->rounds.push_back(Round{5, 1});
-	// this->rounds.push_back(Round{7, 1});
-	// this->rounds.push_back(Round{10, 2});
-	// this->rounds.push_back(Round{15, 2});
-	// this->rounds.push_back(Round{20, 2});
-	// this->rounds.push_back(Round{25, 2});
-	// this->rounds.push_back(Round{35, 2});
-	// this->rounds.push_back(Round{50, 3});
-	// this->rounds.push_back(Round{80, 3});
+	this->rounds.push_back(Round{5, 1});
+	this->rounds.push_back(Round{7, 1});
+	this->rounds.push_back(Round{10, 2});
+	this->rounds.push_back(Round{15, 2});
+	this->rounds.push_back(Round{20, 2});
+	this->rounds.push_back(Round{25, 2});
+	this->rounds.push_back(Round{35, 2});
+	this->rounds.push_back(Round{50, 3});
+	this->rounds.push_back(Round{80, 3});
 
 	this->idleTimeTimer = this->idleTime;
 

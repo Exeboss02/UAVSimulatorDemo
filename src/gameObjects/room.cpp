@@ -16,6 +16,7 @@
 #include "rendering/renderQueue.h"
 #include "utilities/time.h"
 #include <numbers>
+#include <format>
 
 static const std::array<std::array<int, 2>, 4> wallpositions = {
 	std::array<int, 2>({0, 1}),
@@ -48,7 +49,7 @@ void Room::Start() {
 
 	DirectX::XMVECTOR position = this->transform.GetGlobalPosition();
 
-	if(!(position.m128_f32[0] == 70 && position.m128_f32[2] == 0)) //for not playing build sound in the starting room
+	if (!(position.m128_f32[0] == 140 && position.m128_f32[2] == 0)) // for not playing build sound in the starting room
 	{
 		SoundClip* buildClip = AssetManager::GetInstance().GetSoundClip("Build1.wav");
 		this->speaker = this->factory->CreateStaticGameObject<SoundSourceObject>();
@@ -115,7 +116,10 @@ void Room::Start() {
 		this->walls[i] = meshobj;
 	}
 	auto buildCollider = this->factory->CreateStaticGameObject<BoxCollider>();
-	buildCollider->transform.SetScale({1, .5, 1});
+	//fixing scale issue
+	DirectX::XMFLOAT3 shipScale;
+		DirectX::XMStoreFloat3(&shipScale, this->transform.GetScale());
+	buildCollider->transform.SetScale(DirectX::XMVECTOR({(1.0f / shipScale.x), (0.5f / shipScale.y), (1.0f / shipScale.z)}));
 	buildCollider->transform.SetPosition({0, 1, 0});
 	buildCollider->SetParent(this->GetPtr());
 	buildCollider->SetSolid(false);
@@ -267,9 +271,15 @@ void Room::ShowBuildMenu(std::shared_ptr<Player> player) {
 			std::function<void()> cb;
 			UI::Vec2 pos;
 		};
-
+		
 		// Barebone specs: only labels. Positions will be computed to center the buttons beneath the crosshair.
-		std::vector<std::string> labels = {"Turret", "Generator", "Mine"};
+		std::string turretLabel = std::format("Turret, Cost {}", this->turretCost.getCostString());
+		std::string generatorLabel = std::format("Generator, Cost {}", this->generatorCost.getCostString());
+		std::string mineLabel = std::format("Mine, Cost {}", this->mineCost.getCostString());
+
+		std::vector<std::string> labels = {turretLabel, generatorLabel, mineLabel};
+
+		
 
 		// Determine canvas size (fallback to camera aspect if unavailable) and crosshair center
 		UI::Vec2 canvasSize{0.0f, 0.0f};
@@ -343,17 +353,27 @@ void Room::ShowBuildMenu(std::shared_ptr<Player> player) {
 			// Hide menu and restore player input on click. Spawn directly from Room for each type.
 			std::weak_ptr<GameObject> me = this->GetPtr();
 			auto playerWeak = std::weak_ptr<Player>(player);
-			bool isGenerator = (label == "Generator");
-			bool isTurret = (label == "Turret");
-			bool isMine = (label == "Mine");
+			
+			bool isGenerator = (label == generatorLabel);
+			bool isTurret = (label == turretLabel);
+			bool isMine = (label == mineLabel);
+
 			btn->SetOnClick([me, playerWeak, isGenerator, isTurret, isMine]() {
 				if (auto roomPtr = std::dynamic_pointer_cast<Room>(me.lock())) {
 					bool built = false;
-					if (isGenerator) {
+					if (isGenerator && GameManager::GetInstance()->GetPlayer()->resources.tryToPay(
+										   roomPtr->generatorCost.getTitanium(), roomPtr->generatorCost.getLubricant(),
+							roomPtr->generatorCost.getCarbonFiber(), roomPtr->generatorCost.getCircuit())) {
 						built = roomPtr->TryBuildGenerator();
-					} else if (isTurret) {
+					} else if (isTurret &&
+							   GameManager::GetInstance()->GetPlayer()->resources.tryToPay(
+								   roomPtr->turretCost.getTitanium(), roomPtr->turretCost.getLubricant(),
+								   roomPtr->turretCost.getCarbonFiber(), roomPtr->turretCost.getCircuit())) {
 						built = roomPtr->TryBuildTurret();
-					} else if (isMine) {
+					} else if (isMine &&
+							   GameManager::GetInstance()->GetPlayer()->resources.tryToPay(
+								   roomPtr->mineCost.getTitanium(), roomPtr->mineCost.getLubricant(),
+											 roomPtr->mineCost.getCarbonFiber(), roomPtr->mineCost.getCircuit())) {
 						built = roomPtr->TryBuildMine();
 					}
 					if (built) {
@@ -434,6 +454,9 @@ void Room::Hover() {
 		if (!prompt) return;
 
 		std::string txt = "Press \"F\" to open build menu";
+		if (auto gameManager = GameManager::GetInstance(); gameManager && gameManager->GetInCombat()) {
+			txt = "Can't build during attacks";
+		}
 		DirectX::XMVECTOR worldPos = this->transform.GetGlobalPosition();
 		prompt->Show(txt, worldPos);
 	} catch (const std::exception& e) {
@@ -475,6 +498,10 @@ bool Room::TryBuildGenerator() {
 
 		gen->SetParent(this->GetPtr());
 		gen->transform.SetPosition(0, 1.5, 0);
+
+		DirectX::XMFLOAT3 shipScale;
+		DirectX::XMStoreFloat3(&shipScale, this->transform.GetGlobalScale());
+		gen->transform.SetScale(DirectX::XMVECTOR({(1.0f / shipScale.x), (1.0f / shipScale.y), (1.0f / shipScale.z)}));
 
 		this->builtObject = static_pointer_cast<GameObject3D>(gen.Get());
 
@@ -527,7 +554,13 @@ bool Room::TryBuildTurret() {
 		auto turret = this->factory->CreateStaticGameObject<Turret>();
 
 		turret->SetParent(this->GetPtr());
-		turret->transform.SetPosition(0, 1.5, 0);
+		turret->transform.SetPosition(0, 0.6, 0);
+
+		DirectX::XMFLOAT3 shipScale;
+		DirectX::XMStoreFloat3(&shipScale, this->transform.GetGlobalScale());
+		Logger::Log(shipScale.x, ", ", shipScale.y, ", ", shipScale.z);
+		turret->transform.SetScale(
+			DirectX::XMVECTOR({(1.0f / shipScale.x), (1.0f / shipScale.y), (1.0f / shipScale.z)}));
 
 		this->builtObject = static_pointer_cast<GameObject3D>(turret.Get());
 
@@ -582,6 +615,10 @@ bool Room::TryBuildMine() {
 		mine->SetParent(this->GetPtr());
 		mine->transform.SetPosition(slot->transform.GetPosition());
 		mine->SetName("Mine");
+
+		DirectX::XMFLOAT3 shipScale;
+		DirectX::XMStoreFloat3(&shipScale, this->transform.GetGlobalScale());
+		mine->transform.SetScale(DirectX::XMVECTOR({(1.0f / shipScale.x), (1.0f / shipScale.y), (1.0f / shipScale.z)}));
 
 		// Make the interact collider work again after the mine explodes
 		mine->SetPostExplosion([&] {

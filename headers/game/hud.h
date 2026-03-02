@@ -43,6 +43,8 @@ public:
 
 	void SetStoryTextVisibility(bool visible);
 
+	void SetCoreHealthText(int health);
+
 private:
 	std::weak_ptr<UI::Text> MakeText(const std::string& name, const std::string& text, float x, float y, float width,
 									 UI::Anchor anchor);
@@ -70,6 +72,10 @@ private:
 
 	std::weak_ptr<UI::Image> playerHealthIcon;
 	std::weak_ptr<UI::Text> playerHealthText;
+
+	std::weak_ptr<UI::Text> coreHealthText;
+
+	std::weak_ptr<UI::Image> bloodOverlay;
 
 	std::weak_ptr<UI::Text> storyText;
 

@@ -42,10 +42,12 @@ private:
 	std::weak_ptr<SoundSourceObject> speaker;
 	std::weak_ptr<GameObject3D> target;
 
+	std::weak_ptr<GameObject3D> turretPart;
+	std::weak_ptr<GameObject3D> framePart;
+
 	float turnSpeedRPS = 3.14;
 	float lastFired = 0;
 	float rpm = 60;
 	float range = 20;
-	float damage = 10;
-
+	float damage = 20;
 };

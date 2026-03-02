@@ -1,18 +1,27 @@
 #include "gameObjects/cockpit.h"
 #include "core/physics/sphereCollider.h"
 #include "gameObjects/room.h"
+#include "game/gameManager.h"
+#include "gameObjects/SpaceShipObj.h"
+#include "utilities/aStar.h"
 
 void Cockpit::Start() { 
 	auto coreCollider = this->factory->CreateStaticGameObject<SphereCollider>();
 	coreCollider->SetParent(this->GetPtr());
 	coreCollider->SetSolid(true);
 
+	// Update core health on hud
+	GameManager::GetInstance()->GetPlayer()->hud->SetCoreHealthText(this->health.Get());
+
 	coreCollider->SetOnHit([&](float damage) { 
-		this->health -= damage;
-		if (this->health < 0) {
+		this->health.Decrement(damage);
+		if (this->health.IsDead()) {
 			this->onDeath();
 			Logger::Log("Core Died");
 		}
+
+		// Update core health on hud
+		GameManager::GetInstance()->GetPlayer()->hud->SetCoreHealthText(this->health.Get());
 	});
 	coreCollider->transform.SetPosition(0, 2, 0);
 	coreCollider->transform.SetScale(2, 2, 2);

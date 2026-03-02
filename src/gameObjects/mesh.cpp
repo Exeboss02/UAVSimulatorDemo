@@ -1,5 +1,5 @@
 #include "gameObjects/mesh.h"
-
+#include "utilities/logger.h"
 Mesh::Mesh(VertexBuffer vertexbuffer, IndexBuffer indexbuffer, std::vector<SubMesh>&& submeshes,
 		   DirectX::BoundingBox boundingBox)
 	: vertexbuffer(std::move(vertexbuffer)), indexbuffer(std::move(indexbuffer)), subMeshes(std::move(submeshes)),

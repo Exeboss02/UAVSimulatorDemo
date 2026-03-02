@@ -17,6 +17,7 @@ Player::~Player() {}
 
 void Player::Start() {
 	this->RigidBody::Start();
+	this->health.SetMax(100);
 
 	// Set player to spawn point
 	DirectX::XMVECTOR spawnPoint = GameManager::GetInstance()->GetPlayerSpawnPoint();
@@ -42,10 +43,8 @@ void Player::Start() {
 	// adding gun
 	this->addGun(Guns::pistol);
 
-	//on hit function
-	std::function<void(float)> onHitFunction = [&](float value) {
-		this->OnHit(value);
-	};
+	// on hit function
+	std::function<void(float)> onHitFunction = [&](float value) { this->OnHit(value); };
 
 	// adding body colliders
 	{
@@ -151,7 +150,7 @@ void Player::Start() {
 void Player::Tick() {
 	this->RigidBody::Tick();
 
-	//this->GunAnimation(); //something is weird with this->canShoot, so do not use this yet
+	// this->GunAnimation(); //something is weird with this->canShoot, so do not use this yet
 
 	InputManager::GetInstance().ReadControllerInput(this->controllerInput->GetControllerIndex());
 	DirectX::XMVECTOR position = this->transform.GetGlobalPosition();
@@ -203,11 +202,9 @@ void Player::Tick() {
 		this->sfxTimer.Reset();
 	}
 
-	//Landing sound handling
-	if(this->isGrounded)
-	{
-		if(!this->hasPlayedLandSound)
-		{
+	// Landing sound handling
+	if (this->isGrounded) {
+		if (!this->hasPlayedLandSound) {
 			SoundClip* clip = AssetManager::GetInstance().GetSoundClip("Land.wav");
 			this->jumpSpeaker.lock()->SetRandomPitch(0.7f, 1.0f);
 			this->jumpSpeaker.lock()->SetGain(0.15f);
@@ -216,8 +213,7 @@ void Player::Tick() {
 		}
 	}
 
-	else if(!this->isGrounded)
-	{
+	else if (!this->isGrounded) {
 		this->hasPlayedLandSound = false;
 	}
 
@@ -238,6 +234,15 @@ void Player::Tick() {
 		GameManager::GetInstance()->PlayerDied();
 	}
 	ImGui::End();
+
+	this->healthFragment += Time::GetInstance().GetDeltaTime() * this->healthRegenPerMin / 60;
+
+	if (this->healthFragment > 1) {
+		int generatedHealth = this->healthFragment;
+		this->health.Increment(generatedHealth);
+		this->healthFragment -= generatedHealth;
+	}
+
 }
 
 void Player::PhysicsTick() {
@@ -276,7 +281,7 @@ void Player::PhysicsTick() {
 		this->moveVector = DirectX::XMVectorAdd(this->moveVector, jumpVector);
 		this->isJumping = false;
 
-		//Play jump sound
+		// Play jump sound
 		SoundClip* clip = AssetManager::GetInstance().GetSoundClip("Jump.wav");
 		this->jumpSpeaker.lock()->SetRandomPitch(0.9f, 1.2f);
 		this->jumpSpeaker.lock()->SetGain(0.5f);
@@ -332,11 +337,9 @@ void Player::UpdateCamera() {
 	}
 }
 
-void Player::GunAnimation()
-{
-	//if the player can shoot the gun hasn't been fired and should therefore not move
-	if(this->canShoot)
-	{
+void Player::GunAnimation() {
+	// if the player can shoot the gun hasn't been fired and should therefore not move
+	if (this->canShoot) {
 		this->gunIsReturning = false;
 		return;
 	}
@@ -344,8 +347,7 @@ void Player::GunAnimation()
 	float deltaTime = Time::GetInstance().GetDeltaTime();
 	this->gunAnimationTimer.Tick(deltaTime);
 
-	if(this->gunAnimationTimer.TimeIsUp())
-	{
+	if (this->gunAnimationTimer.TimeIsUp()) {
 		this->gunIsReturning = true;
 		this->gunAnimationTimer.Reset();
 	}
@@ -354,17 +356,15 @@ void Player::GunAnimation()
 	DirectX::XMStoreFloat3(&gunDefaultPos, this->gunDefaultPosition);
 	DirectX::XMStoreFloat3(&gunBackPos, this->gunBackPosition);
 
-	//gun is flying backwards
-	if(!this->gunIsReturning)
-	{
-		float lerpValue = (this->gunAnimationTimer.startTime - this->gunAnimationTimer.currentTime) / this->gunAnimationTimer.startTime;
+	// gun is flying backwards
+	if (!this->gunIsReturning) {
+		float lerpValue = (this->gunAnimationTimer.startTime - this->gunAnimationTimer.currentTime) /
+						  this->gunAnimationTimer.startTime;
 		DirectX::XMFLOAT3 currentPos = FLOAT3LERP(gunDefaultPos, gunBackPos, lerpValue);
 		DirectX::XMVECTOR newPos = DirectX::XMLoadFloat3(&currentPos);
 
 		this->gun.lock()->transform.SetPosition(newPos);
-	}
-	else
-	{
+	} else {
 		float lerpValue = this->gunAnimationTimer.currentTime / this->gunAnimationTimer.startTime;
 		DirectX::XMFLOAT3 currentPos = FLOAT3LERP(gunDefaultPos, gunBackPos, lerpValue);
 		DirectX::XMVECTOR newPos = DirectX::XMLoadFloat3(&currentPos);
@@ -405,6 +405,8 @@ void Player::SetInputEnabled(bool enabled) {
 	}
 }
 
+void Player::SetHealthRegen(float healthPerMin) { this->healthRegenPerMin = healthPerMin; }
+
 void Player::ShowQuitToMenuPrompt() {
 	if (this->hud) {
 		// Ensure quit prompt is exclusive: do not open it while any build menu is open
@@ -433,7 +435,12 @@ void Player::HideQuitToMenuPrompt() {
 	}
 }
 
-void Player::DecrementHealth(int hp) { this->health.Decrement(hp); }
+void Player::DecrementHealth(int hp) {
+	this->health.Decrement(hp);
+	if (this->health.IsDead()) {
+		GameManager::GetInstance()->PlayerDied();
+	}
+}
 
 void Player::IncrementHealth(int hp) { this->health.Increment(hp); }
 
@@ -450,8 +457,16 @@ void Player::OnCollision(std::weak_ptr<GameObject3D> gameObject3D) {
 	}
 }
 
-void Player::OnHit(float value)
-{
+void Player::OnHit(float value) {
+	this->DecrementHealth(value);
+	if(this->health.Get() <= 0)
+	{
+		SoundClip* hurtClip = AssetManager::GetInstance().GetSoundClip("DeathDelay.wav");
+		this->hurtSpeaker.lock()->SetRandomPitch(0.9f, 1.1f);
+		this->hurtSpeaker.lock()->Play(hurtClip);
+		return;
+	}
+
 	SoundClip* hurtClip = AssetManager::GetInstance().GetSoundClip("DeathScream.wav"); //temp sound clip
 	this->hurtSpeaker.lock()->SetRandomPitch(0.9f, 1.1f);
 	this->hurtSpeaker.lock()->Play(hurtClip);
@@ -535,7 +550,6 @@ void Player::Interact() {
 
 	if (this->keyBoardInput.Interact() || this->controllerInput->Interact()) {
 
-
 		Ray ray{Vector3D{posVec}, Vector3D{lookVec}};
 		RayCastData rayCastData;
 
@@ -572,8 +586,7 @@ void Player::Interact() {
 
 void Player::CheckForTriggerPress() {
 
-	if (this->canShoot)
-	{
+	if (this->canShoot) {
 		this->gun.lock()->Shoot((this->keyBoardInput.LeftClick() || this->controllerInput->RightClick()),
 								this->keyBoardInput.LeftDown() || this->controllerInput->RightDown());
 

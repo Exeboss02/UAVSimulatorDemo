@@ -41,8 +41,8 @@ private:
 	// Collider
 	std::weak_ptr<SphereCollider> hitbox;
 
-	std::weak_ptr<MeshObject> head;
-	DirectX::XMVECTOR headOffsetFromBody = DirectX::XMVectorSet(0, 0.5f, 0, 0);
+	std::weak_ptr<GameObject3D> head;
+	DirectX::XMVECTOR headOffsetFromBody = DirectX::XMVectorSet(0, 0, 0, 0);
 
 	// Pathfinding
 	std::vector<std::shared_ptr<AStarVertex>> path;

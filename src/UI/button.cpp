@@ -300,6 +300,10 @@ void UI::Button::LoadFromJson(const nlohmann::json& data) {
 		else if (s == "bottom")
 			this->vAlign = Button::VerticalAlign::BOTTOM;
 	}
+
+	if(data.contains("labelFontSize") && data["labelFontSize"].is_number()) {
+		this->labelFontSize = data["labelFontSize"].get<float>();
+	}
 }
 
 void UI::Button::SaveToJson(nlohmann::json& data) {
@@ -338,6 +342,8 @@ void UI::Button::SaveToJson(nlohmann::json& data) {
 		data["vAlign"] = "bottom";
 		break;
 	}
+
+	data["labelFontSize"] = this->labelFontSize;
 }
 
 void UI::Button::SetTint(const DirectX::XMFLOAT4& c) {
@@ -361,11 +367,10 @@ void UI::Button::Draw() {
 	// Render label text centered inside the button
 	if (this->label.empty()) return;
 
-	// Choose font size relative to button height so measured width matches render size.
 	UI::Vec2 pos = this->GetPosition();
 	UI::Vec2 sz = this->GetSize();
 
-	float fontSize = std::max(10.0f, sz.y * 0.6f);
+	float fontSize = this->labelFontSize;
 	std::string font = "assets/fonts/lucon.ttf";
 	float measured = UI::TextRenderer::GetInstance().MeasureString(this->label, fontSize, font).x;
 

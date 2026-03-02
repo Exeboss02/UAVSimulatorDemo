@@ -33,11 +33,14 @@ public:
 	int GetOnPressedEventID() const;
 	void SetOnReleasedEventID(int id);
 	int GetOnReleasedEventID() const;
+	void SetOnHoverEventID(int id);
+	int GetOnHoverEventID() const;
 
 	// Wired setters: set the ID and attempt to wire callbacks immediately
 	void SetOnClickEventID_Wire(int id);
 	void SetOnPressedEventID_Wire(int id);
 	void SetOnReleasedEventID_Wire(int id);
+	void SetOnHoverEventID_Wire(int id);
 
 	bool IsHovered() const;
 	bool isPressed() const;
@@ -80,6 +83,7 @@ private:
 	int onClickEventID = 0;
 	int onPressedEventID = 0;
 	int onReleasedEventID = 0;
+	int onHoverEventID = 0;
 
 	DirectX::XMFLOAT4 color{1.0f, 1.0f, 1.0f, 1.0f};
 

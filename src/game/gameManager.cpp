@@ -15,7 +15,7 @@
 std::weak_ptr<GameManager> GameManager::instance;
 
 GameManager::GameManager()
-	: playerSpawnPoint(DirectX::XMVectorSet(140.0, 5.0, 0.0, 0.0)), currentRound(0), inCombat(false),
+	: playerSpawnPoint(DirectX::XMVectorSet(140.0, 5.0, -23.0f, 0.0)), currentRound(0), inCombat(false),
 	  enemySpawnTimer(1), unspawnedEnemies(0), enemySpawnDelay(2), idleTime(30), idleTimeTimer(0) {}
 
 void GameManager::Start() {

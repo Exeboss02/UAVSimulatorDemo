@@ -59,11 +59,16 @@ void GameManager::Start() {
 	AudioManager::GetInstance().SetMasterMusicVolume(0.5f);
 	AudioManager::GetInstance().SetMasterSoundEffectsVolume(0.5f);
 
-	// Audio
+	// Battle music
 	this->buildMusicWaitTimer.Initialize(5);
 	AudioManager::GetInstance().AddMusicTrackStandardFolder("LethalContact.wav", "contact");
 	AudioManager::GetInstance().LoopMusicTrack("contact", true);
 	AudioManager::GetInstance().SetGain("contact", 0.4f);
+
+	//Main menu music
+	AudioManager::GetInstance().AddMusicTrackStandardFolder("CourageDemo.wav", "courage");
+	//AudioManager::GetInstance().LoopMusicTrack("courage", true);
+	AudioManager::GetInstance().SetGain("courage", 0.4f);
 
 	this->shipSpeaker = this->factory->CreateGameObjectOfType<SoundSourceObject>();
 	this->shipSpeaker.lock()->transform.SetPosition(this->GetPlayerSpawnPoint());

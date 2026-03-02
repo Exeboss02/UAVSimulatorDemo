@@ -13,8 +13,14 @@ void Wall::OnInteract() {
 		}
 	} catch (...) {
 	}
+}
 
-	Logger::Log("stop interacting with me!");
+void Wall::Interact(std::shared_ptr<Player> playerShared) {
+
+	if (!playerShared->resources.tryToPay(this->wallCost.getTitanium(), this->wallCost.getLubricant(),
+										  this->wallCost.getCarbonFiber(), this->wallCost.getCircuit())) {
+		return;
+	}
 
 	auto parentWeak = this->GetParent();
 	if (parentWeak.expired()) {
@@ -57,10 +63,10 @@ void Wall::SpawnInteractables() {
 
 	DirectX::XMFLOAT3 pos(0.0f, 3.0f, 4.5f);
 	colliderobj->transform.SetPosition(DirectX::XMLoadFloat3(&pos));
-	DirectX::XMFLOAT3 scale(0.750f, 0.750f, 0.250f);
+	DirectX::XMFLOAT3 scale(3.0f, 3.0f, 0.250f);
 	colliderobj->transform.SetScale(DirectX::XMLoadFloat3(&scale));
 	colliderobj->SetParent(this->GetPtr());
-	colliderobj->SetOnInteract([&](std::shared_ptr<Player>) { this->OnInteract(); });
+	colliderobj->SetOnInteract([&](std::shared_ptr<Player> playerShared) { this->Interact(playerShared); });
 	colliderobj->SetOnHover([&] { this->Hover(); });
 	colliderobj->SetTag(Tag::INTERACTABLE);
 	colliderobj->SetName("Interactable " + std::to_string(this->factory->GetNextID()));
@@ -158,7 +164,7 @@ void Wall::Hover() {
 		auto prompt = promptWeak.lock();
 		if (!prompt) return;
 
-		std::string txt = "Press \"F\" to build room";
+		std::string txt = std::format("Press \"F\" to build room: Cost {}", this->wallCost.getCostString());
 		try {
 			if (auto gameManager = GameManager::GetInstance(); gameManager && gameManager->GetInCombat()) {
 				txt = "Can't build during attacks";

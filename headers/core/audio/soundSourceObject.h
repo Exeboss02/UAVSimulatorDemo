@@ -28,6 +28,11 @@ public:
 	void Play(SoundClip* soundClip);
 
 	/// <summary>
+	/// Stops playing a sound clip. Is a trigger and should be called once when it should stop
+	/// </summary>
+	void Stop();
+
+	/// <summary>
 	/// Sets sound source volume
 	/// </summary>
 	/// <param name="gain"></param>

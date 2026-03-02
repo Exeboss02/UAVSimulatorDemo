@@ -14,6 +14,11 @@
 
 std::weak_ptr<GameManager> GameManager::instance;
 
+GameManager::~GameManager()
+{
+	this->shipSpeaker.lock()->Stop();
+}
+
 GameManager::GameManager()
 	: playerSpawnPoint(DirectX::XMVectorSet(140.0, 5.0, -23.0f, 0.0)), currentRound(0), inCombat(false),
 	  enemySpawnTimer(1), unspawnedEnemies(0), enemySpawnDelay(2), idleTime(30), idleTimeTimer(0) {}
@@ -72,10 +77,14 @@ void GameManager::Start() {
 	// AudioManager::GetInstance().LoopMusicTrack("courage", true);
 	AudioManager::GetInstance().SetGain("courage", 0.4f);
 
-	this->shipSpeaker = this->factory->CreateGameObjectOfType<SoundSourceObject>();
-	this->shipSpeaker.lock()->transform.SetPosition(this->GetPlayerSpawnPoint());
-	// SoundClip* announcement = AssetManager::GetInstance().GetDialogueSoundClip("Announcement.wav");
-	// this->shipSpeaker.lock()->Play(announcement);
+	DirectX::XMVECTOR offset = {};
+	offset.m128_f32[1] = -1;
+	offset.m128_f32[2] = 20;
+	this->shipSpeaker = this->factory->CreateStaticGameObject<SoundSourceObject>();
+	this->shipSpeaker.lock()->transform.SetPosition(DirectX::XMVectorAdd(this->GetPlayerSpawnPoint(), offset));
+	SoundClip* buildMusic = AssetManager::GetInstance().GetSoundClip("GTAinBerlin.wav");
+	this->shipSpeaker.lock()->SetGain(1.0f);
+	this->shipSpeaker.lock()->Play(buildMusic);
 }
 
 void GameManager::Tick() {
@@ -419,6 +428,7 @@ void GameManager::AudioHandling() {
 
 	if (this->inCombat) {
 		if (!this->isPlayingCombatMusic) {
+			this->shipSpeaker.lock()->Stop();
 			AudioManager::GetInstance().Play("contact");
 			this->isPlayingCombatMusic = true;
 			this->isFading = false;
@@ -434,7 +444,7 @@ void GameManager::AudioHandling() {
 				this->isFading = true;
 				this->isPlayingCombatMusic = false;
 				this->isPlayingBuildMusic = false;
-				this->shipSpeaker.lock()->SetGain(0.5f);
+				this->shipSpeaker.lock()->SetGain(1.0f);
 			}
 
 			if (!this->isPlayingBuildMusic) {
@@ -444,11 +454,11 @@ void GameManager::AudioHandling() {
 					this->isPlayingBuildMusic = true;
 					this->isFading = false;
 					this->isPlayingCombatMusic = false;
-					this->shipSpeaker.lock()->SetGain(0.5f);
+					this->shipSpeaker.lock()->SetGain(1.0f);
 					this->buildMusicWaitTimer.Reset();
 
-					SoundClip* buildMusic = AssetManager::GetInstance().GetDialogueSoundClip("Announcement.wav");
-					// this->shipSpeaker.lock()->Play(buildMusic); //only dialogue in between rounds?
+					SoundClip* buildMusic = AssetManager::GetInstance().GetSoundClip("GTAinBerlin.wav");
+					this->shipSpeaker.lock()->Play(buildMusic);
 				}
 			}
 

@@ -1,10 +1,11 @@
 #include "gameObjects/gun.h"
-#include <numbers>
-#include "gameObjects/rayVis.h"
-#include "gameObjects/cameraObject.h"
-#include "utilities/logger.h"
 #include "core/physics/vector3D.h"
+#include "game/crosshair.h"
+#include "gameObjects/cameraObject.h"
+#include "gameObjects/rayVis.h"
+#include "utilities/logger.h"
 #include <memory>
+#include <numbers>
 
 Gun::Gun() {}
 
@@ -28,29 +29,26 @@ void Gun::Shoot(bool pressedTrigger, bool triggerDown) {
 		break;
 	}
 
-	
-
 	if (!this->shootCoolDown.TimeIsUp()) {
 		return;
 	}
 	this->shootCoolDown.Reset();
-	
+
 	SoundClip* shootClip = AssetManager::GetInstance().GetSoundClip(this->soundClipShootPath);
 	std::shared_ptr<SoundSourceObject> lockedSpeaker = this->speaker.lock();
 	lockedSpeaker->SetRandomPitch(0.92f, 1.0f);
 	lockedSpeaker->Play(shootClip); // shoot sound
-	
-	DirectX::XMVECTOR lookVec;
-	DirectX::XMVECTOR posVec; 
 
-	if (auto parentCameraShared  = this->parentCamera.lock()) {
+	DirectX::XMVECTOR lookVec;
+	DirectX::XMVECTOR posVec;
+
+	if (auto parentCameraShared = this->parentCamera.lock()) {
 		lookVec = this->parentCamera.lock()->transform.GetGlobalForward();
 		posVec = this->parentCamera.lock()->transform.GetGlobalPosition();
-	} else{
+	} else {
 		lookVec = this->muzzle.lock()->transform.GetGlobalForward();
 		posVec = this->muzzle.lock()->transform.GetGlobalPosition();
 	}
-	
 
 	Ray ray{Vector3D{posVec}, Vector3D{lookVec}};
 	RayCastData rayCastData;
@@ -58,23 +56,30 @@ void Gun::Shoot(bool pressedTrigger, bool triggerDown) {
 	bool didHit = PhysicsQueue::GetInstance().castRay(ray, rayCastData, ~Tag::NOIGNORE, Tag::PLAYER);
 	std::string hitString;
 	if (didHit) {
-
-		rayCastData.hitColider.lock()->Hit(this->damage);
+		auto hitCollider = rayCastData.hitColider.lock();
+		if (hitCollider) {
+			hitCollider->Hit(this->damage);
+			if ((hitCollider->GetTag() & Tag::ENEMY) != 0) {
+				auto crosshairWeak = this->factory->FindObjectOfType<Crosshair>();
+				if (!crosshairWeak.expired()) {
+					if (auto crosshair = crosshairWeak.lock()) {
+						crosshair->ShowHitIndicator();
+					}
+				}
+			}
+		}
 		hitString = "hit";
 
-
-		
 		if (this->parentCamera.expired()) {
 			this->VisulalizeShootBasedOnMuzzle(lookVec, posVec, rayCastData.distance);
 		} else {
 			this->VisualizeShootBasedOnCameraParent(lookVec, posVec, rayCastData.distance);
 		}
-		
+
 	} else {
 		hitString = "miss";
 	}
-	//Logger::Log(hitString, " at distance: ", std::to_string(rayCastData.distance));
-
+	// Logger::Log(hitString, " at distance: ", std::to_string(rayCastData.distance));
 }
 
 void Gun::Start() {
@@ -89,12 +94,9 @@ void Gun::Start() {
 	this->speaker = this->factory->CreateGameObjectOfType<SoundSourceObject>();
 	this->speaker.lock()->SetParent(this->GetPtr());
 
-	if(this->fireMode == FireMode::SEMIAUTOMATIC)
-	{
+	if (this->fireMode == FireMode::SEMIAUTOMATIC) {
 		this->speaker.lock()->SetGain(0.6f);
-	}
-	else
-	{
+	} else {
 		this->speaker.lock()->SetGain(0.3f);
 	}
 
@@ -125,7 +127,6 @@ void Gun::Start() {
 
 		this->muzzle = muzzle;
 	}
-
 }
 
 void Gun::Tick() {
@@ -137,12 +138,9 @@ void Gun::Tick() {
 	{
 		this->shootCoolDown.Tick(deltaTime);
 	}
-
-
 }
 
 void Gun::setParentToShootFrom(std::shared_ptr<GameObject3D> parentCamera) { this->parentCamera = parentCamera; }
-
 
 void Gun::VisualizeShootBasedOnCameraParent(DirectX::XMVECTOR lookVec, DirectX::XMVECTOR posVec, float distance) {
 	Vector3D hitPos(DirectX::XMVectorAdd(posVec, DirectX::XMVectorScale(lookVec, distance)));
@@ -154,13 +152,14 @@ void Gun::VisualizeShootBasedOnCameraParent(DirectX::XMVECTOR lookVec, DirectX::
 	auto colliderobj = colliderobjWeak.lock();
 	colliderobj->StartDeathTimer(0.05f);
 	colliderobj->SetMesh(meshdata);
-	colliderobj->GetMesh().SetMaterial(0, AssetManager::GetInstance().GetMaterialWeakPtr("defaultUnlitMaterial").lock());
+	colliderobj->GetMesh().SetMaterial(0,
+									   AssetManager::GetInstance().GetMaterialWeakPtr("defaultUnlitMaterial").lock());
 	colliderobj->SetCastShadow(false);
 
 	colliderobj->transform.SetPosition(
 		DirectX::XMVectorAdd(muzzlePos.getXMVector(), DirectX::XMVectorScale(muzzleToHit.getXMVector(), 0.5)));
 
-	//create rotation
+	// create rotation
 	DirectX::XMVECTOR direction = DirectX::XMVector3Normalize(muzzleToHit.getXMVector());
 
 	DirectX::XMVECTOR up = DirectX::XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
@@ -174,13 +173,12 @@ void Gun::VisualizeShootBasedOnCameraParent(DirectX::XMVECTOR lookVec, DirectX::
 	DirectX::XMMATRIX worldRotMat = XMMatrixTranspose(lookAtMat);
 
 	DirectX::XMVECTOR quat = XMQuaternionRotationMatrix(worldRotMat);
-	//create rotation end
+	// create rotation end
 
 	colliderobj->transform.SetRotationQuaternion(quat);
 
 	DirectX::XMFLOAT3 scale(0.01f, 0.01f, muzzleToHit.Length() / 2);
 	colliderobj->transform.SetScale(DirectX::XMLoadFloat3(&scale));
-
 }
 
 void Gun::VisulalizeShootBasedOnMuzzle(DirectX::XMVECTOR lookVec, DirectX::XMVECTOR posVec, float distance) {

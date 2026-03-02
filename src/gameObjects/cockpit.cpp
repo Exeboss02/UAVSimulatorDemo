@@ -10,6 +10,7 @@ void Cockpit::Start() {
 	auto coreCollider = this->factory->CreateStaticGameObject<SphereCollider>();
 	coreCollider->SetParent(this->GetPtr());
 	coreCollider->SetSolid(true);
+	coreCollider->SetTag(Tag::PLAYER);
 
 	auto coreMesh = this->factory->CreateStaticGameObject<MeshObject>();
 	coreMesh->SetParent(this->GetPtr());

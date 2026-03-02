@@ -68,7 +68,12 @@ void ResourceGenerator::Interact(std::shared_ptr<Player> player) {
 
 	this->lastGenerated = currentTime;
 
-	player->resources.GetResource(this->resourceType).IncrementAmount(amountGenerated);
+	//player->resources.GetResource(this->resourceType).IncrementAmount(amountGenerated);
+	player->resources.GetResource(ResourceType::Titanium).IncrementAmount(amountGenerated);
+	player->resources.GetResource(ResourceType::CarbonFiber).IncrementAmount(amountGenerated);
+	player->resources.GetResource(ResourceType::Circuit).IncrementAmount(amountGenerated);
+	player->resources.GetResource(ResourceType::Lubricant).IncrementAmount(amountGenerated);
+
 
 	// hide interaction prompt for a short time so text disappears when interacting
 	try {

@@ -17,6 +17,10 @@ void Wall::OnInteract() {
 
 void Wall::Interact(std::shared_ptr<Player> playerShared) {
 
+	if (GameManager::GetInstance()->GetInCombat()) {
+		return;
+	}
+
 	if (!playerShared->resources.tryToPay(this->wallCost.getTitanium(), this->wallCost.getLubricant(),
 										  this->wallCost.getCarbonFiber(), this->wallCost.getCircuit())) {
 		return;

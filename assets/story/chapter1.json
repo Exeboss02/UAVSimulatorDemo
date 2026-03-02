@@ -27,7 +27,7 @@
           "displayTime": 3.0
         }
       ],
-      "soundClipPath": "WaitingForActionRadio.wav"
+      "soundClipPath": "Announcement.wav"
     },
     {
       "textParts": [
@@ -52,7 +52,7 @@
           "displayTime": 7.0
         }
       ],
-      "soundClipPath": "WaitingForActionRadio.wav"
+      "soundClipPath": "Announcement.wav"
     },
     {
       "textParts": [
@@ -78,7 +78,7 @@
         }
 
       ],
-      "soundClipPath": "WaitingForActionRadio.wav"
+      "soundClipPath": "Announcement.wav"
     },
     {
       "textParts": [
@@ -103,7 +103,7 @@
           "displayTime": 3.0
         }
       ],
-      "soundClipPath": "WaitingForActionRadio.wav"
+      "soundClipPath": "Announcement.wav"
     },
     {
       "textParts": [
@@ -133,7 +133,7 @@
         }
 
       ],
-      "soundClipPath": "WaitingForActionRadio.wav"
+      "soundClipPath": "Announcement.wav"
     },
     {
       "textParts": [
@@ -159,7 +159,7 @@
         }
 
       ],
-      "soundClipPath": "WaitingForActionRadio.wav"
+      "soundClipPath": "Announcement.wav"
     },
     {
       "textParts": [
@@ -177,7 +177,7 @@
         }
 
       ],
-      "soundClipPath": "WaitingForActionRadio.wav"
+      "soundClipPath": "Announcement.wav"
     },
     {
       "textParts": [
@@ -195,7 +195,7 @@
         }
 
       ],
-      "soundClipPath": "WaitingForActionRadio.wav"
+      "soundClipPath": "Announcement.wav"
     },
 
     {
@@ -209,7 +209,7 @@
           "displayTime": 3.0
         }
       ],
-      "soundClipPath": "WaitingForActionRadio.wav"
+      "soundClipPath": "Announcement.wav"
     },
     {
       "textParts": [
@@ -235,7 +235,7 @@
         }
 
       ],
-      "soundClipPath": "WaitingForActionRadio.wav"
+      "soundClipPath": "Announcement.wav"
     },
     {
       "textParts": [
@@ -261,7 +261,7 @@
         }
 
       ],
-      "soundClipPath": "WaitingForActionRadio.wav"
+      "soundClipPath": "Announcement.wav"
     }
   ],
   "endScreenText": "After pressing the button you are flung into space,\n never to be seen again.\n The pirates, or rather the pirate king \nwho controls them never managed to retrieve the \nluxurios fermented golden foxcatjelly coffee beans \nyou stole. \nBERTA on the other hand is living the good life, \ntraveling between planets, sunbathing, \nshooting asteroids and the occasional trader. \nYou know, AI stuff. \nBut, hey, you managed to escape the pirates, \nso, you won?"

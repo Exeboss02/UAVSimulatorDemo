@@ -11,6 +11,8 @@ MusicPlayer::~MusicPlayer()
 
 void MusicPlayer::Start()
 {
+    this->GameObject3D::Start();
+
     AudioManager::GetInstance().FadeOutStop("contact", 2.0f);
     AudioManager::GetInstance().Play("courage");
 }

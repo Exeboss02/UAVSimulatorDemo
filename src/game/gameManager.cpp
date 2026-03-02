@@ -73,8 +73,8 @@ void GameManager::Start() {
 
 	this->shipSpeaker = this->factory->CreateGameObjectOfType<SoundSourceObject>();
 	this->shipSpeaker.lock()->transform.SetPosition(this->GetPlayerSpawnPoint());
-	SoundClip* announcement = AssetManager::GetInstance().GetDialogueSoundClip("Announcement.wav");
-	this->shipSpeaker.lock()->Play(announcement);
+	// SoundClip* announcement = AssetManager::GetInstance().GetDialogueSoundClip("Announcement.wav");
+	// this->shipSpeaker.lock()->Play(announcement);
 }
 
 void GameManager::Tick() {

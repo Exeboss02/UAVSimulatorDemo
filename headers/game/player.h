@@ -31,7 +31,7 @@ public:
 	bool jumpInput = false;
 	bool isGrounded = false;
 	bool isJumping = false;
-	float jumpForce = 12;
+	float jumpForce = 14;
 
 	float speed = 3;
 	float mouseSensitivity = 0.03f;

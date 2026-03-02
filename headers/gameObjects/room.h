@@ -84,6 +84,7 @@ public:
 
 	// Build helpers used by UI callbacks
 	bool IsBuildMenuOpen();
+	void CloseBuildMenu();
 	bool TryBuildGenerator();
 	bool TryBuildTurret();
 	bool TryBuildMine();

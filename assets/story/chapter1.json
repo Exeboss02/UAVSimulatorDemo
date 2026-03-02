@@ -186,7 +186,7 @@
           "displayTime": 3.0
         },
         {
-          "text": "",
+          "text": "I could use that",
           "displayTime": 3.0
         },
         {
@@ -197,10 +197,38 @@
       ],
       "soundClipPath": "WaitingForActionRadio.wav"
     },
+    
     {
       "textParts": [
         {
           "text": "",
+          "displayTime": 3.0
+        }
+
+
+      ],
+      "soundClipPath": "WaitingForActionRadio.wav"
+    },
+    {
+      "textParts": [
+        {
+          "text": "Wow, great job pilot!",
+          "displayTime": 3.0
+        },
+        {
+          "text": "It seems there is only one ship hunting us left!",
+          "displayTime": 3.0
+        },
+        {
+          "text": "After that we are free to roam the galaxy, together!",
+          "displayTime": 3.0
+        },
+        {
+          "text": "We really must celebrate this afterwards!",
+          "displayTime": 3.0
+        },
+        {
+          "text": "I will prepare a wonderfull gift for you",
           "displayTime": 3.0
         }
 

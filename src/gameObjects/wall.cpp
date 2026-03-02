@@ -1,11 +1,19 @@
 #include "gameObjects/wall.h"
 #include "UI/interactionPrompt.h"
+#include "game/gameManager.h"
 #include "gameObjects/room.h"
 #include "utilities/logger.h"
 #include "utilities/time.h"
 void Wall::OnObserve() {}
 
-void Wall::OnInteract() {}
+void Wall::OnInteract() {
+	try {
+		if (auto gameManager = GameManager::GetInstance(); gameManager && gameManager->GetInCombat()) {
+			return;
+		}
+	} catch (...) {
+	}
+}
 
 void Wall::Interact(std::shared_ptr<Player> playerShared) {
 
@@ -40,8 +48,6 @@ void Wall::Interact(std::shared_ptr<Player> playerShared) {
 	// disable showing the prompt for a short time
 	this->hoverDisabledUntil = Time::GetInstance().GetSessionTime() + 0.5f;
 }
-
- 
 
 void Wall::Start() {
 	this->MeshObject::Start();
@@ -143,9 +149,9 @@ void Wall::SetWallState(int wallState, bool edgeWall) {
 	}
 }
 
-void Wall::RemoveInteractables() { 
+void Wall::RemoveInteractables() {
 	if (!this->interactable.expired()) {
-		this->factory->QueueDeleteGameObject(this->interactable); 
+		this->factory->QueueDeleteGameObject(this->interactable);
 	}
 }
 
@@ -159,6 +165,12 @@ void Wall::Hover() {
 		if (!prompt) return;
 
 		std::string txt = std::format("Press \"F\" to build room: Cost {}", this->wallCost.getCostString());
+		try {
+			if (auto gameManager = GameManager::GetInstance(); gameManager && gameManager->GetInCombat()) {
+				txt = "Can't build during attacks";
+			}
+		} catch (...) {
+		}
 		DirectX::XMVECTOR worldPos = this->transform.GetGlobalPosition();
 		prompt->Show(txt, worldPos);
 	} catch (const std::exception& e) {

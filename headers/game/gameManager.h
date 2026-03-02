@@ -101,6 +101,7 @@ private:
 	std::weak_ptr<UI::Image> winBackground;
 	std::weak_ptr<UI::Text> winTitle;
 	std::weak_ptr<UI::Text> winPrompt;
+	std::vector<std::weak_ptr<UI::Text>> winStoryLines;
 	float winStartTime = 0.0f; // session time when win screen was shown
 	bool isPlayingCombatMusic = false;
 	bool isPlayingBuildMusic = false;

@@ -129,7 +129,7 @@ private:
 	bool isPlaying = false;
 
 	float pitch = 1;
-	float gain = 1;
+	float gain = 0.5f;
 	float* masterGain = nullptr;
 	float velocity[3] = { 0, 0, 0 };
 };

@@ -19,6 +19,7 @@ void Mine::Start() {
     std::weak_ptr<SoundSourceObject> speaker = this->factory->CreateStaticGameObject<SoundSourceObject>();
     speaker.lock()->SetParent(this->GetPtr());
     speaker.lock()->SetRandomPitch(0.8f, 1.0f);
+    speaker.lock()->SetGain(1.0f);
 	speaker.lock()->Play(clip);
 
 	this->MeshObject::Start();
@@ -42,7 +43,7 @@ void Mine::OnExplode() {
     SoundClip* explosionClip = AssetManager::GetInstance().GetSoundClip("Explosion2.wav");
     std::weak_ptr<SoundSourceObject> speaker = this->factory->CreateGameObjectOfType<SoundSourceObject>();
     speaker.lock()->SetDeleteWhenFinnished(true);
-    speaker.lock()->SetPitch(0.7f);
+    speaker.lock()->SetPitch(1.0f);
     speaker.lock()->transform.SetPosition(this->transform.GetGlobalPosition());
     speaker.lock()->Play(explosionClip);
 

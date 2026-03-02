@@ -52,13 +52,14 @@ void GameManager::Start() {
 
 
 	// Master Volume
-	AudioManager::GetInstance().SetMasterMusicVolume(0.4f);
-	AudioManager::GetInstance().SetMasterSoundEffectsVolume(1);
+	AudioManager::GetInstance().SetMasterMusicVolume(0.5f);
+	AudioManager::GetInstance().SetMasterSoundEffectsVolume(0.5f);
 
 	// Audio
 	this->buildMusicWaitTimer.Initialize(5);
 	AudioManager::GetInstance().AddMusicTrackStandardFolder("LethalContact.wav", "contact");
 	AudioManager::GetInstance().LoopMusicTrack("contact", true);
+	AudioManager::GetInstance().SetGain("contact", 0.4f);
 
 	this->shipSpeaker = this->factory->CreateGameObjectOfType<SoundSourceObject>();
 	this->shipSpeaker.lock()->transform.SetPosition(this->GetPlayerSpawnPoint());
@@ -269,7 +270,7 @@ void GameManager::AudioHandling()
 				this->isFading = true;
 				this->isPlayingCombatMusic = false;
 				this->isPlayingBuildMusic = false;
-				this->shipSpeaker.lock()->SetGain(1);
+				this->shipSpeaker.lock()->SetGain(0.5f);
 			}
 
 			if(!this->isPlayingBuildMusic)
@@ -281,7 +282,7 @@ void GameManager::AudioHandling()
 					this->isPlayingBuildMusic = true;
 					this->isFading = false;
 					this->isPlayingCombatMusic = false;
-					this->shipSpeaker.lock()->SetGain(1);
+					this->shipSpeaker.lock()->SetGain(0.5f);
 					this->buildMusicWaitTimer.Reset();
 
 					SoundClip* buildMusic = AssetManager::GetInstance().GetDialogueSoundClip("Announcement.wav");

@@ -116,13 +116,15 @@ void Player::Start() {
 	// SFX
 	this->walkSpeaker = this->factory->CreateGameObjectOfType<SoundSourceObject>();
 	this->walkSpeaker.lock()->SetParent(this->GetPtr());
-	this->walkSpeaker.lock()->SetGain(1.0f);
+	this->walkSpeaker.lock()->SetGain(0.85f);
 
 	this->jumpSpeaker = this->factory->CreateGameObjectOfType<SoundSourceObject>();
 	this->jumpSpeaker.lock()->SetParent(this->GetPtr());
+	this->jumpSpeaker.lock()->SetGain(0.5f);
 
 	this->hurtSpeaker = this->factory->CreateGameObjectOfType<SoundSourceObject>();
 	this->hurtSpeaker.lock()->SetParent(this->GetPtr());
+	this->hurtSpeaker.lock()->SetGain(0.3f);
 
 	this->soundClips.push_back(AssetManager::GetInstance().GetSoundClip("Step1.wav"));
 	this->soundClips.push_back(AssetManager::GetInstance().GetSoundClip("Step2.wav"));
@@ -195,7 +197,7 @@ void Player::Tick() {
 		{
 			SoundClip* clip = AssetManager::GetInstance().GetSoundClip("Land.wav");
 			this->jumpSpeaker.lock()->SetRandomPitch(0.7f, 1.0f);
-			this->jumpSpeaker.lock()->SetGain(0.3f);
+			this->jumpSpeaker.lock()->SetGain(0.15f);
 			this->jumpSpeaker.lock()->Play(clip);
 			this->hasPlayedLandSound = true;
 		}
@@ -264,7 +266,7 @@ void Player::PhysicsTick() {
 		//Play jump sound
 		SoundClip* clip = AssetManager::GetInstance().GetSoundClip("Jump.wav");
 		this->jumpSpeaker.lock()->SetRandomPitch(0.9f, 1.2f);
-		this->jumpSpeaker.lock()->SetGain(1.0f);
+		this->jumpSpeaker.lock()->SetGain(0.5f);
 		this->jumpSpeaker.lock()->Play(clip);
 	}
 
@@ -391,9 +393,16 @@ void Player::OnCollision(std::weak_ptr<GameObject3D> gameObject3D) {
 
 	std::string name = gameObject3D.lock()->GetName();
 	std::shared_ptr<SpaceShip> spaceShip = std::dynamic_pointer_cast<SpaceShip>(gameObject3D.lock());
+	std::shared_ptr<Enemy> enemy = std::dynamic_pointer_cast<Enemy>(gameObject3D.lock());
 
 	if (spaceShip) {
 		this->isGrounded = true;
+	}
+
+	if (enemy) {
+		SoundClip* hurtClip = AssetManager::GetInstance().GetSoundClip("DeathScream.wav"); //temp sound clip
+		this->hurtSpeaker.lock()->SetRandomPitch(0.9f, 1.1f);
+		this->hurtSpeaker.lock()->Play(hurtClip);
 	}
 }
 

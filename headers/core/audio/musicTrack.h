@@ -41,9 +41,9 @@ private:
 	ALint state = 0;
 	AudioInstruction audioInstruction;
 	float pitch = 1.0f;
-	float startGain = 1.0f;
-	float targetGain = 1.0f;
-	float currentGain = 1.0f;
+	float startGain = 0.5f;
+	float targetGain = 0.5f;
+	float currentGain = 0.5f;
 	float position[3] = { 0, 0, 0 };
 	float velocity[3] = { 0, 0, 0 };
 

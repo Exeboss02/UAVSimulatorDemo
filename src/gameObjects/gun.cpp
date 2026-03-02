@@ -35,10 +35,10 @@ void Gun::Shoot(bool pressedTrigger, bool triggerDown) {
 	}
 	this->shootCoolDown.Reset();
 	
-
+	SoundClip* shootClip = AssetManager::GetInstance().GetSoundClip(this->soundClipShootPath);
 	std::shared_ptr<SoundSourceObject> lockedSpeaker = this->speaker.lock();
 	lockedSpeaker->SetRandomPitch(0.92f, 1.0f);
-	lockedSpeaker->Play(this->soundClips[0]); // shoot sound
+	lockedSpeaker->Play(shootClip); // shoot sound
 	
 	DirectX::XMVECTOR lookVec;
 	DirectX::XMVECTOR posVec; 
@@ -88,10 +88,15 @@ void Gun::Start() {
 	// SFX
 	this->speaker = this->factory->CreateGameObjectOfType<SoundSourceObject>();
 	this->speaker.lock()->SetParent(this->GetPtr());
-	this->speaker.lock()->SetGain(0.5f);
 
-	this->soundClips.push_back(AssetManager::GetInstance().GetSoundClip("Shoot3.wav"));
-
+	if(this->fireMode == FireMode::SEMIAUTOMATIC)
+	{
+		this->speaker.lock()->SetGain(0.6f);
+	}
+	else
+	{
+		this->speaker.lock()->SetGain(0.3f);
+	}
 
 	{
 		auto meshobjweak = this->factory->CreateGameObjectOfType<MeshObject>();

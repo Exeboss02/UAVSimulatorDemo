@@ -29,8 +29,8 @@ void ResourceGenerator::Start() {
 	this->speaker = this->factory->CreateStaticGameObject<SoundSourceObject>();
 	this->speaker.lock()->SetParent(this->GetPtr());
 	this->speaker.lock()->LoopSoundEffect(0); //0 = loops forever
-	this->speaker.lock()->SetGain(0.8f);
 	this->speaker.lock()->SetRandomPitch(0.8f, 1.1f);
+	this->speaker.lock()->SetGain(0.7f);
 	this->speaker.lock()->Play(clip);
 
 	SoundClip* buildClip = AssetManager::GetInstance().GetSoundClip("Build2.wav");
@@ -38,6 +38,7 @@ void ResourceGenerator::Start() {
 	tempSpeaker.lock()->SetDeleteWhenFinnished(true);
 	tempSpeaker.lock()->transform.SetPosition(this->transform.GetGlobalPosition());
 	tempSpeaker.lock()->SetRandomPitch(0.8f, 1.0f);
+	tempSpeaker.lock()->SetGain(1.0f);
 	tempSpeaker.lock()->Play(buildClip);
 
 	this->MeshObject::Start();

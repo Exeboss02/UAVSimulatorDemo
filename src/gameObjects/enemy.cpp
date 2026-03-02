@@ -39,6 +39,12 @@ void Enemy::Start() {
 	collider->SetTag(Tag::ENEMY);
 	collider->SetDynamic(true);
 
+	//Create speaker object
+    this->speaker = this->factory->CreateGameObjectOfType<SoundSourceObject>();
+    this->speaker.lock()->SetParent(this->GetPtr());
+	this->speaker.lock()->SetGain(1.0f);
+	
+
 	collider->SetOnHit([&](float damage) {
 		this->health.Decrement(damage);
 		if (this->health.Get() <= 0) {
@@ -48,6 +54,7 @@ void Enemy::Start() {
 			std::weak_ptr<SoundSourceObject> deathSpeaker = this->factory->CreateGameObjectOfType<SoundSourceObject>();
 			deathSpeaker.lock()->transform.SetPosition(this->transform.GetGlobalPosition());
 			deathSpeaker.lock()->SetDeleteWhenFinnished(true);
+			deathSpeaker.lock()->SetGain(1.0f);
 			deathSpeaker.lock()->Play(deathClip);
 
 			this->factory->QueueDeleteGameObject(this->GetPtr());
@@ -60,10 +67,6 @@ void Enemy::Start() {
 		if(!this->speaker.expired()) this->speaker.lock()->Play(clip);
 	});
 	this->hitbox = collider;
-
-	//Create speaker object
-    this->speaker = this->factory->CreateGameObjectOfType<SoundSourceObject>();
-    speaker.lock()->SetParent(this->GetPtr());
 }
 
 void Enemy::Tick() {

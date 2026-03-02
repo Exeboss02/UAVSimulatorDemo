@@ -145,7 +145,7 @@ void Turret::Fire() {
 		colliderobj->StartDeathTimer(0.05f);
 		colliderobj->SetMesh(meshdata);
 		colliderobj->GetMesh().SetMaterial(
-			0, AssetManager::GetInstance().GetMaterialWeakPtr("defaultUnlitMaterial").lock());
+			0, AssetManager::GetInstance().GetMaterialWeakPtr("turretLaser").lock());
 		colliderobj->SetCastShadow(false);
 		colliderobj->transform.SetPosition(
 			DirectX::XMVectorAdd(posVec, DirectX::XMVectorScale(lookVec, rayCastData.distance / 2)));

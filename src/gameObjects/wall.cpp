@@ -57,7 +57,7 @@ void Wall::SpawnInteractables() {
 
 	DirectX::XMFLOAT3 pos(0.0f, 3.0f, 4.5f);
 	colliderobj->transform.SetPosition(DirectX::XMLoadFloat3(&pos));
-	DirectX::XMFLOAT3 scale(0.750f, 0.750f, 0.250f);
+	DirectX::XMFLOAT3 scale(3.0f, 3.0f, 0.250f);
 	colliderobj->transform.SetScale(DirectX::XMLoadFloat3(&scale));
 	colliderobj->SetParent(this->GetPtr());
 	colliderobj->SetOnInteract([&](std::shared_ptr<Player> playerShared) { this->Interact(playerShared); });

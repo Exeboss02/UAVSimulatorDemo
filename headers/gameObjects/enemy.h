@@ -8,6 +8,7 @@
 #include "gameObjects/gameObject3D.h"
 #include "utilities/aStar.h"
 #include "utilities/time.h"
+#include "core/tools.h"
 
 enum MoveSpeedMode { NORMAL, SLOWED };
 

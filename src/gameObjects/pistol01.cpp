@@ -9,7 +9,7 @@ Pistol01::~Pistol01() {}
 void Pistol01::Start() { 
 	
 	this->gunVisualPath = "guns/Pistol3.glb:Mesh_0";
-	this->soundClipShootPath = "Shoot3.wav";
+	this->soundClipShootPath = "Shoot2.wav";
 	this->fireRate = 0.3f;
 	this->visualScale = DirectX::XMFLOAT3(0.01f, 0.01f, 0.01f);
 	this->visualRotationRPY = DirectX::XMFLOAT3(0, 0, std::numbers::pi / 2);

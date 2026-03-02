@@ -161,7 +161,9 @@ MeshObjData AssetManager::GetMeshObjData(std::string identifier) {
 
 std::string AssetManager::GetPathToSoundFolder() { return this->soundBank.GetPathToSoundFolder(); }
 
-SoundClip* AssetManager::GetSoundClip(std::string id) { return this->soundBank.GetSoundClip(id); }
+SoundClip* AssetManager::GetSoundClip(std::string filename) { return this->soundBank.GetSoundClip(filename); }
+
+SoundClip* AssetManager::GetDialogueSoundClip(std::string filename) { return this->soundBank.GetDialogueSoundClip(filename); }
 
 AssetManager& AssetManager::GetInstance() {
 	static AssetManager instance;

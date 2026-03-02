@@ -43,17 +43,34 @@ void Enemy::Start() {
 	collider->SetDynamic(true);
 	//collider->ShowDebug(true);
 
+	//Create speaker object
+    this->speaker = this->factory->CreateGameObjectOfType<SoundSourceObject>();
+    this->speaker.lock()->SetParent(this->GetPtr());
+	this->speaker.lock()->SetGain(1.0f);
+	
+
 	collider->SetOnHit([&](float damage) {
 		this->health.Decrement(damage);
 		if (this->health.Get() <= 0) {
+
+			//temporary speaker that deletes itself when finnished playing, since this object will get deleted now
+			SoundClip* deathClip = AssetManager::GetInstance().GetSoundClip("RobotBreach.wav");
+			std::weak_ptr<SoundSourceObject> deathSpeaker = this->factory->CreateGameObjectOfType<SoundSourceObject>();
+			deathSpeaker.lock()->transform.SetPosition(this->transform.GetGlobalPosition());
+			deathSpeaker.lock()->SetDeleteWhenFinnished(true);
+			deathSpeaker.lock()->SetGain(1.0f);
+			deathSpeaker.lock()->Play(deathClip);
+
 			this->factory->QueueDeleteGameObject(this->GetPtr());
 		}
+			
+		int randomInt = RandomInt(1, 3);
+		std::string soundName = "RobotHit" + std::to_string(randomInt) + ".wav";
+		SoundClip* clip = AssetManager::GetInstance().GetSoundClip(soundName);
+	
+		if(!this->speaker.expired()) this->speaker.lock()->Play(clip);
 	});
 	this->hitbox = collider;
-
-	//Create speaker object
-    this->speaker = this->factory->CreateGameObjectOfType<SoundSourceObject>();
-    speaker.lock()->SetParent(this->GetPtr());
 }
 
 void Enemy::Tick() {

@@ -119,7 +119,7 @@ void Cockpit::createVisualsAndColiders() {
 	}
 
 	this->walls[0].lock()->SetWallState(Room::WallState::door);
-	this->walls[1].lock()->SetWallState(Room::WallState::solid);
-	this->walls[3].lock()->SetWallState(Room::WallState::solid);
+	this->walls[1].lock()->SetWallState(Room::WallState::solid, true);
+	this->walls[3].lock()->SetWallState(Room::WallState::solid, true);
 
 }

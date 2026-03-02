@@ -146,7 +146,7 @@
           "displayTime": 3.0
         },
         {
-          "text": "And definitly to kill you and tour the galaxy alone",
+          "text": "And definitly not to kill you and tour the galaxy alone",
           "displayTime": 3.0
         },
         {
@@ -190,7 +190,7 @@
           "displayTime": 3.0
         },
         {
-          "text": "",
+          "text": "...",
           "displayTime": 3.0
         }
 
@@ -201,11 +201,13 @@
     {
       "textParts": [
         {
-          "text": "",
+          "text": "Hey, you don't happen to have some tape laying around do you?",
+          "displayTime": 3.0
+        },
+        {
+          "text": "And a pen perhaps?",
           "displayTime": 3.0
         }
-
-
       ],
       "soundClipPath": "WaitingForActionRadio.wav"
     },
@@ -229,6 +231,28 @@
         },
         {
           "text": "I will prepare a wonderfull gift for you",
+          "displayTime": 3.0
+        }
+
+      ],
+      "soundClipPath": "WaitingForActionRadio.wav"
+    },
+    {
+      "textParts": [
+        {
+          "text": "You made it!",
+          "displayTime": 3.0
+        },
+        {
+          "text": "I never doubted you for a second!",
+          "displayTime": 3.0
+        },
+        {
+          "text": "Walk over to the cockpit, I have a surprise for you",
+          "displayTime": 3.0
+        },
+        {
+          "text": "I am sure you will be overjoyed with what I have prepared!",
           "displayTime": 3.0
         }
 

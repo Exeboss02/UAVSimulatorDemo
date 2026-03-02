@@ -4,9 +4,11 @@
 #include "game/gameManager.h"
 #include "gameObjects/SpaceShipObj.h"
 #include "utilities/aStar.h"
+#include "gameObjects/emergencyExitButton.h"
 #include <numbers>
 
 void Cockpit::Start() { 
+	this->SetName("Cockpit");
 	auto coreCollider = this->factory->CreateStaticGameObject<SphereCollider>();
 	coreCollider->SetParent(this->GetPtr());
 	coreCollider->SetSolid(true);
@@ -60,7 +62,9 @@ void Cockpit::Start() {
 
 	this->speaker = this->factory->CreateStaticGameObject<SoundSourceObject>();
 
-	
+	auto emergencyButton = this->factory->CreateStaticGameObject<EmergenceExitButton>();
+	emergencyButton->transform.SetPosition(4.43, 2, 0);
+	emergencyButton->SetParent(this->GetPtr());
 
 	this->GameObject3D::Start(); 
 

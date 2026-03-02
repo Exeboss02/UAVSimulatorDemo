@@ -1,6 +1,7 @@
 #include "game/storyManager.h"
 #include "core/assetManager.h"
 #include "core/filepathHolder.h"
+#include "gameObjects/emergencyExitButton.h"
 #include "nlohmann/json.hpp"
 #include "utilities/logger.h"
 #include <iostream>
@@ -39,6 +40,14 @@ void StoryManager::PlayNextStoryPart() {
 	}
 	this->currentStoryPart++;
 	this->playing = true;
+
+	if (this->currentStoryPart == this->storyParts.size() - 1) {
+		Logger::Log("Last round");
+		if (auto button = this->factory->FindObjectOfType<EmergenceExitButton>().lock()) {
+			Logger::Log("yo");
+			button->SetState(EmergenceExitButton::State::PostTouchUp);
+		}
+	}
 	Logger::Log("Playing next storypart");
 }
 

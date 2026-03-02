@@ -10,6 +10,8 @@
 #include "utilities/time.h"
 #include "core/tools.h"
 
+#include "gameObjects/meshObject.h"
+
 enum MoveSpeedMode { NORMAL, SLOWED };
 
 class Enemy : public GameObject3D {
@@ -33,11 +35,14 @@ private:
 	Health health;
 	float movementSpeed;
 	DirectX::XMVECTOR direction;
-	DirectX::XMVECTOR targetRotation;
+	DirectX::XMVECTOR bodyTargetRotation;
 	const float rotationSpeed = 5.0f;
 
 	// Collider
 	std::weak_ptr<SphereCollider> hitbox;
+
+	std::weak_ptr<MeshObject> head;
+	DirectX::XMVECTOR headOffsetFromBody = DirectX::XMVectorSet(0, 0.5f, 0, 0);
 
 	// Pathfinding
 	std::vector<std::shared_ptr<AStarVertex>> path;
@@ -49,6 +54,7 @@ private:
 
 	// Shooting
 	const float damage = 5.f;
+	const float shootRange = 15.f;
 	bool canShoot;
 	const float shotCooldown;
 	float timeSinceLastShot;
@@ -75,6 +81,9 @@ private:
 
 	void ShootAtCore();
 	void ShootAtPlayer();
+
+	void RotateBody(const float deltaTime);
+	void RotateHead(DirectX::XMVECTOR& newDirection, const float deltaTime);
 
 	void VisualizeRay(const DirectX::XMVECTOR& position, const DirectX::XMVECTOR& direction, float distance);
 };

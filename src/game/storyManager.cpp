@@ -25,7 +25,7 @@ void StoryManager::LoadStory(std::filesystem::path path) {
 
 		std::string soundClipPath = storyPartIt["soundClipPath"].get<std::string>();
 
-		SoundClip* soundClip = AssetManager::GetInstance().GetSoundClip(soundClipPath);
+		SoundClip* soundClip = AssetManager::GetInstance().GetDialogueSoundClip(soundClipPath);
 
 		this->storyParts.emplace_back(storyTexts, soundClip);
 	}

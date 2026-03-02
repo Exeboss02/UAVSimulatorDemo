@@ -31,7 +31,7 @@ public:
 	bool jumpInput = false;
 	bool isGrounded = false;
 	bool isJumping = false;
-	float jumpForce = 12;
+	float jumpForce = 14;
 
 	float speed = 3;
 	float mouseSensitivity = 0.03f;
@@ -65,12 +65,14 @@ public:
 	// Enable or disable player movement/input (used when UI menus are open)
 	void SetInputEnabled(bool enabled);
 
+	void SetHealthRegen(float healthPerMin);
 	// Show/hide quit-to-menu prompt (forwarded to HUD)
 	void ShowQuitToMenuPrompt();
 	void HideQuitToMenuPrompt();
 
 	void DecrementHealth(int hp);
 	void IncrementHealth(int hp);
+
 	int GetHealth() const;
 
 	bool isPlayingMusic = false;
@@ -101,6 +103,9 @@ private:
 	bool showCursor = true;
 
 	Health health;
+
+	float healthFragment = 0;
+	float healthRegenPerMin = 15;
 
 	float cameraRotation[3];
 

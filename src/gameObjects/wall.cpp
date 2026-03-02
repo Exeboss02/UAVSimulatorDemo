@@ -1,13 +1,25 @@
 #include "gameObjects/wall.h"
 #include "UI/interactionPrompt.h"
+#include "game/gameManager.h"
 #include "gameObjects/room.h"
 #include "utilities/logger.h"
 #include "utilities/time.h"
 void Wall::OnObserve() {}
 
-void Wall::OnInteract() {}
+void Wall::OnInteract() {
+	try {
+		if (auto gameManager = GameManager::GetInstance(); gameManager && gameManager->GetInCombat()) {
+			return;
+		}
+	} catch (...) {
+	}
+}
 
 void Wall::Interact(std::shared_ptr<Player> playerShared) {
+
+	if (GameManager::GetInstance()->GetInCombat()) {
+		return;
+	}
 
 	if (!playerShared->resources.tryToPay(this->wallCost.getTitanium(), this->wallCost.getLubricant(),
 										  this->wallCost.getCarbonFiber(), this->wallCost.getCircuit())) {
@@ -41,8 +53,6 @@ void Wall::Interact(std::shared_ptr<Player> playerShared) {
 	this->hoverDisabledUntil = Time::GetInstance().GetSessionTime() + 0.5f;
 }
 
- 
-
 void Wall::Start() {
 	this->MeshObject::Start();
 	Logger::Log("Wall started");
@@ -75,7 +85,8 @@ void Wall::SpawnWallColliders(int wallStateIndex) {
 	this->wallColliders.clear();
 	Room::WallState wallState = static_cast<Room::WallState>(wallStateIndex);
 	switch (wallState) {
-	case (Room::WallState::window || Room::WallState::solid): {
+	case (Room::WallState::window):
+	case (Room::WallState::solid): {
 		auto colliderobj = this->factory->CreateStaticGameObject<BoxCollider>();
 		DirectX::XMFLOAT3 pos(0.0f, 3.0f, 4.75f);
 		colliderobj->transform.SetPosition(DirectX::XMLoadFloat3(&pos));
@@ -143,9 +154,9 @@ void Wall::SetWallState(int wallState, bool edgeWall) {
 	}
 }
 
-void Wall::RemoveInteractables() { 
+void Wall::RemoveInteractables() {
 	if (!this->interactable.expired()) {
-		this->factory->QueueDeleteGameObject(this->interactable); 
+		this->factory->QueueDeleteGameObject(this->interactable);
 	}
 }
 
@@ -159,6 +170,12 @@ void Wall::Hover() {
 		if (!prompt) return;
 
 		std::string txt = std::format("Press \"F\" to build room: Cost {}", this->wallCost.getCostString());
+		try {
+			if (auto gameManager = GameManager::GetInstance(); gameManager && gameManager->GetInCombat()) {
+				txt = "Can't build during attacks";
+			}
+		} catch (...) {
+		}
 		DirectX::XMVECTOR worldPos = this->transform.GetGlobalPosition();
 		prompt->Show(txt, worldPos);
 	} catch (const std::exception& e) {

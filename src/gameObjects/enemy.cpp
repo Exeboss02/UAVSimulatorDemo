@@ -20,7 +20,7 @@ Enemy::Enemy()
 	  canShoot(true), shotCooldown(1.5f), timeSinceLastShot(0.0f), isSlowed(false), slowDuration(0.0f), timeSinceSlowed(0.0f), 
 		playerHitAccuracy(0.6f), timeStuck(0.f), stuckCheckInterval(4.f) {
 	this->direction = DirectX::XMVectorSet(0, 0, 1, 0);
-	this->targetRotation = DirectX::XMQuaternionIdentity();
+	this->bodyTargetRotation = DirectX::XMQuaternionIdentity();
 	this->SetMoveSpeedMode(MoveSpeedMode::NORMAL);
 	this->transform.SetScale({0.5f, 0.5f, 0.5f});
 }
@@ -30,11 +30,21 @@ void Enemy::Start() {
 	meshObj->SetParent(this->GetPtr());
 
 	MeshObjData meshData =
-		AssetManager::GetInstance().GetMeshObjData("enemies/piratebot2.glb:Mesh_0"); // TODO: Add enemy mesh
+		AssetManager::GetInstance().GetMeshObjData("enemies/piratebot2.glb:Mesh_0");
 	meshObj->SetMesh(meshData);
 	meshObj->transform.SetScale({0.3, 0.3, 0.3});
 	meshObj->transform.SetRotationRPY({0, -DirectX::XM_PIDIV2, 0});
-	meshObj->transform.SetPosition({0,-0.8,0});
+	meshObj->transform.SetPosition(0.f, -0.8f, 0.f);
+
+	auto head = this->factory->CreateGameObjectOfType<MeshObject>().lock();
+
+	meshData = AssetManager::GetInstance().GetMeshObjData("TexBox/TextureCube.glb:Mesh_0");
+	head->SetMesh(meshData);
+	head->transform.SetScale({0.3, 0.3, 0.3});
+	meshObj->transform.SetRotationRPY({0, 0, 0});
+	head->transform.SetPosition(DirectX::XMVectorAdd(this->transform.GetGlobalPosition(), this->headOffsetFromBody));
+
+	this->head = head;
 
 	auto collider = this->factory->CreateGameObjectOfType<SphereCollider>().lock();
 	collider->transform.SetScale({2, 2, 2});
@@ -61,7 +71,7 @@ void Enemy::Start() {
 			deathSpeaker.lock()->SetGain(1.0f);
 			deathSpeaker.lock()->Play(deathClip);
 
-			this->factory->QueueDeleteGameObject(this->GetPtr());
+			this->KillSelf();
 		}
 			
 		int randomInt = RandomInt(1, 3);
@@ -84,7 +94,9 @@ void Enemy::Tick() {
 		this->ShootAtPlayer();
 	} else {
 		this->ShootAtCore();
+		this->RotateHead(this->direction, dt * 2);
 	}
+	this->head.lock()->transform.SetPosition(DirectX::XMVectorAdd(this->transform.GetGlobalPosition(), this->headOffsetFromBody));
 }
 
 void Enemy::SlowDownEnemy(float durationInSec) {
@@ -126,9 +138,24 @@ void Enemy::SetPath(const std::vector<std::shared_ptr<AStarVertex>>& newPath) {
 	this->currentPathIndex = 0;
 	this->hasFinishedPath = false;
 	this->transform.SetPosition(this->path[0]->transform.GetGlobalPosition());
+
+	// Calculate initial direction from first path node to second
+	if (this->maxPathIndex > 0) {
+		this->direction = DirectX::XMVectorSubtract(this->path[1]->transform.GetGlobalPosition(),
+													this->path[0]->transform.GetGlobalPosition());
+		this->direction = DirectX::XMVector3Normalize(this->direction);
+
+		// Set head direction to match initial path direction
+		if (!this->head.expired()) {
+			this->head.lock()->transform.SetDirection(this->direction);
+		}
+	}
 }
 
-void Enemy::KillSelf() { this->factory->QueueDeleteGameObject(this->GetPtr()); }
+void Enemy::KillSelf() { 
+	this->factory->QueueDeleteGameObject(this->GetPtr()); 
+	this->factory->QueueDeleteGameObject(this->head);
+}
 
 void Enemy::DecrementHealth(size_t amount) {
 	this->health.Decrement(static_cast<int>(amount));
@@ -154,13 +181,26 @@ void Enemy::MoveAlongPath(const float deltaTime) {
 		this->CalulateTargetRotation();
 	}
 
-	// Smoothly lerp rotation
-	DirectX::XMVECTOR currentRotation = this->transform.GetRotationQuaternion();
-	float deltaRotation = this->rotationSpeed * deltaTime;
-	DirectX::XMVECTOR newRotation = DirectX::XMQuaternionSlerp(currentRotation, this->targetRotation, deltaRotation);
-	this->transform.SetRotationQuaternion(newRotation);
+	this->RotateBody(deltaTime);
+
+	if (auto player = this->factory->FindObjectOfType<Player>().lock()) {
+		DirectX::XMVECTOR toPlayer = DirectX::XMVectorSubtract(player->transform.GetGlobalPosition(), this->transform.GetGlobalPosition());
+
+		float distanceToPlayer = DirectX::XMVectorGetX(DirectX::XMVector4Length(toPlayer));
+		if (distanceToPlayer < this->shootRange) {
+			toPlayer = DirectX::XMVector3Normalize(toPlayer);
+			this->RotateHead(toPlayer, deltaTime);
+		} 
+		else { // If player is out of range, rotate head towards movement direction
+			this->RotateHead(this->direction, deltaTime);
+		}
+	}
 
 	this->transform.Move(this->direction, this->movementSpeed * deltaTime);
+	if (this->head.expired()) {
+		Logger::Log("Enemy has no head to move.");
+		return;
+	}
 }
 
 bool Enemy::IsAtCurrentPathNode() {
@@ -187,7 +227,17 @@ void Enemy::CalulateTargetRotation() {
 	rotationMatrix.r[2] = this->direction;
 	rotationMatrix.r[3] = DirectX::XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f);
 
-	this->targetRotation = DirectX::XMQuaternionRotationMatrix(rotationMatrix);
+	//this->bodyTargetRotation = DirectX::XMQuaternionRotationMatrix(rotationMatrix);
+
+	DirectX::XMVECTOR targetRotation = DirectX::XMQuaternionRotationMatrix(rotationMatrix);
+
+	// Apply compensating rotation for the mesh's initial +90° Y rotation
+	DirectX::XMVECTOR meshOffsetRotation =
+		DirectX::XMQuaternionRotationAxis(DirectX::XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f),
+										  -DirectX::XM_PIDIV2 // -90 degrees to compensate for mesh's +90
+		);
+
+	this->bodyTargetRotation = DirectX::XMQuaternionMultiply(meshOffsetRotation, targetRotation);
 }
 
 void Enemy::IsStuckOnPath(const float deltaTime) {
@@ -270,16 +320,31 @@ void Enemy::ShootAtPlayer() {
 		Logger::Log("Enemy couldn't find player.");
 		return;
 	}
+	if (this->head.expired()) {
+		Logger::Error("Enemy has no head to shoot from.");
+		return;
+	}
 
-	DirectX::XMVECTOR enemyPosition = this->transform.GetGlobalPosition();
+	DirectX::XMVECTOR headPosition = this->head.lock()->transform.GetGlobalPosition();
 	DirectX::XMVECTOR playerPosition = player->transform.GetGlobalPosition();
-	DirectX::XMVECTOR rayDirection = DirectX::XMVectorSubtract(playerPosition, enemyPosition);
+	DirectX::XMVECTOR rayDirection = DirectX::XMVectorSubtract(playerPosition, headPosition);
 	float rayLength = DirectX::XMVectorGetX(DirectX::XMVector4Length(rayDirection));
 	rayDirection = DirectX::XMVector3Normalize(rayDirection);
 
+	if (rayLength > this->shootRange) {
+		return; // Player is out of range, don't shoot
+	}
+
+	DirectX::XMVECTOR forward = this->head.lock()->transform.GetGlobalForward();
+
+	// Check if forward is close to rayDirection, if not, don't shoot (enemy is not facing player)
+	if (!DirectX::XMVector4NearEqual(forward, rayDirection, DirectX::XMVectorSet(0.2f, 1.f, 0.2f, 0.2f))) {
+		return; // Enemy is not facing player enough to shoot
+	}
+
 	// Offset ray origin to avoid hitting self
-	DirectX::XMVECTOR adjustedPos = DirectX::XMVectorAdd(enemyPosition, DirectX::XMVectorScale(rayDirection, 1.5f));
-	float maxDistance = rayLength + 1.f; // Subtract offset, add small bias
+	DirectX::XMVECTOR adjustedPos = DirectX::XMVectorAdd(headPosition, DirectX::XMVectorScale(rayDirection, 0.5f));
+	float maxDistance = rayLength + 1.f; // add small bias
 
 	Ray ray{Vector3D(adjustedPos), Vector3D(rayDirection)};
 	RayCastData rayCastData = {};
@@ -307,14 +372,14 @@ void Enemy::ShootAtPlayer() {
 					DirectX::XMVECTOR missDir = DirectX::XMVectorAdd(
 						rayDirection, DirectX::XMVectorSet(rX, rY, rZ, 0.0f)); // Add some random offset
 
-					this->VisualizeRay(enemyPosition, missDir, rayCastData.distance);
+					this->VisualizeRay(adjustedPos, missDir, rayCastData.distance);
 					return;
 				}
 
 				rayCastData.hitColider.lock()->Hit(this->damage);
 				Logger::Log("Enemy shooting at player - HIT!");
 				this->canShoot = false;
-				this->VisualizeRay(enemyPosition, rayDirection, rayCastData.distance);
+				this->VisualizeRay(adjustedPos, rayDirection, rayCastData.distance);
 
 				if(!this->speaker.expired())
 				{
@@ -325,6 +390,67 @@ void Enemy::ShootAtPlayer() {
 			}
 		}
 	}
+}
+
+void Enemy::RotateBody(const float deltaTime) {
+	// Smoothly lerp rotation
+	DirectX::XMVECTOR currentRotation = this->transform.GetRotationQuaternion();
+	float deltaRotation = this->rotationSpeed * deltaTime;
+	DirectX::XMVECTOR newRotation = DirectX::XMQuaternionSlerp(currentRotation, this->bodyTargetRotation, deltaRotation);
+	this->transform.SetRotationQuaternion(newRotation); // Make sure this is body's transform, not head's
+}
+
+void Enemy::RotateHead(DirectX::XMVECTOR& newDirection, const float deltaTime) {
+
+	if (this->head.expired()) {
+		Logger::Error("Enemy has no head to rotate.");
+		return;
+	}
+
+	// Check if we are already facing the desired direction
+	if (DirectX::XMVector4NearEqual(
+			this->head.lock()->transform.GetGlobalForward(), // Make sure this is head's forward, not body's
+									newDirection, 
+									DirectX::XMVectorSet(0.01f, 0.01f, 0.01f, 0.01f))) 
+	{
+		return;
+	}
+
+	DirectX::XMVECTOR currentDir = DirectX::XMVector3Normalize(this->head.lock()->transform.GetGlobalForward());
+	DirectX::XMVECTOR desiredDir = DirectX::XMVector3Normalize(newDirection);
+
+	float dot = DirectX::XMVectorGetX(DirectX::XMVector3Dot(currentDir, newDirection));
+	dot = std::clamp(dot, -1.0f, 1.0f);
+
+	float maxStep = this->rotationSpeed * 0.3f * deltaTime;
+
+	DirectX::XMVECTOR newDir;
+
+	float angle = acosf(dot);
+	if (angle <= maxStep) {
+		newDir = desiredDir;
+	} 
+	else {
+		float step = std::min(angle, maxStep);
+		DirectX::XMVECTOR axis = DirectX::XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
+
+		// Determine rotation direction (clockwise or counter-clockwise)
+		DirectX::XMVECTOR cross = DirectX::XMVector3Cross(currentDir, desiredDir);
+		if (DirectX::XMVectorGetY(cross) < 0.0f) {
+			step = -step;
+		}
+
+		if (DirectX::XMVector3LengthSq(axis).m128_f32[0] < 0.0001f) {
+			// axis = DirectX::XMVectorSet(0, 1, 0, 0); // fallback axis
+			axis = DirectX::XMVector3Orthogonal(currentDir);
+		}
+
+		DirectX::XMVECTOR rot = DirectX::XMQuaternionRotationAxis(axis, step);
+
+		newDir = DirectX::XMVector3Normalize(DirectX::XMVector3Rotate(currentDir, rot));
+	}
+
+	this->head.lock()->transform.SetDirection(newDir);
 }
 
 void Enemy::VisualizeRay(const DirectX::XMVECTOR& position, const DirectX::XMVECTOR& direction, float distance) {

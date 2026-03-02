@@ -234,6 +234,15 @@ void Player::Tick() {
 		GameManager::GetInstance()->PlayerDied();
 	}
 	ImGui::End();
+
+	this->healthFragment += Time::GetInstance().GetDeltaTime() * this->healthRegenPerMin / 60;
+
+	if (this->healthFragment > 1) {
+		int generatedHealth = this->healthFragment;
+		this->health.Increment(generatedHealth);
+		this->healthFragment -= generatedHealth;
+	}
+
 }
 
 void Player::PhysicsTick() {
@@ -395,6 +404,8 @@ void Player::SetInputEnabled(bool enabled) {
 		this->canShoot = false;
 	}
 }
+
+void Player::SetHealthRegen(float healthPerMin) { this->healthRegenPerMin = healthPerMin; }
 
 void Player::ShowQuitToMenuPrompt() {
 	if (this->hud) {

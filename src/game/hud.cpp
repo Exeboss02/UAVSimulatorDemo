@@ -45,6 +45,9 @@ void HUD::Start() {
 	float iconTextOffsetY = 40;
 	float iconTextOffsetX = -iconSize - padding;
 
+	UI::Vec2 canvasSize = {static_cast<float>(Window::GetCurrentWidth()),
+						   static_cast<float>(Window::GetCurrentHeight())};
+
 	// Titanium
 	{
 		this->titaniumIcon = this->MakeIcon("HUD_Titanium_Icon", "assets/images/metal.png", -padding, startPos,
@@ -125,7 +128,7 @@ void HUD::Start() {
 				if (!bgWeak.expired()) {
 					auto bg = bgWeak.lock();
 					bg->SetName("HUD_Quit_Background");
-					bg->SetSize(UI::Vec2{canvasWidth, canvasHeight});
+					bg->SetSize(canvasSize);
 					bg->SetPosition(UI::Vec2{0.0f, 0.0f});
 					bg->SetTint(DirectX::XMFLOAT4{0.0f, 0.0f, 0.0f, 0.5f});
 					bg->SetVisible(false);
@@ -146,13 +149,12 @@ void HUD::Start() {
 				quitText->SetName("HUD_QuitPrompt_Text");
 				quitText->SetText("Do you want to quit to menu?");
 				quitText->SetFontSize(36.0f);
-				// Size and position centered
-				float w = canvasWidth;
-				float h = canvasHeight;
-				float tw = 600.0f;
+
+				float tw = 400.0f;
 				float th = 60.0f;
 				quitText->SetSize(UI::Vec2{tw, th});
-				quitText->SetPosition(UI::Vec2{((w - tw) + 120) * 0.5f, (h - th) * 0.5f - 350.0f});
+				quitText->SetAnchor(UI::Anchor::TopCenter);
+				quitText->SetPosition(UI::Vec2{0.0f, 100.0f});
 				quitText->SetVisible(false);
 				// Prompt text should be above the background but below buttons
 				quitText->SetZIndex(1);
@@ -170,7 +172,8 @@ void HUD::Start() {
 				yesBtn->SetName("HUD_Quit_Yes");
 				yesBtn->SetLabel("YES");
 				yesBtn->SetSize(UI::Vec2{200.0f, 50.0f});
-				yesBtn->SetPosition(UI::Vec2{(canvasWidth - 200.0f) * 0.5f - 120.0f, (canvasHeight) * 0.5f - 200.0f});
+				yesBtn->SetAnchor(UI::Anchor::TopCenter);
+				yesBtn->SetPosition(UI::Vec2{-200.0f, 200.0f});
 				yesBtn->SetVisible(false);
 				// Buttons must be top-most so they receive input events
 				yesBtn->SetZIndex(2);
@@ -194,8 +197,10 @@ void HUD::Start() {
 				auto noBtn = noWeak.lock();
 				noBtn->SetName("HUD_Quit_No");
 				noBtn->SetLabel("NO");
+				noBtn->SetHorizontalAlign(UI::Button::HorizontalAlign::CENTER);
 				noBtn->SetSize(UI::Vec2{200.0f, 50.0f});
-				noBtn->SetPosition(UI::Vec2{(canvasWidth - 200.0f) * 0.5f + 120.0f, (canvasHeight) * 0.5f - 200.0f});
+				noBtn->SetAnchor(UI::Anchor::TopCenter);
+				noBtn->SetPosition(UI::Vec2{200.0f, 200.0f});
 				noBtn->SetVisible(false);
 				// Buttons must be top-most so they receive input events
 				noBtn->SetZIndex(2);

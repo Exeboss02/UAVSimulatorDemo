@@ -1,10 +1,12 @@
 #include "game/gameManager.h"
+#include "UI/canvas.h"
 #include "UI/canvasObject.h"
 #include "UI/image.h"
 #include "UI/text.h"
 #include "core/filepathHolder.h"
 #include "rendering/renderQueue.h"
 #include "scene/sceneManager.h"
+#include <algorithm>
 #include <cstdlib>
 #include <format>
 #include <random>
@@ -38,7 +40,6 @@ void GameManager::Start() {
 
 	this->storyManager = this->factory->CreateGameObjectOfType<StoryManager>();
 
-
 	// Set up rounds
 	this->rounds.reserve(1);
 	this->rounds.push_back(Round{3, 1});
@@ -53,7 +54,6 @@ void GameManager::Start() {
 	// this->rounds.push_back(Round{80, 3});
 
 	this->idleTimeTimer = this->idleTime;
-
 
 	// Master Volume
 	AudioManager::GetInstance().SetMasterMusicVolume(0.3f);
@@ -109,8 +109,8 @@ void GameManager::Tick() {
 				this->enemySpawnTimer -= Time::GetInstance().GetDeltaTime();
 			} else {
 				size_t cachedUnspawnedEnemies = this->unspawnedEnemies;
-				for (size_t i = 0; i < std::min(this->rounds[this->currentRound].breachPoints, cachedUnspawnedEnemies);
-					 i++) {
+				for (size_t i = 0;
+					 i < (std::min) (this->rounds[this->currentRound].breachPoints, cachedUnspawnedEnemies); i++) {
 					SpawnEnemy(i);
 				}
 
@@ -166,8 +166,6 @@ void GameManager::ReloadScene() {
 }
 
 void GameManager::Win() {
-	Logger::Log("You won!");
-
 	// Try to find the main HUD canvas to place the win overlay on top
 	auto canvasWeak = this->factory->FindObjectOfType<UI::CanvasObject>();
 	if (canvasWeak.expired()) {
@@ -183,8 +181,8 @@ void GameManager::Win() {
 		return;
 	}
 
-	float canvasWidth = 1920.0f;
-	float canvasHeight = 1080.0f;
+	float canvasWidth = static_cast<float>(Window::GetCurrentWidth());
+	float canvasHeight = static_cast<float>(Window::GetCurrentHeight());
 	try {
 		if (auto canvasPtr = canvasShared->GetCanvas()) {
 			auto sz = canvasPtr->GetSize();
@@ -221,10 +219,8 @@ void GameManager::Win() {
 			title->SetName("Win_Title");
 			title->SetText("You won!");
 			title->SetFontSize(72.0f);
-			float tw = 800.0f;
-			float th = 120.0f;
-			title->SetSize(UI::Vec2{tw, th});
-			title->SetPosition(UI::Vec2{(canvasWidth - tw) * 0.5f + 260, (canvasHeight - th) * 0.5f - 200.0f});
+			title->SetAnchor(UI::Anchor::MidCenter);
+			title->SetPosition(UI::Vec2{0.0f, -200.0f});
 			title->SetVisible(true);
 			title->SetZIndex(1);
 			std::weak_ptr<GameObject> me = canvasShared->GetPtr();
@@ -349,29 +345,22 @@ void GameManager::EndRound() {
 	}
 }
 
-void GameManager::AudioHandling()
-{	
+void GameManager::AudioHandling() {
 	float deltaTime = Time::GetInstance().GetDeltaTime();
 
-	if(this->inCombat)
-	{
-		if (!this->isPlayingCombatMusic)
-		{
+	if (this->inCombat) {
+		if (!this->isPlayingCombatMusic) {
 			AudioManager::GetInstance().Play("contact");
 			this->isPlayingCombatMusic = true;
 			this->isFading = false;
 			this->isPlayingBuildMusic = false;
 		}
-	}
-	else
-	{
+	} else {
 		ALint state = 0;
 		AudioManager::GetInstance().GetMusicTrackSourceState("contact", state);
 
-		if(this->currentRound > 0)
-		{
-			if(!this->isFading && !this->isPlayingBuildMusic)
-			{
+		if (this->currentRound > 0) {
+			if (!this->isFading && !this->isPlayingBuildMusic) {
 				AudioManager::GetInstance().FadeOutStop("contact", 6);
 				this->isFading = true;
 				this->isPlayingCombatMusic = false;
@@ -379,12 +368,10 @@ void GameManager::AudioHandling()
 				this->shipSpeaker.lock()->SetGain(1);
 			}
 
-			if(!this->isPlayingBuildMusic)
-			{
+			if (!this->isPlayingBuildMusic) {
 				this->buildMusicWaitTimer.Tick(deltaTime);
 
-				if(this->buildMusicWaitTimer.TimeIsUp())
-				{
+				if (this->buildMusicWaitTimer.TimeIsUp()) {
 					this->isPlayingBuildMusic = true;
 					this->isFading = false;
 					this->isPlayingCombatMusic = false;
@@ -392,12 +379,11 @@ void GameManager::AudioHandling()
 					this->buildMusicWaitTimer.Reset();
 
 					SoundClip* buildMusic = AssetManager::GetInstance().GetSoundClip("Announcement.wav");
-					//this->shipSpeaker.lock()->Play(buildMusic); //only dialogue in between rounds?
+					// this->shipSpeaker.lock()->Play(buildMusic); //only dialogue in between rounds?
 				}
 			}
 
-			if(this->idleTimeTimer <= 8)
-			{
+			if (this->idleTimeTimer <= 8) {
 				float gain = this->shipSpeaker.lock()->GetGain();
 				gain -= (deltaTime / 5);
 				this->shipSpeaker.lock()->SetGain(gain);
@@ -408,9 +394,7 @@ void GameManager::AudioHandling()
 
 bool GameManager::GetInCombat() const { return this->inCombat; }
 
-const size_t& GameManager::GetCurrentRound() {
-	return this->currentRound;
-}
+const size_t& GameManager::GetCurrentRound() { return this->currentRound; }
 
 std::shared_ptr<Player> GameManager::GetPlayer() { return this->player.lock(); }
 

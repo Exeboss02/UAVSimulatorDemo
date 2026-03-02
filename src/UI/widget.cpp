@@ -21,7 +21,10 @@ UI::Vec2 UI::Widget::GetPosition() const { return this->truePosition; }
 
 UI::Vec2 UI::Widget::GetSize() const { return this->size; }
 
-void UI::Widget::SetAnchor(Anchor anchor) { this->anchor = anchor; }
+void UI::Widget::SetAnchor(Anchor anchor) {
+	this->anchor = anchor;
+	this->CalculateTruePosition();
+}
 
 Anchor UI::Widget::GetAnchor() const { return this->anchor; }
 
@@ -40,7 +43,7 @@ void UI::Widget::Update(float dt) {
 	float epsilon = static_cast<float>(addr % 1000u) * 1e-6f; // range ~0..0.000999
 	float z = 0.5f + static_cast<float>(this->GetZIndex()) * 0.001f + epsilon;
 	XMVECTOR posVec =
-		XMVectorSet(this->position.x + this->size.x * 0.5f, this->position.y + this->size.y * 0.5f, z, 1.0f);
+		XMVectorSet(this->truePosition.x + this->size.x * 0.5f, this->truePosition.y + this->size.y * 0.5f, z, 1.0f);
 	XMVECTOR scaleVec = XMVectorSet(this->size.x * 0.5f, this->size.y * 0.5f, 1.0f, 0.0f);
 	this->transform.SetPosition(posVec);
 	this->transform.SetScale(scaleVec);
@@ -58,8 +61,8 @@ void UI::Widget::Draw() {
 }
 
 bool UI::Widget::HitTest(Vec2 point) const {
-	return point.x >= position.x && point.x <= position.x + size.x && point.y >= position.y &&
-		   point.y <= position.y + size.y;
+	return point.x >= truePosition.x && point.x <= truePosition.x + size.x && point.y >= truePosition.y &&
+		   point.y <= truePosition.y + size.y;
 }
 
 void UI::Widget::SetWidgetMesh(MeshObjData& mesh) { SetMesh(mesh); }

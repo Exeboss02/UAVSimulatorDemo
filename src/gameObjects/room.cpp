@@ -316,8 +316,8 @@ void Room::ShowBuildMenu(std::shared_ptr<Player> player) {
 			btn->SetName(label);
 			btn->SetLabel(label);
 
-			btn->SetHorizontalAlign(UI::Button::HorizontalAlign::LEFT);
-			btn->SetVerticalAlign(UI::Button::VerticalAlign::TOP);
+			btn->SetHorizontalAlign(UI::Button::HorizontalAlign::CENTER);
+			btn->SetVerticalAlign(UI::Button::VerticalAlign::MIDDLE);
 			UI::Vec2 pos{startX + static_cast<float>(i) * (btnW + spacing), yPos};
 			btn->SetPosition(pos);
 			btn->SetSize({150, 40});
@@ -363,8 +363,8 @@ void Room::ShowBuildMenu(std::shared_ptr<Player> player) {
 				cancelBtn->SetParent(canvasObj->GetPtr());
 				cancelBtn->SetName("Cancel");
 				cancelBtn->SetLabel("Cancel");
-				cancelBtn->SetHorizontalAlign(UI::Button::HorizontalAlign::LEFT);
-				cancelBtn->SetVerticalAlign(UI::Button::VerticalAlign::TOP);
+				cancelBtn->SetHorizontalAlign(UI::Button::HorizontalAlign::CENTER);
+				cancelBtn->SetVerticalAlign(UI::Button::VerticalAlign::MIDDLE);
 				cancelBtn->SetPosition(cancelPos);
 				cancelBtn->SetSize({150, 40});
 				cancelBtn->SetVisible(true);

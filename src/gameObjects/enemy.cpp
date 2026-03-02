@@ -334,7 +334,7 @@ void Enemy::VisualizeRay(const DirectX::XMVECTOR& position, const DirectX::XMVEC
 	colliderobj->StartDeathTimer(1);
 	colliderobj->SetMesh(meshdata);
 	colliderobj->GetMesh().SetMaterial(0,
-									   AssetManager::GetInstance().GetMaterialWeakPtr("redUnlit").lock());
+									   AssetManager::GetInstance().GetMaterialWeakPtr("enemyLaser").lock());
 	colliderobj->SetCastShadow(false);
 
 	colliderobj->transform.SetPosition(DirectX::XMVectorAdd(position, DirectX::XMVectorScale(direction, distance / 2)));

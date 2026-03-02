@@ -214,12 +214,12 @@ void AssetManager::CreateDefaultAssets() {
 	auto redUnlit = std::make_shared<UnlitMaterial>(this->d3d11Device);
 	redUnlit->unlitShader = pixelShaderUnlit;
 	redUnlit->color[0] = 1.0, redUnlit->color[1] = 0.0, redUnlit->color[2] = 0.0, redUnlit->color[3] = 1.0;
-	AddMaterial("redUnlit", redUnlit);
+	AddMaterial("enemyLaser", redUnlit);
 
 	auto blueUnlit = std::make_shared<UnlitMaterial>(this->d3d11Device);
 	blueUnlit->unlitShader = pixelShaderUnlit;
 	blueUnlit->color[0] = 0.4, blueUnlit->color[1] = 0.65, blueUnlit->color[2] = 0.89, blueUnlit->color[3] = 1.0;
-	AddMaterial("blueUnlit", blueUnlit);
+	AddMaterial("turretLaser", blueUnlit);
 
 	auto wireframeMaterial = std::make_shared<UnlitMaterial>(this->d3d11Device);
 	wireframeMaterial->unlitShader = pixelShaderUnlit;

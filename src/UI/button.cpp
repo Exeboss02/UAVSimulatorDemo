@@ -344,45 +344,45 @@ void UI::Button::Draw() {
 	// Render label text centered inside the button
 	if (this->label.empty()) return;
 
-		// Choose font size relative to button height so measured width matches render size.
-		UI::Vec2 pos = this->GetPosition();
-		UI::Vec2 sz = this->GetSize();
+	// Choose font size relative to button height so measured width matches render size.
+	UI::Vec2 pos = this->GetPosition();
+	UI::Vec2 sz = this->GetSize();
 
-		float fontSize = std::max(10.0f, sz.y * 0.6f);
-		std::string font = "assets/fonts/lucon.ttf";
-		float measured = UI::TextRenderer::GetInstance().MeasureString(this->label, fontSize, font).x;
+	float fontSize = std::max(10.0f, sz.y * 0.6f);
+	std::string font = "assets/fonts/lucon.ttf";
+	float measured = UI::TextRenderer::GetInstance().MeasureString(this->label, fontSize, font).x;
 
-		// Horizontal alignment
-		float paddingX = 8.0f;
-		float x = pos.x + paddingX; // default left
-		switch (this->hAlign) {
-		case Button::HorizontalAlign::LEFT:
-			x = pos.x + paddingX;
-			break;
-		case Button::HorizontalAlign::CENTER: {
-			float centerX = pos.x + sz.x * 0.5f;
-			x = centerX - measured * 0.5f; // midpoint of string at button center
-			break;
-		}
-		case Button::HorizontalAlign::RIGHT:
-			x = pos.x + sz.x - measured - paddingX;
-			break;
-		}
+	// Horizontal alignment
+	float paddingX = 8.0f;
+	float x = pos.x + paddingX; // default left
+	switch (this->hAlign) {
+	case Button::HorizontalAlign::LEFT:
+		x = pos.x + paddingX;
+		break;
+	case Button::HorizontalAlign::CENTER: {
+		float centerX = pos.x + sz.x * 0.5f;
+		x = centerX - measured * 0.5f; // midpoint of string at button center
+		break;
+	}
+	case Button::HorizontalAlign::RIGHT:
+		x = pos.x + sz.x - measured - paddingX;
+		break;
+	}
 
-		// Vertical alignment
-		float paddingY = 4.0f;
-		float y = pos.y + paddingY; // top
-		switch (this->vAlign) {
-		case Button::VerticalAlign::TOP:
-			y = pos.y + paddingY;
-			break;
-		case Button::VerticalAlign::MIDDLE:
-			y = pos.y + (sz.y - fontSize) * 0.5f;
-			break;
-		case Button::VerticalAlign::BOTTOM:
-			y = pos.y + sz.y - fontSize - paddingY;
-			break;
-		}
+	// Vertical alignment
+	float paddingY = 4.0f;
+	float y = pos.y + paddingY; // top
+	switch (this->vAlign) {
+	case Button::VerticalAlign::TOP:
+		y = pos.y + paddingY;
+		break;
+	case Button::VerticalAlign::MIDDLE:
+		y = pos.y + (sz.y - fontSize) * 0.5f;
+		break;
+	case Button::VerticalAlign::BOTTOM:
+		y = pos.y + sz.y - fontSize - paddingY;
+		break;
+	}
 
 	// Pick contrasting text color against button tint
 	float r = this->color.x;

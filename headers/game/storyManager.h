@@ -34,6 +34,8 @@ public:
 	void LoadStory(std::filesystem::path path);
 	void PlayNextStoryPart();
 
+	const std::string& GetEndScreenText() const;
+
 	void Tick() override;
 	void Start() override;
 
@@ -46,4 +48,6 @@ private:
 	std::vector<StoryPart> storyParts;
 	std::weak_ptr<Player> player;
 	size_t currentStoryIndex = 0;
+
+	std::string endScreenText;
 };

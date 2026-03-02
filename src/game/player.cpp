@@ -433,7 +433,13 @@ void Player::HideQuitToMenuPrompt() {
 	}
 }
 
-void Player::DecrementHealth(int hp) { this->health.Decrement(hp); }
+void Player::DecrementHealth(int hp) { 
+	this->health.Decrement(hp);
+	if (this->health.IsDead()) {
+		GameManager::GetInstance()->PlayerDied();
+	}
+
+}
 
 void Player::IncrementHealth(int hp) { this->health.Increment(hp); }
 
@@ -452,6 +458,7 @@ void Player::OnCollision(std::weak_ptr<GameObject3D> gameObject3D) {
 
 void Player::OnHit(float value)
 {
+	this->DecrementHealth(value);
 	SoundClip* hurtClip = AssetManager::GetInstance().GetSoundClip("DeathScream.wav"); //temp sound clip
 	this->hurtSpeaker.lock()->SetRandomPitch(0.9f, 1.1f);
 	this->hurtSpeaker.lock()->Play(hurtClip);

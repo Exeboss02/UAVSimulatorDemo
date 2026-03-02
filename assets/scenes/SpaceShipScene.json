@@ -7,7 +7,7 @@
     {
       "transform": {
         "position": [
-          310,
+          140,
           5.0,
           0.0
         ],
@@ -45,12 +45,34 @@
           1.0
         ],
         "scale": [
+          2.0,
+          1.5,
+          2.0
+        ]
+      },
+      "type": "SpaceShip"
+    },
+    {
+      "name": "THE GUN UPGRADE",
+      "transform": {
+        "position": [
+          143,
+          0.0,
+          0.0
+        ],
+        "rotation": [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ],
+        "scale": [
           1.0,
           1.0,
           1.0
         ]
       },
-      "type": "SpaceShip"
+      "type": "GunPickUp"
     }
     
   ]

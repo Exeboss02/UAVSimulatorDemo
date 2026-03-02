@@ -404,7 +404,7 @@ void GameManager::EndRound() {
 	this->idleTimeTimer = this->idleTime;
 
 	if (this->currentRound >= this->rounds.size()) {
-		Win();
+		// Let storymanager do the winning
 	}
 
 	if (auto sm = this->storyManager.lock()) {

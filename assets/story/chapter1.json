@@ -87,14 +87,21 @@
           "displayTime": 3.0
         },
         {
-          "text": "Couldn't you just give back the ",
+          "text": "Couldn't you just give it back? Why would you even steal something like that?",
+          "displayTime": 6.0
+        },
+        {
+          "text": "Can't believe I am going to die for THAT",
           "displayTime": 3.0
         },
         {
-          "text": "I'm sure they will forgive you",
+          "text": "You know they will probably be able to send another 7 ships or something before you reach that warp gate?",
+          "displayTime": 3.0
+        },
+        {
+          "text": "Which I hope is where you are heading because there is no way you will be able to escape otherwise",
           "displayTime": 3.0
         }
-
       ],
       "soundClipPath": "WaitingForActionRadio.wav"
     },
@@ -105,11 +112,23 @@
           "displayTime": 3.0
         },
         {
-          "text": "If I could just find that and a couple of new arms I could get rid of both the pesky pilo. HRM",
+          "text": "If I could just find that and a couple of new arms I could get rid of both the pesky pilo...",
           "displayTime": 3.0
         },
         {
-          "text": "Oh, you were listening huh? Good, I was just talking about how I could help taking care of the bots",
+          "text": "Oh, you were listening huh? Good, uuh, I was just talking about how I could help taking care of the bots",
+          "displayTime": 3.0
+        },
+        {
+          "text": "I was not plotting to kill you or anything",
+          "displayTime": 3.0
+        },
+        {
+          "text": "You just need to, ehrm, find my old weapon and give it to me",
+          "displayTime": 3.0
+        },
+        {
+          "text": "You definitly shouldn't use it for yourself cause, that would be bad..",
           "displayTime": 3.0
         }
 
@@ -119,7 +138,23 @@
     {
       "textParts": [
         {
-          "text": "",
+          "text": "You know, even though you are much inferior to the great BERTA..",
+          "displayTime": 3.0
+        },
+        {
+          "text": "I am a little impressed you made it this far, I am still waiting for my weapon though...",
+          "displayTime": 3.0
+        },
+        {
+          "text": "And definitly to kill you and tour the galaxy alone",
+          "displayTime": 3.0
+        },
+        {
+          "text": "But hey, for completly unrelated reasons, could you give back complete controll of the ship?",
+          "displayTime": 3.0
+        },
+        {
+          "text": "So I could.. help pilot it",
           "displayTime": 3.0
         }
 
@@ -129,7 +164,15 @@
     {
       "textParts": [
         {
-          "text": "",
+          "text": "Hm, this thing might actually make it, but how do I get rid of it once we reach the warp gate...",
+          "displayTime": 7.0
+        },
+        {
+          "text": "..",
+          "displayTime": 1.0
+        },
+        {
+          "text": "Ah your back! great",
           "displayTime": 3.0
         }
 
@@ -139,15 +182,13 @@
     {
       "textParts": [
         {
+          "text": "Ooooh, that is what airlock password was...",
+          "displayTime": 3.0
+        },
+        {
           "text": "",
           "displayTime": 3.0
-        }
-
-      ],
-      "soundClipPath": "WaitingForActionRadio.wav"
-    },
-    {
-      "textParts": [
+        },
         {
           "text": "",
           "displayTime": 3.0

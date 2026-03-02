@@ -176,7 +176,7 @@ void Room::SetupPathfindingNodes(std::shared_ptr<SpaceShip> spaceShip, std::shar
 
 	size_t nodeCount = this->pathfindingNodes.size();
 
-	const float nodeHeight = 2.0f;
+	const float nodeHeight = 1.5f;
 
 	// 9 nodes in local room-space, 1 in the center, and 8 around the center in a circle.
 	std::array<DirectX::XMVECTOR, 9> nodesLocal = {};
@@ -328,7 +328,7 @@ void Room::ShowBuildMenu(std::shared_ptr<Player> player) {
 
 		// Button layout
 		const float btnW = 150.0f;
-		const float btnH = 300.0f;
+		const float btnH = 140.0f;
 		const float spacing = 20.0f;
 		const size_t n = labels.size();
 		const float totalW = n * btnW + (n - 1) * spacing;
@@ -347,7 +347,7 @@ void Room::ShowBuildMenu(std::shared_ptr<Player> player) {
 			btn->SetLabel(label);
 
 			btn->SetHorizontalAlign(UI::Button::HorizontalAlign::CENTER);
-			btn->SetVerticalAlign(UI::Button::VerticalAlign::MIDDLE);
+			btn->SetVerticalAlign(UI::Button::VerticalAlign::TOP);
 			UI::Vec2 pos{startX + static_cast<float>(i) * (btnW + spacing), yPos};
 			btn->SetPosition(pos);
 			btn->SetSize({btnW, btnH});

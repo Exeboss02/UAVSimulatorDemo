@@ -45,6 +45,8 @@ public:
 
 	Resource& GetResource(ResourceType resource);
 
+	bool tryToPay(size_t titanium, size_t lubricant, size_t carbonFiber, size_t circuit);
+
 private:
 	std::array<Resource*, 4> resources;
 };

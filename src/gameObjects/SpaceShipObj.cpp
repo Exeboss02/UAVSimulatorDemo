@@ -5,7 +5,7 @@
 #include "gameObjects/enemy.h"
 #include "imgui.h"
 #include <array>
-
+#include "gameObjects/cockpit.h"
 #include "utilities/logger.h"
 
 

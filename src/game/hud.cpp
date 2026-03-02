@@ -86,6 +86,10 @@ void HUD::Start() {
 		this->playerHealthText = this->MakeText("HUD_Player_Health", "0", -iconTextOffsetX, padding + iconTextOffsetY,
 												textWidth, UI::Anchor::TopLeft);
 	}
+	// Core Health
+	{
+		this->coreHealthText = this->MakeText("HUD_Core_Health", "Core Health: 100", 0, 40, textWidth, UI::Anchor::TopCenter);
+	}
 
 	// Blood overlay (visible on low health)
 	{
@@ -321,6 +325,8 @@ void HUD::SetStoryTextVisibility(bool visible) {
 		storyText->SetVisible(visible);
 	}
 }
+
+void HUD::SetCoreHealthText(int health) { this->SafeTextSet(this->coreHealthText, std::format("Core Health: {}", health)); }
 
 std::weak_ptr<UI::Text> HUD::MakeText(const std::string& name, const std::string& text, float x, float y, float width,
 									  UI::Anchor anchor) {

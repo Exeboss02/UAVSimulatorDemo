@@ -1,5 +1,9 @@
 #pragma once 
 #include "gameObjects/gameObject3D.h"
+#include "game/health.h"
+
+class SpaceShip;
+struct AStarVertex;
 
 class Cockpit : public GameObject3D {
 public:
@@ -17,7 +21,7 @@ public:
 
 private:
 	std::function<void()> onDeath = []() { Logger::Log("Core Died"); };
-	float health = 100;
+	Health health;
 
 	DirectX::XMVECTOR corePosition;
 

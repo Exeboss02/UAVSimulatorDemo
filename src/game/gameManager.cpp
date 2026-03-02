@@ -4,6 +4,7 @@
 #include "UI/image.h"
 #include "UI/text.h"
 #include "core/filepathHolder.h"
+#include "core/input/keyboardInput.h"
 #include "rendering/renderQueue.h"
 #include "scene/sceneManager.h"
 #include <algorithm>
@@ -14,8 +15,8 @@
 std::weak_ptr<GameManager> GameManager::instance;
 
 GameManager::GameManager()
-	: playerSpawnPoint(DirectX::XMVectorSet(140.0, 5.0, 0.0, 0.0)), currentRound(0), inCombat(false), enemySpawnTimer(1),
-	  unspawnedEnemies(0), enemySpawnDelay(2), idleTime(30), idleTimeTimer(0) {}
+	: playerSpawnPoint(DirectX::XMVectorSet(140.0, 5.0, 0.0, 0.0)), currentRound(0), inCombat(false),
+	  enemySpawnTimer(1), unspawnedEnemies(0), enemySpawnDelay(2), idleTime(30), idleTimeTimer(0) {}
 
 void GameManager::Start() {
 	if (GameManager::instance.expired()) {
@@ -66,9 +67,9 @@ void GameManager::Start() {
 	AudioManager::GetInstance().LoopMusicTrack("contact", true);
 	AudioManager::GetInstance().SetGain("contact", 0.4f);
 
-	//Main menu music
+	// Main menu music
 	AudioManager::GetInstance().AddMusicTrackStandardFolder("CourageDemo.wav", "courage");
-	//AudioManager::GetInstance().LoopMusicTrack("courage", true);
+	// AudioManager::GetInstance().LoopMusicTrack("courage", true);
 	AudioManager::GetInstance().SetGain("courage", 0.4f);
 
 	this->shipSpeaker = this->factory->CreateGameObjectOfType<SoundSourceObject>();
@@ -80,9 +81,8 @@ void GameManager::Start() {
 void GameManager::Tick() {
 	// If win screen is visible
 	if (this->winScreenVisible) {
-		float currentTime = Time::GetInstance().GetSessionTime();
-		// Auto-transition to main menu after 5 seconds
-		if (currentTime - this->winStartTime >= 5.0f) {
+		KeyboardInput keyboardInput;
+		if (keyboardInput.Interact()) {
 			if (auto playerPtr = this->player.lock()) {
 				playerPtr->SetShowCursor(true);
 				playerPtr->SetInputEnabled(false);
@@ -99,6 +99,13 @@ void GameManager::Tick() {
 			if (!this->winPrompt.expired()) {
 				if (auto p = this->winPrompt.lock()) this->factory->QueueDeleteGameObject(std::weak_ptr<GameObject>(p));
 			}
+			for (auto& lineWeak : this->winStoryLines) {
+				if (lineWeak.expired()) continue;
+				if (auto line = lineWeak.lock()) {
+					this->factory->QueueDeleteGameObject(std::weak_ptr<GameObject>(line));
+				}
+			}
+			this->winStoryLines.clear();
 			this->winScreenVisible = false;
 
 			if (auto sm = SceneManager::GetActive()) {
@@ -173,6 +180,14 @@ void GameManager::ReloadScene() {
 }
 
 void GameManager::Win() {
+	if (auto playerPtr = this->player.lock()) {
+		playerPtr->SetInputEnabled(false);
+		playerPtr->SetShowCursor(true);
+		if (playerPtr->hud) {
+			playerPtr->hud->OnDestroy();
+		}
+	}
+
 	// Try to find the main HUD canvas to place the win overlay on top
 	auto canvasWeak = this->factory->FindObjectOfType<UI::CanvasObject>();
 	if (canvasWeak.expired()) {
@@ -199,17 +214,19 @@ void GameManager::Win() {
 	} catch (...) {
 	}
 
-	// Semi-opaque background
+	// Full-screen opaque black background
 	{
 		auto bgWeak = this->factory->CreateGameObjectOfType<UI::Image>();
 		if (!bgWeak.expired()) {
 			auto bg = bgWeak.lock();
 			bg->SetName("Win_Background");
+			bg->SetImage("assets/images/test.png");
+			bg->SetAnchor(UI::Anchor::TopLeft);
 			bg->SetSize(UI::Vec2{canvasWidth, canvasHeight});
 			bg->SetPosition(UI::Vec2{0.0f, 0.0f});
-			bg->SetTint(DirectX::XMFLOAT4{0.0f, 0.0f, 0.0f, 0.6f});
+			bg->SetTint(DirectX::XMFLOAT4{0.0f, 0.0f, 0.0f, 1.0f});
 			bg->SetVisible(true);
-			bg->SetZIndex(0);
+			bg->SetZIndex(100);
 			std::weak_ptr<GameObject> me = canvasShared->GetPtr();
 			bg->SetParent(me);
 			canvasShared->AddChild(std::static_pointer_cast<UI::Widget>(bg));
@@ -218,29 +235,71 @@ void GameManager::Win() {
 		}
 	}
 
-	// Title text: "You won!"
+	this->winTitle.reset();
+
+	// Story text lines (one UI text per line)
 	{
-		auto titleWeak = this->factory->CreateGameObjectOfType<UI::Text>();
-		if (!titleWeak.expired()) {
-			auto title = titleWeak.lock();
-			title->SetName("Win_Title");
-			title->SetText("You won!");
-			title->SetFontSize(72.0f);
-			title->SetAnchor(UI::Anchor::MidCenter);
-			title->SetPosition(UI::Vec2{0.0f, -200.0f});
-			title->SetVisible(true);
-			title->SetZIndex(1);
+		this->winStoryLines.clear();
+		const std::vector<std::string> lines = {"After pressing the button you are flung into space,",
+												"never to be seen again.",
+												"The pirates, or rather the pirate king",
+												"who controls them never managed to retrieve the",
+												"luxurios fermented golden foxcatjelly coffee beans",
+												"you stole.",
+												"BERTA on the other hand is living the good life,",
+												"traveling between planets, sunbathing,",
+												"shooting asteroids and the occasional trader.",
+												"You know, AI stuff.",
+												"But, hey, you managed to escape the pirates,",
+												"so, you won?"};
+
+		const float startY = -220.0f;
+		const float lineSpacing = 40.0f;
+		for (size_t index = 0; index < lines.size(); ++index) {
+			auto lineWeak = this->factory->CreateGameObjectOfType<UI::Text>();
+			if (lineWeak.expired()) continue;
+
+			auto lineText = lineWeak.lock();
+			if (!lineText) continue;
+
+			lineText->SetName("Win_Story_Line_" + std::to_string(index + 1));
+			lineText->SetText(lines[index]);
+			lineText->SetFontSize(28.0f);
+			lineText->SetAnchor(UI::Anchor::MidCenter);
+			lineText->SetPosition(UI::Vec2{0.0f, startY + lineSpacing * static_cast<float>(index)});
+			lineText->SetVisible(true);
+			lineText->SetZIndex(101);
+
 			std::weak_ptr<GameObject> me = canvasShared->GetPtr();
-			title->SetParent(me);
-			canvasShared->AddChild(std::static_pointer_cast<UI::Widget>(title));
-			RenderQueue::AddUIWidget(title);
-			this->winTitle = title;
+			lineText->SetParent(me);
+			canvasShared->AddChild(std::static_pointer_cast<UI::Widget>(lineText));
+			RenderQueue::AddUIWidget(lineText);
+
+			this->winStoryLines.push_back(lineText);
+		}
+	}
+
+	// Continue prompt at the bottom
+	{
+		auto promptWeak = this->factory->CreateGameObjectOfType<UI::Text>();
+		if (!promptWeak.expired()) {
+			auto prompt = promptWeak.lock();
+			prompt->SetName("Win_Continue_Prompt");
+			prompt->SetText("Press \"F\" to continue...");
+			prompt->SetFontSize(22.0f);
+			prompt->SetAnchor(UI::Anchor::BottomCenter);
+			prompt->SetPosition(UI::Vec2{0.0f, -40.0f});
+			prompt->SetVisible(true);
+			prompt->SetZIndex(101);
+			std::weak_ptr<GameObject> me = canvasShared->GetPtr();
+			prompt->SetParent(me);
+			canvasShared->AddChild(std::static_pointer_cast<UI::Widget>(prompt));
+			RenderQueue::AddUIWidget(prompt);
+			this->winPrompt = prompt;
 		}
 	}
 
 	this->winScreenVisible = true;
-	// Record the session time so we can enforce a delay before allowing menu return
-	this->winStartTime = Time::GetInstance().GetSessionTime();
 }
 
 void GameManager::PlayerDied() {
@@ -389,7 +448,7 @@ void GameManager::AudioHandling() {
 					this->buildMusicWaitTimer.Reset();
 
 					SoundClip* buildMusic = AssetManager::GetInstance().GetDialogueSoundClip("Announcement.wav");
-					//this->shipSpeaker.lock()->Play(buildMusic); //only dialogue in between rounds?
+					// this->shipSpeaker.lock()->Play(buildMusic); //only dialogue in between rounds?
 				}
 			}
 

@@ -39,6 +39,7 @@ void GameManager::Start() {
 	}
 
 	this->storyManager = this->factory->CreateGameObjectOfType<StoryManager>();
+	this->storyManager.lock()->PlayNextStoryPart();
 
 	// Set up rounds
 	this->rounds.reserve(10);
@@ -245,6 +246,7 @@ void GameManager::PlayerDied() {
 	lockedPlayer->SetCameraRotation(0, 0, 0);
 	lockedPlayer->SetPhysicsPosition(this->playerSpawnPoint);
 	lockedPlayer->SetPreviousPhysicsPosition(this->playerSpawnPoint);
+	lockedPlayer->IncrementHealth(100);
 }
 
 void GameManager::Loose() {
@@ -345,6 +347,8 @@ void GameManager::EndRound() {
 		sm->PlayNextStoryPart();
 	}
 }
+
+std::weak_ptr<StoryManager> GameManager::GetStoryManager() { return this->storyManager; }
 
 void GameManager::AudioHandling() {
 	float deltaTime = Time::GetInstance().GetDeltaTime();

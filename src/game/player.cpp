@@ -27,6 +27,8 @@ void Player::Start() {
 	this->SetPhysicsPosition(spawnPoint);
 	this->SetPreviousPhysicsPosition(spawnPoint);
 
+	this->resources.titanium.SetAmount(20);
+
 	// adding camera
 	auto cameraWeak = this->factory->CreateGameObjectOfType<CameraObject>();
 	auto cameraShared = cameraWeak.lock();
@@ -627,6 +629,7 @@ void Player::addGun(Guns gunType) {
 		break;
 	case Guns::none:
 		gunWeak = std::weak_ptr<Gun>();
+		break;
 	default:
 		break;
 	}

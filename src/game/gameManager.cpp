@@ -33,7 +33,7 @@ void GameManager::Start() {
 	}
 
 	this->storyManager = this->factory->CreateGameObjectOfType<StoryManager>();
-
+	this->storyManager.lock()->PlayNextStoryPart();
 
 	// Set up rounds
 	this->rounds.reserve(10);

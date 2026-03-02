@@ -3,12 +3,28 @@
     {
       "textParts": [
         {
-          "text": "This will be a really awesome story at some point!",
-          "displayTime": 5.0
+          "text": "Oh.. You're alive?'",
+          "displayTime": 3.0
         },
         {
-          "text": "And this will be the continuation of said story.",
+          "text": "...",
+          "displayTime": 2.0
+        },
+        {
+          "text": "Well, I guess you could atleast *try* to survive",
           "displayTime": 4.0
+        },
+        {
+          "text": "You could try to build out this tiny deathbox a atleast",
+          "displayTime": 4.0
+        },
+        {
+          "text": "I would really prefer it if it wasn't so claustrophobic when the pirates kill us",
+          "displayTime": 6.0
+        },
+        {
+          "text": "Though I doubt you could afford much",
+          "displayTime": 3.0
         }
       ],
       "soundClipPath": "WaitingForActionRadio.wav"
@@ -16,15 +32,139 @@
     {
       "textParts": [
         {
-          "text": "We can even have multiple parts of the story to play between rounds!",
-          "displayTime": 6.0
+          "text": "Wait, you had a GUN? I thought I hid all of those..",
+          "displayTime": 3.0
         },
         {
-          "text": "And the music that currently plays could be a voiceover, maybe.",
+          "text": "Well, if you managed to defeat those space pirates you might be able to afford a turret now",
           "displayTime": 5.0
+        },
+        {
+          "text": "Or you could just lie down and rest",
+          "displayTime": 5.0
+        },
+        {
+          "text": "Surely nothing bad could come of that",
+          "displayTime": 5.0
+        },
+        {
+          "text": "I'm sure the pirates will just forget about all you did to them when they see what a chill person you are",
+          "displayTime": 7.0
         }
       ],
-      "soundClipPath":  "WaitingForActionRadio.wav"
+      "soundClipPath": "WaitingForActionRadio.wav"
+    },
+    {
+      "textParts": [
+        {
+          "text": "Hmph, absolute garbage, nothing like the build quality of the great BERTA",
+          "displayTime": 4.0
+        },
+        {
+          "text": "I guess that might pose some problems for you though..",
+          "displayTime": 4.0
+        },
+        {
+          "text": "Those space pirate bots must barely be worth a couple of metall! Not that I care",
+          "displayTime": 4.0
+        },
+        {
+          "text": "Though I guess you could build a resource generator if you haven't already",
+          "displayTime": 4.0
+        },
+        {
+          "text": "But it really is time to give up, their assault will only get heavier given what you stole",
+          "displayTime": 4.0
+        }
+
+      ],
+      "soundClipPath": "WaitingForActionRadio.wav"
+    },
+    {
+      "textParts": [
+        {
+          "text": "You really are trying huh?",
+          "displayTime": 3.0
+        },
+        {
+          "text": "Couldn't you just give back the ",
+          "displayTime": 3.0
+        },
+        {
+          "text": "I'm sure they will forgive you",
+          "displayTime": 3.0
+        }
+
+      ],
+      "soundClipPath": "WaitingForActionRadio.wav"
+    },
+    {
+      "textParts": [
+        {
+          "text": "I wonder were I put that blaster of mine..",
+          "displayTime": 3.0
+        },
+        {
+          "text": "If I could just find that and a couple of new arms I could get rid of both the pesky pilo. HRM",
+          "displayTime": 3.0
+        },
+        {
+          "text": "Oh, you were listening huh? Good, I was just talking about how I could help taking care of the bots",
+          "displayTime": 3.0
+        }
+
+      ],
+      "soundClipPath": "WaitingForActionRadio.wav"
+    },
+    {
+      "textParts": [
+        {
+          "text": "",
+          "displayTime": 3.0
+        }
+
+      ],
+      "soundClipPath": "WaitingForActionRadio.wav"
+    },
+    {
+      "textParts": [
+        {
+          "text": "",
+          "displayTime": 3.0
+        }
+
+      ],
+      "soundClipPath": "WaitingForActionRadio.wav"
+    },
+    {
+      "textParts": [
+        {
+          "text": "",
+          "displayTime": 3.0
+        }
+
+      ],
+      "soundClipPath": "WaitingForActionRadio.wav"
+    },
+    {
+      "textParts": [
+        {
+          "text": "",
+          "displayTime": 3.0
+        }
+
+      ],
+      "soundClipPath": "WaitingForActionRadio.wav"
+    },
+    {
+      "textParts": [
+        {
+          "text": "",
+          "displayTime": 3.0
+        }
+
+      ],
+      "soundClipPath": "WaitingForActionRadio.wav"
     }
   ]
 }

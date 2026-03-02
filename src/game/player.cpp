@@ -42,6 +42,11 @@ void Player::Start() {
 	// adding gun
 	this->addGun(Guns::pistol);
 
+	//on hit function
+	std::function<void(float)> onHitFunction = [&](float value) {
+		this->OnHit(value);
+	};
+
 	// adding body colliders
 	{
 		auto colliderobjWeak = this->factory->CreateGameObjectOfType<SphereCollider>();
@@ -55,6 +60,7 @@ void Player::Start() {
 		colliderobj->SetParent(this->GetPtr());
 		colliderobj->SetTag(Tag::PLAYER);
 		colliderobj->SetName("PlayerCollider " + std::to_string(this->factory->GetNextID()));
+		colliderobj->SetOnHit(onHitFunction);
 	}
 
 	{
@@ -69,6 +75,7 @@ void Player::Start() {
 		colliderobj->SetParent(this->GetPtr());
 		colliderobj->SetTag(Tag::PLAYER);
 		colliderobj->SetName("PlayerCollider " + std::to_string(this->factory->GetNextID()));
+		colliderobj->SetOnHit(onHitFunction);
 	}
 
 	{
@@ -83,6 +90,7 @@ void Player::Start() {
 		colliderobj->SetParent(this->GetPtr());
 		colliderobj->SetTag(Tag::PLAYER);
 		colliderobj->SetName("PlayerCollider " + std::to_string(this->factory->GetNextID()));
+		colliderobj->SetOnHit(onHitFunction);
 	}
 
 	// GroundCheck
@@ -393,17 +401,17 @@ void Player::OnCollision(std::weak_ptr<GameObject3D> gameObject3D) {
 
 	std::string name = gameObject3D.lock()->GetName();
 	std::shared_ptr<SpaceShip> spaceShip = std::dynamic_pointer_cast<SpaceShip>(gameObject3D.lock());
-	std::shared_ptr<Enemy> enemy = std::dynamic_pointer_cast<Enemy>(gameObject3D.lock());
 
 	if (spaceShip) {
 		this->isGrounded = true;
 	}
+}
 
-	if (enemy) {
-		SoundClip* hurtClip = AssetManager::GetInstance().GetSoundClip("DeathScream.wav"); //temp sound clip
-		this->hurtSpeaker.lock()->SetRandomPitch(0.9f, 1.1f);
-		this->hurtSpeaker.lock()->Play(hurtClip);
-	}
+void Player::OnHit(float value)
+{
+	SoundClip* hurtClip = AssetManager::GetInstance().GetSoundClip("DeathScream.wav"); //temp sound clip
+	this->hurtSpeaker.lock()->SetRandomPitch(0.9f, 1.1f);
+	this->hurtSpeaker.lock()->Play(hurtClip);
 }
 
 void Player::LoadFromJson(const nlohmann::json& data) {

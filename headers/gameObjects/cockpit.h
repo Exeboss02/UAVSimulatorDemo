@@ -2,6 +2,7 @@
 #include "gameObjects/gameObject3D.h"
 #include "game/health.h"
 #include "gameObjects/wall.h"
+#include "core/audio/soundEngine.h"
 
 class SpaceShip;
 struct AStarVertex;
@@ -30,4 +31,6 @@ private:
 
 	void createVisualsAndColiders();
 	std::array<std::weak_ptr<Wall>, 4> walls;
+
+	std::weak_ptr<SoundSourceObject> speaker;
 };

@@ -10,8 +10,7 @@ void Mine::Start() {
 	collider->SetOnCollision([&](std::weak_ptr<GameObject> trigger) { 
         this->OnExplode();
     });
-	collider->SetOnHit([&](float damadge) { this->OnExplode();
-       });
+
 	collider->transform.SetScale(5, 5, 5);
 	this->SetMesh(AssetManager::GetInstance().GetMeshObjData("meshes/mine.glb:Mesh_0"));
 

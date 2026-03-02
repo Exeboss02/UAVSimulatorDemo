@@ -154,6 +154,14 @@ void Wall::SetWallState(int wallState, bool edgeWall) {
 	}
 }
 
+void Wall::SetWallCost(size_t titanium, size_t lubricant, size_t carbonfiber, size_t circuitboards)
+{
+	this->wallCost.setTitanium(titanium);
+	this->wallCost.setLubricant(lubricant);
+	this->wallCost.setCarbonFiber(carbonfiber);
+	this->wallCost.setCircuit(circuitboards);
+}
+
 void Wall::RemoveInteractables() {
 	if (!this->interactable.expired()) {
 		this->factory->QueueDeleteGameObject(this->interactable);

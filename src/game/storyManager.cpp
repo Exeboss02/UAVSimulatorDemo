@@ -98,7 +98,7 @@ bool StoryPart::PlayStoryPart(std::shared_ptr<Player> player) {
 		this->currentTextPart = 0;
 		if (auto speaker = player->storySpeaker.lock()) {
 			if (this->soundClip) {
-				speaker->Play(this->soundClip);
+				//speaker->Play(this->soundClip);
 			}
 		}
 		player->hud->SetStoryText(this->textParts[this->currentTextPart].GetText());

@@ -113,6 +113,10 @@ void Room::Start() {
 
 		meshobj->SetWAllIndex(i);
 
+		DirectX::XMVECTOR distanceVector = DirectX::XMVectorSubtract(GameManager::GetInstance()->GetPlayerSpawnPoint(), meshobj->transform.GetGlobalPosition());
+		float distance = DirectX::XMVectorGetX(DirectX::XMVector3Length(distanceVector));
+		meshobj->SetWallCost((distance / 2) - 1, 0, 0, 0);
+
 		this->walls[i] = meshobj;
 	}
 	auto buildCollider = this->factory->CreateStaticGameObject<BoxCollider>();

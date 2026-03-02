@@ -7,6 +7,7 @@ class SpaceShip;
 #include "gameObjects/spaceShipObj.h"
 #include "gameObjects/wall.h"
 #include "utilities/aStar.h"
+#include "core/audio/soundEngine.h"
 
 class Room : public GameObject3D {
 public:
@@ -102,6 +103,8 @@ private:
 
 	// UI for build menu
 	std::weak_ptr<class UI::CanvasObject> buildMenu;
+
+	std::weak_ptr<SoundSourceObject> speaker;
 
 	void ShowBuildMenu(std::shared_ptr<class Player> player);
 	void HideBuildMenu();

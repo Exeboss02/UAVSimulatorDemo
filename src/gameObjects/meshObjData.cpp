@@ -1,5 +1,6 @@
 #include "gameObjects/meshObjData.h"
 #include "utilities/logger.h"
+#include "rendering/renderQueue.h"
 
 
 void MeshObjData::SetMesh(std::shared_ptr<Mesh> mesh) {

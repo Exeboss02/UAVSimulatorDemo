@@ -13,6 +13,7 @@
 #include "gameObjects/room.h"
 #include "gameObjects/turret.h"
 #include "game/gunPickUp.h"
+#include "game/musicPlayer.h"
 
 // std
 #include <Windows.h>
@@ -58,6 +59,7 @@ SceneManager::SceneManager(Renderer* rend)
 	this->objectFromString.RegisterType<Player>(NAMEOF(Player)); // Game specific
 	this->objectFromString.RegisterType<GameManager>(NAMEOF(GameManager));
 	this->objectFromString.RegisterType<GunPickUp>(NAMEOF(GunPickUp));
+	this->objectFromString.RegisterType<MusicPlayer>(NAMEOF(MusicPlayer));
 
 
 	CreateNewScene(this->emptyScene);

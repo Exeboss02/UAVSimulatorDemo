@@ -28,6 +28,11 @@ void SoundBank::AddSoundClipStandardFolder(const std::string filename, const std
 	this->CreateSoundBuffer((FilepathHolder::GetAssetsDirectory() / "audio" / "soundeffects" / filename).string(), id);
 }
 
+void SoundBank::AddDialogueSoundClipStandardFolder(const std::string filename, const std::string id)
+{
+	this->CreateSoundBuffer((FilepathHolder::GetAssetsDirectory() / "audio" / "dialogue" / filename).string(), id);
+}
+
 void SoundBank::AddSoundClip(const std::string path, const std::string id)
 {
 	this->CreateSoundBuffer(path, id);
@@ -46,6 +51,29 @@ SoundClip* SoundBank::GetSoundClip(const std::string id)
 	if (clipIt == soundClips.end())
 	{
 		this->AddSoundClipStandardFolder(id, id);
+		clipIt = this->soundClips.find(id);
+
+		if (clipIt == soundClips.end())
+		{
+			Logger::Log("couldn't find or load " + id);
+			return nullptr;
+		}
+		clip = clipIt->second;
+	} else {
+		clip = clipIt->second;
+	}
+
+	return (clip);
+}
+
+SoundClip* SoundBank::GetDialogueSoundClip(const std::string id)
+{
+	SoundClip* clip;
+	auto clipIt = this->soundClips.find(id);
+
+	if (clipIt == soundClips.end())
+	{
+		this->AddDialogueSoundClipStandardFolder(id, id);
 		clipIt = this->soundClips.find(id);
 
 		if (clipIt == soundClips.end())

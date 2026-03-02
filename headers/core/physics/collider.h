@@ -149,6 +149,8 @@ public:
 	bool GetDynamic();
 	void SetDynamic(bool dynamic);
 
+	void ShowDebug(bool show);
+
 private:
 	ColliderType type = ColliderType::NONE;
 	size_t tag = Tag::OBJECT;

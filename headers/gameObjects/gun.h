@@ -40,7 +40,6 @@ private:
 
 	std::weak_ptr<MeshObject> gunVisual;
 
-	std::vector<SoundClip*> soundClips;
 	std::weak_ptr<SoundSourceObject> speaker;
 	std::weak_ptr<GameObject3D> muzzle;
 	Timer shootCoolDown;

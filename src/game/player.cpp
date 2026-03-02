@@ -25,7 +25,6 @@ void Player::Start() {
 	this->SetPhysicsPosition(spawnPoint);
 	this->SetPreviousPhysicsPosition(spawnPoint);
 
-
 	// adding camera
 	auto cameraWeak = this->factory->CreateGameObjectOfType<CameraObject>();
 	auto cameraShared = cameraWeak.lock();
@@ -42,6 +41,11 @@ void Player::Start() {
 	// adding gun
 	this->addGun(Guns::pistol);
 
+	//on hit function
+	std::function<void(float)> onHitFunction = [&](float value) {
+		this->OnHit(value);
+	};
+
 	// adding body colliders
 	{
 		auto colliderobjWeak = this->factory->CreateGameObjectOfType<SphereCollider>();
@@ -55,6 +59,7 @@ void Player::Start() {
 		colliderobj->SetParent(this->GetPtr());
 		colliderobj->SetTag(Tag::PLAYER);
 		colliderobj->SetName("PlayerCollider " + std::to_string(this->factory->GetNextID()));
+		colliderobj->SetOnHit(onHitFunction);
 	}
 
 	{
@@ -69,6 +74,7 @@ void Player::Start() {
 		colliderobj->SetParent(this->GetPtr());
 		colliderobj->SetTag(Tag::PLAYER);
 		colliderobj->SetName("PlayerCollider " + std::to_string(this->factory->GetNextID()));
+		colliderobj->SetOnHit(onHitFunction);
 	}
 
 	{
@@ -83,6 +89,7 @@ void Player::Start() {
 		colliderobj->SetParent(this->GetPtr());
 		colliderobj->SetTag(Tag::PLAYER);
 		colliderobj->SetName("PlayerCollider " + std::to_string(this->factory->GetNextID()));
+		colliderobj->SetOnHit(onHitFunction);
 	}
 
 	// GroundCheck
@@ -111,11 +118,20 @@ void Player::Start() {
 	this->SetAllOnCollisionFunction(function);
 	
 	this->sfxTimer.Initialize(0.4f);
+	this->gunAnimationTimer.Initialize(0.15f);
 
 	// SFX
-	this->speaker = this->factory->CreateGameObjectOfType<SoundSourceObject>();
-	this->speaker.lock()->SetParent(this->GetPtr());
-	this->speaker.lock()->SetGain(1.0f);
+	this->walkSpeaker = this->factory->CreateGameObjectOfType<SoundSourceObject>();
+	this->walkSpeaker.lock()->SetParent(this->GetPtr());
+	this->walkSpeaker.lock()->SetGain(0.85f);
+
+	this->jumpSpeaker = this->factory->CreateGameObjectOfType<SoundSourceObject>();
+	this->jumpSpeaker.lock()->SetParent(this->GetPtr());
+	this->jumpSpeaker.lock()->SetGain(0.5f);
+
+	this->hurtSpeaker = this->factory->CreateGameObjectOfType<SoundSourceObject>();
+	this->hurtSpeaker.lock()->SetParent(this->GetPtr());
+	this->hurtSpeaker.lock()->SetGain(0.3f);
 
 	this->soundClips.push_back(AssetManager::GetInstance().GetSoundClip("Step1.wav"));
 	this->soundClips.push_back(AssetManager::GetInstance().GetSoundClip("Step2.wav"));
@@ -124,10 +140,17 @@ void Player::Start() {
 	// Create HUD owned by player
 	this->hud = std::make_unique<HUD>(this->factory);
 	this->hud->Start();
+	// Register callback so when HUD hides the quit prompt (e.g. NO), player input/cursor are restored
+	this->hud->SetOnQuitPromptHidden([this]() {
+		this->SetInputEnabled(true);
+		this->SetShowCursor(false);
+	});
 }
 
 void Player::Tick() {
 	this->RigidBody::Tick();
+
+	//this->GunAnimation(); //something is weird with this->canShoot, so do not use this yet
 
 	InputManager::GetInstance().ReadControllerInput(this->controllerInput->GetControllerIndex());
 	DirectX::XMVECTOR position = this->transform.GetGlobalPosition();
@@ -135,8 +158,8 @@ void Player::Tick() {
 	AudioManager::GetInstance().SetListenerPosition(position.m128_f32[0], position.m128_f32[1], position.m128_f32[2]);
 	DirectX::XMVECTOR forward = this->transform.GetGlobalForward();
 	DirectX::XMVECTOR up = this->transform.GetGlobalUp();
-	ALfloat listenerOrientation[6] = { -forward.m128_f32[0], -forward.m128_f32[1], -forward.m128_f32[2],
-		 up.m128_f32[0], up.m128_f32[1], up.m128_f32[2] };
+	ALfloat listenerOrientation[6] = {-forward.m128_f32[0], -forward.m128_f32[1], -forward.m128_f32[2],
+									  up.m128_f32[0],		up.m128_f32[1],		  up.m128_f32[2]};
 	AudioManager::GetInstance().SetListenerOrientation(listenerOrientation);
 
 	if (this->inputEnabled) {
@@ -172,11 +195,29 @@ void Player::Tick() {
 	if (this->sfxTimer.TimeIsUp()) {
 		int randomIndex = RandomInt(0, 2);
 
-		std::shared_ptr<SoundSourceObject> lockedSpeaker = this->speaker.lock();
-		lockedSpeaker->SetRandomPitch(0.8f, 1.2f);
+		std::shared_ptr<SoundSourceObject> lockedSpeaker = this->walkSpeaker.lock();
+		lockedSpeaker->SetRandomPitch(0.6f, 1.0f);
 		lockedSpeaker->Play(this->soundClips[randomIndex]);
 
 		this->sfxTimer.Reset();
+	}
+
+	//Landing sound handling
+	if(this->isGrounded)
+	{
+		if(!this->hasPlayedLandSound)
+		{
+			SoundClip* clip = AssetManager::GetInstance().GetSoundClip("Land.wav");
+			this->jumpSpeaker.lock()->SetRandomPitch(0.7f, 1.0f);
+			this->jumpSpeaker.lock()->SetGain(0.15f);
+			this->jumpSpeaker.lock()->Play(clip);
+			this->hasPlayedLandSound = true;
+		}
+	}
+
+	else if(!this->isGrounded)
+	{
+		this->hasPlayedLandSound = false;
 	}
 
 	// this->aim();
@@ -233,6 +274,12 @@ void Player::PhysicsTick() {
 
 		this->moveVector = DirectX::XMVectorAdd(this->moveVector, jumpVector);
 		this->isJumping = false;
+
+		//Play jump sound
+		SoundClip* clip = AssetManager::GetInstance().GetSoundClip("Jump.wav");
+		this->jumpSpeaker.lock()->SetRandomPitch(0.9f, 1.2f);
+		this->jumpSpeaker.lock()->SetGain(0.5f);
+		this->jumpSpeaker.lock()->Play(clip);
 	}
 
 	DirectX::XMVECTOR linearVelocityVector = {};
@@ -250,7 +297,7 @@ void Player::UpdateCamera() {
 	std::shared_ptr<CameraObject> cam = this->camera.lock();
 
 	if (this->keyBoardInput.Quit()) {
-		PostQuitMessage(0);
+		this->ShowQuitToMenuPrompt();
 	}
 
 	// Skip game input if ImGui is capturing mouse or keyboard
@@ -284,6 +331,47 @@ void Player::UpdateCamera() {
 	}
 }
 
+void Player::GunAnimation()
+{
+	//if the player can shoot the gun hasn't been fired and should therefore not move
+	if(this->canShoot)
+	{
+		this->gunIsReturning = false;
+		return;
+	}
+
+	float deltaTime = Time::GetInstance().GetDeltaTime();
+	this->gunAnimationTimer.Tick(deltaTime);
+
+	if(this->gunAnimationTimer.TimeIsUp())
+	{
+		this->gunIsReturning = true;
+		this->gunAnimationTimer.Reset();
+	}
+
+	DirectX::XMFLOAT3 gunDefaultPos, gunBackPos;
+	DirectX::XMStoreFloat3(&gunDefaultPos, this->gunDefaultPosition);
+	DirectX::XMStoreFloat3(&gunBackPos, this->gunBackPosition);
+
+	//gun is flying backwards
+	if(!this->gunIsReturning)
+	{
+		float lerpValue = (this->gunAnimationTimer.startTime - this->gunAnimationTimer.currentTime) / this->gunAnimationTimer.startTime;
+		DirectX::XMFLOAT3 currentPos = FLOAT3LERP(gunDefaultPos, gunBackPos, lerpValue);
+		DirectX::XMVECTOR newPos = DirectX::XMLoadFloat3(&currentPos);
+
+		this->gun.lock()->transform.SetPosition(newPos);
+	}
+	else
+	{
+		float lerpValue = this->gunAnimationTimer.currentTime / this->gunAnimationTimer.startTime;
+		DirectX::XMFLOAT3 currentPos = FLOAT3LERP(gunDefaultPos, gunBackPos, lerpValue);
+		DirectX::XMVECTOR newPos = DirectX::XMLoadFloat3(&currentPos);
+
+		this->gun.lock()->transform.SetPosition(newPos);
+	}
+}
+
 void Player::SetCameraRotation(float r, float p, float y) {
 	this->cameraRotation[0] = r;
 	this->cameraRotation[1] = p;
@@ -292,7 +380,17 @@ void Player::SetCameraRotation(float r, float p, float y) {
 
 void Player::SetShowCursor(bool visible) {
 	this->showCursor = visible;
-	ShowCursor(visible);
+	// Force OS cursor state to the requested visibility. ShowCursor uses an internal
+	// display counter; call repeatedly until the API reports the desired state.
+	if (visible) {
+		while (ShowCursor(TRUE) < 0) {
+			;
+		}
+	} else {
+		while (ShowCursor(FALSE) >= 0) {
+			;
+		}
+	}
 	// when showing cursor, disable shooting
 	this->canShoot = !visible;
 }
@@ -303,6 +401,22 @@ void Player::SetInputEnabled(bool enabled) {
 		this->input[0] = 0.0f;
 		this->input[1] = 0.0f;
 		this->canShoot = false;
+	}
+}
+
+void Player::ShowQuitToMenuPrompt() {
+	if (this->hud) {
+		this->hud->ShowQuitToMenuPrompt();
+		this->SetShowCursor(true);
+		this->SetInputEnabled(false);
+	}
+}
+
+void Player::HideQuitToMenuPrompt() {
+	if (this->hud) {
+		this->hud->HideQuitToMenuPrompt();
+		this->SetInputEnabled(true);
+		this->SetShowCursor(false);
 	}
 }
 
@@ -321,6 +435,13 @@ void Player::OnCollision(std::weak_ptr<GameObject3D> gameObject3D) {
 	if (spaceShip) {
 		this->isGrounded = true;
 	}
+}
+
+void Player::OnHit(float value)
+{
+	SoundClip* hurtClip = AssetManager::GetInstance().GetSoundClip("DeathScream.wav"); //temp sound clip
+	this->hurtSpeaker.lock()->SetRandomPitch(0.9f, 1.1f);
+	this->hurtSpeaker.lock()->Play(hurtClip);
 }
 
 void Player::LoadFromJson(const nlohmann::json& data) {
@@ -401,15 +522,6 @@ void Player::Interact() {
 
 	if (this->keyBoardInput.Interact() || this->controllerInput->Interact()) {
 
-		static int x = 0;
-		if (x % 2 == 0) {
-			this->addGun(Guns::rifle);
-			x++;
-
-		} else {
-			this->addGun(Guns::pistol);
-			x++;
-		}
 
 		Ray ray{Vector3D{posVec}, Vector3D{lookVec}};
 		RayCastData rayCastData;
@@ -447,9 +559,14 @@ void Player::Interact() {
 
 void Player::CheckForTriggerPress() {
 
-	if (this->canShoot) {
+	if (this->canShoot)
+	{
 		this->gun.lock()->Shoot((this->keyBoardInput.LeftClick() || this->controllerInput->RightClick()),
 								this->keyBoardInput.LeftDown() || this->controllerInput->RightDown());
+
+		this->gunDefaultPosition = this->transform.GetPosition();
+		this->gunBackPosition.m128_f32[1] = 0.2f;
+		this->gunBackPosition.m128_f32[1] = 0.4f;
 	}
 }
 

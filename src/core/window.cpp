@@ -38,6 +38,10 @@ LRESULT Window::WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam
 			this->ToggleFullscreen(!this->isFullscreen);
 			return 0;
 		}
+	} else if (message == WM_DESTROY) {
+		// close the application entirely
+		PostQuitMessage(0);
+		return 0;
 	}
 
 	bool result = InputManager::GetInstance().ReadMessage(hWnd, message, wParam, lParam);

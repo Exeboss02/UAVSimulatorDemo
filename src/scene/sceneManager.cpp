@@ -12,6 +12,7 @@
 #include "gameObjects/pointLightObject.h"
 #include "gameObjects/room.h"
 #include "gameObjects/turret.h"
+#include "game/gunPickUp.h"
 
 // std
 #include <Windows.h>
@@ -56,6 +57,8 @@ SceneManager::SceneManager(Renderer* rend)
 	// Game specific
 	this->objectFromString.RegisterType<Player>(NAMEOF(Player)); // Game specific
 	this->objectFromString.RegisterType<GameManager>(NAMEOF(GameManager));
+	this->objectFromString.RegisterType<GunPickUp>(NAMEOF(GunPickUp));
+
 
 	CreateNewScene(this->emptyScene);
 	this->emptyScene->CreateGameObjectOfType<CameraObject>();
@@ -70,6 +73,7 @@ void SceneManager::WireButtonEvents(UI::Button* button) {
 	int clickId = button->GetOnClickEventID();
 	int pressId = button->GetOnPressedEventID();
 	int releaseId = button->GetOnReleasedEventID();
+	int hoverId = button->GetOnHoverEventID();
 
 	if (clickId != 0) {
 		button->SetOnClick([this, clickId]() { this->eventManager->Trigger(clickId); });
@@ -79,6 +83,9 @@ void SceneManager::WireButtonEvents(UI::Button* button) {
 	}
 	if (releaseId != 0) {
 		button->SetOnReleased([this, releaseId]() { this->eventManager->Trigger(releaseId); });
+	}
+	if (hoverId != 0) {
+		button->SetOnHover([this, hoverId]() { this->eventManager->Trigger(hoverId); });
 	}
 }
 
@@ -178,6 +185,9 @@ void SceneManager::LoadSceneFromFile(const std::string& filePath) {
 		PostQuitMessage(0);
 	});
 
+	this->eventManager->RegisterCallback(static_cast<int>(ButtonEvent::PLAY_SOUND),
+										 []() { Logger::Log("Sound is being played"); });
+
 	// After all objects are started, wire any buttons that were created/modified in the editor
 	for (const auto& go : this->mainScene->GetGameObjects()) {
 		if (auto btn = dynamic_cast<UI::Button*>(go.get())) {
@@ -186,6 +196,14 @@ void SceneManager::LoadSceneFromFile(const std::string& filePath) {
 	}
 
 	SetMainCameraInScene(this->mainScene);
+}
+
+void SceneManager::QueueLoadSceneFile(const std::string& filePath) {
+	if (!this->mainScene) {
+		Logger::Error("QueueLoadSceneFile called without a main scene.");
+		return;
+	}
+	this->mainScene->QueueLoadScene(filePath);
 }
 
 void SceneManager::CreateObjectsFromJsonRecursively(const nlohmann::json& data, std::weak_ptr<GameObject> parent) {

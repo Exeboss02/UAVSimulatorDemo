@@ -1,12 +1,18 @@
 #pragma once
 
-#include "gameObjects/gameObject3D.h"
-#include "game/player.h"
-#include "gameObjects/SpaceShipObj.h"
-#include "gameObjects/testEnemy.h"
-#include "gameObjects/enemy.h"
-#include "game/storyManager.h"
 #include "core/tools.h"
+#include "game/player.h"
+#include "game/storyManager.h"
+#include "gameObjects/SpaceShipObj.h"
+#include "gameObjects/enemy.h"
+#include "gameObjects/gameObject3D.h"
+#include "gameObjects/testEnemy.h"
+
+namespace UI {
+class Image;
+class Text;
+class CanvasObject;
+} // namespace UI
 
 struct Round {
 	size_t enemyCount;
@@ -29,6 +35,7 @@ public:
 	void SpawnRound(size_t roundIndex);
 	void SpawnEnemy(size_t atBreachpoint);
 	void EndRound();
+	std::weak_ptr<StoryManager> GetStoryManager();
 
 	bool GetInCombat() const;
 
@@ -89,6 +96,12 @@ private:
 
 	size_t unspawnedEnemies;
 
+	// Win screen UI
+	bool winScreenVisible = false;
+	std::weak_ptr<UI::Image> winBackground;
+	std::weak_ptr<UI::Text> winTitle;
+	std::weak_ptr<UI::Text> winPrompt;
+	float winStartTime = 0.0f; // session time when win screen was shown
 	bool isPlayingCombatMusic = false;
 	bool isPlayingBuildMusic = false;
 	bool isFading = false;

@@ -195,6 +195,11 @@ void UI::Button::ShowInHierarchy() {
 		SetOnReleasedEventID_Wire(releasedId);
 	}
 
+	int hoverId = this->onHoverEventID;
+	if (ImGui::InputInt("OnHover Event ID", &hoverId)) {
+		SetOnHoverEventID_Wire(hoverId);
+	}
+
 	ImGui::Separator();
 	// Alignment controls
 	ImGui::Text("Label alignment:");
@@ -224,6 +229,10 @@ void UI::Button::SetOnReleasedEventID(int id) { this->onReleasedEventID = id; }
 
 int UI::Button::GetOnReleasedEventID() const { return this->onReleasedEventID; }
 
+void UI::Button::SetOnHoverEventID(int id) { this->onHoverEventID = id; }
+
+int UI::Button::GetOnHoverEventID() const { return this->onHoverEventID; }
+
 // After changing the stored event IDs, attempt to wire the button to the active SceneManager's EventManager
 // so edits in the inspector take effect immediately.
 void UI::Button::SetOnClickEventID_Wire(int id) {
@@ -238,6 +247,11 @@ void UI::Button::SetOnPressedEventID_Wire(int id) {
 
 void UI::Button::SetOnReleasedEventID_Wire(int id) {
 	this->SetOnReleasedEventID(id);
+	if (auto sm = SceneManager::GetActive()) sm->WireButtonEvents(this);
+}
+
+void UI::Button::SetOnHoverEventID_Wire(int id) {
+	this->SetOnHoverEventID(id);
 	if (auto sm = SceneManager::GetActive()) sm->WireButtonEvents(this);
 }
 
@@ -264,6 +278,8 @@ void UI::Button::LoadFromJson(const nlohmann::json& data) {
 		this->onPressedEventID = data["onPressedEvent"].get<int>();
 	if (data.contains("onReleasedEvent") && data["onReleasedEvent"].is_number())
 		this->onReleasedEventID = data["onReleasedEvent"].get<int>();
+	if (data.contains("onHoverEvent") && data["onHoverEvent"].is_number())
+		this->onHoverEventID = data["onHoverEvent"].get<int>();
 
 	// Alignment
 	if (data.contains("hAlign") && data["hAlign"].is_string()) {
@@ -296,6 +312,7 @@ void UI::Button::SaveToJson(nlohmann::json& data) {
 	if (this->onClickEventID != 0) data["onClickEvent"] = this->onClickEventID;
 	if (this->onPressedEventID != 0) data["onPressedEvent"] = this->onPressedEventID;
 	if (this->onReleasedEventID != 0) data["onReleasedEvent"] = this->onReleasedEventID;
+	if (this->onHoverEventID != 0) data["onHoverEvent"] = this->onHoverEventID;
 
 	// Alignment
 	switch (this->hAlign) {
@@ -344,45 +361,45 @@ void UI::Button::Draw() {
 	// Render label text centered inside the button
 	if (this->label.empty()) return;
 
-		// Choose font size relative to button height so measured width matches render size.
-		UI::Vec2 pos = this->GetPosition();
-		UI::Vec2 sz = this->GetSize();
+	// Choose font size relative to button height so measured width matches render size.
+	UI::Vec2 pos = this->GetPosition();
+	UI::Vec2 sz = this->GetSize();
 
-		float fontSize = std::max(10.0f, sz.y * 0.6f);
-		std::string font = "assets/fonts/lucon.ttf";
-		float measured = UI::TextRenderer::GetInstance().MeasureString(this->label, fontSize, font).x;
+	float fontSize = std::max(10.0f, sz.y * 0.6f);
+	std::string font = "assets/fonts/lucon.ttf";
+	float measured = UI::TextRenderer::GetInstance().MeasureString(this->label, fontSize, font).x;
 
-		// Horizontal alignment
-		float paddingX = 8.0f;
-		float x = pos.x + paddingX; // default left
-		switch (this->hAlign) {
-		case Button::HorizontalAlign::LEFT:
-			x = pos.x + paddingX;
-			break;
-		case Button::HorizontalAlign::CENTER: {
-			float centerX = pos.x + sz.x * 0.5f;
-			x = centerX - measured * 0.5f; // midpoint of string at button center
-			break;
-		}
-		case Button::HorizontalAlign::RIGHT:
-			x = pos.x + sz.x - measured - paddingX;
-			break;
-		}
+	// Horizontal alignment
+	float paddingX = 8.0f;
+	float x = pos.x + paddingX; // default left
+	switch (this->hAlign) {
+	case Button::HorizontalAlign::LEFT:
+		x = pos.x + paddingX;
+		break;
+	case Button::HorizontalAlign::CENTER: {
+		float centerX = pos.x + sz.x * 0.5f;
+		x = centerX - measured * 0.5f; // midpoint of string at button center
+		break;
+	}
+	case Button::HorizontalAlign::RIGHT:
+		x = pos.x + sz.x - measured - paddingX;
+		break;
+	}
 
-		// Vertical alignment
-		float paddingY = 4.0f;
-		float y = pos.y + paddingY; // top
-		switch (this->vAlign) {
-		case Button::VerticalAlign::TOP:
-			y = pos.y + paddingY;
-			break;
-		case Button::VerticalAlign::MIDDLE:
-			y = pos.y + (sz.y - fontSize) * 0.5f;
-			break;
-		case Button::VerticalAlign::BOTTOM:
-			y = pos.y + sz.y - fontSize - paddingY;
-			break;
-		}
+	// Vertical alignment
+	float paddingY = 4.0f;
+	float y = pos.y + paddingY; // top
+	switch (this->vAlign) {
+	case Button::VerticalAlign::TOP:
+		y = pos.y + paddingY;
+		break;
+	case Button::VerticalAlign::MIDDLE:
+		y = pos.y + (sz.y - fontSize) * 0.5f;
+		break;
+	case Button::VerticalAlign::BOTTOM:
+		y = pos.y + sz.y - fontSize - paddingY;
+		break;
+	}
 
 	// Pick contrasting text color against button tint
 	float r = this->color.x;

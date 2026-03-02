@@ -1,7 +1,8 @@
 #pragma once
 
-#include <memory>
 #include "UI/widget.h"
+#include <functional>
+#include <memory>
 
 class ResourceManager;
 class GameObjectFactory;
@@ -11,6 +12,7 @@ class CanvasObject;
 class Text;
 class Image;
 class InteractionPrompt;
+class Button;
 } // namespace UI
 
 class Crosshair;
@@ -30,8 +32,15 @@ public:
 	// Clean up (queue deletes) if needed
 	void OnDestroy();
 
+	// Quit-to-menu prompt controls
+	void ShowQuitToMenuPrompt();
+	void HideQuitToMenuPrompt();
+	bool IsQuitPromptVisible() const;
+
+	// Callback invoked when the quit prompt is hidden (e.g. NO pressed)
+	void SetOnQuitPromptHidden(std::function<void()> cb) { this->onQuitPromptHidden = std::move(cb); }
 	void SetStoryText(const std::string& text);
-	
+
 	void SetStoryTextVisibility(bool visible);
 
 private:
@@ -68,4 +77,13 @@ private:
 
 	// Shared prompt created once and reused for interactions
 	std::weak_ptr<UI::InteractionPrompt> interactionPrompt;
+
+	// Quit modal widgets
+	std::weak_ptr<UI::Text> quitPromptText;
+	std::weak_ptr<UI::Button> quitYesButton;
+	std::weak_ptr<UI::Button> quitNoButton;
+	std::weak_ptr<UI::Image> quitBackground;
+	bool quitPromptVisible = false;
+
+	std::function<void()> onQuitPromptHidden;
 };

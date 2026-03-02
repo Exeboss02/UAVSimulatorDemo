@@ -3,12 +3,18 @@
 
 #include <algorithm>
 
-void UI::Canvas::SetSize(Vec2 size) { this->size = size; }
+void UI::Canvas::SetSize(Vec2 size) {
+	this->size = size;
+	for (auto& child : this->children) {
+		if (child) child->SetCanvasSize(size);
+	}
+}
 
 UI::Vec2 UI::Canvas::GetSize() const { return this->size; }
 
 void UI::Canvas::AddChild(const std::shared_ptr<Widget>& child) {
 	if (!child) return;
+	child->SetCanvasSize(this->size);
 	this->children.push_back(child);
 }
 

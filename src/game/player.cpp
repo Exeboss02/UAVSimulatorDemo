@@ -251,6 +251,7 @@ void Player::UpdateCamera() {
 
 	if (this->keyBoardInput.Quit()) {
 		PostQuitMessage(0);
+		return;
 	}
 
 	// Skip game input if ImGui is capturing mouse or keyboard

@@ -481,7 +481,7 @@ bool Room::TryBuildTurret() {
 		auto turret = this->factory->CreateStaticGameObject<Turret>();
 
 		turret->SetParent(this->GetPtr());
-		turret->transform.SetPosition(0, 1.5, 0);
+		turret->transform.SetPosition(0, 0.5, 0);
 
 		this->builtObject = static_pointer_cast<GameObject3D>(turret.Get());
 

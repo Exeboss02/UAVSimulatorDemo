@@ -7,17 +7,38 @@
 #include "gameObjects/rayVis.h"
 
 void Turret::Start() { 
-	this->SetMesh(AssetManager::GetInstance().GetMeshObjData("TexBox/TextureCube.glb:Mesh_0"));
+	this->SetMesh(AssetManager::GetInstance().GetMeshObjData("Buildings/Turret.glb:Mesh_0"));
 	auto collider = this->factory->CreateStaticGameObject<SphereCollider>();
 	collider->transform.SetScale(2, 2, 2);
+	collider->transform.SetPosition(0, 0.5, 0);
 	collider->SetParent(this->GetPtr());
 	collider->SetTag(Tag::PLAYER);
+	auto colliderChild = collider.Get();
 	/*this->shootSound = SoundSourceManager::*/
 	auto speaker = this->factory->CreateStaticGameObject<SoundSourceObject>();
 	speaker->SetParent(this->GetParent());
 	this->speaker = speaker;
 	this->shootSound = AssetManager::GetInstance().GetSoundClip("Laser1.wav");
 	this->MeshObject::Start();
+
+	//collider.Init();
+
+	//colliderChild->ShowDebug(true);
+
+	auto frame = this->factory->CreateGameObjectOfType<MeshObject>().lock();
+	frame->SetMesh(AssetManager::GetInstance().GetMeshObjData("Buildings/Turret.glb:Mesh_2"));
+	frame->SetParent(this->GetPtr());
+	this->framePart = frame;
+
+	auto turretParent = this->factory->CreateGameObjectOfType<GameObject3D>().lock();
+	turretParent->transform.SetPosition(0, 1.15, 0);
+	turretParent->SetParent(this->GetPtr());
+	this->turretPart = turretParent;
+
+	auto turret = this->factory->CreateGameObjectOfType<MeshObject>().lock();
+	turret->SetMesh(AssetManager::GetInstance().GetMeshObjData("Buildings/Turret.glb:Mesh_1"));
+	turret->transform.SetRotationRPY(0, 0, DirectX::XM_PI);
+	turret->SetParent(turretParent->GetPtr());
 }
 
 void Turret::Tick() {
@@ -27,8 +48,10 @@ void Turret::Tick() {
 	if (!this->target.expired()) {
 		auto target = this->target.lock();
 
+		auto turret = this->turretPart.lock();
+
 		DirectX::XMVECTOR betweenVec =
-			DirectX::XMVectorSubtract(target->transform.GetGlobalPosition(), this->transform.GetGlobalPosition());
+			DirectX::XMVectorSubtract(target->transform.GetGlobalPosition(), turret->transform.GetGlobalPosition());
 
 		float distanceSquared = DirectX::XMVectorGetX(DirectX::XMVector3Dot(betweenVec, betweenVec));
 
@@ -88,8 +111,10 @@ void Turret::Fire() {
 	Logger::Log("Boom");
 	this->lastFired = Time::GetInstance().GetSessionTime();
 
-	const DirectX::XMVECTOR lookVec = this->transform.GetGlobalForward();
-	const DirectX::XMVECTOR posVec = this->transform.GetGlobalPosition();
+	auto turret = this->turretPart.lock();
+
+	const DirectX::XMVECTOR lookVec = turret->transform.GetGlobalForward();
+	const DirectX::XMVECTOR posVec = turret->transform.GetGlobalPosition();
 
 	Ray ray{Vector3D{posVec}, Vector3D{lookVec}};
 	RayCastData rayCastData;
@@ -116,7 +141,7 @@ void Turret::Fire() {
 		colliderobj->SetCastShadow(false);
 		colliderobj->transform.SetPosition(
 			DirectX::XMVectorAdd(posVec, DirectX::XMVectorScale(lookVec, rayCastData.distance / 2)));
-		colliderobj->transform.SetRotationQuaternion(this->transform.GetGlobalRotation());
+		colliderobj->transform.SetRotationQuaternion(turret->transform.GetGlobalRotation());
 		DirectX::XMFLOAT3 scale(0.01f, 0.01f, rayCastData.distance / 2);
 		colliderobj->transform.SetScale(DirectX::XMLoadFloat3(&scale));
 		// end of rayVis
@@ -124,8 +149,15 @@ void Turret::Fire() {
 }
 
 void Turret::SetDirection(DirectX::XMVECTOR newDirection) {
+	if (this->turretPart.expired()) {
+		Logger::Warn("No turret");
+		return;
+	}
+
+	auto turret = this->turretPart.lock();
+
 	DirectX::XMVECTOR desiredDir = DirectX::XMVector3Normalize(newDirection);
-	DirectX::XMVECTOR currentDir = DirectX::XMVector3Normalize(this->transform.GetGlobalForward());
+	DirectX::XMVECTOR currentDir = DirectX::XMVector3Normalize(turret->transform.GetGlobalForward());
 	float deltaTime = Time::GetInstance().GetDeltaTime();
 
 	float dot = DirectX::XMVectorGetX(DirectX::XMVector3Dot(currentDir, desiredDir));
@@ -144,6 +176,11 @@ void Turret::SetDirection(DirectX::XMVECTOR newDirection) {
 
 		DirectX::XMVECTOR newDir = DirectX::XMVector3Normalize(XMVector3TransformNormal(currentDir, rot));
 
-		this->transform.SetDirection(newDir);
+		turret->transform.SetDirection(newDir);
+
+		DirectX::XMVECTOR frameDir{newDir.m128_f32[0], 0, newDir.m128_f32[2]};
+
+		auto frame = this->framePart.lock();
+		frame->transform.SetDirection(frameDir);
 	}
 }

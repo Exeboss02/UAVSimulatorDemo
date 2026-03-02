@@ -49,6 +49,6 @@ private:
 	float lastFired = 0;
 	float rpm = 60;
 	float range = 20;
-	float damage = 10;
+	float damage = 20;
 
 };

@@ -2,6 +2,9 @@
 #include "gameObjects/gameObject3D.h"
 #include "game/health.h"
 
+class SpaceShip;
+struct AStarVertex;
+
 class Cockpit : public GameObject3D {
 public:
 	void Start() override;

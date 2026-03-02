@@ -2,6 +2,8 @@
 #include "core/physics/sphereCollider.h"
 #include "gameObjects/room.h"
 #include "game/gameManager.h"
+#include "gameObjects/SpaceShipObj.h"
+#include "utilities/aStar.h"
 
 void Cockpit::Start() { 
 	auto coreCollider = this->factory->CreateStaticGameObject<SphereCollider>();

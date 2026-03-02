@@ -12,8 +12,8 @@ void Mine::Start() {
     });
 	collider->SetOnHit([&](float damadge) { this->OnExplode();
        });
-	collider->transform.SetScale(2, 2, 2);
-	this->SetMesh(AssetManager::GetInstance().GetMeshObjData("TexBox/TextureCube.glb:Mesh_0"));
+	collider->transform.SetScale(5, 5, 5);
+	this->SetMesh(AssetManager::GetInstance().GetMeshObjData("meshes/mine.glb:Mesh_0"));
 
     SoundClip* clip = AssetManager::GetInstance().GetSoundClip("Build2.wav");
     std::weak_ptr<SoundSourceObject> speaker = this->factory->CreateStaticGameObject<SoundSourceObject>();
@@ -21,6 +21,13 @@ void Mine::Start() {
     speaker.lock()->SetRandomPitch(0.8f, 1.0f);
     speaker.lock()->SetGain(1.0f);
 	speaker.lock()->Play(clip);
+
+    this->transform.SetPosition(0, 1.0f, 0);
+    this->transform.SetScale(0.5f, 0.5f, 0.5f);
+
+    //this looks crazy, but feels okey
+    this->range = 35000;
+    this->damage = 4000;
 
 	this->MeshObject::Start();
 }
@@ -40,7 +47,7 @@ void Mine::OnExplode() {
 
     //When mine gets the destroyed it creates a soundSourceObject that keeps living after
     //the mine stops existing that plays the sound, it gets deleted once it finnishes playing
-    SoundClip* explosionClip = AssetManager::GetInstance().GetSoundClip("Explosion2.wav");
+    SoundClip* explosionClip = AssetManager::GetInstance().GetSoundClip("BigExplosion1.wav");
     std::weak_ptr<SoundSourceObject> speaker = this->factory->CreateGameObjectOfType<SoundSourceObject>();
     speaker.lock()->SetDeleteWhenFinnished(true);
     speaker.lock()->SetPitch(1.0f);

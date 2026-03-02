@@ -29,6 +29,6 @@ private:
 
 	float hoverDisabledUntil = 0.0f;
 
-
+	size_t titanuimCost = 10;
 
 };

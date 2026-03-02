@@ -1,5 +1,6 @@
 #include "game/gunPickUp.h"
 #include "UI/interactionPrompt.h"
+#include <format>
 GunPickUp::GunPickUp() {}
 
 GunPickUp::~GunPickUp() {}
@@ -44,8 +45,9 @@ void GunPickUp::Start() {
 void GunPickUp::OnInteract(std::shared_ptr<Player> playerShared) {
 
 
-	if (playerShared->resources.titanium.DecrementAmount(10)) {
+	if (playerShared->resources.titanium.DecrementAmount(this->titanuimCost)) {
 		playerShared->addGun(Player::Guns::rifle);
+		this->factory->QueueDeleteGameObject(this->GetPtr());
 	}
 
 }
@@ -59,7 +61,7 @@ void GunPickUp::Hover() {
 		auto prompt = promptWeak.lock();
 		if (!prompt) return;
 
-		std::string txt = "10 titanium to repair gun";
+		std::string txt = std::format("{} iron to repair rifle", this->titanuimCost);
 		DirectX::XMVECTOR worldPos = this->transform.GetGlobalPosition();
 		prompt->Show(txt, worldPos);
 	} catch (const std::exception& e) {

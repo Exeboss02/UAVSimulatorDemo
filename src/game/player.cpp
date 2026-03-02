@@ -6,8 +6,9 @@
 #include "gameObjects/meshObject.h"
 #include "gameObjects/mine.h"
 #include "gameObjects/pistol01.h"
-#include "gameObjects/rifle01.h"
 #include "gameObjects/rayVis.h"
+#include "gameObjects/rifle01.h"
+#include "gameObjects/room.h"
 #include <numbers>
 
 Player::Player() : cameraRotation{0, 0, 0} { this->controllerInput = std::make_shared<ControllerInput>(0); }
@@ -116,7 +117,7 @@ void Player::Start() {
 		}
 	};
 	this->SetAllOnCollisionFunction(function);
-	
+
 	this->sfxTimer.Initialize(0.4f);
 	this->gunAnimationTimer.Initialize(0.15f);
 
@@ -406,6 +407,18 @@ void Player::SetInputEnabled(bool enabled) {
 
 void Player::ShowQuitToMenuPrompt() {
 	if (this->hud) {
+		// Ensure quit prompt is exclusive: do not open it while any build menu is open
+		try {
+			auto rooms = this->factory->FindObjectsOfType<Room>();
+			for (auto& roomWeak : rooms) {
+				if (roomWeak.expired()) continue;
+				auto room = roomWeak.lock();
+				if (!room) continue;
+				if (room->IsBuildMenuOpen()) return;
+			}
+		} catch (...) {
+		}
+
 		this->hud->ShowQuitToMenuPrompt();
 		this->SetShowCursor(true);
 		this->SetInputEnabled(false);
@@ -592,7 +605,6 @@ void Player::Aim() {
 }
 
 void Player::addGun(Guns gunType) {
-	
 
 	if (!this->gun.expired()) {
 		this->factory->QueueDeleteGameObject(this->gun);

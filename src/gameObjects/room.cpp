@@ -48,7 +48,7 @@ void Room::Start() {
 
 	DirectX::XMVECTOR position = this->transform.GetGlobalPosition();
 
-	if(!(position.m128_f32[0] == 140 && position.m128_f32[2] == 0)) //for not playing build sound in the starting room
+	if (!(position.m128_f32[0] == 140 && position.m128_f32[2] == 0)) // for not playing build sound in the starting room
 	{
 		SoundClip* buildClip = AssetManager::GetInstance().GetSoundClip("Build1.wav");
 		this->speaker = this->factory->CreateStaticGameObject<SoundSourceObject>();
@@ -434,6 +434,9 @@ void Room::Hover() {
 		if (!prompt) return;
 
 		std::string txt = "Press \"F\" to open build menu";
+		if (auto gameManager = GameManager::GetInstance(); gameManager && gameManager->GetInCombat()) {
+			txt = "Can't build during attacks";
+		}
 		DirectX::XMVECTOR worldPos = this->transform.GetGlobalPosition();
 		prompt->Show(txt, worldPos);
 	} catch (const std::exception& e) {

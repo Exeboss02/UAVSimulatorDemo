@@ -1,11 +1,18 @@
 #include "gameObjects/wall.h"
 #include "UI/interactionPrompt.h"
+#include "game/gameManager.h"
 #include "gameObjects/room.h"
 #include "utilities/logger.h"
 #include "utilities/time.h"
 void Wall::OnObserve() {}
 
 void Wall::OnInteract() {
+	try {
+		if (auto gameManager = GameManager::GetInstance(); gameManager && gameManager->GetInCombat()) {
+			return;
+		}
+	} catch (...) {
+	}
 
 	Logger::Log("stop interacting with me!");
 
@@ -136,9 +143,9 @@ void Wall::SetWallState(int wallState, bool edgeWall) {
 	}
 }
 
-void Wall::RemoveInteractables() { 
+void Wall::RemoveInteractables() {
 	if (!this->interactable.expired()) {
-		this->factory->QueueDeleteGameObject(this->interactable); 
+		this->factory->QueueDeleteGameObject(this->interactable);
 	}
 }
 
@@ -152,6 +159,12 @@ void Wall::Hover() {
 		if (!prompt) return;
 
 		std::string txt = "Press \"F\" to build room";
+		try {
+			if (auto gameManager = GameManager::GetInstance(); gameManager && gameManager->GetInCombat()) {
+				txt = "Can't build during attacks";
+			}
+		} catch (...) {
+		}
 		DirectX::XMVECTOR worldPos = this->transform.GetGlobalPosition();
 		prompt->Show(txt, worldPos);
 	} catch (const std::exception& e) {

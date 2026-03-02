@@ -562,19 +562,19 @@ void Player::Interact() {
 			hitString = "hit";
 
 			// rayVis
-			MeshObjData meshdata = AssetManager::GetInstance().GetMeshObjData("TexBox/TextureCube.glb:Mesh_0");
-			auto colliderobjWeak = this->factory->CreateGameObjectOfType<RayVis>();
-			auto colliderobj = colliderobjWeak.lock();
-			colliderobj->StartDeathTimer(5);
-			colliderobj->SetMesh(meshdata);
-			colliderobj->GetMesh().SetMaterial(
-				0, AssetManager::GetInstance().GetMaterialWeakPtr("defaultUnlitMaterial").lock());
-			colliderobj->SetCastShadow(false);
-			colliderobj->transform.SetPosition(
-				DirectX::XMVectorAdd(posVec, DirectX::XMVectorScale(lookVec, rayCastData.distance / 2)));
-			colliderobj->transform.SetRotationQuaternion(this->camera.lock()->transform.GetGlobalRotation());
-			DirectX::XMFLOAT3 scale(0.01f, 0.01f, rayCastData.distance / 2);
-			colliderobj->transform.SetScale(DirectX::XMLoadFloat3(&scale));
+			//MeshObjData meshdata = AssetManager::GetInstance().GetMeshObjData("TexBox/TextureCube.glb:Mesh_0");
+			//auto colliderobjWeak = this->factory->CreateGameObjectOfType<RayVis>();
+			//auto colliderobj = colliderobjWeak.lock();
+			//colliderobj->StartDeathTimer(5);
+			//colliderobj->SetMesh(meshdata);
+			//colliderobj->GetMesh().SetMaterial(
+			//	0, AssetManager::GetInstance().GetMaterialWeakPtr("defaultUnlitMaterial").lock());
+			//colliderobj->SetCastShadow(false);
+			//colliderobj->transform.SetPosition(
+			//	DirectX::XMVectorAdd(posVec, DirectX::XMVectorScale(lookVec, rayCastData.distance / 2)));
+			//colliderobj->transform.SetRotationQuaternion(this->camera.lock()->transform.GetGlobalRotation());
+			//DirectX::XMFLOAT3 scale(0.01f, 0.01f, rayCastData.distance / 2);
+			//colliderobj->transform.SetScale(DirectX::XMLoadFloat3(&scale));
 			// end of rayVis
 		} else {
 			hitString = "miss";

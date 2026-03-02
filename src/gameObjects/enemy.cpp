@@ -30,14 +30,18 @@ void Enemy::Start() {
 	meshObj->SetParent(this->GetPtr());
 
 	MeshObjData meshData =
-		AssetManager::GetInstance().GetMeshObjData("TexBox/TextureCube.glb:Mesh_0"); // TODO: Add enemy mesh
+		AssetManager::GetInstance().GetMeshObjData("enemies/piratebot2.glb:Mesh_0"); // TODO: Add enemy mesh
 	meshObj->SetMesh(meshData);
+	meshObj->transform.SetScale({0.3, 0.3, 0.3});
+	meshObj->transform.SetRotationRPY({0, -DirectX::XM_PIDIV2, 0});
+	meshObj->transform.SetPosition({0,-0.8,0});
 
 	auto collider = this->factory->CreateGameObjectOfType<SphereCollider>().lock();
 	collider->transform.SetScale({2, 2, 2});
 	collider->SetParent(this->GetPtr());
 	collider->SetTag(Tag::ENEMY);
 	collider->SetDynamic(true);
+	//collider->ShowDebug(true);
 
 	collider->SetOnHit([&](float damage) {
 		this->health.Decrement(damage);

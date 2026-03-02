@@ -11,6 +11,13 @@ void Cockpit::Start() {
 	coreCollider->SetParent(this->GetPtr());
 	coreCollider->SetSolid(true);
 
+	auto coreMesh = this->factory->CreateStaticGameObject<MeshObject>();
+	coreMesh->SetParent(this->GetPtr());
+	coreMesh->transform.SetPosition(0, 2, 0);
+	coreMesh->transform.SetScale(1, 1.2f, 1);
+	coreMesh->SetMesh(AssetManager::GetInstance().GetMeshObjData("meshes/core.glb:Mesh_0"));
+	
+
 	// Update core health on hud
 	GameManager::GetInstance()->GetPlayer()->hud->SetCoreHealthText(this->health.Get());
 

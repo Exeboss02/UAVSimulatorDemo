@@ -30,6 +30,6 @@ private:
 
 	float hoverDisabledUntil = 0.0f;
 
-	CostHandler gunCost = CostHandler(10, 0, 0, 0);
+	CostHandler gunCost = CostHandler(100, 0, 0, 0);
 
 };

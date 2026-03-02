@@ -8,6 +8,7 @@ class SpaceShip;
 #include "gameObjects/wall.h"
 #include "utilities/aStar.h"
 #include "core/audio/soundEngine.h"
+#include "game/costHandler.h"
 
 class Room : public GameObject3D {
 public:
@@ -112,4 +113,8 @@ private:
 	void Hover();
 
 	float hoverDisabledUntil = 0.0f;
+
+	CostHandler turretCost = CostHandler(4, 0, 0, 0);
+	CostHandler mineCost = CostHandler(3, 0, 0, 0);
+	CostHandler generatorCost = CostHandler(0, 0, 0, 0);
 };

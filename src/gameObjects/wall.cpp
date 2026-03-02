@@ -5,9 +5,14 @@
 #include "utilities/time.h"
 void Wall::OnObserve() {}
 
-void Wall::OnInteract() {
+void Wall::OnInteract() {}
 
-	Logger::Log("stop interacting with me!");
+void Wall::Interact(std::shared_ptr<Player> playerShared) {
+
+	if (!playerShared->resources.tryToPay(this->wallCost.getTitanium(), this->wallCost.getLubricant(),
+										  this->wallCost.getCarbonFiber(), this->wallCost.getCircuit())) {
+		return;
+	}
 
 	auto parentWeak = this->GetParent();
 	if (parentWeak.expired()) {
@@ -36,6 +41,8 @@ void Wall::OnInteract() {
 	this->hoverDisabledUntil = Time::GetInstance().GetSessionTime() + 0.5f;
 }
 
+ 
+
 void Wall::Start() {
 	this->MeshObject::Start();
 	Logger::Log("Wall started");
@@ -53,7 +60,7 @@ void Wall::SpawnInteractables() {
 	DirectX::XMFLOAT3 scale(0.750f, 0.750f, 0.250f);
 	colliderobj->transform.SetScale(DirectX::XMLoadFloat3(&scale));
 	colliderobj->SetParent(this->GetPtr());
-	colliderobj->SetOnInteract([&](std::shared_ptr<Player>) { this->OnInteract(); });
+	colliderobj->SetOnInteract([&](std::shared_ptr<Player> playerShared) { this->Interact(playerShared); });
 	colliderobj->SetOnHover([&] { this->Hover(); });
 	colliderobj->SetTag(Tag::INTERACTABLE);
 	colliderobj->SetName("Interactable " + std::to_string(this->factory->GetNextID()));
@@ -151,7 +158,7 @@ void Wall::Hover() {
 		auto prompt = promptWeak.lock();
 		if (!prompt) return;
 
-		std::string txt = "Press \"F\" to build room";
+		std::string txt = std::format("Press \"F\" to build room: Cost {}", this->wallCost.getCostString());
 		DirectX::XMVECTOR worldPos = this->transform.GetGlobalPosition();
 		prompt->Show(txt, worldPos);
 	} catch (const std::exception& e) {

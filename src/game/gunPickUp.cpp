@@ -45,7 +45,7 @@ void GunPickUp::Start() {
 void GunPickUp::OnInteract(std::shared_ptr<Player> playerShared) {
 
 
-	if (playerShared->resources.titanium.DecrementAmount(this->titanuimCost)) {
+	if (playerShared->resources.tryToPay(this->gunCost.getTitanium(), this->gunCost.getLubricant(), this->gunCost.getCarbonFiber(), this->gunCost.getCircuit())) {
 		playerShared->addGun(Player::Guns::rifle);
 		this->factory->QueueDeleteGameObject(this->GetPtr());
 	}
@@ -61,7 +61,7 @@ void GunPickUp::Hover() {
 		auto prompt = promptWeak.lock();
 		if (!prompt) return;
 
-		std::string txt = std::format("{} iron to repair rifle", this->titanuimCost);
+		std::string txt = std::format("Repair rifle, Cost {}", this->gunCost.getCostString());
 		DirectX::XMVECTOR worldPos = this->transform.GetGlobalPosition();
 		prompt->Show(txt, worldPos);
 	} catch (const std::exception& e) {

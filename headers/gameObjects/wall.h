@@ -2,6 +2,8 @@
 #include "core/physics/boxCollider.h"
 #include "gameObjects/gameObject3D.h"
 #include "gameObjects/meshObject.h"
+#include "game/costHandler.h"
+
 #include <array>
 #include <memory>
 #include <vector>
@@ -10,6 +12,8 @@ class Wall : public MeshObject {
 public:
 	virtual void OnObserve();
 	virtual void OnInteract();
+
+	void Interact(std::shared_ptr<Player> playerShared);
 
 	virtual void Start() override;
 
@@ -36,4 +40,6 @@ private:
 	void SpawnWallColliders(int wallStateIndex);
 
 	void RemoveInteractables();
+
+	CostHandler wallCost = CostHandler(2, 0, 0, 0);
 };

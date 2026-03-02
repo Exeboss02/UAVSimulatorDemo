@@ -85,7 +85,8 @@ void Wall::SpawnWallColliders(int wallStateIndex) {
 	this->wallColliders.clear();
 	Room::WallState wallState = static_cast<Room::WallState>(wallStateIndex);
 	switch (wallState) {
-	case (Room::WallState::window || Room::WallState::solid): {
+	case (Room::WallState::window):
+	case (Room::WallState::solid): {
 		auto colliderobj = this->factory->CreateStaticGameObject<BoxCollider>();
 		DirectX::XMFLOAT3 pos(0.0f, 3.0f, 4.75f);
 		colliderobj->transform.SetPosition(DirectX::XMLoadFloat3(&pos));

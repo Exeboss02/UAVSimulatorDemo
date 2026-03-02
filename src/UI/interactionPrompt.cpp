@@ -38,17 +38,19 @@ void UI::InteractionPrompt::Show(const std::string& text, DirectX::XMVECTOR worl
 		textShared->SetText(text);
 		textShared->SetFontSize(this->fontSize);
 
-		float w = static_cast<float>(Window::GetCurrentWidth());
-		float h = static_cast<float>(Window::GetCurrentHeight());
-
 		UI::Vec2 size = textShared->GetSize();
 		if (size.x <= 0.0f) size.x = 200.0f;
+		if (size.y <= 0.0f) size.y = this->fontSize;
 
-		float sy = (h - size.y) * 0.5f + this->offsetY;
+		float canvasW = static_cast<float>(Window::GetCurrentWidth());
+		float canvasH = static_cast<float>(Window::GetCurrentHeight());
+		if (canvasW <= 0.0f) canvasW = 1920.0f;
+		if (canvasH <= 0.0f) canvasH = 1080.0f;
+		textShared->SetCanvasSize(UI::Vec2{canvasW, canvasH});
 
-		float px = ((w - size.x) * 0.5f) + this->offsetX;
 		textShared->SetSize(UI::Vec2{size.x, size.y});
-		textShared->SetPosition(UI::Vec2{px, sy});
+		textShared->SetAnchor(UI::Anchor::MidCenter);
+		textShared->SetPosition(UI::Vec2{this->offsetX, this->offsetY});
 		textShared->SetVisible(true);
 
 	} catch (const std::exception& e) {

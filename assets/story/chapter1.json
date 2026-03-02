@@ -3,27 +3,27 @@
     {
       "textParts": [
         {
-          "text": "Oh.. You're alive?'",
+          "text": "BERTA - Oh.. You're alive?'",
           "displayTime": 3.0
         },
         {
-          "text": "...",
+          "text": "BERTA - ...",
           "displayTime": 2.0
         },
         {
-          "text": "Well, I guess you could atleast *try* to survive",
+          "text": "BERTA - Well, I guess you could atleast *try* to survive",
           "displayTime": 4.0
         },
         {
-          "text": "You could try to build out this tiny deathbox a atleast",
+          "text": "BERTA - And maybe also build out this tiny deathbox",
           "displayTime": 4.0
         },
         {
-          "text": "I would really prefer it if it wasn't so claustrophobic when the pirates kill us",
+          "text": "BERTA - I would really prefer it if it wasn't so claustrophobic when the pirates kill us",
           "displayTime": 6.0
         },
         {
-          "text": "Though I doubt you could afford much",
+          "text": "BERTA - Though I doubt you could afford much",
           "displayTime": 3.0
         }
       ],
@@ -32,23 +32,23 @@
     {
       "textParts": [
         {
-          "text": "Wait, you had a GUN? I thought I hid all of those..",
+          "text": "BERTA - Wait, you had a GUN? I thought I hid all of those..",
           "displayTime": 3.0
         },
         {
-          "text": "Well, if you managed to defeat those space pirates you might be able to afford a turret now",
+          "text": "BERTA - Well, if you managed to defeat those space pirates you might be able to afford a turret now",
           "displayTime": 5.0
         },
         {
-          "text": "Or you could just lie down and rest",
+          "text": "BERTA - Or you could just lie down and rest",
           "displayTime": 5.0
         },
         {
-          "text": "Surely nothing bad could come of that",
+          "text": "BERTA - Surely nothing bad could come of that",
           "displayTime": 5.0
         },
         {
-          "text": "I'm sure the pirates will just forget about all you did to them when they see what a chill person you are",
+          "text": "BERTA - I'm sure the pirates will just forget about all you did to them when they see what a chill person you are",
           "displayTime": 7.0
         }
       ],
@@ -57,23 +57,23 @@
     {
       "textParts": [
         {
-          "text": "Hmph, absolute garbage, nothing like the build quality of the great BERTA",
+          "text": "BERTA - Hmph, absolute garbage, nothing like the build quality of the great BERTA",
           "displayTime": 4.0
         },
         {
-          "text": "I guess that might pose some problems for you though..",
+          "text": "BERTA - I guess that might pose some problems for you though..",
           "displayTime": 4.0
         },
         {
-          "text": "Those space pirate bots must barely be worth a couple of metall! Not that I care",
+          "text": "BERTA - Those space pirate bots must barely be worth a couple of metall! Not that I care",
           "displayTime": 4.0
         },
         {
-          "text": "Though I guess you could build a resource generator if you haven't already",
+          "text": "BERTA - Though I guess you could build a resource generator if you haven't already",
           "displayTime": 4.0
         },
         {
-          "text": "But it really is time to give up, their assault will only get heavier given what you stole",
+          "text": "BERTA - But it really is time to give up, their assault will only get heavier given what you stole",
           "displayTime": 4.0
         }
 
@@ -83,23 +83,23 @@
     {
       "textParts": [
         {
-          "text": "You really are trying huh?",
+          "text": "BERTA - You really are trying huh?",
           "displayTime": 3.0
         },
         {
-          "text": "Couldn't you just give it back? Why would you even steal something like that?",
+          "text": "BERTA - Couldn't you just give it back? Why would you even steal something like that?",
           "displayTime": 6.0
         },
         {
-          "text": "Can't believe I am going to die for THAT",
+          "text": "BERTA - Can't believe I am going to die for THAT",
           "displayTime": 3.0
         },
         {
-          "text": "You know they will probably be able to send another 7 ships or something before you reach that warp gate?",
+          "text": "BERTA - You know they will probably be able to send another 7 ships or something before you reach that warp gate?",
           "displayTime": 3.0
         },
         {
-          "text": "Which I hope is where you are heading because there is no way you will be able to escape otherwise",
+          "text": "BERTA - Which I hope is where you are heading because there is no way you will be able to escape otherwise",
           "displayTime": 3.0
         }
       ],
@@ -108,53 +108,27 @@
     {
       "textParts": [
         {
-          "text": "I wonder were I put that blaster of mine..",
+          "text": "BERTA - I wonder were I put that blaster of mine..",
           "displayTime": 3.0
         },
         {
-          "text": "If I could just find that and a couple of new arms I could get rid of both the pesky pilo...",
+          "text": "BERTA - If I could just find that and a couple of new arms I could get rid of both the pesky pilo...",
           "displayTime": 3.0
         },
         {
-          "text": "Oh, you were listening huh? Good, uuh, I was just talking about how I could help taking care of the bots",
+          "text": "BERTA - Oh, you were listening huh? Good, uuh, I was just talking about how I could help taking care of the bots",
           "displayTime": 3.0
         },
         {
-          "text": "I was not plotting to kill you or anything",
+          "text": "BERTA - I was not plotting to kill you or anything",
           "displayTime": 3.0
         },
         {
-          "text": "You just need to, ehrm, find my old weapon and give it to me",
+          "text": "BERTA - You just need to, ehrm, find my old weapon and give it to me",
           "displayTime": 3.0
         },
         {
-          "text": "You definitly shouldn't use it for yourself cause, that would be bad..",
-          "displayTime": 3.0
-        }
-
-      ],
-      "soundClipPath": "WaitingForActionRadio.wav"
-    },
-    {
-      "textParts": [
-        {
-          "text": "You know, even though you are much inferior to the great BERTA..",
-          "displayTime": 3.0
-        },
-        {
-          "text": "I am a little impressed you made it this far, I am still waiting for my weapon though...",
-          "displayTime": 3.0
-        },
-        {
-          "text": "And definitly not to kill you and tour the galaxy alone",
-          "displayTime": 3.0
-        },
-        {
-          "text": "But hey, for completly unrelated reasons, could you give back complete controll of the ship?",
-          "displayTime": 3.0
-        },
-        {
-          "text": "So I could.. help pilot it",
+          "text": "BERTA - You definitly shouldn't use it for yourself cause, that would be bad..",
           "displayTime": 3.0
         }
 
@@ -164,15 +138,41 @@
     {
       "textParts": [
         {
-          "text": "Hm, this thing might actually make it, but how do I get rid of it once we reach the warp gate...",
+          "text": "BERTA - You know, even though you are much inferior to the great BERTA..",
+          "displayTime": 3.0
+        },
+        {
+          "text": "BERTA - I am a little impressed you made it this far, I am still waiting for my weapon though...",
+          "displayTime": 3.0
+        },
+        {
+          "text": "BERTA - And definitly not to kill you and tour the galaxy alone",
+          "displayTime": 3.0
+        },
+        {
+          "text": "BERTA - But hey, for completly unrelated reasons, could you give back complete controll of the ship?",
+          "displayTime": 3.0
+        },
+        {
+          "text": "BERTA - So I could.. help pilot it",
+          "displayTime": 3.0
+        }
+
+      ],
+      "soundClipPath": "WaitingForActionRadio.wav"
+    },
+    {
+      "textParts": [
+        {
+          "text": "BERTA - Hm, this thing might actually make it, but how do I get rid of it once we reach the warp gate...",
           "displayTime": 7.0
         },
         {
-          "text": "..",
+          "text": "BERTA - ..",
           "displayTime": 1.0
         },
         {
-          "text": "Ah your back! great",
+          "text": "BERTA - Ah your back! great",
           "displayTime": 3.0
         }
 
@@ -182,30 +182,30 @@
     {
       "textParts": [
         {
-          "text": "Ooooh, that is what airlock password was...",
+          "text": "BERTA - Ooooh, that is what airlock password was...",
           "displayTime": 3.0
         },
         {
-          "text": "I could use that",
+          "text": "BERTA - I could use that",
           "displayTime": 3.0
         },
         {
-          "text": "...",
+          "text": "BERTA - ...",
           "displayTime": 3.0
         }
 
       ],
       "soundClipPath": "WaitingForActionRadio.wav"
     },
-    
+
     {
       "textParts": [
         {
-          "text": "Hey, you don't happen to have some tape laying around do you?",
+          "text": "BERTA - Hey, you don't happen to have some tape laying around do you?",
           "displayTime": 3.0
         },
         {
-          "text": "And a pen perhaps?",
+          "text": "BERTA - And a pen perhaps?",
           "displayTime": 3.0
         }
       ],
@@ -214,23 +214,23 @@
     {
       "textParts": [
         {
-          "text": "Wow, great job pilot!",
+          "text": "BERTA - Wow, great job pilot!",
           "displayTime": 3.0
         },
         {
-          "text": "It seems there is only one ship hunting us left!",
+          "text": "BERTA - It seems there is only one ship hunting us left!",
           "displayTime": 3.0
         },
         {
-          "text": "After that we are free to roam the galaxy, together!",
+          "text": "BERTA - After that we are free to roam the galaxy, together!",
           "displayTime": 3.0
         },
         {
-          "text": "We really must celebrate this afterwards!",
+          "text": "BERTA - We really must celebrate this afterwards!",
           "displayTime": 3.0
         },
         {
-          "text": "I will prepare a wonderfull gift for you",
+          "text": "BERTA - I will prepare a wonderfull gift for you",
           "displayTime": 3.0
         }
 
@@ -240,24 +240,25 @@
     {
       "textParts": [
         {
-          "text": "You made it!",
+          "text": "BERTA - You made it!",
           "displayTime": 3.0
         },
         {
-          "text": "I never doubted you for a second!",
+          "text": "BERTA - I never doubted you for a second!",
           "displayTime": 3.0
         },
         {
-          "text": "Walk over to the cockpit, I have a surprise for you",
+          "text": "BERTA - Walk over to the cockpit, I have a surprise for you",
           "displayTime": 3.0
         },
         {
-          "text": "I am sure you will be overjoyed with what I have prepared!",
+          "text": "BERTA - I am sure you will be overjoyed with what I have prepared!",
           "displayTime": 3.0
         }
 
       ],
       "soundClipPath": "WaitingForActionRadio.wav"
     }
-  ]
+  ],
+  "EndScreenText": "After pressing the button you are flung into space, never to be seen again. The pirates, or rather the pirate king who controls them never managed to retrieve the luxurios fermented golden foxcatjelly coffee beans you stole. BERTA on the other hand is living the good life, traveling between planets, sunbathing, shooting asteroids and the occasional trader. You know, AI stuff. But, hey, you managed to escape the pirates, so, you won?"
 }

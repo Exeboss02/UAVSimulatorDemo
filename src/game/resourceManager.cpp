@@ -28,4 +28,20 @@ ResourceManager::ResourceManager()
 	: titanium("Titanium", 0), lubricant("Lubricant", 0), carbonFiber("Carbon Fiber", 0), circuit("Circuits", 0),
 	  resources({&titanium, &lubricant, &carbonFiber, &circuit}) {}
 
-Resource& ResourceManager::GetResource(ResourceType resource) { return *this->resources[static_cast<size_t>(resource)]; }
+Resource& ResourceManager::GetResource(ResourceType resource) {
+	return *this->resources[static_cast<size_t>(resource)];
+}
+
+bool ResourceManager::tryToPay(size_t titanium, size_t lubricant, size_t carbonFiber, size_t circuit) { 
+	
+	if (this->titanium.GetAmount() >= titanium && this->lubricant.GetAmount() >= lubricant &&
+		this->carbonFiber.GetAmount() >= carbonFiber && this->circuit.GetAmount() >= circuit) {
+		this->titanium.DecrementAmount(titanium);
+		this->lubricant.DecrementAmount(lubricant);
+		this->carbonFiber.DecrementAmount(carbonFiber);
+		this->circuit.DecrementAmount(circuit);
+		return true;
+	} else {
+		return false;
+	}
+}

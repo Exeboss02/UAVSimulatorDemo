@@ -30,21 +30,26 @@ void Enemy::Start() {
 	meshObj->SetParent(this->GetPtr());
 
 	MeshObjData meshData =
-		AssetManager::GetInstance().GetMeshObjData("enemies/piratebot2.glb:Mesh_0");
+		AssetManager::GetInstance().GetMeshObjData("enemies/NewEnemy.glb:Mesh_0");
 	meshObj->SetMesh(meshData);
 	meshObj->transform.SetScale({0.3, 0.3, 0.3});
-	meshObj->transform.SetRotationRPY({0, -DirectX::XM_PIDIV2, 0});
+	//meshObj->transform.SetRotationRPY({0, -DirectX::XM_PIDIV2, 0});
 	meshObj->transform.SetPosition(0.f, -0.8f, 0.f);
+
+	auto headParent = this->factory->CreateGameObjectOfType<GameObject3D>().lock();
+	//headParent->SetParent(this->GetPtr());
+	meshObj->transform.SetRotationRPY({0, 0, 0});
+	this->head = headParent;
 
 	auto head = this->factory->CreateGameObjectOfType<MeshObject>().lock();
 
-	meshData = AssetManager::GetInstance().GetMeshObjData("TexBox/TextureCube.glb:Mesh_0");
+	meshData = AssetManager::GetInstance().GetMeshObjData("enemies/NewEnemy.glb:Mesh_1");
 	head->SetMesh(meshData);
-	head->transform.SetScale({0.3, 0.3, 0.3});
-	meshObj->transform.SetRotationRPY({0, 0, 0});
-	head->transform.SetPosition(DirectX::XMVectorAdd(this->transform.GetGlobalPosition(), this->headOffsetFromBody));
+	head->transform.SetScale({0.15, 0.15, 0.15});
+	head->transform.SetPosition({0.0, -0.4, 0.0});
+	head->transform.SetRotationRPY({0, -DirectX::XM_PIDIV2, 0});
+	head->SetParent(headParent);
 
-	this->head = head;
 
 	auto collider = this->factory->CreateGameObjectOfType<SphereCollider>().lock();
 	collider->transform.SetScale({2, 2, 2});
@@ -401,7 +406,6 @@ void Enemy::RotateBody(const float deltaTime) {
 }
 
 void Enemy::RotateHead(DirectX::XMVECTOR& newDirection, const float deltaTime) {
-
 	if (this->head.expired()) {
 		Logger::Error("Enemy has no head to rotate.");
 		return;
@@ -410,9 +414,7 @@ void Enemy::RotateHead(DirectX::XMVECTOR& newDirection, const float deltaTime) {
 	// Check if we are already facing the desired direction
 	if (DirectX::XMVector4NearEqual(
 			this->head.lock()->transform.GetGlobalForward(), // Make sure this is head's forward, not body's
-									newDirection, 
-									DirectX::XMVectorSet(0.01f, 0.01f, 0.01f, 0.01f))) 
-	{
+			newDirection, DirectX::XMVectorSet(0.01f, 0.01f, 0.01f, 0.01f))) {
 		return;
 	}
 
@@ -429,8 +431,7 @@ void Enemy::RotateHead(DirectX::XMVECTOR& newDirection, const float deltaTime) {
 	float angle = acosf(dot);
 	if (angle <= maxStep) {
 		newDir = desiredDir;
-	} 
-	else {
+	} else {
 		float step = std::min(angle, maxStep);
 		DirectX::XMVECTOR axis = DirectX::XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
 

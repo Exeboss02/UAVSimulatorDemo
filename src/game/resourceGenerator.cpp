@@ -14,8 +14,8 @@
 
 void ResourceGenerator::Start() {
 	this->SetMesh(AssetManager::GetInstance().GetMeshObjData("meshes/generator.glb:Mesh_0"));
-	this->transform.SetScale(0.5f, 1.0f, 0.5f);
-	this->transform.SetPosition(0, 2.0f, 0);
+	this->transform.SetScale(0.5f, 1.2f, 0.5f);
+	this->transform.SetPosition(0, 1.8f, 0);
 
 	auto interactCollider = this->factory->CreateStaticGameObject<BoxCollider>();
 	interactCollider->SetParent(this->GetPtr());

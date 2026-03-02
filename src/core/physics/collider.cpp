@@ -94,6 +94,7 @@ void Collider::Start()
 		visualMeshObject->SetParent(std::static_pointer_cast<Collider>(this->GetPtr()));
 		visualMeshObject->SetActive(false);
 		visualMeshObject->SetCastShadow(false);
+		this->meshObjectChild = visualMeshObject.Get();
 	} else {
 		auto visualMeshObject = this->factory->CreateGameObjectOfType<MeshObject>().lock();
 		visualMeshObject->SetMesh(meshData);
@@ -101,6 +102,7 @@ void Collider::Start()
 		visualMeshObject->SetParent(std::static_pointer_cast<Collider>(this->GetPtr()));
 		visualMeshObject->SetActive(false);
 		visualMeshObject->SetCastShadow(false);
+		this->meshObjectChild = visualMeshObject;
 	}
 	#endif
 }
@@ -372,4 +374,6 @@ void Collider::SetSolid(bool solid) {this->solid = solid;}
 
 bool Collider::GetDynamic() { return this->dynamic; }
 
-void Collider::SetDynamic(bool dynamic) {this->dynamic = dynamic;}
+void Collider::SetDynamic(bool dynamic) { this->dynamic = dynamic; }
+
+void Collider::ShowDebug(bool show) { this->meshObjectChild.lock()->SetActive(show); }

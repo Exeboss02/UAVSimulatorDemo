@@ -1,16 +1,16 @@
 #include "gameObjects/emergencyExitButton.h"
-
-class GameManager;
+#include "game/gameManager.h"
 
 void EmergenceExitButton::Start() { 
 	auto collider = this->factory->CreateStaticGameObject<SphereCollider>();
 	collider->SetOnInteract([&](std::shared_ptr<Player> player) {
 		this->OnInteract(player); 
 	});
+	collider->SetParent(this->GetPtr());
+	collider->transform.SetScale(4, 4, 4);
 
 	this->transform.SetRotationRPY(3.14/2, 3.14, 0);
 	this->transform.SetScale(0.1, 0.1, 0.1);
-	// 4.43, 2, 0
 	auto sign = this->factory->CreateStaticGameObject<MeshObject>();
 	sign->SetParent(this->GetPtr());
 	sign->transform.SetPosition(-6, -0.5, 0);
@@ -41,6 +41,15 @@ void EmergenceExitButton::SetState(EmergenceExitButton::State state) {
 	this->state = state;
 }
 
-void EmergenceExitButton::OnInteract(std::shared_ptr<Player> player) {
-	
+void EmergenceExitButton::OnInteract(std::shared_ptr<Player> player) { 
+	switch (this->state) {
+	case (EmergenceExitButton::State::PreTouchUp): {
+		GameManager::GetInstance()->PlayerDied();
+		break;
+	}
+	case (EmergenceExitButton::State::PostTouchUp):
+		GameManager::GetInstance()->Win();
+		break;
+	}
+
 }

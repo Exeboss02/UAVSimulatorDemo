@@ -7,7 +7,7 @@
           "displayTime": 3.0
         },
         {
-          "text": "BERTA - ...",
+          "text": "...",
           "displayTime": 2.0
         },
         {
@@ -15,7 +15,7 @@
           "displayTime": 4.0
         },
         {
-          "text": "BERTA - And maybe also build out this tiny deathbox",
+          "text": "BERTA - And maybe also expand this tiny deathbox",
           "displayTime": 4.0
         },
         {
@@ -57,7 +57,7 @@
     {
       "textParts": [
         {
-          "text": "BERTA - Hmph, absolute garbage, nothing like the build quality of the great BERTA",
+          "text": "BERTA - Hmph, absolute garbage, theses bots have nothing on the build quality of the great BERTA",
           "displayTime": 4.0
         },
         {
@@ -65,7 +65,7 @@
           "displayTime": 4.0
         },
         {
-          "text": "BERTA - Those space pirate bots must barely be worth a couple of metall! Not that I care",
+          "text": "BERTA - Those space pirate bots must barely provide a couple of titanium! Not that I care",
           "displayTime": 4.0
         },
         {
@@ -190,7 +190,7 @@
           "displayTime": 3.0
         },
         {
-          "text": "BERTA - ...",
+          "text": "...",
           "displayTime": 3.0
         }
 
@@ -254,11 +254,15 @@
         {
           "text": "BERTA - I am sure you will be overjoyed with what I have prepared!",
           "displayTime": 3.0
+        },
+        {
+          "text": "BERTA - Just press the gift button for your gift",
+          "displayTime": 30.0
         }
 
       ],
       "soundClipPath": "WaitingForActionRadio.wav"
     }
   ],
-  "EndScreenText": "After pressing the button you are flung into space, never to be seen again. The pirates, or rather the pirate king who controls them never managed to retrieve the luxurios fermented golden foxcatjelly coffee beans you stole. BERTA on the other hand is living the good life, traveling between planets, sunbathing, shooting asteroids and the occasional trader. You know, AI stuff. But, hey, you managed to escape the pirates, so, you won?"
+  "endScreenText": "After pressing the button you are flung into space,\n never to be seen again.\n The pirates, or rather the pirate king \nwho controls them never managed to retrieve the \nluxurios fermented golden foxcatjelly coffee beans \nyou stole. \nBERTA on the other hand is living the good life, \ntraveling between planets, sunbathing, \nshooting asteroids and the occasional trader. \nYou know, AI stuff. \nBut, hey, you managed to escape the pirates, \nso, you won?"
 }

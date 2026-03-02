@@ -28,6 +28,9 @@ void UI::Canvas::Update(float dt) {
 		UI::Vec2 newSize{static_cast<float>(w), static_cast<float>(h)};
 		if (newSize.x != this->size.x || newSize.y != this->size.y) {
 			this->SetSize(newSize);
+			for (auto& child : children) {
+				if (child) child->SetCanvasSize(newSize);
+			}
 		}
 	}
 

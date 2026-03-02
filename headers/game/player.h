@@ -22,6 +22,7 @@ public:
 
 	std::vector<SoundClip*> soundClips;
 	std::weak_ptr<SoundSourceObject> speaker;
+	std::weak_ptr<SoundSourceObject> storySpeaker;
 
 	bool jumpInput = false;
 	bool isGrounded = false;
@@ -68,7 +69,6 @@ public:
 	bool isPlayingMusic = false;
 	bool canShoot = false;
 
-	Timer musicTimer;
 	Timer sfxTimer;
 
 	ResourceManager resources;

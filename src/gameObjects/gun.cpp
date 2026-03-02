@@ -31,7 +31,6 @@ void Gun::Shoot(bool pressedTrigger, bool triggerDown) {
 	
 
 	if (!this->shootCoolDown.TimeIsUp()) {
-		Logger::Log("cooldown not down");
 		return;
 	}
 	this->shootCoolDown.Reset();
@@ -106,6 +105,7 @@ void Gun::Start() {
 		meshobj->transform.SetScale(DirectX::XMLoadFloat3(&this->visualScale));
 		meshobj->transform.SetRotationRPY(this->visualRotationRPY.x, this->visualRotationRPY.y,
 										  this->visualRotationRPY.z);
+		meshobj->SetCastShadow(false);
 		this->gunVisual = meshobj;
 	}
 

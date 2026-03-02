@@ -34,6 +34,11 @@ public:
 	void SetGain(float gain);
 
 	/// <summary>
+	/// Sets sound source volume
+	/// </summary>
+	float GetGain();
+
+	/// <summary>
 	/// Sets sound source pitch
 	/// </summary>
 	/// <param name="pitch"></param>

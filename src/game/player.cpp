@@ -35,6 +35,9 @@ void Player::Start() {
 
 	this->camera = cameraShared;
 
+	this->storySpeaker = this->factory->CreateGameObjectOfType<SoundSourceObject>();
+	this->storySpeaker.lock()->SetParent(this->GetPtr());
+
 	// adding gun
 	this->addGun(Guns::pistol);
 
@@ -105,25 +108,13 @@ void Player::Start() {
 		}
 	};
 	this->SetAllOnCollisionFunction(function);
-
-	this->musicTimer.Initialize(2);
+	
 	this->sfxTimer.Initialize(0.4f);
 
-	// Master Volume
-	AudioManager::GetInstance().SetMasterMusicVolume(0.3f);
-	AudioManager::GetInstance().SetMasterSoundEffectsVolume(1);
-
-	// Music
-	AudioManager::GetInstance().AddMusicTrackStandardFolder("LethalContact.wav", "contact");
-	AudioManager::GetInstance().LoopMusicTrack("contact", true);
 	// SFX
 	this->speaker = this->factory->CreateGameObjectOfType<SoundSourceObject>();
 	this->speaker.lock()->SetParent(this->GetPtr());
 	this->speaker.lock()->SetGain(1.0f);
-
-	// AssetManager::GetInstance().AddSoundClipStandardFolder("Step1.wav", "step1");
-	//  AssetManager::GetInstance().AddSoundClipStandardFolder("Step2.wav", "step2");
-	//  AssetManager::GetInstance().AddSoundClipStandardFolder("Step3.wav", "step3");
 
 	this->soundClips.push_back(AssetManager::GetInstance().GetSoundClip("Step1.wav"));
 	this->soundClips.push_back(AssetManager::GetInstance().GetSoundClip("Step2.wav"));
@@ -177,17 +168,9 @@ void Player::Tick() {
 	float deltaTime = Time::GetInstance().GetDeltaTime();
 	if (deltaTime < 1) // to prevent tick spam when loading scene
 	{
-		this->musicTimer.Tick(deltaTime);
-
 		if (this->isGrounded && DirectX::XMVectorGetX(DirectX::XMVector3Length(this->moveVector)) > 0.01f) {
 			this->sfxTimer.Tick(deltaTime);
 		}
-	}
-
-	if (this->musicTimer.TimeIsUp() && !isPlayingMusic) {
-		// AudioManager::GetInstance().FadeInPlay("contact", 0, 6);
-		AudioManager::GetInstance().Play("contact");
-		this->isPlayingMusic = true;
 	}
 
 	if (this->sfxTimer.TimeIsUp()) {

@@ -7,13 +7,23 @@
 
 UI::Widget::Widget(MeshObjData& mesh) { SetMesh(mesh); }
 
-void UI::Widget::SetPosition(Vec2 pos) { this->position = pos; }
+void UI::Widget::SetPosition(Vec2 pos) {
+	this->position = pos;
+	this->CalculateTruePosition();
+}
 
-void UI::Widget::SetSize(Vec2 size) { this->size = size; }
+void UI::Widget::SetSize(Vec2 size) {
+	this->size = size;
+	this->CalculateTruePosition();
+}
 
-UI::Vec2 UI::Widget::GetPosition() const { return this->position; }
+UI::Vec2 UI::Widget::GetPosition() const { return this->truePosition; }
 
 UI::Vec2 UI::Widget::GetSize() const { return this->size; }
+
+void UI::Widget::SetAnchor(Anchor anchor) { this->anchor = anchor; }
+
+Anchor UI::Widget::GetAnchor() const { return this->anchor; }
 
 void UI::Widget::SetVisible(bool visible) { this->visible = visible; }
 
@@ -57,6 +67,52 @@ void UI::Widget::SetWidgetMesh(MeshObjData& mesh) { SetMesh(mesh); }
 int UI::Widget::GetZIndex() const { return this->zIndex; }
 
 void UI::Widget::SetZIndex(int z) { this->zIndex = z; }
+
+void UI::Widget::SetCanvasSize(Vec2 size) {
+	this->canvasSize = size;
+	this->CalculateTruePosition();
+}
+
+void UI::Widget::CalculateTruePosition() {
+	const float DPI = Window::GetCurrentDPI();
+	const float canvasSizeX = this->canvasSize.x * 96. / DPI;
+	const float canvasSizeY = this->canvasSize.y * 96. / DPI;
+
+	switch (this->anchor) {
+	case (Anchor::TopLeft):
+		this->truePosition = this->position;
+		break;
+	case (Anchor::TopRight):
+		this->truePosition = Vec2(this->position.x + canvasSizeX - this->GetSize().x, this->position.y);
+		break;
+	case (Anchor::TopCenter):
+		this->truePosition = Vec2(this->position.x + canvasSizeX / 2 - this->GetSize().x / 2, this->position.y);
+		break;
+	case (Anchor::MidLeft):
+		this->truePosition = Vec2(this->position.x, this->position.y + canvasSizeY / 2 - this->GetSize().y / 2);
+		break;
+	case (Anchor::MidRight):
+		this->truePosition = Vec2(this->position.x + canvasSizeX - this->GetSize().x,
+								  this->position.y + canvasSizeY / 2 - this->GetSize().y / 2);
+		break;
+	case (Anchor::MidCenter):
+		this->truePosition = Vec2(this->position.x + canvasSizeX / 2 - this->GetSize().x / 2,
+								  this->position.y + canvasSizeY / 2 - this->GetSize().y / 2);
+		break;
+	case (Anchor::BottomLeft):
+		this->truePosition = Vec2(this->position.x, this->position.y + canvasSizeY - this->GetSize().y);
+		break;
+	case (Anchor::BottomRight):
+		this->truePosition = Vec2(this->position.x + canvasSizeX - this->GetSize().x,
+								  this->position.y + canvasSizeY - this->GetSize().y);
+		break;
+	case (Anchor::BottomCenter):
+		this->truePosition = Vec2(this->position.x + canvasSizeX / 2 - this->GetSize().x / 2,
+								  this->position.y + canvasSizeY - this->GetSize().y);
+		break;
+	}
+	// Logger::Log(this->truePosition.x, ":", this->truePosition.y);
+}
 
 void UI::Widget::ShowInHierarchy() {
 	// First display common GameObject inspector

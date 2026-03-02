@@ -44,8 +44,7 @@ void TextRenderer::Render(void* context) {
 
 	for (const auto& sub : submissions) {
 		std::wstring wtext(sub.text.begin(), sub.text.end());
-		std::wstring wfont(sub.font.empty() ? L"assets/fonts/lucon.ttf"
-											: std::wstring(sub.font.begin(), sub.font.end()));
+		std::wstring wfont(sub.font.empty() ? L"Lucida Console" : std::wstring(sub.font.begin(), sub.font.end()));
 
 		if (wtext.empty()) {
 			Logger::Warn("TextRenderer::Render: wtext is empty!");
@@ -53,7 +52,7 @@ void TextRenderer::Render(void* context) {
 		}
 		if (wfont.empty()) {
 			Logger::Warn("TextRenderer::Render: wfont is empty! Using assets/fonts/lucon.ttf.");
-			wfont = L"assets/fonts/lucon.ttf";
+			wfont = L"Lucida Console";
 		}
 
 		float safeFontSize = sub.fontSize > 0 ? sub.fontSize : 16.0f;
@@ -69,18 +68,27 @@ void TextRenderer::Render(void* context) {
 	submissions.clear();
 }
 
-float TextRenderer::MeasureString(const std::string& text, float fontSize, const std::string& font) {
-	if (!fw1Initialized || fw1FontWrapper == nullptr) return 0.0f;
-	if (text.empty()) return 0.0f;
+Vec2 TextRenderer::MeasureString(const std::string& text, float fontSize, const std::string& font) {
+	if (!fw1Initialized || fw1FontWrapper == nullptr) return Vec2(0,0);
+	if (text.empty()) return Vec2(0, 0);
 
 	std::wstring wtext(text.begin(), text.end());
-	std::wstring wfont(font.empty() ? L"assets/fonts/lucon.ttf" : std::wstring(font.begin(), font.end()));
+	std::wstring wfont(font.empty() ? L"Lucida Console" : std::wstring(font.begin(), font.end()));
 
-	FW1_RECTF layout{0.0f, 0.0f, 0.0f, 0.0f};
-	FW1_RECTF rect = fw1FontWrapper->MeasureString(wtext.c_str(), wfont.c_str(), fontSize, &layout, 0);
+	Vec2 windowSize(Window::GetCurrentWidth(), Window::GetCurrentHeight());
 
-	return rect.Right - rect.Left;
+	FW1_RECTF layout{};
+	layout.Left = 0;
+	layout.Top = 0;
+	layout.Right = windowSize.x;
+	layout.Bottom = windowSize.y;
+	FW1_RECTF rect = fw1FontWrapper->MeasureString(wtext.c_str(), wfont.c_str(), fontSize, &layout, FW1_LEFT | FW1_TOP);
+
+	// Dont question 
+	return Vec2(windowSize.x + rect.Right, windowSize.y + rect.Bottom);
 }
+
+
 
 bool TextRenderer::InitializeFW1(ID3D11Device* device) {
 	if (fw1Initialized) return true;
@@ -89,7 +97,7 @@ bool TextRenderer::InitializeFW1(ID3D11Device* device) {
 		Logger::Error("Failed to create FW1Factory. HRESULT=", hr);
 		return false;
 	}
-	hr = fw1Factory->CreateFontWrapper(device, L"assets/fonts/lucon.ttf", &fw1FontWrapper);
+	hr = fw1Factory->CreateFontWrapper(device, L"Lucida Console", &fw1FontWrapper);
 	if (FAILED(hr) || !fw1FontWrapper) {
 		Logger::Error("Failed to create FW1FontWrapper. HRESULT=", hr);
 		fw1Factory->Release();

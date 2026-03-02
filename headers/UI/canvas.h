@@ -34,6 +34,7 @@ public:
 
 private:
 	Vec2 size{};
+
 	std::vector<std::shared_ptr<Widget>> children;
 
 	ScaleMode scaleMode = ScaleMode::Pixel;

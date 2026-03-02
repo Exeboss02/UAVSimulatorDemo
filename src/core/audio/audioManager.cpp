@@ -86,6 +86,13 @@ void AudioManager::GetMusicTrackSourceState(std::string id, ALint& sourceState)
 	this->musicTrackManager.GetMusicTrackSourceState(id, sourceState);
 }
 
+float AudioManager::GetMusicTrackGain(std::string id)
+{
+	MusicTrack* track = this->musicTrackManager.GetMusicTrack(id);
+	if(track) return track->GetGain();
+	else return -1;
+}
+
 void AudioManager::SetGain(std::string id, float gain)
 {
 	this->musicTrackManager.SetGain(id, gain);

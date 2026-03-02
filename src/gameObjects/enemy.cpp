@@ -250,17 +250,17 @@ void Enemy::ShootAtPlayer() {
 		return;
 	}
 
-	Vector3D enemyPosition = this->transform.GetGlobalPosition();
-	Vector3D playerPosition = player->transform.GetGlobalPosition();
-	Vector3D rayDirection = playerPosition - enemyPosition;
-	float rayLength = rayDirection.Length();
-	rayDirection.Normalize();
+	DirectX::XMVECTOR enemyPosition = this->transform.GetGlobalPosition();
+	DirectX::XMVECTOR playerPosition = player->transform.GetGlobalPosition();
+	DirectX::XMVECTOR rayDirection = DirectX::XMVectorSubtract(playerPosition, enemyPosition);
+	float rayLength = DirectX::XMVectorGetX(DirectX::XMVector4Length(rayDirection));
+	rayDirection = DirectX::XMVector3Normalize(rayDirection);
 
 	// Offset ray origin to avoid hitting self
-	Vector3D adjustedPos = enemyPosition + rayDirection * 1.5f;
+	DirectX::XMVECTOR adjustedPos = DirectX::XMVectorAdd(enemyPosition, DirectX::XMVectorScale(rayDirection, 1.5f));
 	float maxDistance = rayLength + 1.f; // Subtract offset, add small bias
 
-	Ray ray{adjustedPos, rayDirection};
+	Ray ray{Vector3D(adjustedPos), Vector3D(rayDirection)};
 	RayCastData rayCastData = {};
 
 	bool didHit = PhysicsQueue::GetInstance().castRay(ray, rayCastData, maxDistance);
@@ -268,21 +268,32 @@ void Enemy::ShootAtPlayer() {
 	if (didHit) {
 		if (auto hitCollider = rayCastData.hitColider.lock()) {
 			if (hitCollider->GetParent().lock().get() == player.get()) {
-				DirectX::XMVECTOR pos = DirectX::XMVectorSet(adjustedPos.GetX(), adjustedPos.GetY(), adjustedPos.GetZ(), 1.0f);
-				DirectX::XMVECTOR dir = DirectX::XMVectorSet(rayDirection.GetX(), rayDirection.GetY(), rayDirection.GetZ(), 0.0f);
 
-				float randomValue = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
-				if (this->playerHitAccuracy < randomValue) {
+				std::random_device rd;
+				std::mt19937 gen(rd());
+				std::uniform_real_distribution<float> dist(0.0f, 1.0f);
+				float random = dist(gen);
+				if (this->playerHitAccuracy < random) {
 					Logger::Log("Enemy shooting at player - MISSED!");
 					this->canShoot = false;
-					this->VisualizeRay(pos, dir, rayCastData.distance);
+
+					// Alter the ray direction to visually indicate a miss
+					std::uniform_real_distribution<float> dist2(0.1f, 0.17f);
+					float rX = dist2(gen);
+					float rY = dist2(gen);
+					float rZ = dist2(gen);
+
+					DirectX::XMVECTOR missDir = DirectX::XMVectorAdd(
+						rayDirection, DirectX::XMVectorSet(rX, rY, rZ, 0.0f)); // Add some random offset
+
+					this->VisualizeRay(enemyPosition, missDir, rayCastData.distance);
 					return;
 				}
 
 				rayCastData.hitColider.lock()->Hit(this->damage);
 				Logger::Log("Enemy shooting at player - HIT!");
 				this->canShoot = false;
-				this->VisualizeRay(pos, dir, rayCastData.distance);
+				this->VisualizeRay(enemyPosition, rayDirection, rayCastData.distance);
 
 				if(!this->speaker.expired())
 				{

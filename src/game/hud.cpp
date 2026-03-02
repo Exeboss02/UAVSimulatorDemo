@@ -65,18 +65,18 @@ void HUD::Start() {
 	}
 	// Carbon
 	{
-		this->lubricantIcon = this->MakeIcon("HUD_Carbon_Icon", "assets/images/carbon_fiber.png", -padding,
+		this->carbonFiberIcon = this->MakeIcon("HUD_Carbon_Icon", "assets/images/carbon_fiber.png", -padding,
 											 startPos + IconOffset * 2, iconSize, UI::Anchor::TopRight);
-		this->lubricantText =
-			this->MakeText("HUD_Lubricant", "0", iconTextOffsetX, startPos + iconTextOffsetY + IconOffset * 2,
+		this->carbonFiberText =
+			this->MakeText("HUD_Carbon", "0", iconTextOffsetX, startPos + iconTextOffsetY + IconOffset * 2,
 						   textWidth, UI::Anchor::TopRight);
 	}
 	// Circuit
 	{
-		this->lubricantIcon = this->MakeIcon("HUD_Circuit_Icon", "assets/images/circuit_board.png", -padding,
+		this->circuitIcon = this->MakeIcon("HUD_Circuit_Icon", "assets/images/circuit_board.png", -padding,
 											 startPos + IconOffset * 3, iconSize, UI::Anchor::TopRight);
-		this->lubricantText =
-			this->MakeText("HUD_Lubricant", "0", iconTextOffsetX, startPos + iconTextOffsetY + IconOffset * 3,
+		this->circuitText =
+			this->MakeText("HUD_Circuit", "0", iconTextOffsetX, startPos + iconTextOffsetY + IconOffset * 3,
 						   textWidth, UI::Anchor::TopRight);
 	}
 	// Player health

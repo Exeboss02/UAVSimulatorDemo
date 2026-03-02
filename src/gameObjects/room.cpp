@@ -144,7 +144,7 @@ void Room::Start() {
 	spotLight->transform.SetPosition({0, 4.5, 0});
 	spotLight->transform.SetRotationRPY(0, std::numbers::pi / 2, 0);
 	spotLight->SetAngle(120.);
-	spotLight->SetIntensity(10.);
+	spotLight->SetIntensity(30.0f);
 }
 
 void Room::Tick() { this->GameObject3D::Tick(); }

@@ -78,8 +78,8 @@ void GameManager::Start() {
 	AudioManager::GetInstance().SetGain("courage", 0.4f);
 
 	DirectX::XMVECTOR offset = {};
-	offset.m128_f32[1] = -1;
-	offset.m128_f32[2] = 20;
+	offset.m128_f32[1] = -2;
+	offset.m128_f32[2] = 26;
 	this->shipSpeaker = this->factory->CreateStaticGameObject<SoundSourceObject>();
 	this->shipSpeaker.lock()->transform.SetPosition(DirectX::XMVectorAdd(this->GetPlayerSpawnPoint(), offset));
 	SoundClip* buildMusic = AssetManager::GetInstance().GetSoundClip("GTAinBerlin.wav");

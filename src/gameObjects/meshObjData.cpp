@@ -2,6 +2,7 @@
 #include "utilities/logger.h"
 #include "rendering/renderQueue.h"
 
+
 void MeshObjData::SetMesh(std::shared_ptr<Mesh> mesh) {
 	this->mesh = std::weak_ptr<Mesh>(mesh);
 	this->materials.clear();

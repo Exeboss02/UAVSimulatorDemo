@@ -87,6 +87,26 @@ void HUD::Start() {
 												textWidth, UI::Anchor::TopLeft);
 	}
 
+	// Blood overlay (visible on low health)
+	{
+		auto bloodWeak = this->factory->CreateGameObjectOfType<UI::Image>();
+		if (!bloodWeak.expired()) {
+			auto blood = bloodWeak.lock();
+			blood->SetName("HUD_Blood_Overlay");
+			blood->SetImage("assets/images/blood.png");
+			blood->SetSize(canvasSize);
+			blood->SetPosition(UI::Vec2{0.0f, 0.0f});
+			blood->SetAnchor(UI::Anchor::TopLeft);
+			blood->SetVisible(false);
+			blood->SetZIndex(-1);
+			std::weak_ptr<GameObject> me = canvasShared->GetPtr();
+			blood->SetParent(me);
+			canvasShared->AddChild(std::static_pointer_cast<UI::Widget>(blood));
+			RenderQueue::AddUIWidget(blood);
+			this->bloodOverlay = blood;
+		}
+	}
+
 	{
 		this->storyText = this->MakeText("HUD_Player_Story_Text", " ", 0, -20, 0, UI::Anchor::BottomCenter);
 	}
@@ -132,8 +152,8 @@ void HUD::Start() {
 					bg->SetPosition(UI::Vec2{0.0f, 0.0f});
 					bg->SetTint(DirectX::XMFLOAT4{0.0f, 0.0f, 0.0f, 0.5f});
 					bg->SetVisible(false);
-					// Ensure background is below the prompt buttons so they remain clickable
-					bg->SetZIndex(0);
+					// Keep menu above all HUD widgets while preserving internal menu layering
+					bg->SetZIndex(100);
 					std::weak_ptr<GameObject> me = canvasShared->GetPtr();
 					bg->SetParent(me);
 					canvasShared->AddChild(std::static_pointer_cast<UI::Widget>(bg));
@@ -156,8 +176,8 @@ void HUD::Start() {
 				quitText->SetAnchor(UI::Anchor::TopCenter);
 				quitText->SetPosition(UI::Vec2{0.0f, 100.0f});
 				quitText->SetVisible(false);
-				// Prompt text should be above the background but below buttons
-				quitText->SetZIndex(1);
+				// Prompt text should be above background and below buttons
+				quitText->SetZIndex(101);
 				std::weak_ptr<GameObject> me = canvasShared->GetPtr();
 				quitText->SetParent(me);
 				canvasShared->AddChild(std::static_pointer_cast<UI::Widget>(quitText));
@@ -175,8 +195,8 @@ void HUD::Start() {
 				yesBtn->SetAnchor(UI::Anchor::TopCenter);
 				yesBtn->SetPosition(UI::Vec2{-200.0f, 200.0f});
 				yesBtn->SetVisible(false);
-				// Buttons must be top-most so they receive input events
-				yesBtn->SetZIndex(2);
+				// Buttons are top-most among menu widgets
+				yesBtn->SetZIndex(102);
 				std::weak_ptr<GameObject> me = canvasShared->GetPtr();
 				yesBtn->SetParent(me);
 				canvasShared->AddChild(std::static_pointer_cast<UI::Widget>(yesBtn));
@@ -202,8 +222,8 @@ void HUD::Start() {
 				noBtn->SetAnchor(UI::Anchor::TopCenter);
 				noBtn->SetPosition(UI::Vec2{200.0f, 200.0f});
 				noBtn->SetVisible(false);
-				// Buttons must be top-most so they receive input events
-				noBtn->SetZIndex(2);
+				// Buttons are top-most among menu widgets
+				noBtn->SetZIndex(102);
 				std::weak_ptr<GameObject> me = canvasShared->GetPtr();
 				noBtn->SetParent(me);
 				canvasShared->AddChild(std::static_pointer_cast<UI::Widget>(noBtn));
@@ -222,6 +242,15 @@ void HUD::Update(const ResourceManager& resources, const Health& playerHealth) {
 	this->SafeTextSet(this->carbonFiberText, std::to_string(resources.carbonFiber.GetAmount()));
 	this->SafeTextSet(this->circuitText, std::to_string(resources.circuit.GetAmount()));
 	this->SafeTextSet(this->playerHealthText, std::to_string(playerHealth.Get()));
+
+	if (auto blood = this->bloodOverlay.lock()) {
+		if (auto canvasObj = this->canvasObj.lock()) {
+			if (auto canvas = canvasObj->GetCanvas()) {
+				blood->SetSize(canvas->GetSize());
+			}
+		}
+		blood->SetVisible(playerHealth.Get() <= 20);
+	}
 }
 
 void HUD::OnDestroy() {

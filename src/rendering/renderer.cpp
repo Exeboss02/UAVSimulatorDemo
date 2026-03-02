@@ -5,13 +5,13 @@
 #include "UI/textRenderer.h"
 #include "UI/widget.h"
 #include "core/filepathHolder.h"
+#include "gameObjects/SpaceShipObj.h"
 #include "gameObjects/objectLoader.h"
 #include <chrono>
 #include <cmath>
 #include <memory>
-#include "gameObjects/SpaceShipObj.h"
 
-//#define DEBUG_TIMER
+// #define DEBUG_TIMER
 
 Renderer::Renderer()
 	: viewport(), currentPixelShader(nullptr), currentVertexShader(nullptr), currentRasterizerState(nullptr),
@@ -21,7 +21,8 @@ Renderer::Renderer()
 						 SpaceShip::ROOM_SIZE * (SpaceShip::SHIP_MAX_SIZE_Y + 1)},
 						3, 4),
 	  renderQueue(this->meshRenderQueue, this->spotLightRenderQueue, this->pointLightRenderQueue,
-				  this->staticObjectsTree, this->uiRenderQueue), pointLightViewPort(), spotLightViewPort() {
+				  this->staticObjectsTree, this->uiRenderQueue),
+	  pointLightViewPort(), spotLightViewPort() {
 	this->renderQueue.newSkyboxCallback = [this](std::string filename) { this->ChangeSkybox(filename); };
 }
 
@@ -72,9 +73,9 @@ void Renderer::SetAllDefaults() {
 	// FW1FontWrapper handles font loading at runtime; no atlas preload needed
 }
 
-void Renderer::CreateUIBuffers() { 
-	std::vector<uint32_t> indices; 
-	
+void Renderer::CreateUIBuffers() {
+	std::vector<uint32_t> indices;
+
 	indices.push_back(0);
 	indices.push_back(2);
 	indices.push_back(3);
@@ -85,19 +86,20 @@ void Renderer::CreateUIBuffers() {
 
 	std::vector<Vertex> vertices(4);
 
-
-
 	// Create transient vertex and index buffers
 	this->uiVertexBuffer = std::make_unique<VertexBuffer>();
-	this->uiVertexBuffer->Init(this->device.Get(), sizeof(Vertex), static_cast<UINT>(vertices.size()), (void*) vertices.data(), true);
+	this->uiVertexBuffer->Init(this->device.Get(), sizeof(Vertex), static_cast<UINT>(vertices.size()),
+							   (void*) vertices.data(), true);
 
 	this->uiIndexBuffer = std::make_unique<IndexBuffer>();
 	this->uiIndexBuffer->Init(this->device.Get(), indices.size(), (uint32_t*) indices.data());
 }
 
-std::vector<std::weak_ptr<MeshObject>> Renderer::GetVisibleObjects(CameraObject& camera, bool checkIndividualObjects, bool allStatic) {
+std::vector<std::weak_ptr<MeshObject>> Renderer::GetVisibleObjects(CameraObject& camera, bool checkIndividualObjects,
+																   bool allStatic) {
 	std::vector<std::weak_ptr<MeshObject>> visible =
-		allStatic ? this->staticObjectsTree.GetAllElements() : this->staticObjectsTree.GetVisibleElements(camera, checkIndividualObjects);
+		allStatic ? this->staticObjectsTree.GetAllElements()
+				  : this->staticObjectsTree.GetVisibleElements(camera, checkIndividualObjects);
 
 	visible.reserve(this->meshRenderQueue.size());
 
@@ -129,7 +131,8 @@ std::vector<std::weak_ptr<MeshObject>> Renderer::GetVisibleDynamicObjects(Camera
 
 		float farPlane = camera.GetFarPlane();
 		if (farPlane < 100) {
-			float distance = DirectX::XMVectorGetX(DirectX::XMVector3LengthSq(DirectX::XMVectorSubtract(cameraGlobalPos, locked->transform.GetGlobalPosition())));
+			float distance = DirectX::XMVectorGetX(DirectX::XMVector3LengthSq(
+				DirectX::XMVectorSubtract(cameraGlobalPos, locked->transform.GetGlobalPosition())));
 
 			if (distance > std::powf(camera.GetFarPlane(), 2.0f) + 9) {
 				continue;
@@ -312,6 +315,17 @@ void Renderer::CreateSampler() {
 	} else {
 		Logger::Log("Failed to create alpha blend state for UI text");
 	}
+
+	D3D11_DEPTH_STENCIL_DESC uiDepthDesc{};
+	uiDepthDesc.DepthEnable = FALSE;
+	uiDepthDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;
+	uiDepthDesc.DepthFunc = D3D11_COMPARISON_ALWAYS;
+	uiDepthDesc.StencilEnable = FALSE;
+
+	HRESULT uiDepthHr = this->device->CreateDepthStencilState(&uiDepthDesc, this->uiDepthDisabledState.GetAddressOf());
+	if (FAILED(uiDepthHr)) {
+		Logger::Log("Failed to create UI depth-disabled state");
+	}
 }
 
 void Renderer::CreateRasterizerStates() {
@@ -354,9 +368,9 @@ void Renderer::CreateRasterizerStates() {
 }
 
 void Renderer::CreateRenderMap(RenderMap& renderMap, CameraObject& camera) {
-	#ifdef DEBUG_TIMER
-		const auto start{std::chrono::steady_clock::now()};
-	#endif // DEBUG_TIMER
+#ifdef DEBUG_TIMER
+	const auto start{std::chrono::steady_clock::now()};
+#endif // DEBUG_TIMER
 
 	//// Removes dead gameobjects
 	// this->meshRenderQueue.erase(std::remove_if(this->meshRenderQueue.begin(), this->meshRenderQueue.end(),
@@ -417,7 +431,7 @@ void Renderer::CreateRenderMap(RenderMap& renderMap, CameraObject& camera) {
 	const std::chrono::duration<double> elapsedSeconds{finsihedRenderMap - start};
 	ImGui::Text(("Render map creation: " + std::to_string(elapsedSeconds.count()) + " : " +
 				 std::to_string(this->visibleObjectsMainCamera.size()))
-			.c_str());
+					.c_str());
 #endif // DEBUG_TIMER
 }
 
@@ -438,7 +452,7 @@ void Renderer::CreateCheapRenderMap(CheapRenderMap& renderMap, CameraObject& cam
 
 		auto& meshObjData = meshObject->GetMesh();
 
-		//if (meshObjData.GetMaterial(0).lock()->wireframe) continue;
+		// if (meshObjData.GetMaterial(0).lock()->wireframe) continue;
 
 		size_t meshIdentifier = meshObjData.GetMeshIndex();
 		auto [meshIterator, meshInserted] = renderMap.meshes.try_emplace(meshIdentifier);
@@ -466,15 +480,14 @@ void Renderer::CreateCheapRenderMap(CheapRenderMap& renderMap, CameraObject& cam
 	const auto finsihedRenderMap{std::chrono::steady_clock::now()};
 	const std::chrono::duration<double> elapsedSeconds{finsihedRenderMap - start};
 	ImGui::Text(("Cheap Render map: " + std::to_string(elapsedSeconds.count()) + " : " + std::to_string(objects.size()))
-			.c_str());
+					.c_str());
 #endif // DEBUG_TIMER
 }
 
 void Renderer::CreateSpotlightRenderMap(CheapRenderMap& renderMap, CameraObject& camera, size_t index) {
-	#ifdef DEBUG_TIMER
+#ifdef DEBUG_TIMER
 	const auto start{std::chrono::steady_clock::now()};
-	#endif // DEBUG_TIMER
-
+#endif // DEBUG_TIMER
 
 	if (this->renderQueue.instance->recalculateStatic) {
 		this->staticObjectsForSpotlights[index] = this->staticObjectsTree.GetVisibleElements(camera, true, true);
@@ -483,7 +496,8 @@ void Renderer::CreateSpotlightRenderMap(CheapRenderMap& renderMap, CameraObject&
 	std::vector<std::weak_ptr<MeshObject>> visible;
 
 	visible.reserve(this->staticObjectsForSpotlights[index].size());
-	std::copy(this->staticObjectsForSpotlights[index].begin(), this->staticObjectsForSpotlights[index].end(), std::back_inserter(visible));
+	std::copy(this->staticObjectsForSpotlights[index].begin(), this->staticObjectsForSpotlights[index].end(),
+			  std::back_inserter(visible));
 
 	auto dynamicObjects = GetVisibleDynamicObjects(camera, true);
 	visible.reserve(dynamicObjects.size());
@@ -491,11 +505,11 @@ void Renderer::CreateSpotlightRenderMap(CheapRenderMap& renderMap, CameraObject&
 
 	CreateCheapRenderMap(renderMap, camera, visible);
 
-	#ifdef DEBUG_TIMER
+#ifdef DEBUG_TIMER
 	const auto finsihedRenderMap{std::chrono::steady_clock::now()};
 	const std::chrono::duration<double> elapsedSeconds{finsihedRenderMap - start};
 	ImGui::Text(("Spotlight Render map: " + std::to_string(elapsedSeconds.count())).c_str());
-	#endif // DEBUG_TIMER
+#endif // DEBUG_TIMER
 }
 
 size_t Renderer::FillRenderMap(RenderMap& renderMap, CameraObject& camera) {
@@ -747,7 +761,7 @@ void Renderer::RenderUI() {
 	this->immediateContext->VSSetConstantBuffers(0, 1, &camBuf);
 
 	// Disable depth testing so UI draws on top
-	this->immediateContext->OMSetDepthStencilState(nullptr, 0);
+	this->immediateContext->OMSetDepthStencilState(this->uiDepthDisabledState.Get(), 0);
 
 	// Build a list of live widgets, remove expired entries and sort by zIndex
 	std::vector<std::shared_ptr<UI::Widget>> widgets;
@@ -861,7 +875,7 @@ void Renderer::RenderUI() {
 	this->BindRasterizerState(this->uiRasterizerState.get());
 
 	// Ensure depth test is disabled for UI text (BindRenderTarget rebinds depth state)
-	this->immediateContext->OMSetDepthStencilState(nullptr, 0);
+	this->immediateContext->OMSetDepthStencilState(this->uiDepthDisabledState.Get(), 0);
 	// Render all text submissions now (TextRenderer sorts by zIndex)
 	UI::TextRenderer::GetInstance().Render(this->immediateContext.Get());
 	// Restore default rasterizer and blend state
@@ -1313,8 +1327,8 @@ void Renderer::RenderMeshObject(MeshObject* meshObject, bool renderMaterial) {
 	}
 }
 
-void Renderer::DrawTextQuads(const std::vector<Vertex>& vertices,
-							 ID3D11ShaderResourceView* srv, const DirectX::XMFLOAT4& color, bool useLinearFilter) {
+void Renderer::DrawTextQuads(const std::vector<Vertex>& vertices, ID3D11ShaderResourceView* srv,
+							 const DirectX::XMFLOAT4& color, bool useLinearFilter) {
 	if (vertices.empty()) {
 		Logger::Warn("Renderer::DrawTextQuads: no vertices or no indices");
 		return;

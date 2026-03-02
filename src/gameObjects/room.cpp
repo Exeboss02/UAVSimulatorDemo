@@ -49,7 +49,7 @@ void Room::Start() {
 
 	DirectX::XMVECTOR position = this->transform.GetGlobalPosition();
 
-	if(!(position.m128_f32[0] == 70 && position.m128_f32[2] == 0)) //for not playing build sound in the starting room
+	if(!(position.m128_f32[0] == 140 && position.m128_f32[2] == 0)) //for not playing build sound in the starting room
 	{
 		SoundClip* buildClip = AssetManager::GetInstance().GetSoundClip("Build1.wav");
 		this->speaker = this->factory->CreateStaticGameObject<SoundSourceObject>();
@@ -91,7 +91,6 @@ void Room::Start() {
 
 	auto parent = std::static_pointer_cast<SpaceShip>(parentWeak.lock());
 
-	
 	size_t maxX = parent->SHIP_MAX_SIZE_X;
 	size_t maxY = parent->SHIP_MAX_SIZE_Y;
 	for (size_t i = 0; i < 4; i++) {
@@ -219,6 +218,11 @@ void Room::SetupPathfindingNodes(std::shared_ptr<SpaceShip> spaceShip, std::shar
 void Room::ShowBuildMenu(std::shared_ptr<Player> player) {
 	try {
 		if (!this->factory) return;
+
+		// Never open build menu while quit-to-menu prompt is visible
+		if (player && player->hud && player->hud->IsQuitPromptVisible()) {
+			return;
+		}
 
 		// If something is already built here, don't open the build menu
 		if (!this->builtObject.expired()) {
@@ -460,6 +464,8 @@ void Room::Hover() {
 }
 
 bool Room::IsBuildMenuOpen() { return !this->buildMenu.expired(); }
+
+void Room::CloseBuildMenu() { this->HideBuildMenu(); }
 
 bool Room::TryBuildGenerator() {
 	Logger::Log("Room::TryBuildGenerator called");

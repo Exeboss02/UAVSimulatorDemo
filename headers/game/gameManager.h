@@ -35,6 +35,7 @@ public:
 	void SpawnRound(size_t roundIndex);
 	void SpawnEnemy(size_t atBreachpoint);
 	void EndRound();
+	std::weak_ptr<StoryManager> GetStoryManager();
 
 	bool GetInCombat() const;
 

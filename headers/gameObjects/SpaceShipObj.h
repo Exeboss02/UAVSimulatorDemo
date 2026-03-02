@@ -6,9 +6,12 @@ class Room;
 #include "gameObjects/gameObject3D.h"
 #include "gameObjects/room.h"
 #include "utilities/aStar.h"
-#include "gameObjects/cockpit.h"
 
 #include <functional>
+#include <memory>
+
+
+class Cockpit;
 
 struct Vector2Int {
 	int x;

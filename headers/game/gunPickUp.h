@@ -4,6 +4,7 @@
 #include "gameObjects/gameObject3D.h"
 #include "gameObjects/meshObject.h"
 #include "game/player.h"
+#include "game/costHandler.h"
 
 class GunPickUp : public MeshObject {
 public:
@@ -29,6 +30,6 @@ private:
 
 	float hoverDisabledUntil = 0.0f;
 
-	size_t titanuimCost = 10;
+	CostHandler gunCost = CostHandler(10, 0, 0, 0);
 
 };

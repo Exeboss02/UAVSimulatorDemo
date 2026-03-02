@@ -70,6 +70,7 @@ private:
 
 	std::weak_ptr<UI::Image> playerHealthIcon;
 	std::weak_ptr<UI::Text> playerHealthText;
+	std::weak_ptr<UI::Image> bloodOverlay;
 
 	std::weak_ptr<UI::Text> storyText;
 

@@ -86,9 +86,8 @@ public:
 	IDXGISwapChain* GetSwapChain() const;
 
 	// Draw quads for text rendering (positions in screen space, using current UI camera)
-	void DrawTextQuads(const std::vector<Vertex>& vertices,
-					   ID3D11ShaderResourceView* srv, const DirectX::XMFLOAT4& color = {1.0f, 1.0f, 1.0f, 1.0f},
-					   bool useLinearFilter = true);
+	void DrawTextQuads(const std::vector<Vertex>& vertices, ID3D11ShaderResourceView* srv,
+					   const DirectX::XMFLOAT4& color = {1.0f, 1.0f, 1.0f, 1.0f}, bool useLinearFilter = true);
 
 private:
 	const size_t maximumSpotlights;
@@ -112,6 +111,7 @@ private:
 	Microsoft::WRL::ComPtr<IDXGISwapChain> swapChain;
 
 	Microsoft::WRL::ComPtr<ID3D11BlendState> alphaBlendState;
+	Microsoft::WRL::ComPtr<ID3D11DepthStencilState> uiDepthDisabledState;
 
 	std::unique_ptr<RenderTarget> renderTarget;
 	std::unique_ptr<DepthBuffer> depthBuffer;
@@ -166,8 +166,10 @@ private:
 	std::vector<std::weak_ptr<MeshObject>> visibleObjectsMainCamera;
 
 	QuadTree staticObjectsTree;
-	std::vector<std::weak_ptr<MeshObject>> GetVisibleObjects(CameraObject& camera, bool checkIndividualObjects = true, bool allStatic = false);
-	std::vector<std::weak_ptr<MeshObject>> GetVisibleDynamicObjects(CameraObject& camera, bool onlyShadowCaster = false);
+	std::vector<std::weak_ptr<MeshObject>> GetVisibleObjects(CameraObject& camera, bool checkIndividualObjects = true,
+															 bool allStatic = false);
+	std::vector<std::weak_ptr<MeshObject>> GetVisibleDynamicObjects(CameraObject& camera,
+																	bool onlyShadowCaster = false);
 
 	// Constant buffers:
 	// The renderer keeps these constant buffers since only one is ever required
@@ -206,7 +208,8 @@ private:
 	void CreateRasterizerStates();
 
 	void CreateRenderMap(RenderMap& renderMap, CameraObject& camera);
-	void CreateCheapRenderMap(CheapRenderMap& renderMap, CameraObject& camera, std::vector<std::weak_ptr<MeshObject>>& objects);
+	void CreateCheapRenderMap(CheapRenderMap& renderMap, CameraObject& camera,
+							  std::vector<std::weak_ptr<MeshObject>>& objects);
 	void CreateSpotlightRenderMap(CheapRenderMap& renderMap, CameraObject& camera, size_t index);
 
 	// Doesn't work
@@ -228,7 +231,6 @@ private:
 	/// This gets called by the RenderPass() to render the UI logic.
 	/// </summary
 	void RenderUI();
-
 
 	void ShadowPass();
 

@@ -195,6 +195,11 @@ void UI::Button::ShowInHierarchy() {
 		SetOnReleasedEventID_Wire(releasedId);
 	}
 
+	int hoverId = this->onHoverEventID;
+	if (ImGui::InputInt("OnHover Event ID", &hoverId)) {
+		SetOnHoverEventID_Wire(hoverId);
+	}
+
 	ImGui::Separator();
 	// Alignment controls
 	ImGui::Text("Label alignment:");
@@ -224,6 +229,10 @@ void UI::Button::SetOnReleasedEventID(int id) { this->onReleasedEventID = id; }
 
 int UI::Button::GetOnReleasedEventID() const { return this->onReleasedEventID; }
 
+void UI::Button::SetOnHoverEventID(int id) { this->onHoverEventID = id; }
+
+int UI::Button::GetOnHoverEventID() const { return this->onHoverEventID; }
+
 // After changing the stored event IDs, attempt to wire the button to the active SceneManager's EventManager
 // so edits in the inspector take effect immediately.
 void UI::Button::SetOnClickEventID_Wire(int id) {
@@ -238,6 +247,11 @@ void UI::Button::SetOnPressedEventID_Wire(int id) {
 
 void UI::Button::SetOnReleasedEventID_Wire(int id) {
 	this->SetOnReleasedEventID(id);
+	if (auto sm = SceneManager::GetActive()) sm->WireButtonEvents(this);
+}
+
+void UI::Button::SetOnHoverEventID_Wire(int id) {
+	this->SetOnHoverEventID(id);
 	if (auto sm = SceneManager::GetActive()) sm->WireButtonEvents(this);
 }
 
@@ -264,6 +278,8 @@ void UI::Button::LoadFromJson(const nlohmann::json& data) {
 		this->onPressedEventID = data["onPressedEvent"].get<int>();
 	if (data.contains("onReleasedEvent") && data["onReleasedEvent"].is_number())
 		this->onReleasedEventID = data["onReleasedEvent"].get<int>();
+	if (data.contains("onHoverEvent") && data["onHoverEvent"].is_number())
+		this->onHoverEventID = data["onHoverEvent"].get<int>();
 
 	// Alignment
 	if (data.contains("hAlign") && data["hAlign"].is_string()) {
@@ -296,6 +312,7 @@ void UI::Button::SaveToJson(nlohmann::json& data) {
 	if (this->onClickEventID != 0) data["onClickEvent"] = this->onClickEventID;
 	if (this->onPressedEventID != 0) data["onPressedEvent"] = this->onPressedEventID;
 	if (this->onReleasedEventID != 0) data["onReleasedEvent"] = this->onReleasedEventID;
+	if (this->onHoverEventID != 0) data["onHoverEvent"] = this->onHoverEventID;
 
 	// Alignment
 	switch (this->hAlign) {

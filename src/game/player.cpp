@@ -625,11 +625,17 @@ void Player::addGun(Guns gunType) {
 	case Guns::rifle:
 		gunWeak = this->factory->CreateGameObjectOfType<Rifle01>();
 		break;
+	case Guns::none:
+		gunWeak = std::weak_ptr<Gun>();
 	default:
 		break;
 	}
-	auto gun = gunWeak.lock();
-	gun->SetParent(this->camera.lock()->GetPtr());
-	gun->setParentToShootFrom(this->camera.lock());
-	this->gun = gun;
+	if (auto gun = gunWeak.lock()) {
+		gun->SetParent(this->camera.lock()->GetPtr());
+		gun->setParentToShootFrom(this->camera.lock());
+		this->gun = gun;
+	} else {
+		this->gun = gunWeak;
+	}
+
 }

@@ -89,7 +89,8 @@ public:
 
 	enum Guns {
 		pistol,
-		rifle
+		rifle,
+		none,
 	};
 	/// <summary>
 	/// add gun based on enum, add to switch case to add more

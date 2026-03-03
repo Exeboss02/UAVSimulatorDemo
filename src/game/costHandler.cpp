@@ -26,7 +26,7 @@ std::string CostHandler::getCostString() {
 	for (size_t i = 0; i < parts.size(); ++i) {
 		oss << parts[i];
 		if (i < parts.size() - 1) {
-			oss << " | "; 
+			oss << "\n"; 
 		}
 	}
 

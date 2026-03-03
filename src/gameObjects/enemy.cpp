@@ -354,7 +354,7 @@ void Enemy::ShootAtPlayer() {
 	Ray ray{Vector3D(adjustedPos), Vector3D(rayDirection)};
 	RayCastData rayCastData = {};
 
-	bool didHit = PhysicsQueue::GetInstance().castRay(ray, rayCastData, maxDistance);
+	bool didHit = PhysicsQueue::GetInstance().castRay(ray, rayCastData, Tag::PLAYER, Tag::ENEMY, maxDistance);
 
 	if (didHit) {
 		if (auto hitCollider = rayCastData.hitColider.lock()) {

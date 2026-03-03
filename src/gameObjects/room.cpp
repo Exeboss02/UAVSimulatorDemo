@@ -135,12 +135,7 @@ void Room::Start() {
 	buildCollider->SetIgnoreTag(Tag::PLAYER);
 	// Maybe tweak positionW
 	this->buildSlot = buildCollider;
-	buildCollider->SetOnInteract([&](std::shared_ptr<Player> p) {
-		if (this->builtObject.expired() && !GameManager::GetInstance()->GetInCombat()) {
-			this->ShowBuildMenu(p);
-		}
-	});
-	buildCollider->SetOnHover([&] { this->Hover(); });
+	this->EnableBuildSlotInteractions();
 
 	auto spotLight = this->factory->CreateGameObjectOfType<SpotlightObject>().lock();
 	spotLight->SetParent(this->GetPtr());
@@ -527,6 +522,62 @@ bool Room::IsBuildMenuOpen() { return !this->buildMenu.expired(); }
 
 void Room::CloseBuildMenu() { this->HideBuildMenu(); }
 
+void Room::EnableBuildSlotInteractions() {
+	if (this->buildSlot.expired()) return;
+	auto slot = this->buildSlot.lock();
+	if (!slot) return;
+
+	slot->SetOnInteract([&](std::shared_ptr<Player> player) {
+		if (this->builtObject.expired() && !GameManager::GetInstance()->GetInCombat()) {
+			this->ShowBuildMenu(player);
+		}
+	});
+	slot->SetOnHover([&] { this->Hover(); });
+	slot->SetTag(Tag::INTERACTABLE);
+}
+
+void Room::DisableBuildSlotInteractions() {
+	if (this->buildSlot.expired()) return;
+	auto slot = this->buildSlot.lock();
+	if (!slot) return;
+
+	slot->SetOnHover([] {});
+	slot->SetOnInteract([](std::shared_ptr<Player>) {});
+	slot->SetTag(Tag::OBJECT);
+}
+
+bool Room::RemoveBuiltObject() {
+	if (this->builtObject.expired()) {
+		return false;
+	}
+
+	auto built = this->builtObject.lock();
+	if (!built) {
+		this->builtObject.reset();
+		this->EnableBuildSlotInteractions();
+		return false;
+	}
+
+	this->factory->QueueDeleteGameObject(built);
+	this->builtObject.reset();
+	this->EnableBuildSlotInteractions();
+
+	if (!this->GetParent().expired()) {
+		auto spaceship = static_pointer_cast<SpaceShip>(GetParent().lock());
+		auto centerNode = this->pathfindingNodes[0];
+		if (spaceship && centerNode && spaceship->GetPathfinder()->AddVertex(centerNode)) {
+			unsigned int edgeCostCenterToOuter = static_cast<unsigned int>(this->size / 3);
+			for (size_t i = 1; i < this->pathfindingNodes.size(); ++i) {
+				if (this->pathfindingNodes[i]) {
+					spaceship->GetPathfinder()->AddEdge(centerNode, this->pathfindingNodes[i], edgeCostCenterToOuter);
+				}
+			}
+		}
+	}
+
+	return true;
+}
+
 bool Room::TryBuildGenerator() {
 	Logger::Log("Room::TryBuildGenerator called");
 	try {
@@ -567,15 +618,7 @@ bool Room::TryBuildGenerator() {
 			spaceship->GetPathfinder()->RemoveVertex(this->pathfindingNodes[0]);
 		}
 
-		// Disable hover on the build slot now that something is built here
-		auto slotForHover = this->buildSlot;
-		if (!slotForHover.expired()) {
-			auto slotPtr = slotForHover.lock();
-			if (slotPtr) {
-				slotPtr->SetOnHover([] {});
-				slotPtr->SetOnInteract([](std::shared_ptr<Player>) {});
-			}
-		}
+		this->DisableBuildSlotInteractions();
 		return true;
 	} catch (const std::exception& e) {
 		Logger::Error("Room::TryBuildGenerator exception: ", e.what());
@@ -626,15 +669,7 @@ bool Room::TryBuildTurret() {
 			spaceship->GetPathfinder()->RemoveVertex(this->pathfindingNodes[0]);
 		}
 
-		// Disable hover on the build slot now that something is built here
-		auto slotForHover = this->buildSlot;
-		if (!slotForHover.expired()) {
-			auto slotPtr = slotForHover.lock();
-			if (slotPtr) {
-				slotPtr->SetOnHover([] {});
-				slotPtr->SetOnInteract([](std::shared_ptr<Player>) {});
-			}
-		}
+		this->DisableBuildSlotInteractions();
 		return true;
 	} catch (const std::exception& e) {
 		Logger::Error("Room::TryBuildTurret exception: ", e.what());
@@ -677,29 +712,14 @@ bool Room::TryBuildMine() {
 		DirectX::XMStoreFloat3(&shipScale, this->transform.GetGlobalScale());
 		mine->transform.SetScale(DirectX::XMVECTOR({(1.0f / shipScale.x), (1.0f / shipScale.y), (1.0f / shipScale.z)}));
 
-		// Make the interact collider work again after the mine explodes
+		// Make the room build slot work again after the mine explodes
 		mine->SetPostExplosion([&] {
-			if (this->buildSlot.expired()) return;
-
-			auto build = this->buildSlot.lock();
-			build->SetOnInteract([&](std::shared_ptr<Player> p) {
-				if (this->builtObject.expired() && !GameManager::GetInstance()->GetInCombat()) {
-					this->ShowBuildMenu(p);
-				}
-			});
-			build->SetOnHover([&] { this->Hover(); });
+			this->builtObject.reset();
+			this->EnableBuildSlotInteractions();
 		});
 
 		this->builtObject = static_pointer_cast<GameObject3D>(mine.Get());
-		// Disable hover on the build slot now that something is built here
-		auto& slotForHover = this->buildSlot;
-		if (!slotForHover.expired()) {
-			auto slotPtr = slotForHover.lock();
-			if (slotPtr) {
-				slotPtr->SetOnHover([] {});
-				slotPtr->SetOnInteract([](std::shared_ptr<Player>) {});
-			}
-		}
+		this->DisableBuildSlotInteractions();
 		return true;
 	} catch (const std::exception& e) {
 		Logger::Error("Room::TryBuildMine exception: ", e.what());

@@ -87,6 +87,7 @@ public:
 	// Build helpers used by UI callbacks
 	bool IsBuildMenuOpen();
 	void CloseBuildMenu();
+	bool RemoveBuiltObject();
 	bool TryBuildGenerator();
 	bool TryBuildTurret();
 	bool TryBuildMine();
@@ -110,6 +111,8 @@ private:
 
 	void ShowBuildMenu(std::shared_ptr<class Player> player);
 	void HideBuildMenu();
+	void EnableBuildSlotInteractions();
+	void DisableBuildSlotInteractions();
 
 	void Hover();
 

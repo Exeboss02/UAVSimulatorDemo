@@ -225,6 +225,13 @@ void AssetManager::CreateDefaultAssets() {
 	wireframeMaterial->unlitShader = pixelShaderUnlit;
 	wireframeMaterial->wireframe = true;
 	AddMaterial("wireframeWhite", wireframeMaterial);
+
+	// Load meshes
+	this->GetMeshObjData("meshes/generator.glb:Mesh_0");
+	this->GetMeshObjData("meshes/mine.glb:Mesh_0");
+	this->GetMeshObjData("Buildings/Turret.glb:Mesh_0");
+	this->GetMeshObjData("enemies/NewEnemy.glb:Mesh_0");
+	this->GetMeshObjData("enemies/piratebot2.glb:Mesh_0");
 }
 
 void AssetManager::AddShader(std::string identifier, std::shared_ptr<Shader> shader) {

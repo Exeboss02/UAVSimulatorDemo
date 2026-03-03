@@ -31,12 +31,12 @@ void Cockpit::Start() {
 			Logger::Log("Core Died");
 
 			// create tempspeaker
-			SoundClip* deathClip = AssetManager::GetInstance().GetSoundClip("BigExplosion2.wav");
-			std::weak_ptr<SoundSourceObject> deathSpeaker = this->factory->CreateStaticGameObject<SoundSourceObject>();
-			deathSpeaker.lock()->SetDeleteWhenFinnished(true);
-			deathSpeaker.lock()->transform.SetPosition(this->transform.GetGlobalPosition());
-			deathSpeaker.lock()->Play(deathClip);
-			GameManager::GetInstance()->Loose();
+			// SoundClip* deathClip = AssetManager::GetInstance().GetSoundClip("BigExplosion2.wav");
+			// std::weak_ptr<SoundSourceObject> deathSpeaker = this->factory->CreateStaticGameObject<SoundSourceObject>();
+			// deathSpeaker.lock()->SetDeleteWhenFinnished(true);
+			// deathSpeaker.lock()->transform.SetPosition(this->transform.GetGlobalPosition());
+			// deathSpeaker.lock()->Play(deathClip);
+			// GameManager::GetInstance()->Loose();
 		}
 
 		// Update core health on hud

@@ -124,6 +124,16 @@ void SoundSourceObject::Play(SoundClip* soundClip) //pointer referece?
 	this->sourceIndex = (this->sourceIndex + 1) % this->nrOfSources;
 }
 
+void SoundSourceObject::Stop()
+{
+	for(int i = 0; i < this->nrOfSources; i++)
+	{
+		alSourceStop(this->sources[i]);
+		alSourceRewind(this->sources[i]);
+		alSourcei(this->sources[i], AL_BUFFER, 0);
+	}
+}
+
 void SoundSourceObject::SetId(int newId)
 {
 	this->id = newId;

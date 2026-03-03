@@ -154,6 +154,12 @@ void Player::Tick() {
 
 	// this->GunAnimation(); //something is weird with this->canShoot, so do not use this yet
 
+	if(this->transform.GetGlobalPosition().m128_f32[1] <= -50)
+	{
+		this->SetPhysicsPosition(GameManager::GetInstance()->GetPlayerSpawnPoint());
+		this->SetPreviousPhysicsPosition(GameManager::GetInstance()->GetPlayerSpawnPoint());
+	}
+
 	InputManager::GetInstance().ReadControllerInput(this->controllerInput->GetControllerIndex());
 	DirectX::XMVECTOR position = this->transform.GetGlobalPosition();
 

@@ -28,6 +28,7 @@ void GunPickUp::Start() {
 
 		DirectX::XMFLOAT3 pos(0.1f, 0.0f, 0.0f);
 		colliderobj->transform.SetPosition(DirectX::XMLoadFloat3(&pos));
+		colliderobj->SetSolid(false);
 		DirectX::XMFLOAT3 scale(0.9f, 0.3f, 0.1f);
 		colliderobj->transform.SetScale(DirectX::XMLoadFloat3(&scale));
 		colliderobj->SetParent(this->GetPtr());

@@ -22,6 +22,7 @@ struct Round {
 class GameManager : public GameObject {
 public:
 	GameManager();
+	~GameManager();
 
 	void Start() override;
 	void Tick() override;

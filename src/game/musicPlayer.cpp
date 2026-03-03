@@ -6,7 +6,7 @@ MusicPlayer::MusicPlayer()
 
 MusicPlayer::~MusicPlayer()
 {
-    AudioManager::GetInstance().FadeOutStop("courage", 6.0f);
+    AudioManager::GetInstance().FadeOutStop("courage", 4.0f);
 }
 
 void MusicPlayer::Start()

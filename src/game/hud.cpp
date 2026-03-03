@@ -112,7 +112,7 @@ void HUD::Start() {
 	}
 
 	{
-		this->storyText = this->MakeText("HUD_Player_Story_Text", " ", 0, -20, 0, UI::Anchor::BottomCenter);
+		this->storyText = this->MakeText("HUD_Player_Story_Text", " ", 0, -60, 0, UI::Anchor::BottomCenter);
 	}
 
 	{

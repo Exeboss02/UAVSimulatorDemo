@@ -51,29 +51,6 @@
         ]
       },
       "type": "SpaceShip"
-    },
-    {
-      "name": "THE GUN UPGRADE",
-      "transform": {
-        "position": [
-          146,
-          3.0,
-          0.0
-        ],
-        "rotation": [
-          0.0,
-          0.0,
-          0.0,
-          1.0
-        ],
-        "scale": [
-          1.0,
-          1.0,
-          1.0
-        ]
-      },
-      "type": "GunPickUp"
-    }
-    
+    }    
   ]
 }

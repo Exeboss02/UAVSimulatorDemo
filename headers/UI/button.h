@@ -67,6 +67,9 @@ public:
 	void SetVerticalAlign(VerticalAlign a) { this->vAlign = a; }
 	VerticalAlign GetVerticalAlign() const { return this->vAlign; }
 
+	void SetLabelFontSize(float size) { this->labelFontSize = size; }
+	float GetLabelFontSize() const { return this->labelFontSize; }
+
 private:
 	bool hovered = false;
 	bool pressed = false;
@@ -93,6 +96,8 @@ private:
 	// Label alignment defaults
 	HorizontalAlign hAlign = HorizontalAlign::CENTER;
 	VerticalAlign vAlign = VerticalAlign::MIDDLE;
+
+	float labelFontSize = 18.0f;
 };
 
 } // namespace UI

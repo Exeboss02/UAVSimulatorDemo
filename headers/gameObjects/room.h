@@ -4,11 +4,11 @@
 // Forward declaration to fix C2955 error
 class SpaceShip;
 #include "UI/canvasObject.h"
+#include "core/audio/soundEngine.h"
+#include "game/costHandler.h"
 #include "gameObjects/spaceShipObj.h"
 #include "gameObjects/wall.h"
 #include "utilities/aStar.h"
-#include "core/audio/soundEngine.h"
-#include "game/costHandler.h"
 
 class Room : public GameObject3D {
 public:
@@ -115,7 +115,7 @@ private:
 
 	float hoverDisabledUntil = 0.0f;
 
-	CostHandler turretCost = CostHandler(4, 0, 0, 0);
-	CostHandler mineCost = CostHandler(3, 0, 0, 0);
-	CostHandler generatorCost = CostHandler(0, 0, 0, 0);
+	CostHandler turretCost = CostHandler(10, 20, 0, 10);
+	CostHandler mineCost = CostHandler(0, 0, 10, 0);
+	CostHandler generatorCost = CostHandler(10, 10, 10, 10);
 };

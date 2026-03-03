@@ -190,11 +190,17 @@ void GameManager::ReloadScene() {
 
 void GameManager::Win() {
 	if (auto playerPtr = this->player.lock()) {
+
+		playerPtr->transform.SetPosition(10000, 10000, 10000);
+		playerPtr->SetPhysicsPosition({10000, 10000, 10000});
+		playerPtr->SetPreviousPhysicsPosition({10000, 10000, 10000});
+
 		playerPtr->SetInputEnabled(false);
 		playerPtr->SetShowCursor(true);
 		if (playerPtr->hud) {
 			playerPtr->hud->OnDestroy();
 		}
+		playerPtr->addGun(Player::Guns::none);
 	}
 
 	// Try to find the main HUD canvas to place the win overlay on top
@@ -224,25 +230,25 @@ void GameManager::Win() {
 	}
 
 	// Full-screen opaque black background
-	{
-		auto bgWeak = this->factory->CreateGameObjectOfType<UI::Image>();
-		if (!bgWeak.expired()) {
-			auto bg = bgWeak.lock();
-			bg->SetName("Win_Background");
-			bg->SetImage("assets/images/test.png");
-			bg->SetAnchor(UI::Anchor::TopLeft);
-			bg->SetSize(UI::Vec2{canvasWidth, canvasHeight});
-			bg->SetPosition(UI::Vec2{0.0f, 0.0f});
-			bg->SetTint(DirectX::XMFLOAT4{0.0f, 0.0f, 0.0f, 1.0f});
-			bg->SetVisible(true);
-			bg->SetZIndex(100);
-			std::weak_ptr<GameObject> me = canvasShared->GetPtr();
-			bg->SetParent(me);
-			canvasShared->AddChild(std::static_pointer_cast<UI::Widget>(bg));
-			RenderQueue::AddUIWidget(bg);
-			this->winBackground = bg;
-		}
-	}
+	//{
+	//	auto bgWeak = this->factory->CreateGameObjectOfType<UI::Image>();
+	//	if (!bgWeak.expired()) {
+	//		auto bg = bgWeak.lock();
+	//		bg->SetName("Win_Background");
+	//		bg->SetImage("assets/images/test.png");
+	//		bg->SetAnchor(UI::Anchor::TopLeft);
+	//		bg->SetSize(UI::Vec2{canvasWidth, canvasHeight});
+	//		bg->SetPosition(UI::Vec2{0.0f, 0.0f});
+	//		bg->SetTint(DirectX::XMFLOAT4{0.0f, 0.0f, 0.0f, 1.0f});
+	//		bg->SetVisible(true);
+	//		bg->SetZIndex(100);
+	//		std::weak_ptr<GameObject> me = canvasShared->GetPtr();
+	//		bg->SetParent(me);
+	//		canvasShared->AddChild(std::static_pointer_cast<UI::Widget>(bg));
+	//		RenderQueue::AddUIWidget(bg);
+	//		this->winBackground = bg;
+	//	}
+	//}
 
 	this->winTitle.reset();
 
@@ -313,6 +319,12 @@ void GameManager::Win() {
 
 void GameManager::PlayerDied() {
 	Logger::Log("Player died");
+
+	// Sorta temp
+	this->Loose();
+	return;
+	//
+
 	auto lockedPlayer = this->player.lock();
 	lockedPlayer->transform.SetPosition(this->playerSpawnPoint);
 	lockedPlayer->transform.SetRotationRPY(0, 0, 0);
@@ -324,7 +336,10 @@ void GameManager::PlayerDied() {
 
 void GameManager::Loose() {
 	Logger::Log("Game over!");
-	this->ReloadScene();
+
+	this->factory->QueueLoadScene((FilepathHolder::GetAssetsDirectory() / "scenes/MainMenu.scene").string());
+	ShowCursor(true);
+	//this->ReloadScene();
 }
 
 void GameManager::SpawnNextRound() { this->SpawnRound(this->currentRound); }
@@ -414,6 +429,13 @@ void GameManager::EndRound() {
 
 	if (this->currentRound >= this->rounds.size()) {
 		// Let storymanager do the winning
+	}
+
+	if (auto player = this->player.lock()) {
+		player->resources.carbonFiber.IncrementAmount(30 + this->currentRound * 5);
+		player->resources.titanium.IncrementAmount(30 + this->currentRound * 5);
+		player->resources.circuit.IncrementAmount(30 + this->currentRound * 5);
+		player->resources.lubricant.IncrementAmount(30 + this->currentRound * 5);
 	}
 
 	if (auto sm = this->storyManager.lock()) {

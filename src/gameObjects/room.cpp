@@ -115,7 +115,7 @@ void Room::Start() {
 
 		DirectX::XMVECTOR distanceVector = DirectX::XMVectorSubtract(GameManager::GetInstance()->GetPlayerSpawnPoint(), meshobj->transform.GetGlobalPosition());
 		float distance = DirectX::XMVectorGetX(DirectX::XMVector3Length(distanceVector));
-		meshobj->SetWallCost((distance / 2) - 1, 0, 0, 0);
+		meshobj->SetWallCost((distance - 3), 0, 0, 0);
 
 		this->walls[i] = meshobj;
 	}
@@ -176,7 +176,7 @@ void Room::SetupPathfindingNodes(std::shared_ptr<SpaceShip> spaceShip, std::shar
 
 	size_t nodeCount = this->pathfindingNodes.size();
 
-	const float nodeHeight = 2.0f;
+	const float nodeHeight = 1.5f;
 
 	// 9 nodes in local room-space, 1 in the center, and 8 around the center in a circle.
 	std::array<DirectX::XMVECTOR, 9> nodesLocal = {};
@@ -277,9 +277,9 @@ void Room::ShowBuildMenu(std::shared_ptr<Player> player) {
 		};
 		
 		// Barebone specs: only labels. Positions will be computed to center the buttons beneath the crosshair.
-		std::string turretLabel = std::format("Turret, Cost {}", this->turretCost.getCostString());
-		std::string generatorLabel = std::format("Generator, Cost {}", this->generatorCost.getCostString());
-		std::string mineLabel = std::format("Mine, Cost {}", this->mineCost.getCostString());
+		std::string turretLabel = std::format("Turret, Cost: \n{}", this->turretCost.getCostString());
+		std::string generatorLabel = std::format("Generator, Cost: \n{}", this->generatorCost.getCostString());
+		std::string mineLabel = std::format("Mine, Cost: \n{}", this->mineCost.getCostString());
 
 		std::vector<std::string> labels = {turretLabel, generatorLabel, mineLabel};
 
@@ -328,14 +328,14 @@ void Room::ShowBuildMenu(std::shared_ptr<Player> player) {
 
 		// Button layout
 		const float btnW = 150.0f;
-		const float btnH = 40.0f;
+		const float btnH = 140.0f;
 		const float spacing = 20.0f;
 		const size_t n = labels.size();
 		const float totalW = n * btnW + (n - 1) * spacing;
 		const float centerX = crossCenter.x;
 		const float centerY = crossCenter.y;
 		const float startX = centerX - totalW * 0.5f;
-		const float yPos = centerY + (btnH * 0.5f) + 40.0f; // just below crosshair
+		const float yPos = centerY + 60.0f; // just below crosshair
 
 		for (size_t i = 0; i < labels.size(); ++i) {
 			const auto& label = labels[i];
@@ -347,10 +347,10 @@ void Room::ShowBuildMenu(std::shared_ptr<Player> player) {
 			btn->SetLabel(label);
 
 			btn->SetHorizontalAlign(UI::Button::HorizontalAlign::CENTER);
-			btn->SetVerticalAlign(UI::Button::VerticalAlign::MIDDLE);
+			btn->SetVerticalAlign(UI::Button::VerticalAlign::TOP);
 			UI::Vec2 pos{startX + static_cast<float>(i) * (btnW + spacing), yPos};
 			btn->SetPosition(pos);
-			btn->SetSize({150, 40});
+			btn->SetSize({btnW, btnH});
 			btn->SetVisible(true);
 			canvasObj->AddChild(std::static_pointer_cast<UI::Widget>(btn));
 			RenderQueue::AddUIWidget(btn);

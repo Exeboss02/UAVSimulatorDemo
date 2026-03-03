@@ -27,6 +27,8 @@ void Player::Start() {
 	this->SetPhysicsPosition(spawnPoint);
 	this->SetPreviousPhysicsPosition(spawnPoint);
 
+	this->resources.titanium.SetAmount(20);
+
 	// adding camera
 	auto cameraWeak = this->factory->CreateGameObjectOfType<CameraObject>();
 	auto cameraShared = cameraWeak.lock();
@@ -568,19 +570,19 @@ void Player::Interact() {
 			hitString = "hit";
 
 			// rayVis
-			MeshObjData meshdata = AssetManager::GetInstance().GetMeshObjData("TexBox/TextureCube.glb:Mesh_0");
-			auto colliderobjWeak = this->factory->CreateGameObjectOfType<RayVis>();
-			auto colliderobj = colliderobjWeak.lock();
-			colliderobj->StartDeathTimer(5);
-			colliderobj->SetMesh(meshdata);
-			colliderobj->GetMesh().SetMaterial(
-				0, AssetManager::GetInstance().GetMaterialWeakPtr("defaultUnlitMaterial").lock());
-			colliderobj->SetCastShadow(false);
-			colliderobj->transform.SetPosition(
-				DirectX::XMVectorAdd(posVec, DirectX::XMVectorScale(lookVec, rayCastData.distance / 2)));
-			colliderobj->transform.SetRotationQuaternion(this->camera.lock()->transform.GetGlobalRotation());
-			DirectX::XMFLOAT3 scale(0.01f, 0.01f, rayCastData.distance / 2);
-			colliderobj->transform.SetScale(DirectX::XMLoadFloat3(&scale));
+			//MeshObjData meshdata = AssetManager::GetInstance().GetMeshObjData("TexBox/TextureCube.glb:Mesh_0");
+			//auto colliderobjWeak = this->factory->CreateGameObjectOfType<RayVis>();
+			//auto colliderobj = colliderobjWeak.lock();
+			//colliderobj->StartDeathTimer(5);
+			//colliderobj->SetMesh(meshdata);
+			//colliderobj->GetMesh().SetMaterial(
+			//	0, AssetManager::GetInstance().GetMaterialWeakPtr("defaultUnlitMaterial").lock());
+			//colliderobj->SetCastShadow(false);
+			//colliderobj->transform.SetPosition(
+			//	DirectX::XMVectorAdd(posVec, DirectX::XMVectorScale(lookVec, rayCastData.distance / 2)));
+			//colliderobj->transform.SetRotationQuaternion(this->camera.lock()->transform.GetGlobalRotation());
+			//DirectX::XMFLOAT3 scale(0.01f, 0.01f, rayCastData.distance / 2);
+			//colliderobj->transform.SetScale(DirectX::XMLoadFloat3(&scale));
 			// end of rayVis
 		} else {
 			hitString = "miss";
@@ -631,11 +633,18 @@ void Player::addGun(Guns gunType) {
 	case Guns::rifle:
 		gunWeak = this->factory->CreateGameObjectOfType<Rifle01>();
 		break;
+	case Guns::none:
+		gunWeak = std::weak_ptr<Gun>();
+		break;
 	default:
 		break;
 	}
-	auto gun = gunWeak.lock();
-	gun->SetParent(this->camera.lock()->GetPtr());
-	gun->setParentToShootFrom(this->camera.lock());
-	this->gun = gun;
+	if (auto gun = gunWeak.lock()) {
+		gun->SetParent(this->camera.lock()->GetPtr());
+		gun->setParentToShootFrom(this->camera.lock());
+		this->gun = gun;
+	} else {
+		this->gun = gunWeak;
+	}
+
 }

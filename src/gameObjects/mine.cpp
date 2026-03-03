@@ -25,8 +25,8 @@ void Mine::Start() {
     this->transform.SetScale(0.5f, 0.5f, 0.5f);
 
     //this looks crazy, but feels okey
-    this->range = 35000;
-    this->damage = 4000;
+    this->range = 15;
+    this->damage = 100;
 
 	this->MeshObject::Start();
 }
@@ -62,10 +62,13 @@ void Mine::OnExplode() {
 		auto betweenVec =
 			DirectX::XMVectorSubtract(this->transform.GetGlobalPosition(), enemy->transform.GetGlobalPosition());
 		float distanceSquared = DirectX::XMVector3Dot(betweenVec, betweenVec).m128_f32[0];
+		float distance = sqrtf(distanceSquared);
 
         if (distanceSquared > rangeSquared) continue;
 
-        float damage = (1 / distanceSquared) * this->damage;
+        float rangeScalar = (distance / 10);
+
+        float damage = (1 / (rangeScalar * rangeScalar)) * this->damage;
 
         enemy->DecrementHealth(damage);
     }

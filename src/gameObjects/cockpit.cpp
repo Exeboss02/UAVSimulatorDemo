@@ -7,6 +7,7 @@
 #include "gameObjects/room.h"
 #include "utilities/aStar.h"
 #include <numbers>
+#include "gameObjects/spotlightObject.h"
 
 void Cockpit::Start() {
 	this->SetName("Cockpit");
@@ -64,11 +65,11 @@ void Cockpit::Start() {
 	this->speaker = this->factory->CreateStaticGameObject<SoundSourceObject>();
 
 	auto emergencyButton = this->factory->CreateStaticGameObject<EmergenceExitButton>();
-	emergencyButton->transform.SetPosition(4.43, 2, 0);
+	emergencyButton->transform.SetPosition(4.43, 2, 2);
 	emergencyButton->SetParent(this->GetPtr());
 
 	auto gunPickUp = this->factory->CreateStaticGameObject<GunPickUp>();
-	gunPickUp->transform.SetPosition(-4, 0.58, 4);
+	gunPickUp->transform.SetPosition(-4, 1.45, 2.3);
 	gunPickUp->transform.SetRotationRPY(0, 3.14 / 2, 3.14 * 1.75);
 
 	auto globalScale = this->transform.GetGlobalScale();
@@ -78,6 +79,22 @@ void Cockpit::Start() {
 								  1 / globalScale.m128_f32[2]);
 
 	gunPickUp->SetParent(this->GetPtr());
+
+	auto testRoom = this->factory->CreateStaticGameObject<MeshObject>();
+	testRoom->SetMesh(AssetManager::GetInstance().GetMeshObjData("SpaceShip/SpaceshipCockpit.glb:Mesh_0"));
+	testRoom->SetParent(this->GetPtr());
+	testRoom->transform.SetScale(1 / globalScale.m128_f32[0], 1 / globalScale.m128_f32[1],
+								  1 / globalScale.m128_f32[2]);
+	testRoom->transform.SetRotationRPY({0,-DirectX::XM_PIDIV2,0});
+	testRoom->transform.SetPosition(0, 0.5, 0);
+
+	auto spotLight = this->factory->CreateGameObjectOfType<SpotlightObject>().lock();
+	spotLight->SetParent(this->GetPtr());
+	spotLight->transform.SetPosition({0, 4.5, 0});
+	spotLight->transform.SetRotationRPY(0, std::numbers::pi / 2, 0);
+	spotLight->SetAngle(120.);
+	spotLight->SetIntensity(30.0f);
+
 
 
 	this->GameObject3D::Start();
@@ -122,40 +139,62 @@ void Cockpit::SetupPathfindingNodes(std::shared_ptr<SpaceShip> spaceShip) {
 
 void Cockpit::createVisualsAndColiders() {
 
+	// Walls
+	for (int i = 0; i < 2; i++) {
+		auto colliderobj = this->factory->CreateStaticGameObject<BoxCollider>();
+		DirectX::XMFLOAT3 pos(4.75f * (i == 0 ? 1 : -1), 3.0f, 0);
+		colliderobj->transform.SetPosition(DirectX::XMLoadFloat3(&pos));
+		DirectX::XMFLOAT3 scale(5.0f, 2.5f, 0.250f);
+		colliderobj->transform.SetScale(DirectX::XMLoadFloat3(&scale));
+		colliderobj->transform.SetRotationRPY(0, 0, std::numbers::pi / 2);
+		colliderobj->SetParent(this->GetPtr());
+		colliderobj->SetTag(Tag::WALL);
+		//auto col = colliderobj.Get();
+		//colliderobj.Init();
+		//col->ShowDebug(true);
+	}
+
+	// Control table
 	{
-		auto meshobj = this->factory->CreateStaticGameObject<MeshObject>();
-
-		meshobj->SetParent(this->GetPtr());
-
-		MeshObjData meshdata = AssetManager::GetInstance().GetMeshObjData("SpaceShip/room2.glb:Mesh_0");
-
-		meshobj->SetMesh(meshdata);
+		auto colliderobj = this->factory->CreateStaticGameObject<BoxCollider>();
+		DirectX::XMFLOAT3 pos(0, 3.0f, -3);
+		colliderobj->transform.SetPosition(DirectX::XMLoadFloat3(&pos));
+		DirectX::XMFLOAT3 scale(5.0f, 2.5f, 0.250f);
+		colliderobj->transform.SetScale(DirectX::XMLoadFloat3(&scale));
+		colliderobj->SetParent(this->GetPtr());
+		colliderobj->SetTag(Tag::WALL);
+		//auto col = colliderobj.Get();
+		//colliderobj.Init();
+		//col->ShowDebug(true);
 	}
+
+	// Angled walls
+	for (int i = 0; i < 2; i++) {
+		auto colliderobj = this->factory->CreateStaticGameObject<BoxCollider>();
+		DirectX::XMFLOAT3 pos(4.75f * (i == 0 ? 1 : -1), 3.0f, 0);
+		colliderobj->transform.SetPosition(DirectX::XMLoadFloat3(&pos));
+		DirectX::XMFLOAT3 scale(5.0f, 2.5f, 0.250f);
+		colliderobj->transform.SetScale(DirectX::XMLoadFloat3(&scale));
+		colliderobj->transform.SetRotationRPY(0, 0, DirectX::XM_PIDIV4 * (i == 0 ? -1 : 1));
+		colliderobj->SetParent(this->GetPtr());
+		colliderobj->SetTag(Tag::WALL);
+		//auto col = colliderobj.Get();
+		//colliderobj.Init();
+		//col->ShowDebug(true);
+	}
+
+	// Table
 	{
-		auto meshobj = this->factory->CreateStaticGameObject<MeshObject>();
-
-		meshobj->SetParent(this->GetPtr());
-
-		MeshObjData meshdata = AssetManager::GetInstance().GetMeshObjData("SpaceShip/room2.glb:Mesh_4");
-		meshobj->SetMesh(meshdata);
+		auto colliderobj = this->factory->CreateStaticGameObject<BoxCollider>();
+		DirectX::XMFLOAT3 pos(-4, 0.9f, 2.3f);
+		colliderobj->transform.SetPosition(DirectX::XMLoadFloat3(&pos));
+		DirectX::XMFLOAT3 scale(1.0f, 0.5f, 0.5f);
+		colliderobj->transform.SetScale(DirectX::XMLoadFloat3(&scale));
+		colliderobj->transform.SetRotationRPY(0, 0, DirectX::XM_PIDIV2);
+		colliderobj->SetParent(this->GetPtr());
+		colliderobj->SetTag(Tag::FLOOR);
+		//auto col = colliderobj.Get();
+		//colliderobj.Init();
+		//col->ShowDebug(true);
 	}
-
-	for (size_t i = 0; i < 4; i++) {
-
-		auto meshobj = this->factory->CreateStaticGameObject<Wall>();
-
-		meshobj->SetParent(this->GetPtr());
-
-		meshobj->transform.SetRotationRPY(0, 0, i * std::numbers::pi / 2);
-
-		meshobj->SetWallState(Room::WallState::window, true);
-
-		meshobj->SetWAllIndex(i);
-
-		this->walls[i] = meshobj;
-	}
-
-	this->walls[0].lock()->SetWallState(Room::WallState::door);
-	this->walls[1].lock()->SetWallState(Room::WallState::solid, true);
-	this->walls[3].lock()->SetWallState(Room::WallState::solid, true);
 }

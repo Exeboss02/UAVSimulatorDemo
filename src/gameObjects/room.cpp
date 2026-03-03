@@ -558,6 +558,33 @@ bool Room::RemoveBuiltObject() {
 		return false;
 	}
 
+	if (auto gameManager = GameManager::GetInstance(); gameManager) {
+		auto player = gameManager->GetPlayer();
+		if (player) {
+			if (std::dynamic_pointer_cast<Turret>(built)) {
+				player->resources.GetResource(ResourceType::Titanium).IncrementAmount(this->turretCost.getTitanium());
+				player->resources.GetResource(ResourceType::Lubricant).IncrementAmount(this->turretCost.getLubricant());
+				player->resources.GetResource(ResourceType::CarbonFiber)
+					.IncrementAmount(this->turretCost.getCarbonFiber());
+				player->resources.GetResource(ResourceType::Circuit).IncrementAmount(this->turretCost.getCircuit());
+			} else if (std::dynamic_pointer_cast<Mine>(built)) {
+				player->resources.GetResource(ResourceType::Titanium).IncrementAmount(this->mineCost.getTitanium());
+				player->resources.GetResource(ResourceType::Lubricant).IncrementAmount(this->mineCost.getLubricant());
+				player->resources.GetResource(ResourceType::CarbonFiber)
+					.IncrementAmount(this->mineCost.getCarbonFiber());
+				player->resources.GetResource(ResourceType::Circuit).IncrementAmount(this->mineCost.getCircuit());
+			} else if (std::dynamic_pointer_cast<ResourceGenerator>(built)) {
+				player->resources.GetResource(ResourceType::Titanium)
+					.IncrementAmount(this->generatorCost.getTitanium());
+				player->resources.GetResource(ResourceType::Lubricant)
+					.IncrementAmount(this->generatorCost.getLubricant());
+				player->resources.GetResource(ResourceType::CarbonFiber)
+					.IncrementAmount(this->generatorCost.getCarbonFiber());
+				player->resources.GetResource(ResourceType::Circuit).IncrementAmount(this->generatorCost.getCircuit());
+			}
+		}
+	}
+
 	this->factory->QueueDeleteGameObject(built);
 	this->builtObject.reset();
 	this->EnableBuildSlotInteractions();

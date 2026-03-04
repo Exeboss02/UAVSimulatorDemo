@@ -342,6 +342,29 @@ void GameManager::SpawnRound(size_t roundIndex) {
 	this->inCombat = true;
 
 	if (auto spaceshipLock = this->spaceship.lock()) {
+		bool closedAnyBuildMenu = false;
+		for (const auto& [roomPosition, _] : spaceshipLock->GetPlacedRooms()) {
+			if (roomPosition.x < 0 || roomPosition.y < 0) continue;
+			auto roomWeak = spaceshipLock->GetRoom(static_cast<size_t>(roomPosition.x),
+											 static_cast<size_t>(roomPosition.y));
+			if (roomWeak.expired()) continue;
+			auto room = roomWeak.lock();
+			if (!room || !room->IsBuildMenuOpen()) continue;
+
+			room->CloseBuildMenu();
+			closedAnyBuildMenu = true;
+		}
+
+		if (closedAnyBuildMenu) {
+			if (auto playerPtr = this->player.lock()) {
+				const bool quitPromptVisible = playerPtr->hud && playerPtr->hud->IsQuitPromptVisible();
+				if (!quitPromptVisible) {
+					playerPtr->SetShowCursor(false);
+					playerPtr->SetInputEnabled(true);
+				}
+			}
+		}
+
 		auto rooms = spaceshipLock->GetPlacedRooms();
 		if (rooms.size() <= 0) {
 			Logger::Error("No rooms");

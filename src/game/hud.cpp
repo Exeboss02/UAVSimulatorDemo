@@ -90,6 +90,11 @@ void HUD::Start() {
 	{
 		this->coreHealthText = this->MakeText("HUD_Core_Health", "Core Health: 100", 0, 40, textWidth, UI::Anchor::TopCenter);
 	}
+	// Round indicator
+	{
+		this->roundIndicator = this->MakeText("HUD_Round_Indicator", " ", 20, 120, textWidth, UI::Anchor::TopLeft);
+		this->roundIndicator.lock()->SetFontSize(18);
+	}
 
 	// Blood overlay (visible on low health)
 	{
@@ -326,7 +331,17 @@ void HUD::SetStoryTextVisibility(bool visible) {
 	}
 }
 
-void HUD::SetCoreHealthText(int health) { this->SafeTextSet(this->coreHealthText, std::format("Core Health: {}", health)); }
+void HUD::SetCoreHealthText(int health) {
+	this->SafeTextSet(this->coreHealthText, std::format("Core Health: {}", health));
+}
+
+void HUD::SetRoundIndicator(size_t roundsLeft, float timeUntilNextRound, bool showTime){
+	
+	std::string text =
+		std::format("Pirate ships left: {}", roundsLeft) + (showTime ? std::format("\nTime until pirate breach: {}", (int)timeUntilNextRound + 1) : "");
+
+	this->SafeTextSet(this->roundIndicator, text);
+}
 
 std::weak_ptr<UI::Text> HUD::MakeText(const std::string& name, const std::string& text, float x, float y, float width,
 									  UI::Anchor anchor) {

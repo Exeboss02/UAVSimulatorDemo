@@ -164,6 +164,8 @@ void GameManager::Tick() {
 		}
 	}
 
+	this->GetPlayer()->hud->SetRoundIndicator(this->rounds.size() - this->GetCurrentRound(), this->idleTimeTimer, !this->GetInCombat());
+
 	ImGui::Begin("Rounds");
 	if (this->inCombat) {
 		ImGui::Text(std::format("Enemies: {}", this->enemies.size()).c_str());
@@ -171,6 +173,7 @@ void GameManager::Tick() {
 		ImGui::Text(std::format("Idle time: {}", this->idleTimeTimer).c_str());
 	}
 	ImGui::Text(std::format("Current round: {}", this->currentRound).c_str());
+
 	if (ImGui::Button("Start next round")) {
 		SpawnNextRound();
 	}
@@ -228,27 +231,6 @@ void GameManager::Win() {
 		}
 	} catch (...) {
 	}
-
-	// Full-screen opaque black background
-	//{
-	//	auto bgWeak = this->factory->CreateGameObjectOfType<UI::Image>();
-	//	if (!bgWeak.expired()) {
-	//		auto bg = bgWeak.lock();
-	//		bg->SetName("Win_Background");
-	//		bg->SetImage("assets/images/test.png");
-	//		bg->SetAnchor(UI::Anchor::TopLeft);
-	//		bg->SetSize(UI::Vec2{canvasWidth, canvasHeight});
-	//		bg->SetPosition(UI::Vec2{0.0f, 0.0f});
-	//		bg->SetTint(DirectX::XMFLOAT4{0.0f, 0.0f, 0.0f, 1.0f});
-	//		bg->SetVisible(true);
-	//		bg->SetZIndex(100);
-	//		std::weak_ptr<GameObject> me = canvasShared->GetPtr();
-	//		bg->SetParent(me);
-	//		canvasShared->AddChild(std::static_pointer_cast<UI::Widget>(bg));
-	//		RenderQueue::AddUIWidget(bg);
-	//		this->winBackground = bg;
-	//	}
-	//}
 
 	this->winTitle.reset();
 

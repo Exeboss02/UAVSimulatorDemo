@@ -66,18 +66,18 @@ void HUD::Start() {
 	// Carbon
 	{
 		this->carbonFiberIcon = this->MakeIcon("HUD_Carbon_Icon", "assets/images/carbon_fiber.png", -padding,
-											 startPos + IconOffset * 2, iconSize, UI::Anchor::TopRight);
+											   startPos + IconOffset * 2, iconSize, UI::Anchor::TopRight);
 		this->carbonFiberText =
-			this->MakeText("HUD_Carbon", "0", iconTextOffsetX, startPos + iconTextOffsetY + IconOffset * 2,
-						   textWidth, UI::Anchor::TopRight);
+			this->MakeText("HUD_Carbon", "0", iconTextOffsetX, startPos + iconTextOffsetY + IconOffset * 2, textWidth,
+						   UI::Anchor::TopRight);
 	}
 	// Circuit
 	{
 		this->circuitIcon = this->MakeIcon("HUD_Circuit_Icon", "assets/images/circuit_board.png", -padding,
-											 startPos + IconOffset * 3, iconSize, UI::Anchor::TopRight);
+										   startPos + IconOffset * 3, iconSize, UI::Anchor::TopRight);
 		this->circuitText =
-			this->MakeText("HUD_Circuit", "0", iconTextOffsetX, startPos + iconTextOffsetY + IconOffset * 3,
-						   textWidth, UI::Anchor::TopRight);
+			this->MakeText("HUD_Circuit", "0", iconTextOffsetX, startPos + iconTextOffsetY + IconOffset * 3, textWidth,
+						   UI::Anchor::TopRight);
 	}
 	// Player health
 	{
@@ -88,12 +88,21 @@ void HUD::Start() {
 	}
 	// Core Health
 	{
-		this->coreHealthText = this->MakeText("HUD_Core_Health", "Core Health: 100", 0, 40, textWidth, UI::Anchor::TopCenter);
+		this->coreHealthText =
+			this->MakeText("HUD_Core_Health", "Core Health: 100", 0, 40, textWidth, UI::Anchor::TopCenter);
 	}
 	// Round indicator
 	{
 		this->roundIndicator = this->MakeText("HUD_Round_Indicator", " ", 20, 120, textWidth, UI::Anchor::TopLeft);
 		this->roundIndicator.lock()->SetFontSize(18);
+	}
+
+	// Objective Text
+	{
+		this->objective = this->MakeText("HUD_Objective", "---TEMP---", 0, 100, textWidth, UI::Anchor::TopCenter);
+		this->objective.lock()->SetFontSize(22);
+		this->objective.lock()->SetVisible(false);
+		this->objective.lock()->SetColor({1, 1, 0, 1});
 	}
 
 	// Blood overlay (visible on low health)
@@ -335,12 +344,22 @@ void HUD::SetCoreHealthText(int health) {
 	this->SafeTextSet(this->coreHealthText, std::format("Core Health: {}", health));
 }
 
-void HUD::SetRoundIndicator(size_t roundsLeft, float timeUntilNextRound, bool showTime){
-	
-	std::string text =
-		std::format("Pirate ships left: {}", roundsLeft) + (showTime ? std::format("\nTime until pirate breach: {}", (int)timeUntilNextRound + 1) : "");
+void HUD::SetRoundIndicator(size_t roundsLeft, float timeUntilNextRound, bool showTime) {
+
+	std::string text = std::format("Pirate ships left: {}", roundsLeft) +
+					   (showTime ? std::format("\nTime until pirate breach: {}", (int) timeUntilNextRound + 1) : "");
 
 	this->SafeTextSet(this->roundIndicator, text);
+}
+
+void HUD::SetObjective(const std::string& objective) {
+	this->SafeTextSet(this->objective, std::format("Objective: {}", objective));
+}
+
+void HUD::SetObjectiveVisible(bool visible) {
+	if (auto text = this->objective.lock()) {
+		text->SetVisible(visible);
+	}
 }
 
 std::weak_ptr<UI::Text> HUD::MakeText(const std::string& name, const std::string& text, float x, float y, float width,

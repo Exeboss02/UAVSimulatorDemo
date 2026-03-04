@@ -173,17 +173,20 @@ bool RigidBody::Collision(std::weak_ptr<RigidBody> rigidbody, int& nrOfCollision
 			{
 				collision = true;
 
-				//if(!thisCollider->GetSolid() || !otherCollider->GetSolid()) return collision;
+				if(!thisCollider->GetSolid() || !otherCollider->GetSolid()) continue;
 
-				//zero out velocity in direction of contactNormal
+				//zero out velocity in the opposite direction of contactNormal
 				DirectX::XMVECTOR velocity = DirectX::XMLoadFloat3(&this->linearVelocity);
 				float normalComponentMagnitude = DirectX::XMVectorGetX(DirectX::XMVector3Dot(velocity, this->previousContactNormal));
-				DirectX::XMVECTOR normalComponent = DirectX::XMVectorScale(this->previousContactNormal, normalComponentMagnitude);
 
-				// Remove the normal component from the velocity
-				DirectX::XMVECTOR newVelocity = DirectX::XMVectorSubtract(velocity, normalComponent);
-				DirectX::XMStoreFloat3(&this->linearVelocity, velocity);
+				if(normalComponentMagnitude < 0.0f) //only zero out velocity on axis if it is in the exact opposite direction of the contactNormal
+				{
+					DirectX::XMVECTOR normalComponent = DirectX::XMVectorScale(this->previousContactNormal, normalComponentMagnitude);
 
+					// Remove the normal component from the velocity
+					DirectX::XMVECTOR newVelocity = DirectX::XMVectorSubtract(velocity, normalComponent);
+					DirectX::XMStoreFloat3(&this->linearVelocity, newVelocity);
+				}
 			}
 		}
 	}
@@ -237,16 +240,20 @@ bool RigidBody::Collision(std::weak_ptr<Collider> collider, int& nrOfCollisionTe
 		{
 			collision = true;
 
-			//if(!thisCollider->GetSolid() || !otherCollider->GetSolid()) return collision;
+			if(!thisCollider->GetSolid() || !otherCollider->GetSolid()) continue;
 
-			//zero out velocity in direction of contactNormal
+			//zero out velocity in the opposite direction of contactNormal
 			DirectX::XMVECTOR velocity = DirectX::XMLoadFloat3(&this->linearVelocity);
 			float normalComponentMagnitude = DirectX::XMVectorGetX(DirectX::XMVector3Dot(velocity, this->previousContactNormal));
-			DirectX::XMVECTOR normalComponent = DirectX::XMVectorScale(this->previousContactNormal, normalComponentMagnitude);
 
-			// Remove the normal component from the velocity
-			DirectX::XMVECTOR newVelocity = DirectX::XMVectorSubtract(velocity, normalComponent);
-			DirectX::XMStoreFloat3(&this->linearVelocity, velocity);
+			if(normalComponentMagnitude < 0.0f) //only zero out velocity on axis if it is in the exact opposite direction of the contactNormal
+			{
+				DirectX::XMVECTOR normalComponent = DirectX::XMVectorScale(this->previousContactNormal, normalComponentMagnitude);
+
+				// Remove the normal component from the velocity
+				DirectX::XMVECTOR newVelocity = DirectX::XMVectorSubtract(velocity, normalComponent);
+				DirectX::XMStoreFloat3(&this->linearVelocity, newVelocity);
+			}
 		}
 	}
 

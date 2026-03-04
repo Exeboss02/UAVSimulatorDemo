@@ -14,10 +14,7 @@
 
 std::weak_ptr<GameManager> GameManager::instance;
 
-GameManager::~GameManager()
-{
-	this->shipSpeaker.lock()->Stop();
-}
+GameManager::~GameManager() { this->shipSpeaker.lock()->Stop(); }
 
 GameManager::GameManager()
 	: playerSpawnPoint(DirectX::XMVectorSet(140.0, 5.0, -23.0f, 0.0)), currentRound(0), inCombat(false),
@@ -164,7 +161,12 @@ void GameManager::Tick() {
 		}
 	}
 
-	this->GetPlayer()->hud->SetRoundIndicator(this->rounds.size() - this->GetCurrentRound(), this->idleTimeTimer, !this->GetInCombat());
+	// If not in a round currently and we haven't completed all rounds, showTime == True
+	bool showTime = !this->GetInCombat() && (this->currentRound != this->rounds.size());
+
+	// Display current round info in player hud
+	this->GetPlayer()->hud->SetRoundIndicator(this->rounds.size() - this->GetCurrentRound(), this->idleTimeTimer,
+											  showTime);
 
 	ImGui::Begin("Rounds");
 	if (this->inCombat) {
@@ -321,7 +323,7 @@ void GameManager::Loose() {
 
 	this->factory->QueueLoadScene((FilepathHolder::GetAssetsDirectory() / "scenes/MainMenu.scene").string());
 	ShowCursor(true);
-	//this->ReloadScene();
+	// this->ReloadScene();
 }
 
 void GameManager::SpawnNextRound() { this->SpawnRound(this->currentRound); }

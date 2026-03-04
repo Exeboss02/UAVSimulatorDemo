@@ -76,6 +76,9 @@ void RenderQueue::AddLightObject(std::weak_ptr<GameObject> newSpotlightObject) {
 
 	auto light = std::static_pointer_cast<SpotlightObject>(newSpotlightObject.lock());
 
+	static size_t spotlightIndex = 0;
+	light->SetRenderIndex(spotlightIndex++);
+
 	instance->lightRenderQueue.push_back(light);
 }
 

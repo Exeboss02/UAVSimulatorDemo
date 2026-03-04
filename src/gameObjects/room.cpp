@@ -102,8 +102,8 @@ void Room::Start() {
 
 	auto parent = std::static_pointer_cast<SpaceShip>(parentWeak.lock());
 
-	size_t maxX = parent->SHIP_MAX_SIZE_X;
-	size_t maxY = parent->SHIP_MAX_SIZE_Y;
+	size_t maxX = parent->SHIP_MAX_SIZE_X - 1;
+	size_t maxY = parent->SHIP_MAX_SIZE_Y - 1;
 	for (size_t i = 0; i < 4; i++) {
 
 		auto meshobj = this->factory->CreateStaticGameObject<Wall>();

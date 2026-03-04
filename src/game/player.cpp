@@ -112,8 +112,8 @@ void Player::Start() {
 		colliderobj->SetName("GroundCheck " + std::to_string(this->factory->GetNextID()));
 	}
 
-	std::function<void(std::weak_ptr<GameObject3D>)> function = [&](std::weak_ptr<GameObject3D> gameObject3D) {
-		this->OnCollision(gameObject3D);
+	std::function<void(std::weak_ptr<GameObject3D>, std::weak_ptr<Collider>)> function = [&](std::weak_ptr<GameObject3D> gameObject3D, std::weak_ptr<Collider> collider) {
+		this->OnCollision(gameObject3D, collider);
 
 		if (auto mine = dynamic_pointer_cast<Mine>(gameObject3D.lock())) {
 			Logger::Log("Hit Mine");
@@ -453,13 +453,10 @@ void Player::IncrementHealth(int hp) { this->health.Increment(hp); }
 
 int Player::GetHealth() const { return this->health.Get(); }
 
-void Player::OnCollision(std::weak_ptr<GameObject3D> gameObject3D) {
-	if (gameObject3D.expired()) return;
+void Player::OnCollision(std::weak_ptr<GameObject3D> gameObject3D, std::weak_ptr<Collider> collider) {
+	if (gameObject3D.expired() && collider.expired()) return;
 
-	std::string name = gameObject3D.lock()->GetName();
-	std::shared_ptr<SpaceShip> spaceShip = std::dynamic_pointer_cast<SpaceShip>(gameObject3D.lock());
-
-	if (spaceShip) {
+	if (collider.lock()->GetTag() & Tag::FLOOR) {
 		this->isGrounded = true;
 	}
 }

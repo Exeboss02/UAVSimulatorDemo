@@ -312,28 +312,31 @@ bool Collider::CollisionHandling(Collider* otherCollider, DirectX::XMFLOAT3& mtv
 	if (!collision) return false;
 
 	std::weak_ptr<GameObject> thisParent = this->GetParent();
+	std::shared_ptr<Collider> thisCollider = std::static_pointer_cast<Collider>(this->GetPtr());
 	std::weak_ptr<GameObject> otherParent = otherCollider->GetParent();
+	std::shared_ptr<Collider> sharedOtherCollider = std::static_pointer_cast<Collider>(otherCollider->GetPtr());
 
 	if(otherParent.expired())
 	{
 		std::shared_ptr<GameObject3D> otherObject = std::static_pointer_cast<GameObject3D>(otherCollider->GetPtr());
-		this->OnCollision(otherObject);
+	
+		this->OnCollision(otherObject, sharedOtherCollider);
 	}
 	else
 	{
 		std::shared_ptr<GameObject3D> otherParent3D = std::static_pointer_cast<GameObject3D>(otherParent.lock());
-		this->OnCollision(otherParent3D);
+		this->OnCollision(otherParent3D, sharedOtherCollider);
 	}
 
 	if(thisParent.expired())
 	{
 		std::shared_ptr<GameObject3D> thisObject = std::static_pointer_cast<GameObject3D>(this->GetPtr());
-		otherCollider->OnCollision(thisObject);
+		otherCollider->OnCollision(thisObject, thisCollider);
 	}
 	else
 	{
 		std::shared_ptr<GameObject3D> thisParent3D = std::static_pointer_cast<GameObject3D>(thisParent.lock());
-		otherCollider->OnCollision(thisParent3D);
+		otherCollider->OnCollision(thisParent3D, thisCollider);
 	}
 
 	if (!this->solid || !otherCollider->solid) return collision;

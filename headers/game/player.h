@@ -56,7 +56,7 @@ public:
 	void GunAnimation();
 
 	void SetCameraRotation(float r, float p, float y);
-	void OnCollision(std::weak_ptr<GameObject3D> gameObject3D);
+	void OnCollision(std::weak_ptr<GameObject3D> gameObject3D, std::weak_ptr<Collider> collider);
 	void OnHit(float value);
 
 	// Show or hide the OS cursor and enable UI interaction

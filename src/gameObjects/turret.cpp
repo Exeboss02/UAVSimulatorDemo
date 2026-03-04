@@ -1,13 +1,15 @@
 #include "gameObjects/turret.h"
 #include "UI/interactionPrompt.h"
-#include "core/physics/boxCollider.h"
 #include "core/physics/physicsQueue.h"
 #include "core/physics/ray.h"
 #include "core/physics/rayCaster.h"
+#include "core/physics/sphereCollider.h"
 #include "game/gameManager.h"
 #include "gameObjects/rayVis.h"
 #include "gameObjects/room.h"
 #include "utilities/time.h"
+#include <algorithm>
+#include <cmath>
 
 void Turret::Start() {
 	this->SetMesh(AssetManager::GetInstance().GetMeshObjData("Buildings/Turret.glb:Mesh_0"));
@@ -15,16 +17,9 @@ void Turret::Start() {
 	collider->transform.SetScale(2, 2, 2);
 	collider->transform.SetPosition(0, 0.5, 0);
 	collider->SetParent(this->GetPtr());
-	collider->SetTag(Tag::PLAYER);
-
-	auto interactCollider = this->factory->CreateStaticGameObject<BoxCollider>();
-	interactCollider->transform.SetScale(2, 1.5f, 2);
-	interactCollider->transform.SetPosition(0, 1.2f, 0);
-	interactCollider->SetParent(this->GetPtr());
-	interactCollider->SetSolid(false);
-	interactCollider->SetTag(Tag::INTERACTABLE | Tag::OBJECT);
-	interactCollider->SetOnInteract([&](std::shared_ptr<Player> player) { this->RemoveInteract(player); });
-	interactCollider->SetOnHover([&] { this->HoverRemove(); });
+	collider->SetTag(Tag::INTERACTABLE | Tag::OBJECT);
+	collider->SetOnInteract([&](std::shared_ptr<Player> player) { this->RemoveInteract(player); });
+	collider->SetOnHover([&] { this->HoverRemove(); });
 
 	/*this->shootSound = SoundSourceManager::*/
 	auto speaker = this->factory->CreateStaticGameObject<SoundSourceObject>();
@@ -195,7 +190,7 @@ void Turret::SetDirection(DirectX::XMVECTOR newDirection) {
 	if (angle <= maxStep) {
 		newDir = desiredDir;
 	} else {
-		float step = std::min(angle, maxStep);
+		float step = (angle < maxStep) ? angle : maxStep;
 
 		DirectX::XMVECTOR axis = DirectX::XMVector3Normalize(DirectX::XMVector3Cross(currentDir, desiredDir));
 
@@ -211,7 +206,7 @@ void Turret::SetDirection(DirectX::XMVECTOR newDirection) {
 
 	turret->transform.SetDirection(newDir);
 
-	DirectX::XMVECTOR frameDir{newDir.m128_f32[0], 0, newDir.m128_f32[2]};
+	DirectX::XMVECTOR frameDir = DirectX::XMVectorSet(newDir.m128_f32[0], 0, newDir.m128_f32[2], 0);
 	frameDir = DirectX::XMVector3Normalize(frameDir);
 
 	auto frame = this->framePart.lock();

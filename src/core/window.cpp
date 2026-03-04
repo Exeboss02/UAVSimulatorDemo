@@ -44,6 +44,9 @@ LRESULT Window::WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam
 		// close the application entirely
 		PostQuitMessage(0);
 		return TRUE;
+	} else if (message == WM_CLOSE) {
+		PostQuitMessage(0);
+		return TRUE;
 	}
 
 	bool result = InputManager::GetInstance().ReadMessage(hWnd, message, wParam, lParam);

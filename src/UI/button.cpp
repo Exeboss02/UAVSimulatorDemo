@@ -156,6 +156,11 @@ void UI::Button::ShowInHierarchy() {
 		this->SetName(this->label);
 	}
 
+	float labelSize = this->GetLabelFontSize();
+	if (ImGui::DragFloat("Label Font Size", &labelSize, 0.1f, 6.0f, 128.0f, "%.1f")) {
+		this->SetLabelFontSize(labelSize);
+	}
+
 	// Interaction readouts
 	ImGui::Text("Hovered: %s", this->hovered ? "true" : "false");
 	ImGui::Text("Pressed: %s", this->pressed ? "true" : "false");
@@ -301,7 +306,7 @@ void UI::Button::LoadFromJson(const nlohmann::json& data) {
 			this->vAlign = Button::VerticalAlign::BOTTOM;
 	}
 
-	if(data.contains("labelFontSize") && data["labelFontSize"].is_number()) {
+	if (data.contains("labelFontSize") && data["labelFontSize"].is_number()) {
 		this->labelFontSize = data["labelFontSize"].get<float>();
 	}
 }

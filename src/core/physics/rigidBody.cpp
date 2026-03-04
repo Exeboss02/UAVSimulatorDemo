@@ -144,26 +144,27 @@ bool RigidBody::Collision(std::weak_ptr<RigidBody> rigidbody, int& nrOfCollision
 	for (int i = 0; i < this->colliderChildren.size(); i++) {
 		Collider* thisCollider = this->colliderChildren[i].lock().get(); // make sure this ptr isn't stored in collider
 
-		for (int j = 0; j < rigidbody.lock()->GetNrOfColliderChildren(); j++) {
-			Collider* otherCollider = (*rigidbody.lock()->GetColliderChildrenVector())[j]
-										  .lock()
-										  .get(); // make sure this ptr isn't stored in collider
+		for (int j = 0; j < rigidbody.lock()->GetNrOfColliderChildren(); j++)
+		{
+			Collider* otherCollider = (*rigidbody.lock()->GetColliderChildrenVector())[j].lock().get(); // make sure this ptr isn't stored in collider
 
-			if (thisCollider->GetIgnoreTag() != Tag::DISTANCE && otherCollider->GetIgnoreTag() != Tag::DISTANCE) {
+			if (thisCollider->GetIgnoreTag() != Tag::DISTANCE && otherCollider->GetIgnoreTag() != Tag::DISTANCE)
+			{
 				DirectX::XMVECTOR colliderPosition = thisCollider->transform.GetGlobalPosition();
 				DirectX::XMVECTOR otherColliderPosition = otherCollider->transform.GetGlobalPosition();
 				DirectX::XMVECTOR distanceVector = DirectX::XMVectorSubtract(colliderPosition, otherColliderPosition);
+
 				float distanceSquared = DirectX::XMVectorGetX(DirectX::XMVector3LengthSq(distanceVector));
 				float thisExtraCullingDistance = thisCollider->GetExtraCullingDistance();
 				float otherExtraCullingDistance = otherCollider->GetExtraCullingDistance();
 				float cullingDistance = PhysicsQueue::GetInstance().GetColliderCullingDistanceSquared();
 
-				if (distanceSquared >= cullingDistance + thisExtraCullingDistance + otherExtraCullingDistance)
-					continue; // early exit if colliders are too far apart
+				if (distanceSquared >= cullingDistance + thisExtraCullingDistance + otherExtraCullingDistance) continue; // early exit if colliders are too far apart
 			}
 
 			DirectX::XMVECTOR contactNormal = {};
 			tempCollision = thisCollider->Collision(otherCollider, contactNormal);
+			
 			if(DirectX::XMVectorGetX(DirectX::XMVector3LengthSq(contactNormal)) > 0)
 			{
 				this->previousContactNormal = contactNormal;
@@ -213,24 +214,23 @@ bool RigidBody::Collision(std::weak_ptr<Collider> collider, int& nrOfCollisionTe
 
 		Collider* thisCollider = this->colliderChildren[i].lock().get(); // make sure this ptr isn't stored in collider
 
-		if (thisCollider->GetIgnoreTag() != Tag::DISTANCE && otherCollider->GetIgnoreTag() != Tag::DISTANCE) {
+		if (thisCollider->GetIgnoreTag() != Tag::DISTANCE && otherCollider->GetIgnoreTag() != Tag::DISTANCE)
+		{
 			DirectX::XMVECTOR colliderPosition = thisCollider->transform.GetGlobalPosition();
 			DirectX::XMVECTOR otherColliderPosition = otherCollider->transform.GetGlobalPosition();
 			DirectX::XMVECTOR distanceVector = DirectX::XMVectorSubtract(colliderPosition, otherColliderPosition);
+
 			float distanceSquared = DirectX::XMVectorGetX(DirectX::XMVector3LengthSq(distanceVector));
 			float thisExtraCullingDistance = thisCollider->GetExtraCullingDistance();
 			float otherExtraCullingDistance = otherCollider->GetExtraCullingDistance();
 			float cullingDistance = PhysicsQueue::GetInstance().GetColliderCullingDistanceSquared();
-
-			if (GetAsyncKeyState('I')) {
-				int a = 0;
-			}
 
 			if (distanceSquared >= cullingDistance + thisExtraCullingDistance + otherExtraCullingDistance) continue;
 		}
 
 		DirectX::XMVECTOR contactNormal = {};
 		tempCollision = thisCollider->Collision(otherCollider, contactNormal); // doesnt check nor of ticks right now
+
 		if(DirectX::XMVectorGetX(DirectX::XMVector3LengthSq(contactNormal)) > 0)
 		{
 			this->previousContactNormal = contactNormal;

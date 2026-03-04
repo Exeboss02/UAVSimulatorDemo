@@ -268,9 +268,6 @@ void Player::PhysicsTick() {
 
 	this->linearVelocity.x = 0;
 	this->linearVelocity.z = 0;
-	if (this->isGrounded) {
-		this->linearVelocity.y = 0;
-	}
 
 	this->moveVector = {};
 	this->moveVector = DirectX::XMVectorAdd(

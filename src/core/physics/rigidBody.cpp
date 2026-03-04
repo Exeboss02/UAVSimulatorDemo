@@ -162,9 +162,29 @@ bool RigidBody::Collision(std::weak_ptr<RigidBody> rigidbody, int& nrOfCollision
 					continue; // early exit if colliders are too far apart
 			}
 
-			tempCollision = thisCollider->Collision(otherCollider, nrOfCollisionTestsOnTick);
+			DirectX::XMVECTOR contactNormal = {};
+			tempCollision = thisCollider->Collision(otherCollider, contactNormal);
+			if(DirectX::XMVectorGetX(DirectX::XMVector3LengthSq(contactNormal)) > 0)
+			{
+				this->previousContactNormal = contactNormal;
+			}
 
-			if (tempCollision) collision = true;
+			if (tempCollision)
+			{
+				collision = true;
+
+				//if(!thisCollider->GetSolid() || !otherCollider->GetSolid()) return collision;
+
+				//zero out velocity in direction of contactNormal
+				DirectX::XMVECTOR velocity = DirectX::XMLoadFloat3(&this->linearVelocity);
+				float normalComponentMagnitude = DirectX::XMVectorGetX(DirectX::XMVector3Dot(velocity, this->previousContactNormal));
+				DirectX::XMVECTOR normalComponent = DirectX::XMVectorScale(this->previousContactNormal, normalComponentMagnitude);
+
+				// Remove the normal component from the velocity
+				DirectX::XMVECTOR newVelocity = DirectX::XMVectorSubtract(velocity, normalComponent);
+				DirectX::XMStoreFloat3(&this->linearVelocity, velocity);
+
+			}
 		}
 	}
 
@@ -206,8 +226,28 @@ bool RigidBody::Collision(std::weak_ptr<Collider> collider, int& nrOfCollisionTe
 			if (distanceSquared >= cullingDistance + thisExtraCullingDistance + otherExtraCullingDistance) continue;
 		}
 
-		tempCollision = thisCollider->Collision(otherCollider, nrOfCollisionTestsOnTick);
-		if (tempCollision) collision = true;
+		DirectX::XMVECTOR contactNormal = {};
+		tempCollision = thisCollider->Collision(otherCollider, contactNormal); // doesnt check nor of ticks right now
+		if(DirectX::XMVectorGetX(DirectX::XMVector3LengthSq(contactNormal)) > 0)
+		{
+			this->previousContactNormal = contactNormal;
+		}
+
+		if (tempCollision)
+		{
+			collision = true;
+
+			//if(!thisCollider->GetSolid() || !otherCollider->GetSolid()) return collision;
+
+			//zero out velocity in direction of contactNormal
+			DirectX::XMVECTOR velocity = DirectX::XMLoadFloat3(&this->linearVelocity);
+			float normalComponentMagnitude = DirectX::XMVectorGetX(DirectX::XMVector3Dot(velocity, this->previousContactNormal));
+			DirectX::XMVECTOR normalComponent = DirectX::XMVectorScale(this->previousContactNormal, normalComponentMagnitude);
+
+			// Remove the normal component from the velocity
+			DirectX::XMVECTOR newVelocity = DirectX::XMVectorSubtract(velocity, normalComponent);
+			DirectX::XMStoreFloat3(&this->linearVelocity, velocity);
+		}
 	}
 
 	return collision;

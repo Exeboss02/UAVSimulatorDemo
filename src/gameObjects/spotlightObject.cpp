@@ -124,7 +124,6 @@ void SpotlightObject::OnDestroy() {
 
 void SpotlightObject::SetRenderIndex(size_t newRenderIndex) {
 	this->renderIndex = newRenderIndex;
-	Logger::Log("ri: ", this->renderIndex);
 }
 
 size_t SpotlightObject::GetRenderIndex() { return this->renderIndex; }

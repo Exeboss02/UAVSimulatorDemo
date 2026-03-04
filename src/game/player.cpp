@@ -108,12 +108,12 @@ void Player::Start() {
 		colliderobj->transform.SetScale(DirectX::XMLoadFloat3(&scale));
 		colliderobj->SetParent(this->GetPtr());
 		colliderobj->SetTag(Tag::PLAYER);
-		// colliderobj->SetIgnoreTag(~Tag::FLOOR);
-		colliderobj->SetName("PlayerCollider " + std::to_string(this->factory->GetNextID()));
+		colliderobj->SetIgnoreTag(~Tag::FLOOR);
+		colliderobj->SetName("GroundCheck " + std::to_string(this->factory->GetNextID()));
 	}
 
-	std::function<void(std::weak_ptr<GameObject3D>)> function = [&](std::weak_ptr<GameObject3D> gameObject3D) {
-		this->OnCollision(gameObject3D);
+	std::function<void(std::weak_ptr<GameObject3D>, std::weak_ptr<Collider>)> function = [&](std::weak_ptr<GameObject3D> gameObject3D, std::weak_ptr<Collider> collider) {
+		this->OnCollision(gameObject3D, collider);
 
 		if (auto mine = dynamic_pointer_cast<Mine>(gameObject3D.lock())) {
 			Logger::Log("Hit Mine");
@@ -260,9 +260,6 @@ void Player::Tick() {
 void Player::PhysicsTick() {
 	float fixedDeltaTime = Time::GetInstance().GetFixedDeltaTime();
 
-	// Logger::Log(std::to_string(this->linearVelocity.x), ", ", std::to_string(this->linearVelocity.y), ", ",
-	//			std::to_string(this->linearVelocity.z));
-
 	std::shared_ptr<CameraObject> cam = this->camera.lock();
 
 	if (!cam) {
@@ -272,9 +269,6 @@ void Player::PhysicsTick() {
 
 	this->linearVelocity.x = 0;
 	this->linearVelocity.z = 0;
-	if (this->isGrounded) {
-		this->linearVelocity.y = 0;
-	}
 
 	this->moveVector = {};
 	this->moveVector = DirectX::XMVectorAdd(
@@ -309,6 +303,10 @@ void Player::PhysicsTick() {
 
 	// reset isGrounded, this gets set to true in OnCollision
 	this->isGrounded = false;
+
+			if(GetAsyncKeyState(VK_SPACE))Logger::Warn("PLAYER PRESSED JUMP!!!!!!!!!!!!!!");
+		Logger::Warn("linear velocity: ", std::to_string(this->linearVelocity.x), ", ", std::to_string(this->linearVelocity.y), ", ",
+				std::to_string(this->linearVelocity.z));
 }
 
 void Player::UpdateCamera() {
@@ -455,13 +453,10 @@ void Player::IncrementHealth(int hp) { this->health.Increment(hp); }
 
 int Player::GetHealth() const { return this->health.Get(); }
 
-void Player::OnCollision(std::weak_ptr<GameObject3D> gameObject3D) {
-	if (gameObject3D.expired()) return;
+void Player::OnCollision(std::weak_ptr<GameObject3D> gameObject3D, std::weak_ptr<Collider> collider) {
+	if (gameObject3D.expired() && collider.expired()) return;
 
-	std::string name = gameObject3D.lock()->GetName();
-	std::shared_ptr<SpaceShip> spaceShip = std::dynamic_pointer_cast<SpaceShip>(gameObject3D.lock());
-
-	if (spaceShip) {
+	if (collider.lock()->GetTag() & Tag::FLOOR) {
 		this->isGrounded = true;
 	}
 }

@@ -55,7 +55,7 @@ void RigidBody::SetPreviousPhysicsPosition(DirectX::XMVECTOR oldPosition) {
 	this->previousPhysicsPosition = oldPosition;
 }
 
-void RigidBody::SetOnCollisionFunction(std::function<void(std::weak_ptr<GameObject3D>)> function, int index) {
+void RigidBody::SetOnCollisionFunction(std::function<void(std::weak_ptr<GameObject3D>, std::weak_ptr<Collider> collider)> function, int index) {
 	if (index >= this->colliderChildren.size()) {
 		Logger::Log("Tried to set RigidBody collider function with index out of range");
 		return;
@@ -66,7 +66,7 @@ void RigidBody::SetOnCollisionFunction(std::function<void(std::weak_ptr<GameObje
 	}
 }
 
-void RigidBody::SetAllOnCollisionFunction(std::function<void(std::weak_ptr<GameObject3D>)> function) {
+void RigidBody::SetAllOnCollisionFunction(std::function<void(std::weak_ptr<GameObject3D>, std::weak_ptr<Collider>)> function) {
 	for (int i = 0; i < this->colliderChildren.size(); i++) {
 		this->SetOnCollisionFunction(function, i);
 	}
@@ -144,27 +144,43 @@ bool RigidBody::Collision(std::weak_ptr<RigidBody> rigidbody, int& nrOfCollision
 	for (int i = 0; i < this->colliderChildren.size(); i++) {
 		Collider* thisCollider = this->colliderChildren[i].lock().get(); // make sure this ptr isn't stored in collider
 
-		for (int j = 0; j < rigidbody.lock()->GetNrOfColliderChildren(); j++) {
-			Collider* otherCollider = (*rigidbody.lock()->GetColliderChildrenVector())[j]
-										  .lock()
-										  .get(); // make sure this ptr isn't stored in collider
+		for (int j = 0; j < rigidbody.lock()->GetNrOfColliderChildren(); j++)
+		{
+			Collider* otherCollider = (*rigidbody.lock()->GetColliderChildrenVector())[j].lock().get(); // make sure this ptr isn't stored in collider
 
-			if (thisCollider->GetIgnoreTag() != Tag::DISTANCE && otherCollider->GetIgnoreTag() != Tag::DISTANCE) {
+			if (thisCollider->GetIgnoreTag() != Tag::DISTANCE && otherCollider->GetIgnoreTag() != Tag::DISTANCE)
+			{
 				DirectX::XMVECTOR colliderPosition = thisCollider->transform.GetGlobalPosition();
 				DirectX::XMVECTOR otherColliderPosition = otherCollider->transform.GetGlobalPosition();
 				DirectX::XMVECTOR distanceVector = DirectX::XMVectorSubtract(colliderPosition, otherColliderPosition);
+
 				float distanceSquared = DirectX::XMVectorGetX(DirectX::XMVector3LengthSq(distanceVector));
 				float thisExtraCullingDistance = thisCollider->GetExtraCullingDistance();
 				float otherExtraCullingDistance = otherCollider->GetExtraCullingDistance();
 				float cullingDistance = PhysicsQueue::GetInstance().GetColliderCullingDistanceSquared();
 
-				if (distanceSquared >= cullingDistance + thisExtraCullingDistance + otherExtraCullingDistance)
-					continue; // early exit if colliders are too far apart
+				if (distanceSquared >= cullingDistance + thisExtraCullingDistance + otherExtraCullingDistance) continue; // early exit if colliders are too far apart
 			}
 
-			tempCollision = thisCollider->Collision(otherCollider, nrOfCollisionTestsOnTick);
+			DirectX::XMVECTOR contactNormal = {};
+			tempCollision = thisCollider->Collision(otherCollider, contactNormal);
 
-			if (tempCollision) collision = true;
+			if (tempCollision)
+			{
+				collision = true;
+
+				if(!thisCollider->GetSolid() || !otherCollider->GetSolid()) continue;
+
+				//zero out velocity in the opposite direction of contactNormal
+				DirectX::XMVECTOR velocity = DirectX::XMLoadFloat3(&this->linearVelocity);
+				float normalComponentMagnitude = DirectX::XMVectorGetX(DirectX::XMVector3Dot(velocity, contactNormal));
+
+				DirectX::XMVECTOR normalComponent = DirectX::XMVectorScale(contactNormal, normalComponentMagnitude);
+
+				// Remove the normal component from the velocity
+				DirectX::XMVECTOR newVelocity = DirectX::XMVectorSubtract(velocity, normalComponent);
+				DirectX::XMStoreFloat3(&this->linearVelocity, newVelocity);
+			}
 		}
 	}
 
@@ -190,24 +206,39 @@ bool RigidBody::Collision(std::weak_ptr<Collider> collider, int& nrOfCollisionTe
 
 		Collider* thisCollider = this->colliderChildren[i].lock().get(); // make sure this ptr isn't stored in collider
 
-		if (thisCollider->GetIgnoreTag() != Tag::DISTANCE && otherCollider->GetIgnoreTag() != Tag::DISTANCE) {
+		if (thisCollider->GetIgnoreTag() != Tag::DISTANCE && otherCollider->GetIgnoreTag() != Tag::DISTANCE)
+		{
 			DirectX::XMVECTOR colliderPosition = thisCollider->transform.GetGlobalPosition();
 			DirectX::XMVECTOR otherColliderPosition = otherCollider->transform.GetGlobalPosition();
 			DirectX::XMVECTOR distanceVector = DirectX::XMVectorSubtract(colliderPosition, otherColliderPosition);
+
 			float distanceSquared = DirectX::XMVectorGetX(DirectX::XMVector3LengthSq(distanceVector));
 			float thisExtraCullingDistance = thisCollider->GetExtraCullingDistance();
 			float otherExtraCullingDistance = otherCollider->GetExtraCullingDistance();
 			float cullingDistance = PhysicsQueue::GetInstance().GetColliderCullingDistanceSquared();
 
-			if (GetAsyncKeyState('I')) {
-				int a = 0;
-			}
-
 			if (distanceSquared >= cullingDistance + thisExtraCullingDistance + otherExtraCullingDistance) continue;
 		}
 
-		tempCollision = thisCollider->Collision(otherCollider, nrOfCollisionTestsOnTick);
-		if (tempCollision) collision = true;
+		DirectX::XMVECTOR contactNormal = {};
+		tempCollision = thisCollider->Collision(otherCollider, contactNormal); // doesnt check nor of ticks right now
+
+		if (tempCollision)
+		{
+			collision = true;
+
+			if(!thisCollider->GetSolid() || !otherCollider->GetSolid()) continue;
+
+			//zero out velocity in the opposite direction of contactNormal
+			DirectX::XMVECTOR velocity = DirectX::XMLoadFloat3(&this->linearVelocity);
+			float normalComponentMagnitude = DirectX::XMVectorGetX(DirectX::XMVector3Dot(velocity, contactNormal));
+
+			DirectX::XMVECTOR normalComponent = DirectX::XMVectorScale(contactNormal, normalComponentMagnitude);
+
+			// Remove the normal component from the velocity
+			DirectX::XMVECTOR newVelocity = DirectX::XMVectorSubtract(velocity, normalComponent);
+			DirectX::XMStoreFloat3(&this->linearVelocity, newVelocity);
+		}
 	}
 
 	return collision;

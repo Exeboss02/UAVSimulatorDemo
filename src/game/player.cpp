@@ -108,8 +108,8 @@ void Player::Start() {
 		colliderobj->transform.SetScale(DirectX::XMLoadFloat3(&scale));
 		colliderobj->SetParent(this->GetPtr());
 		colliderobj->SetTag(Tag::PLAYER);
-		// colliderobj->SetIgnoreTag(~Tag::FLOOR);
-		colliderobj->SetName("PlayerCollider " + std::to_string(this->factory->GetNextID()));
+		colliderobj->SetIgnoreTag(~Tag::FLOOR);
+		colliderobj->SetName("GroundCheck " + std::to_string(this->factory->GetNextID()));
 	}
 
 	std::function<void(std::weak_ptr<GameObject3D>)> function = [&](std::weak_ptr<GameObject3D> gameObject3D) {

@@ -1,28 +1,32 @@
 #pragma once
-#include "gameObjects/meshObject.h"
-#include "core/physics/sphereCollider.h"
 #include "core/audio/soundEngine.h"
+#include "core/physics/sphereCollider.h"
+#include "gameObjects/meshObject.h"
+
+class Player;
 
 class Mine : public MeshObject {
 public:
-    void Start() override;
+	void Start() override;
 
-    void SetRange(float range);
-    void SetDamage(float damage);
+	void SetRange(float range);
+	void SetDamage(float damage);
 
-    float GetDamage() const;
+	float GetDamage() const;
 	float GetRange() const;
 
-    void SetPostExplosion(std::function<void()> func);
+	void SetPostExplosion(std::function<void()> func);
 
 private:
+	void RemoveInteract(std::shared_ptr<Player> player);
+	void HoverRemove();
 	void OnExplode();
 
-    std::function<void()> postExplosion = [] {};
+	std::function<void()> postExplosion = [] {};
 
-    float damage = 500;
+	float damage = 500;
 
-    float range = 10;
+	float range = 10;
 
-    std::weak_ptr<SphereCollider> collider;
+	std::weak_ptr<SphereCollider> collider;
 };

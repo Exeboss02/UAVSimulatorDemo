@@ -3,6 +3,7 @@
 #include "UI/canvas.h"
 #include "UI/canvasObject.h"
 #include "UI/interactionPrompt.h"
+#include "UI/text.h"
 #include "core/assetManager.h"
 #include "game/crosshair.h"
 #include "game/events.h"
@@ -15,8 +16,8 @@
 #include "gameObjects/turret.h"
 #include "rendering/renderQueue.h"
 #include "utilities/time.h"
-#include <numbers>
 #include <format>
+#include <numbers>
 
 static const std::array<std::array<int, 2>, 4> wallpositions = {
 	std::array<int, 2>({0, 1}),
@@ -113,17 +114,19 @@ void Room::Start() {
 
 		meshobj->SetWAllIndex(i);
 
-		DirectX::XMVECTOR distanceVector = DirectX::XMVectorSubtract(GameManager::GetInstance()->GetPlayerSpawnPoint(), meshobj->transform.GetGlobalPosition());
+		DirectX::XMVECTOR distanceVector = DirectX::XMVectorSubtract(GameManager::GetInstance()->GetPlayerSpawnPoint(),
+																	 meshobj->transform.GetGlobalPosition());
 		float distance = DirectX::XMVectorGetX(DirectX::XMVector3Length(distanceVector));
 		meshobj->SetWallCost((distance - 3), 0, 0, 0);
 
 		this->walls[i] = meshobj;
 	}
 	auto buildCollider = this->factory->CreateStaticGameObject<BoxCollider>();
-	//fixing scale issue
+	// fixing scale issue
 	DirectX::XMFLOAT3 shipScale;
-		DirectX::XMStoreFloat3(&shipScale, this->transform.GetScale());
-	buildCollider->transform.SetScale(DirectX::XMVECTOR({(1.0f / shipScale.x), (0.5f / shipScale.y), (1.0f / shipScale.z)}));
+	DirectX::XMStoreFloat3(&shipScale, this->transform.GetScale());
+	buildCollider->transform.SetScale(
+		DirectX::XMVECTOR({(1.0f / shipScale.x), (0.5f / shipScale.y), (1.0f / shipScale.z)}));
 	buildCollider->transform.SetPosition({0, 1, 0});
 	buildCollider->SetParent(this->GetPtr());
 	buildCollider->SetSolid(false);
@@ -132,12 +135,7 @@ void Room::Start() {
 	buildCollider->SetIgnoreTag(Tag::PLAYER);
 	// Maybe tweak positionW
 	this->buildSlot = buildCollider;
-	buildCollider->SetOnInteract([&](std::shared_ptr<Player> p) {
-		if (this->builtObject.expired() && !GameManager::GetInstance()->GetInCombat()) {
-			this->ShowBuildMenu(p);
-		}
-	});
-	buildCollider->SetOnHover([&] { this->Hover(); });
+	this->EnableBuildSlotInteractions();
 
 	auto spotLight = this->factory->CreateGameObjectOfType<SpotlightObject>().lock();
 	spotLight->SetParent(this->GetPtr());
@@ -269,21 +267,22 @@ void Room::ShowBuildMenu(std::shared_ptr<Player> player) {
 			localCanvasCreated = canvasObj;
 		}
 
-		// Create three buttons: Turret, Generator, Mine
-		struct BtnSpec {
+		// Build options with simple button labels. Details are shown above each button on hover.
+		enum class BuildType { Turret, Generator, Mine };
+		struct BuildOption {
+			BuildType type;
 			std::string label;
-			std::function<void()> cb;
-			UI::Vec2 pos;
+			std::string description;
+			std::string cost;
 		};
-		
-		// Barebone specs: only labels. Positions will be computed to center the buttons beneath the crosshair.
-		std::string turretLabel = std::format("Turret, Cost: \n{}", this->turretCost.getCostString());
-		std::string generatorLabel = std::format("Generator, Cost: \n{}", this->generatorCost.getCostString());
-		std::string mineLabel = std::format("Mine, Cost: \n{}", this->mineCost.getCostString());
 
-		std::vector<std::string> labels = {turretLabel, generatorLabel, mineLabel};
-
-		
+		std::vector<BuildOption> options = {
+			{BuildType::Turret, "Turret", "Automated defense that shoots nearby enemies.",
+			 this->turretCost.getCostString()},
+			{BuildType::Generator, "Generator", "Generates resources over time.", this->generatorCost.getCostString()},
+			{BuildType::Mine, "Mine", "Explodes on enemy proximity and then needs rebuilding.",
+			 this->mineCost.getCostString()},
+		};
 
 		// Determine canvas size (fallback to camera aspect if unavailable) and crosshair center
 		UI::Vec2 canvasSize{0.0f, 0.0f};
@@ -328,23 +327,49 @@ void Room::ShowBuildMenu(std::shared_ptr<Player> player) {
 
 		// Button layout
 		const float btnW = 150.0f;
-		const float btnH = 140.0f;
+		const float btnH = 50.0f;
 		const float spacing = 20.0f;
-		const size_t n = labels.size();
+		const size_t n = options.size();
 		const float totalW = n * btnW + (n - 1) * spacing;
 		const float centerX = crossCenter.x;
 		const float centerY = crossCenter.y;
 		const float startX = centerX - totalW * 0.5f;
 		const float yPos = centerY + 60.0f; // just below crosshair
 
-		for (size_t i = 0; i < labels.size(); ++i) {
-			const auto& label = labels[i];
+		const float sharedInfoX = startX - 80.0f;
+		const float infoY = std::min(yPos - 150.0f, canvasSize.y * 0.22f);
+		std::vector<std::shared_ptr<UI::Text>> infoTexts(options.size());
+		for (size_t i = 0; i < options.size(); ++i) {
+			auto infoTextWeak = this->factory->CreateGameObjectOfType<UI::Text>();
+			if (infoTextWeak.expired()) continue;
+			auto infoText = std::dynamic_pointer_cast<UI::Text>(infoTextWeak.lock());
+			if (!infoText) continue;
+
+			infoText->SetParent(canvasObj->GetPtr());
+			infoText->SetName("BuildMenuInfoText_" + std::to_string(i));
+			infoText->SetText("");
+			infoText->SetFontSize(18.0f);
+			infoText->SetPosition({sharedInfoX, infoY});
+			infoText->SetVisible(false);
+			canvasObj->AddChild(std::static_pointer_cast<UI::Widget>(infoText));
+			RenderQueue::AddUIWidget(infoText);
+			infoTexts[i] = infoText;
+		}
+
+		std::vector<std::weak_ptr<UI::Text>> infoTextRefs;
+		infoTextRefs.reserve(infoTexts.size());
+		for (const auto& textPtr : infoTexts) {
+			infoTextRefs.push_back(textPtr);
+		}
+
+		for (size_t i = 0; i < options.size(); ++i) {
+			const auto& option = options[i];
 			auto btnWeak = this->factory->CreateGameObjectOfType<UI::Button>();
 			if (btnWeak.expired()) continue;
 			auto btn = std::dynamic_pointer_cast<UI::Button>(btnWeak.lock());
 			btn->SetParent(canvasObj->GetPtr());
-			btn->SetName(label);
-			btn->SetLabel(label);
+			btn->SetName(option.label);
+			btn->SetLabel(option.label);
 
 			btn->SetHorizontalAlign(UI::Button::HorizontalAlign::CENTER);
 			btn->SetVerticalAlign(UI::Button::VerticalAlign::TOP);
@@ -354,30 +379,53 @@ void Room::ShowBuildMenu(std::shared_ptr<Player> player) {
 			btn->SetVisible(true);
 			canvasObj->AddChild(std::static_pointer_cast<UI::Widget>(btn));
 			RenderQueue::AddUIWidget(btn);
+
+			const auto hoverDetails = std::format("{}\n{}\n\nCost:\n{}", option.label, option.description, option.cost);
+			btn->SetOnHover([infoTextRefs, hoverDetails, i]() {
+				for (auto& infoWeak : infoTextRefs) {
+					if (auto info = infoWeak.lock()) {
+						info->SetVisible(false);
+						info->SetText("");
+					}
+				}
+				if (i < infoTextRefs.size()) {
+					if (auto info = infoTextRefs[i].lock()) {
+						info->SetText(hoverDetails);
+						info->SetVisible(true);
+					}
+				}
+			});
+			btn->SetOnUnhover([infoTextRefs, i]() {
+				if (i < infoTextRefs.size()) {
+					if (auto info = infoTextRefs[i].lock()) {
+						info->SetVisible(false);
+						info->SetText("");
+					}
+				}
+			});
+
 			// Hide menu and restore player input on click. Spawn directly from Room for each type.
 			std::weak_ptr<GameObject> me = this->GetPtr();
 			auto playerWeak = std::weak_ptr<Player>(player);
-			
-			bool isGenerator = (label == generatorLabel);
-			bool isTurret = (label == turretLabel);
-			bool isMine = (label == mineLabel);
+			BuildType buildType = option.type;
 
-			btn->SetOnClick([me, playerWeak, isGenerator, isTurret, isMine]() {
+			btn->SetOnClick([me, playerWeak, buildType]() {
 				if (auto roomPtr = std::dynamic_pointer_cast<Room>(me.lock())) {
 					bool built = false;
-					if (isGenerator && GameManager::GetInstance()->GetPlayer()->resources.tryToPay(
-										   roomPtr->generatorCost.getTitanium(), roomPtr->generatorCost.getLubricant(),
+					if (buildType == BuildType::Generator &&
+						GameManager::GetInstance()->GetPlayer()->resources.tryToPay(
+							roomPtr->generatorCost.getTitanium(), roomPtr->generatorCost.getLubricant(),
 							roomPtr->generatorCost.getCarbonFiber(), roomPtr->generatorCost.getCircuit())) {
 						built = roomPtr->TryBuildGenerator();
-					} else if (isTurret &&
+					} else if (buildType == BuildType::Turret &&
 							   GameManager::GetInstance()->GetPlayer()->resources.tryToPay(
 								   roomPtr->turretCost.getTitanium(), roomPtr->turretCost.getLubricant(),
 								   roomPtr->turretCost.getCarbonFiber(), roomPtr->turretCost.getCircuit())) {
 						built = roomPtr->TryBuildTurret();
-					} else if (isMine &&
+					} else if (buildType == BuildType::Mine &&
 							   GameManager::GetInstance()->GetPlayer()->resources.tryToPay(
 								   roomPtr->mineCost.getTitanium(), roomPtr->mineCost.getLubricant(),
-											 roomPtr->mineCost.getCarbonFiber(), roomPtr->mineCost.getCircuit())) {
+								   roomPtr->mineCost.getCarbonFiber(), roomPtr->mineCost.getCircuit())) {
 						built = roomPtr->TryBuildMine();
 					}
 					if (built) {
@@ -474,6 +522,89 @@ bool Room::IsBuildMenuOpen() { return !this->buildMenu.expired(); }
 
 void Room::CloseBuildMenu() { this->HideBuildMenu(); }
 
+void Room::EnableBuildSlotInteractions() {
+	if (this->buildSlot.expired()) return;
+	auto slot = this->buildSlot.lock();
+	if (!slot) return;
+
+	slot->SetOnInteract([&](std::shared_ptr<Player> player) {
+		if (this->builtObject.expired() && !GameManager::GetInstance()->GetInCombat()) {
+			this->ShowBuildMenu(player);
+		}
+	});
+	slot->SetOnHover([&] { this->Hover(); });
+	slot->SetTag(Tag::INTERACTABLE);
+}
+
+void Room::DisableBuildSlotInteractions() {
+	if (this->buildSlot.expired()) return;
+	auto slot = this->buildSlot.lock();
+	if (!slot) return;
+
+	slot->SetOnHover([] {});
+	slot->SetOnInteract([](std::shared_ptr<Player>) {});
+	slot->SetTag(Tag::OBJECT);
+}
+
+bool Room::RemoveBuiltObject() {
+	if (this->builtObject.expired()) {
+		return false;
+	}
+
+	auto built = this->builtObject.lock();
+	if (!built) {
+		this->builtObject.reset();
+		this->EnableBuildSlotInteractions();
+		return false;
+	}
+
+	if (auto gameManager = GameManager::GetInstance(); gameManager) {
+		auto player = gameManager->GetPlayer();
+		if (player) {
+			if (std::dynamic_pointer_cast<Turret>(built)) {
+				player->resources.GetResource(ResourceType::Titanium).IncrementAmount(this->turretCost.getTitanium());
+				player->resources.GetResource(ResourceType::Lubricant).IncrementAmount(this->turretCost.getLubricant());
+				player->resources.GetResource(ResourceType::CarbonFiber)
+					.IncrementAmount(this->turretCost.getCarbonFiber());
+				player->resources.GetResource(ResourceType::Circuit).IncrementAmount(this->turretCost.getCircuit());
+			} else if (std::dynamic_pointer_cast<Mine>(built)) {
+				player->resources.GetResource(ResourceType::Titanium).IncrementAmount(this->mineCost.getTitanium());
+				player->resources.GetResource(ResourceType::Lubricant).IncrementAmount(this->mineCost.getLubricant());
+				player->resources.GetResource(ResourceType::CarbonFiber)
+					.IncrementAmount(this->mineCost.getCarbonFiber());
+				player->resources.GetResource(ResourceType::Circuit).IncrementAmount(this->mineCost.getCircuit());
+			} else if (std::dynamic_pointer_cast<ResourceGenerator>(built)) {
+				player->resources.GetResource(ResourceType::Titanium)
+					.IncrementAmount(this->generatorCost.getTitanium());
+				player->resources.GetResource(ResourceType::Lubricant)
+					.IncrementAmount(this->generatorCost.getLubricant());
+				player->resources.GetResource(ResourceType::CarbonFiber)
+					.IncrementAmount(this->generatorCost.getCarbonFiber());
+				player->resources.GetResource(ResourceType::Circuit).IncrementAmount(this->generatorCost.getCircuit());
+			}
+		}
+	}
+
+	this->factory->QueueDeleteGameObject(built);
+	this->builtObject.reset();
+	this->EnableBuildSlotInteractions();
+
+	if (!this->GetParent().expired()) {
+		auto spaceship = static_pointer_cast<SpaceShip>(GetParent().lock());
+		auto centerNode = this->pathfindingNodes[0];
+		if (spaceship && centerNode && spaceship->GetPathfinder()->AddVertex(centerNode)) {
+			unsigned int edgeCostCenterToOuter = static_cast<unsigned int>(this->size / 3);
+			for (size_t i = 1; i < this->pathfindingNodes.size(); ++i) {
+				if (this->pathfindingNodes[i]) {
+					spaceship->GetPathfinder()->AddEdge(centerNode, this->pathfindingNodes[i], edgeCostCenterToOuter);
+				}
+			}
+		}
+	}
+
+	return true;
+}
+
 bool Room::TryBuildGenerator() {
 	Logger::Log("Room::TryBuildGenerator called");
 	try {
@@ -514,15 +645,7 @@ bool Room::TryBuildGenerator() {
 			spaceship->GetPathfinder()->RemoveVertex(this->pathfindingNodes[0]);
 		}
 
-		// Disable hover on the build slot now that something is built here
-		auto slotForHover = this->buildSlot;
-		if (!slotForHover.expired()) {
-			auto slotPtr = slotForHover.lock();
-			if (slotPtr) {
-				slotPtr->SetOnHover([] {});
-				slotPtr->SetOnInteract([](std::shared_ptr<Player>) {});
-			}
-		}
+		this->DisableBuildSlotInteractions();
 		return true;
 	} catch (const std::exception& e) {
 		Logger::Error("Room::TryBuildGenerator exception: ", e.what());
@@ -573,15 +696,7 @@ bool Room::TryBuildTurret() {
 			spaceship->GetPathfinder()->RemoveVertex(this->pathfindingNodes[0]);
 		}
 
-		// Disable hover on the build slot now that something is built here
-		auto slotForHover = this->buildSlot;
-		if (!slotForHover.expired()) {
-			auto slotPtr = slotForHover.lock();
-			if (slotPtr) {
-				slotPtr->SetOnHover([] {});
-				slotPtr->SetOnInteract([](std::shared_ptr<Player>) {});
-			}
-		}
+		this->DisableBuildSlotInteractions();
 		return true;
 	} catch (const std::exception& e) {
 		Logger::Error("Room::TryBuildTurret exception: ", e.what());
@@ -624,29 +739,14 @@ bool Room::TryBuildMine() {
 		DirectX::XMStoreFloat3(&shipScale, this->transform.GetGlobalScale());
 		mine->transform.SetScale(DirectX::XMVECTOR({(1.0f / shipScale.x), (1.0f / shipScale.y), (1.0f / shipScale.z)}));
 
-		// Make the interact collider work again after the mine explodes
+		// Make the room build slot work again after the mine explodes
 		mine->SetPostExplosion([&] {
-			if (this->buildSlot.expired()) return;
-
-			auto build = this->buildSlot.lock();
-			build->SetOnInteract([&](std::shared_ptr<Player> p) {
-				if (this->builtObject.expired() && !GameManager::GetInstance()->GetInCombat()) {
-					this->ShowBuildMenu(p);
-				}
-			});
-			build->SetOnHover([&] { this->Hover(); });
+			this->builtObject.reset();
+			this->EnableBuildSlotInteractions();
 		});
 
 		this->builtObject = static_pointer_cast<GameObject3D>(mine.Get());
-		// Disable hover on the build slot now that something is built here
-		auto& slotForHover = this->buildSlot;
-		if (!slotForHover.expired()) {
-			auto slotPtr = slotForHover.lock();
-			if (slotPtr) {
-				slotPtr->SetOnHover([] {});
-				slotPtr->SetOnInteract([](std::shared_ptr<Player>) {});
-			}
-		}
+		this->DisableBuildSlotInteractions();
 		return true;
 	} catch (const std::exception& e) {
 		Logger::Error("Room::TryBuildMine exception: ", e.what());

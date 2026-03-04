@@ -54,7 +54,11 @@ public:
 
 	virtual void OnDestroy() override;
 
+	void SetRenderIndex(size_t newRenderIndex);
+	size_t GetRenderIndex();
+
 private:
+	size_t renderIndex;
 
 	SpotLightContainer data;
 };

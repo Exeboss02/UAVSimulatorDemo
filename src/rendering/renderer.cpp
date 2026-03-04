@@ -898,6 +898,9 @@ void Renderer::ShadowPass() {
 	}
 	this->GetContext()->PSSetShader(nullptr, nullptr, 0);
 
+	// Make sure that depth stencil state from ui pass isn't left over from last frame
+	this->immediateContext->OMSetDepthStencilState(this->depthBuffer->GetDepthStencilState(), 1);
+
 	this->SpotLightShadowPass();
 	this->PointLightShadowPass();
 
@@ -919,6 +922,20 @@ void Renderer::SpotLightShadowPass() {
 			this->staticObjectsForSpotlights.emplace_back();
 		}
 	}
+
+	// Sort cameras besed on distance
+
+	DirectX::XMVECTOR mainCameraPos = CameraObject::GetMainCamera().transform.GetGlobalPosition();
+
+	std::sort(this->spotLightRenderQueue.begin(), this->spotLightRenderQueue.end(),
+			  [&](std::weak_ptr<SpotlightObject> a, std::weak_ptr<SpotlightObject> b) {
+				  float aDst = DirectX::XMVectorGetX(DirectX::XMVector3LengthSq(
+					  DirectX::XMVectorSubtract(mainCameraPos, a.lock()->transform.GetGlobalPosition())));
+				  float bDst = DirectX::XMVectorGetX(DirectX::XMVector3LengthSq(
+					  DirectX::XMVectorSubtract(mainCameraPos, b.lock()->transform.GetGlobalPosition())));
+
+				  return aDst < bDst;
+			  });
 
 	const uint32_t lightCount = std::min<uint32_t>(this->spotLightRenderQueue.size(), this->maximumSpotlights);
 
@@ -952,7 +969,7 @@ void Renderer::SpotLightShadowPass() {
 
 		// Draw all objects to depthstencil
 		CheapRenderMap thisCameraRenderMap;
-		this->CreateSpotlightRenderMap(thisCameraRenderMap, camera, i);
+		this->CreateSpotlightRenderMap(thisCameraRenderMap, camera, light->GetRenderIndex());
 		this->RenderCheapRenderMap(thisCameraRenderMap);
 	}
 }
@@ -1155,9 +1172,11 @@ void Renderer::BindMaterial(BaseMaterial* material) {
 
 void Renderer::BindLights() {
 	{
-		if (this->spotLightRenderQueue.size() > this->maximumSpotlights) {
+		static bool hasWarned = false;
+		if (this->spotLightRenderQueue.size() > this->maximumSpotlights && !hasWarned) {
 			Logger::Warn("Just letting you know, there's more spotlights in the scene than the renderer supports. "
 						 "Increase maximumSpotlights.");
+			hasWarned = true;
 		}
 
 		uint32_t lightCount = std::min<uint32_t>(this->spotLightRenderQueue.size(), this->maximumSpotlights);

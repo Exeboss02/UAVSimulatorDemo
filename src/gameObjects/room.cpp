@@ -509,8 +509,7 @@ void Room::Hover() {
 		if (auto gameManager = GameManager::GetInstance(); gameManager && gameManager->GetInCombat()) {
 			txt = "Can't build during attacks";
 		}
-		DirectX::XMVECTOR worldPos = this->transform.GetGlobalPosition();
-		prompt->Show(txt, worldPos);
+		prompt->Show(txt);
 	} catch (const std::exception& e) {
 		Logger::Error("Room::Hover exception: ", e.what());
 	} catch (...) {

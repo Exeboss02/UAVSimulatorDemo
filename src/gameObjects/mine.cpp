@@ -120,5 +120,7 @@ void Mine::HoverRemove() {
 		txt = "Can't remove during attacks";
 	}
 
-	prompt->Show(txt, this->transform.GetGlobalPosition());
+	prompt->SetOffset(0.0f, -120.0f);
+	prompt->Show(txt);
+	prompt->SetOffset(0.0f, -50.0f);
 }

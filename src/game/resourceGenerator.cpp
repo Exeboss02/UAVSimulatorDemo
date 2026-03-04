@@ -125,6 +125,5 @@ void ResourceGenerator::Hover() {
 	} else {
 		txt += "\nPress \"R\" to discard generator";
 	}
-	DirectX::XMVECTOR worldPos = this->transform.GetGlobalPosition();
-	prompt->Show(txt, worldPos);
+	prompt->Show(txt);
 }

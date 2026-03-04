@@ -133,8 +133,8 @@ void Turret::Fire() {
 	Ray ray{Vector3D{posVec}, Vector3D{lookVec}};
 	RayCastData rayCastData;
 
-	bool didHit = PhysicsQueue::GetInstance().castRay(
-		ray, rayCastData, Tag::ENEMY, Tag::PLAYER | Tag::INTERACTABLE | Tag::OBJECT);
+	bool didHit = PhysicsQueue::GetInstance().castRay(ray, rayCastData, Tag::ENEMY,
+													  Tag::PLAYER | Tag::INTERACTABLE | Tag::OBJECT);
 	std::string hitString;
 	if (didHit) {
 
@@ -245,5 +245,7 @@ void Turret::HoverRemove() {
 		txt = "Can't remove during attacks";
 	}
 
-	prompt->Show(txt, this->transform.GetGlobalPosition());
+	prompt->SetOffset(0.0f, -120.0f);
+	prompt->Show(txt);
+	prompt->SetOffset(0.0f, -50.0f);
 }

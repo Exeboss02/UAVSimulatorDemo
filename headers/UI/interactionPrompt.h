@@ -1,7 +1,6 @@
 #pragma once
 
 #include "UI/canvasObject.h"
-#include <DirectXMath.h>
 #include <string>
 
 namespace UI {
@@ -14,8 +13,7 @@ public:
 
 	void Start() override;
 
-	// Show prompt with text at world position
-	void Show(const std::string& text, DirectX::XMVECTOR worldPos);
+	void Show(const std::string& text);
 	void Hide();
 
 	void SetOffset(float x, float y) {

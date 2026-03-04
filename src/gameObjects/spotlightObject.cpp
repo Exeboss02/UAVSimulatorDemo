@@ -33,7 +33,7 @@ void SpotlightObject::Start() {
 	this->camera.lock()->SetParent(this->GetPtr());
 	this->camera.lock()->SetFov(90);
 	this->camera.lock()->SetAspectRatio(1 / 1);
-	this->camera.lock()->SetFarPlane(20.);
+	this->camera.lock()->SetFarPlane(20);
 }
 
 void SpotlightObject::Tick() {
@@ -95,9 +95,9 @@ void SpotlightObject::SetAngle(float angle) {
 		throw std::runtime_error(error);
 	}
 
-	if (angle > 120) {
-		Logger::Warn("Spotlight angle is more than 120 degrees, setting angle to 120");
-		angle = 120;
+	if (angle > 140) {
+		Logger::Warn("Spotlight angle is more than 140 degrees, setting angle to 140");
+		angle = 140;
 	}
 
 	this->camera.lock()->SetFov(angle);
@@ -122,6 +122,9 @@ void SpotlightObject::OnDestroy() {
 	throw std::runtime_error("Fatal error in Spotlight");
 }
 
-void SpotlightObject::SetRenderIndex(size_t newRenderIndex) { this->renderIndex = newRenderIndex; }
+void SpotlightObject::SetRenderIndex(size_t newRenderIndex) {
+	this->renderIndex = newRenderIndex;
+	Logger::Log("ri: ", this->renderIndex);
+}
 
 size_t SpotlightObject::GetRenderIndex() { return this->renderIndex; }

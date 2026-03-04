@@ -898,6 +898,9 @@ void Renderer::ShadowPass() {
 	}
 	this->GetContext()->PSSetShader(nullptr, nullptr, 0);
 
+	// Make sure that depth stencil state from ui pass isn't left over from last frame
+	this->immediateContext->OMSetDepthStencilState(this->depthBuffer->GetDepthStencilState(), 1);
+
 	this->SpotLightShadowPass();
 	this->PointLightShadowPass();
 
@@ -1466,6 +1469,10 @@ void Renderer::RenderRenderMap(RenderMap& renderMap, bool renderMaterials) {
 }
 
 void Renderer::RenderCheapRenderMap(CheapRenderMap& renderMap) {
+	ImGui::Begin("Lights");
+	ImGui::Text(std::format("object count: {}", renderMap.meshes.size()).c_str());
+	ImGui::End();
+
 	for (auto& [meshName, mesh] : renderMap.meshes) {
 		this->immediateContext->IASetIndexBuffer(mesh.mesh->GetIndexBuffer().GetBuffer(), DXGI_FORMAT_R32_UINT, 0);
 

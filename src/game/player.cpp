@@ -3,12 +3,14 @@
 #include "core/physics/sphereCollider.h"
 #include "game/gameManager.h"
 #include "game/hud.h"
+#include "game/resourceGenerator.h"
 #include "gameObjects/meshObject.h"
 #include "gameObjects/mine.h"
 #include "gameObjects/pistol01.h"
 #include "gameObjects/rayVis.h"
 #include "gameObjects/rifle01.h"
 #include "gameObjects/room.h"
+#include "gameObjects/turret.h"
 #include <numbers>
 
 Player::Player() : cameraRotation{0, 0, 0} { this->controllerInput = std::make_shared<ControllerInput>(0); }
@@ -154,8 +156,7 @@ void Player::Tick() {
 
 	// this->GunAnimation(); //something is weird with this->canShoot, so do not use this yet
 
-	if(this->transform.GetGlobalPosition().m128_f32[1] <= -50)
-	{
+	if (this->transform.GetGlobalPosition().m128_f32[1] <= -50) {
 		this->SetPhysicsPosition(GameManager::GetInstance()->GetPlayerSpawnPoint());
 		this->SetPreviousPhysicsPosition(GameManager::GetInstance()->GetPlayerSpawnPoint());
 	}
@@ -250,7 +251,6 @@ void Player::Tick() {
 		this->health.Increment(generatedHealth);
 		this->healthFragment -= generatedHealth;
 	}
-
 }
 
 void Player::PhysicsTick() {
@@ -418,15 +418,12 @@ void Player::SetHealthRegen(float healthPerMin) { this->healthRegenPerMin = heal
 void Player::ShowQuitToMenuPrompt() {
 	if (this->hud) {
 		// Ensure quit prompt is exclusive: do not open it while any build menu is open
-		try {
-			auto rooms = this->factory->FindObjectsOfType<Room>();
-			for (auto& roomWeak : rooms) {
-				if (roomWeak.expired()) continue;
-				auto room = roomWeak.lock();
-				if (!room) continue;
-				if (room->IsBuildMenuOpen()) return;
-			}
-		} catch (...) {
+		auto rooms = this->factory->FindObjectsOfType<Room>();
+		for (auto& roomWeak : rooms) {
+			if (roomWeak.expired()) continue;
+			auto room = roomWeak.lock();
+			if (!room) continue;
+			if (room->IsBuildMenuOpen()) return;
 		}
 
 		this->hud->ShowQuitToMenuPrompt();
@@ -467,15 +464,14 @@ void Player::OnCollision(std::weak_ptr<GameObject3D> gameObject3D) {
 
 void Player::OnHit(float value) {
 	this->DecrementHealth(value);
-	if(this->health.Get() <= 0)
-	{
+	if (this->health.Get() <= 0) {
 		SoundClip* hurtClip = AssetManager::GetInstance().GetSoundClip("DeathDelay.wav");
 		this->hurtSpeaker.lock()->SetRandomPitch(0.9f, 1.1f);
 		this->hurtSpeaker.lock()->Play(hurtClip);
 		return;
 	}
 
-	SoundClip* hurtClip = AssetManager::GetInstance().GetSoundClip("DeathScream.wav"); //temp sound clip
+	SoundClip* hurtClip = AssetManager::GetInstance().GetSoundClip("DeathScream.wav"); // temp sound clip
 	this->hurtSpeaker.lock()->SetRandomPitch(0.9f, 1.1f);
 	this->hurtSpeaker.lock()->Play(hurtClip);
 }
@@ -524,39 +520,30 @@ void Player::Interact() {
 			} else {
 				hitString = "miss";
 				// Hide any shared interaction prompt when nothing is hovered
-				try {
-					auto promptWeak = this->factory->FindObjectOfType<UI::InteractionPrompt>();
-					if (!promptWeak.expired()) {
-						auto prompt = promptWeak.lock();
-						if (prompt) prompt->Hide();
-					}
-				} catch (const std::exception& e) {
-					Logger::Error("Player::Interact failed to hide prompt: ", e.what());
-				} catch (...) {
-					Logger::Error("Player::Interact failed to hide prompt (unknown exception)");
+				auto promptWeak = this->factory->FindObjectOfType<UI::InteractionPrompt>();
+				if (!promptWeak.expired()) {
+					auto prompt = promptWeak.lock();
+					if (prompt) prompt->Hide();
 				}
 			}
 
 		} else {
 			hitString = "miss";
 			// Hide any shared interaction prompt when nothing is hovered
-			try {
-				auto promptWeak = this->factory->FindObjectOfType<UI::InteractionPrompt>();
-				if (!promptWeak.expired()) {
-					auto prompt = promptWeak.lock();
-					if (prompt) prompt->Hide();
-				}
-			} catch (const std::exception& e) {
-				Logger::Error("Player::Interact failed to hide prompt: ", e.what());
-			} catch (...) {
-				Logger::Error("Player::Interact failed to hide prompt (unknown exception)");
+			auto promptWeak = this->factory->FindObjectOfType<UI::InteractionPrompt>();
+			if (!promptWeak.expired()) {
+				auto prompt = promptWeak.lock();
+				if (prompt) prompt->Hide();
 			}
 		}
 
 		// Logger::Log(hitString, " at distance: ", std::to_string(rayCastData.distance));
 	}
 
-	if (this->keyBoardInput.Interact() || this->controllerInput->Interact()) {
+	const bool interactPressed = this->keyBoardInput.Interact() || this->controllerInput->Interact();
+	const bool discardPressed = InputManager::GetInstance().WasKeyPressed('R');
+
+	if (interactPressed || discardPressed) {
 
 		Ray ray{Vector3D{posVec}, Vector3D{lookVec}};
 		RayCastData rayCastData;
@@ -565,24 +552,45 @@ void Player::Interact() {
 			PhysicsQueue::GetInstance().castRay(ray, rayCastData, ~Tag::NOIGNORE, Tag::PLAYER, this->interactDistance);
 		std::string hitString;
 		if (didHit) {
+			auto hitCollider = rayCastData.hitColider.lock();
+			if (!hitCollider) return;
 
-			rayCastData.hitColider.lock()->Interact(static_pointer_cast<Player>(this->GetPtr()));
+			bool isDiscardableBuild = false;
+			bool isDiscardOnlyBuild = false;
+			if (auto parentWeak = hitCollider->GetParent(); !parentWeak.expired()) {
+				auto parent = parentWeak.lock();
+				const bool isTurret = std::dynamic_pointer_cast<Turret>(parent) != nullptr;
+				const bool isMine = std::dynamic_pointer_cast<Mine>(parent) != nullptr;
+				const bool isGenerator = std::dynamic_pointer_cast<ResourceGenerator>(parent) != nullptr;
+				isDiscardableBuild = isTurret || isMine || isGenerator;
+				isDiscardOnlyBuild = isTurret || isMine;
+			}
+
+			if (discardPressed) {
+				if (isDiscardableBuild) {
+					hitCollider->Interact(static_pointer_cast<Player>(this->GetPtr()));
+				}
+			} else {
+				if (!isDiscardOnlyBuild) {
+					hitCollider->Interact(static_pointer_cast<Player>(this->GetPtr()));
+				}
+			}
 			hitString = "hit";
 
 			// rayVis
-			//MeshObjData meshdata = AssetManager::GetInstance().GetMeshObjData("TexBox/TextureCube.glb:Mesh_0");
-			//auto colliderobjWeak = this->factory->CreateGameObjectOfType<RayVis>();
-			//auto colliderobj = colliderobjWeak.lock();
-			//colliderobj->StartDeathTimer(5);
-			//colliderobj->SetMesh(meshdata);
-			//colliderobj->GetMesh().SetMaterial(
+			// MeshObjData meshdata = AssetManager::GetInstance().GetMeshObjData("TexBox/TextureCube.glb:Mesh_0");
+			// auto colliderobjWeak = this->factory->CreateGameObjectOfType<RayVis>();
+			// auto colliderobj = colliderobjWeak.lock();
+			// colliderobj->StartDeathTimer(5);
+			// colliderobj->SetMesh(meshdata);
+			// colliderobj->GetMesh().SetMaterial(
 			//	0, AssetManager::GetInstance().GetMaterialWeakPtr("defaultUnlitMaterial").lock());
-			//colliderobj->SetCastShadow(false);
-			//colliderobj->transform.SetPosition(
+			// colliderobj->SetCastShadow(false);
+			// colliderobj->transform.SetPosition(
 			//	DirectX::XMVectorAdd(posVec, DirectX::XMVectorScale(lookVec, rayCastData.distance / 2)));
-			//colliderobj->transform.SetRotationQuaternion(this->camera.lock()->transform.GetGlobalRotation());
-			//DirectX::XMFLOAT3 scale(0.01f, 0.01f, rayCastData.distance / 2);
-			//colliderobj->transform.SetScale(DirectX::XMLoadFloat3(&scale));
+			// colliderobj->transform.SetRotationQuaternion(this->camera.lock()->transform.GetGlobalRotation());
+			// DirectX::XMFLOAT3 scale(0.01f, 0.01f, rayCastData.distance / 2);
+			// colliderobj->transform.SetScale(DirectX::XMLoadFloat3(&scale));
 			// end of rayVis
 		} else {
 			hitString = "miss";
@@ -646,5 +654,4 @@ void Player::addGun(Guns gunType) {
 	} else {
 		this->gun = gunWeak;
 	}
-
 }

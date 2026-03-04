@@ -44,6 +44,7 @@ public:
 	void SetStoryTextVisibility(bool visible);
 
 	void SetCoreHealthText(int health);
+	void SetRoundIndicator(size_t roundsLeft, float timeUntilNextRound, bool showTime);
 
 private:
 	std::weak_ptr<UI::Text> MakeText(const std::string& name, const std::string& text, float x, float y, float width,
@@ -80,6 +81,8 @@ private:
 	std::weak_ptr<UI::Text> storyText;
 
 	std::weak_ptr<Crosshair> crosshair;
+
+	std::weak_ptr<UI::Text> roundIndicator;
 
 	// Shared prompt created once and reused for interactions
 	std::weak_ptr<UI::InteractionPrompt> interactionPrompt;

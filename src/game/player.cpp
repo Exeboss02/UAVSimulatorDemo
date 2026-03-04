@@ -244,7 +244,11 @@ void Player::Tick() {
 	}
 	ImGui::End();
 
-	this->healthFragment += Time::GetInstance().GetDeltaTime() * this->healthRegenPerMin / 60;
+	if (this->healthRegenDelayTimer < 0) {
+		this->healthFragment += Time::GetInstance().GetDeltaTime() * this->healthRegenPerSec;
+	} else {
+		this->healthRegenDelayTimer -= Time::GetInstance().GetDeltaTime();
+	}
 
 	if (this->healthFragment > 1) {
 		int generatedHealth = this->healthFragment;
@@ -413,7 +417,7 @@ void Player::SetInputEnabled(bool enabled) {
 	}
 }
 
-void Player::SetHealthRegen(float healthPerMin) { this->healthRegenPerMin = healthPerMin; }
+void Player::SetHealthRegen(float healthPerMin) { this->healthRegenPerSec = healthPerMin; }
 
 void Player::ShowQuitToMenuPrompt() {
 	if (this->hud) {
@@ -470,7 +474,7 @@ void Player::OnHit(float value) {
 		this->hurtSpeaker.lock()->Play(hurtClip);
 		return;
 	}
-
+	this->healthRegenDelayTimer = this->healthRegenDelay;
 	SoundClip* hurtClip = AssetManager::GetInstance().GetSoundClip("DeathScream.wav"); // temp sound clip
 	this->hurtSpeaker.lock()->SetRandomPitch(0.9f, 1.1f);
 	this->hurtSpeaker.lock()->Play(hurtClip);
@@ -654,4 +658,8 @@ void Player::addGun(Guns gunType) {
 	} else {
 		this->gun = gunWeak;
 	}
+}
+
+void Player::SetHealthRegenDelay(float delay) { 
+	this->healthRegenDelay = delay; 
 }

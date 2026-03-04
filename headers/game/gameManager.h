@@ -62,6 +62,11 @@ public:
 	/// </summary>
 	float GetRandom(float startValue, float endValue);
 
+	struct StoryChecks {
+		bool buildRoom = false;
+		bool buildbuildable = false;
+	} storyChecks{};
+
 private:
 	std::weak_ptr<StoryManager> storyManager;
 

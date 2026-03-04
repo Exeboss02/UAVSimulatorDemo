@@ -67,11 +67,7 @@ public:
 		bool buildbuildable = false;
 	} storyChecks{};
 
-	void SetStoryPause(bool state);
-
 private:
-	bool pauseTimer = false;
-
 	std::weak_ptr<StoryManager> storyManager;
 
 	static std::weak_ptr<GameManager> instance;

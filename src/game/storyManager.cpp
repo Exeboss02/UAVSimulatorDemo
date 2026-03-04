@@ -6,9 +6,12 @@
 #include "utilities/logger.h"
 #include <iostream>
 
-StoryManager::StoryManager() { 
+StoryManager::StoryManager() {
 	this->LoadStory(FilepathHolder::GetAssetsDirectory() / "story/chapter1.json");
-
+	this->storyChecks = {
+		StoryCheck{0, false, "Walk up to a wall and build a room"},
+		StoryCheck{1, false, "Walk up to the build platform in the center of the room and build a buildable"},
+		StoryCheck{10, false, "Push the \"Gift\" button"}};
 }
 
 void StoryManager::LoadStory(std::filesystem::path path) {
@@ -51,22 +54,28 @@ void StoryManager::PlayNextStoryPart() {
 			button->SetState(EmergenceExitButton::State::PostTouchUp);
 		}
 	}
+
+	if (!this->RoundIsChecked(GameManager::GetInstance()->GetCurrentRound())) {
+		this->storyPause = true;
+	}
+
 	Logger::Log("Playing next storypart");
 }
 
-void StoryManager::FinishStoryCheck(StoryChecks check) { 
-	GameManager::GetInstance()->SetStoryPause(false);
+void StoryManager::FinishStoryCheck(StoryChecks check) {
+	this->storyChecks[static_cast<size_t>(check)].checked = true;
+	this->storyPause = false;
+	this->DisplayObjective(GameManager::GetInstance()->GetCurrentRound());
 }
 
 const std::string& StoryManager::GetEndScreenText() const { return this->endScreenText; }
 
-bool StoryManager::GetCheckState(StoryChecks check) const { 
-	
-	return this->storyChecks[static_cast<size_t>(check)].checked; 
+bool StoryManager::GetCheckState(StoryChecks check) const {
 
+	return this->storyChecks[static_cast<size_t>(check)].checked;
 }
 
-bool StoryManager::RoundIsChecked(size_t round) const { 
+bool StoryManager::RoundIsChecked(size_t round) const {
 	for (const auto& storycheck : this->storyChecks) {
 		if (storycheck.associatedRound == round && !storycheck.checked) return false;
 	}
@@ -85,6 +94,7 @@ void StoryManager::Tick() {
 		bool finishedPlaying = storyPart.PlayStoryPart(this->player.lock());
 		if (finishedPlaying) {
 			this->playing = false;
+			this->DisplayObjective(GameManager::GetInstance()->GetCurrentRound());
 		}
 	}
 }
@@ -99,6 +109,21 @@ void StoryManager::Start() {
 	}
 }
 
+bool StoryManager::GetStoryPlaying() const { return this->storyPause || this->playing; }
+
+void StoryManager::DisplayObjective(size_t round) {
+	auto player = GameManager::GetInstance()->GetPlayer();
+	for (const auto& storyCheck : this->storyChecks) {
+		if (!storyCheck.checked && storyCheck.associatedRound == round) {
+			player->hud->SetObjectiveVisible(true);
+			player->hud->SetObjective(storyCheck.objective);
+			return;
+		}
+	}
+	player->hud->SetObjective("Prepare against the pirates");
+	player->hud->SetObjectiveVisible(true);
+}
+
 TextPart::TextPart(std::string text, float displayTime) : text(text), displayTime(displayTime) {}
 
 const std::string& TextPart::GetText() const { return this->text; }
@@ -110,6 +135,7 @@ StoryPart::StoryPart(std::vector<TextPart> textParts, SoundClip* soundClip)
 
 bool StoryPart::PlayStoryPart(std::shared_ptr<Player> player) {
 	// If we have nothing to play, signal that we have finished playing
+	player->hud->SetObjectiveVisible(false);
 	if (this->textParts.size() == 0) return true;
 
 	if (!this->playing) {
@@ -118,7 +144,7 @@ bool StoryPart::PlayStoryPart(std::shared_ptr<Player> player) {
 		this->currentTextPart = 0;
 		if (auto speaker = player->storySpeaker.lock()) {
 			if (this->soundClip) {
-				//speaker->Play(this->soundClip);
+				// speaker->Play(this->soundClip);
 			}
 		}
 		player->hud->SetStoryText(this->textParts[this->currentTextPart].GetText());

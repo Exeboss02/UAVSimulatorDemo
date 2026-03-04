@@ -36,6 +36,15 @@ void Room::CreateRoom(WallIndex wallIndex) {
 		return;
 	}
 
+	if (auto storyManager = GameManager::GetInstance()->GetStoryManager().lock()) {
+		storyManager->FinishStoryCheck(StoryChecks::BuildRoom);
+	}
+	else {
+		std::string error = "Failed to get story manager";
+		Logger::Error(error);
+		throw std::runtime_error(error);
+	}
+
 	auto parent = std::static_pointer_cast<SpaceShip>(parentWeak.lock());
 
 	auto neighOffset = Room::GetNeighborOffset(wallIndex);
@@ -46,6 +55,7 @@ void Room::CreateRoom(WallIndex wallIndex) {
 void Room::SetPosition(size_t x, size_t y) { this->pos = {x, y}; }
 
 void Room::Start() {
+
 	Logger::Warn("room size ", this->size);
 
 	DirectX::XMVECTOR position = this->transform.GetGlobalPosition();
@@ -434,6 +444,12 @@ void Room::ShowBuildMenu(std::shared_ptr<Player> player) {
 							p->SetShowCursor(false);
 							p->SetInputEnabled(true);
 						}
+
+
+						if (auto storyManager = GameManager::GetInstance()->GetStoryManager().lock()) {
+							storyManager->FinishStoryCheck(StoryChecks::BuiltBuildable);
+						}
+
 					} else {
 						Logger::Error("Bob the builder overslept");
 					}

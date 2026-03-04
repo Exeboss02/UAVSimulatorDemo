@@ -31,8 +31,8 @@ private:
 };
 
 enum class StoryChecks {
-	BuiltBuildable,
 	BuildRoom,
+	BuiltBuildable,
 	PressedButton,
 };
 
@@ -50,8 +50,13 @@ public:
 
 	void Tick() override;
 	void Start() override;
+	bool GetStoryPlaying() const;
 
 private:
+	bool storyPause = false;
+
+
+	void DisplayObjective(size_t round);
 
 	bool playing = false;
 	size_t currentStoryPart = 0;
@@ -59,6 +64,7 @@ private:
 	struct StoryCheck {
 		size_t associatedRound;
 		bool checked;
+		std::string objective;
 	};
 
 	std::array<StoryCheck, 3> storyChecks;

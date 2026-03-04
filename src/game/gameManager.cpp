@@ -155,7 +155,7 @@ void GameManager::Tick() {
 	} else if (currentRound < this->rounds.size()) {
 
 		if (this->idleTimeTimer > 0) {
-			if (!this->pauseTimer) {
+			if (!this->storyManager.expired() && !this->storyManager.lock()->GetStoryPlaying()) {
 				this->idleTimeTimer -= Time::GetInstance().GetDeltaTime();
 			}
 		} else {
@@ -163,8 +163,14 @@ void GameManager::Tick() {
 		}
 	}
 
+	if (this->storyManager.expired()) {
+		std::string error = "Story Manager expired before it should";
+		Logger::Error(error);
+		throw std::runtime_error(error);
+	}
+
 	// If not in a round currently and we haven't completed all rounds, showTime == True
-	bool showTime = !this->GetInCombat() && (this->currentRound != this->rounds.size()) && !this->pauseTimer;
+	bool showTime = !this->GetInCombat() && (this->currentRound != this->rounds.size()) && !this->storyManager.lock()->GetStoryPlaying();
 
 	// Display current round info in player hud
 	this->GetPlayer()->hud->SetRoundIndicator(this->rounds.size() - this->GetCurrentRound(), this->idleTimeTimer,
@@ -382,6 +388,8 @@ void GameManager::SpawnRound(size_t roundIndex) {
 		Logger::Error("Failed to create enemy path.");
 	}
 
+	this->GetPlayer()->hud->SetObjective("Defend against the pirate attack!");
+
 	this->unspawnedEnemies = this->rounds[roundIndex].enemyCount;
 
 	this->enemySpawnTimer = 0;
@@ -515,5 +523,3 @@ float GameManager::GetRandom(float startValue, float endValue) {
 	value = value * diff + startValue;
 	return value;
 }
-
-void GameManager::SetStoryPause(bool state) { this->pauseTimer = state; }

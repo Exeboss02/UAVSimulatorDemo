@@ -6,7 +6,10 @@
 #include "utilities/logger.h"
 #include <iostream>
 
-StoryManager::StoryManager() { this->LoadStory(FilepathHolder::GetAssetsDirectory() / "story/chapter1.json"); }
+StoryManager::StoryManager() { 
+	this->LoadStory(FilepathHolder::GetAssetsDirectory() / "story/chapter1.json");
+
+}
 
 void StoryManager::LoadStory(std::filesystem::path path) {
 	std::ifstream storyText(path);
@@ -51,7 +54,24 @@ void StoryManager::PlayNextStoryPart() {
 	Logger::Log("Playing next storypart");
 }
 
+void StoryManager::FinishStoryCheck(StoryChecks check) { 
+	GameManager::GetInstance()->SetStoryPause(false);
+}
+
 const std::string& StoryManager::GetEndScreenText() const { return this->endScreenText; }
+
+bool StoryManager::GetCheckState(StoryChecks check) const { 
+	
+	return this->storyChecks[static_cast<size_t>(check)].checked; 
+
+}
+
+bool StoryManager::RoundIsChecked(size_t round) const { 
+	for (const auto& storycheck : this->storyChecks) {
+		if (storycheck.associatedRound == round && !storycheck.checked) return false;
+	}
+	return true;
+}
 
 void StoryManager::Tick() {
 	this->GameObject::Tick();

@@ -155,14 +155,16 @@ void GameManager::Tick() {
 	} else if (currentRound < this->rounds.size()) {
 
 		if (this->idleTimeTimer > 0) {
-			this->idleTimeTimer -= Time::GetInstance().GetDeltaTime();
+			if (!this->pauseTimer) {
+				this->idleTimeTimer -= Time::GetInstance().GetDeltaTime();
+			}
 		} else {
 			SpawnNextRound();
 		}
 	}
 
 	// If not in a round currently and we haven't completed all rounds, showTime == True
-	bool showTime = !this->GetInCombat() && (this->currentRound != this->rounds.size());
+	bool showTime = !this->GetInCombat() && (this->currentRound != this->rounds.size()) && !this->pauseTimer;
 
 	// Display current round info in player hud
 	this->GetPlayer()->hud->SetRoundIndicator(this->rounds.size() - this->GetCurrentRound(), this->idleTimeTimer,
@@ -513,3 +515,5 @@ float GameManager::GetRandom(float startValue, float endValue) {
 	value = value * diff + startValue;
 	return value;
 }
+
+void GameManager::SetStoryPause(bool state) { this->pauseTimer = state; }

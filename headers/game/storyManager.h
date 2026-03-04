@@ -4,6 +4,7 @@
 #include "gameObjects/gameObject.h"
 #include <filesystem>
 
+
 class TextPart {
 public:
 	TextPart(std::string text, float displayTime);
@@ -25,16 +26,27 @@ private:
 	size_t currentTextPart;
 	float currentPartTime;
 	std::vector<TextPart> textParts;
+
 	SoundClip* soundClip;
 };
+
+enum class StoryChecks {
+	BuiltBuildable,
+	BuildRoom,
+	PressedButton,
+};
+
 
 class StoryManager : public GameObject {
 public:
 	StoryManager();
 	void LoadStory(std::filesystem::path path);
 	void PlayNextStoryPart();
+	void FinishStoryCheck(StoryChecks check);
 
 	const std::string& GetEndScreenText() const;
+	bool GetCheckState(StoryChecks check) const;
+	bool RoundIsChecked(size_t round) const;
 
 	void Tick() override;
 	void Start() override;
@@ -44,6 +56,12 @@ private:
 	bool playing = false;
 	size_t currentStoryPart = 0;
 
+	struct StoryCheck {
+		size_t associatedRound;
+		bool checked;
+	};
+
+	std::array<StoryCheck, 3> storyChecks;
 
 	std::vector<StoryPart> storyParts;
 	std::weak_ptr<Player> player;

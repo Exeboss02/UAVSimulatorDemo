@@ -1,7 +1,7 @@
 #include "gameObjects/spotlightObject.h"
 #include "gameObjects/cameraObject.h"
 
-SpotlightObject::SpotlightObject() {
+SpotlightObject::SpotlightObject() : renderIndex(0) {
 	this->data = {};
 	DirectX::XMStoreFloat3(&this->data.position, DirectX::XMVectorSet(0, 0, 0, 0));
 	DirectX::XMStoreFloat3(&this->data.direction, DirectX::XMVectorSet(0, 0, 0, 0));
@@ -121,3 +121,7 @@ void SpotlightObject::OnDestroy() {
 	Logger::Error("It would break the renderer.");
 	throw std::runtime_error("Fatal error in Spotlight");
 }
+
+void SpotlightObject::SetRenderIndex(size_t newRenderIndex) { this->renderIndex = newRenderIndex; }
+
+size_t SpotlightObject::GetRenderIndex() { return this->renderIndex; }

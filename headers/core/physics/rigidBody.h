@@ -27,12 +27,12 @@ public:
 	/// @brief Sets which function that should be called when a collider at index on the RigidBody collides with another collider
 	/// @param function 
 	/// @param index 
-	void SetOnCollisionFunction(std::function<void(std::weak_ptr<GameObject3D>)> function, int index);
+	void SetOnCollisionFunction(std::function<void(std::weak_ptr<GameObject3D>, std::weak_ptr<Collider> collider)> function, int index);
 
 	/// @brief Sets which function that should be called when any collider on the RigidBody collides with another collider
 	/// @param function 
 	/// @param index 
-	void SetAllOnCollisionFunction(std::function<void(std::weak_ptr<GameObject3D>)> function);
+	void SetAllOnCollisionFunction(std::function<void(std::weak_ptr<GameObject3D>, std::weak_ptr<Collider>)> function);
 
 	void LoadFromJson(const nlohmann::json& data) override;
 	void SaveToJson(nlohmann::json& data) override;

@@ -17,10 +17,10 @@ void Cockpit::Start() {
 	coreCollider->SetTag(Tag::PLAYER);
 
 	auto coreMesh = this->factory->CreateStaticGameObject<MeshObject>();
+	coreMesh->SetMesh(AssetManager::GetInstance().GetMeshObjData("meshes/core.glb:Mesh_0"));
 	coreMesh->SetParent(this->GetPtr());
 	coreMesh->transform.SetPosition(0, 2, 0);
 	coreMesh->transform.SetScale(1, 1.2f, 1);
-	coreMesh->SetMesh(AssetManager::GetInstance().GetMeshObjData("meshes/core.glb:Mesh_0"));
 
 	// Update core health on hud
 	GameManager::GetInstance()->GetPlayer()->hud->SetCoreHealthText(this->health.Get());
@@ -90,9 +90,9 @@ void Cockpit::Start() {
 
 	auto spotLight = this->factory->CreateGameObjectOfType<SpotlightObject>().lock();
 	spotLight->SetParent(this->GetPtr());
-	spotLight->transform.SetPosition({0, 4.5, 0});
+	spotLight->transform.SetPosition({0, 4.5, 2});
 	spotLight->transform.SetRotationRPY(0, std::numbers::pi / 2, 0);
-	spotLight->SetAngle(120.);
+	spotLight->SetAngle(140.);
 	spotLight->SetIntensity(30.0f);
 
 

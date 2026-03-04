@@ -19,7 +19,14 @@ void CameraObject::Tick() {
 
 void CameraObject::LateTick() { /*UpdateCameraMatrix();*/ }
 
-void CameraObject::Start() {}
+void CameraObject::Start() {
+	DirectX::XMVECTOR scale = this->transform.GetGlobalScale();
+	this->transform.SetScale(
+		1. / scale.m128_f32[0],
+		1. / scale.m128_f32[1],
+		1. / scale.m128_f32[2]
+	);
+}
 
 void CameraObject::SetAspectRatio(float aspectRatio) { this->aspectRatio = aspectRatio; }
 

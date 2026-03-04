@@ -91,7 +91,7 @@ void SpaceShip::Tick() {
 
 void SpaceShip::Start() {
 	this->GameObject3D::Start();
-	this->CreateFloorColider();
+	this->CreateFloorAndRoofColider();
 	
 	// Create cockpit first to set the pathfinding goal
 	auto cockpit = this->factory->CreateStaticGameObject<Cockpit>();
@@ -110,7 +110,7 @@ void SpaceShip::Start() {
 	this->pathfinder->AddEdge(nodes[Room::WallIndex::South * 2 + 1], cockpit->GetPathfindingNodes()[1], 1);
 }
 
-void SpaceShip::CreateFloorColider() {
+void SpaceShip::CreateFloorAndRoofColider() {
 	auto colliderobjWeak = this->factory->CreateGameObjectOfType<BoxCollider>();
 
 	auto colliderobj = colliderobjWeak.lock();
@@ -124,4 +124,15 @@ void SpaceShip::CreateFloorColider() {
 	colliderobj->SetTag(Tag::FLOOR);
 	//colliderobj->ignoreTag = Tag::DISTANCE;
 
+	//roof collider
+	auto roofColliderobjWeak = this->factory->CreateGameObjectOfType<BoxCollider>();
+
+	auto roofColliderobj = roofColliderobjWeak.lock();
+	DirectX::XMFLOAT3 roofPos((this->SHIP_MAX_SIZE_X * this->ROOM_SIZE) * 0.5f, 5.5f,
+						  (this->SHIP_MAX_SIZE_Y * this->ROOM_SIZE) * 0.5f);
+	roofColliderobj->transform.SetPosition(DirectX::XMLoadFloat3(&roofPos));
+	DirectX::XMFLOAT3 roofScale(((this->SHIP_MAX_SIZE_X) * this->ROOM_SIZE + this->ROOM_SIZE) * 0.5f + 20.0f, 0.5f,
+							((this->SHIP_MAX_SIZE_Y) * this->ROOM_SIZE + this->ROOM_SIZE) * 0.5f + 20.0f);
+	roofColliderobj->transform.SetScale(DirectX::XMLoadFloat3(&roofScale));
+	roofColliderobj->SetParent(this->GetPtr());
 }

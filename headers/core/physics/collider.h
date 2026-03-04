@@ -131,12 +131,12 @@ public:
 	void Interact(std::shared_ptr<Player> player) { this->interactFunc(player); };
 	void Hover() { this->hoverFunc(); };
 	void Hit(float damage) { this->hitFunc(damage); }
-	void OnCollision(std::weak_ptr<GameObject3D> gameObject3D) { this->collisionFunc(gameObject3D); }
+	void OnCollision(std::weak_ptr<GameObject3D> gameObject3D, std::weak_ptr<Collider> collider) { this->collisionFunc(gameObject3D, collider); }
 
 	void SetOnInteract(std::function<void(std::shared_ptr<Player>)> func) { this->interactFunc = func; }
 	void SetOnHover(std::function<void()> func) { this->hoverFunc = func; }
 	void SetOnHit(std::function<void(float)> func) { this->hitFunc = func; }
-	void SetOnCollision(std::function<void(std::weak_ptr<GameObject3D>)> func) { this->collisionFunc = func; }
+	void SetOnCollision(std::function<void(std::weak_ptr<GameObject3D>, std::weak_ptr<Collider>)> func) { this->collisionFunc = func; }
 
 	void SetType(ColliderType type);
 	ColliderType GetType();
@@ -165,7 +165,7 @@ private:
 	std::function<void(std::shared_ptr<Player>)> interactFunc = [](std::shared_ptr<Player>) {};
 	std::function<void()> hoverFunc = []() {};
 	std::function<void(float)> hitFunc = [](float) {};
-	std::function<void(std::weak_ptr<GameObject3D>)> collisionFunc = [](std::weak_ptr<GameObject3D>) {};
+	std::function<void(std::weak_ptr<GameObject3D>, std::weak_ptr<Collider>)> collisionFunc = [](std::weak_ptr<GameObject3D>, std::weak_ptr<Collider>) {};
 
 	int id = -1;
 	std::weak_ptr<GameObject> meshObjectChild; // reference to the mesh visual representation of the collider (remove?)

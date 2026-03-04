@@ -94,6 +94,4 @@ private:
 
 	DirectX::XMVECTOR physicsPosition = {};
 	DirectX::XMVECTOR previousPhysicsPosition = {};
-
-	DirectX::XMVECTOR previousContactNormal = {};
 };

@@ -1,8 +1,10 @@
 #pragma once
 
-#include "gameObjects/meshObject.h"
 #include "gameObjects/gameObject3D.h"
+#include "gameObjects/meshObject.h"
 #include <vector>
+
+class Player;
 
 class Turret : public MeshObject {
 public:
@@ -30,11 +32,13 @@ public:
 
 	std::weak_ptr<GameObject3D> GetTarget() const;
 	virtual void Fire();
+
 private:
+	void RemoveInteract(std::shared_ptr<Player> player);
+	void HoverRemove();
 
 	float lastAttemptedTargeting = 0;
 	float retargetTime = 0.5;
-
 
 	void SetDirection(DirectX::XMVECTOR newDirection);
 

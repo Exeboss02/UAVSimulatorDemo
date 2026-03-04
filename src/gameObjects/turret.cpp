@@ -1,19 +1,26 @@
 #include "gameObjects/turret.h"
+#include "UI/interactionPrompt.h"
 #include "core/physics/physicsQueue.h"
 #include "core/physics/ray.h"
 #include "core/physics/rayCaster.h"
-#include "utilities/time.h"
+#include "core/physics/sphereCollider.h"
 #include "game/gameManager.h"
 #include "gameObjects/rayVis.h"
+#include "gameObjects/room.h"
+#include "utilities/time.h"
+#include <algorithm>
+#include <cmath>
 
-void Turret::Start() { 
+void Turret::Start() {
 	this->SetMesh(AssetManager::GetInstance().GetMeshObjData("Buildings/Turret.glb:Mesh_0"));
 	auto collider = this->factory->CreateStaticGameObject<SphereCollider>();
 	collider->transform.SetScale(2, 2, 2);
 	collider->transform.SetPosition(0, 0.5, 0);
 	collider->SetParent(this->GetPtr());
-	collider->SetTag(Tag::PLAYER);
-	auto colliderChild = collider.Get();
+	collider->SetTag(Tag::INTERACTABLE | Tag::OBJECT);
+	collider->SetOnInteract([&](std::shared_ptr<Player> player) { this->RemoveInteract(player); });
+	collider->SetOnHover([&] { this->HoverRemove(); });
+
 	/*this->shootSound = SoundSourceManager::*/
 	auto speaker = this->factory->CreateStaticGameObject<SoundSourceObject>();
 	speaker->SetParent(this->GetParent());
@@ -21,16 +28,16 @@ void Turret::Start() {
 	this->shootSound = AssetManager::GetInstance().GetSoundClip("Laser1.wav");
 
 	SoundClip* clip = AssetManager::GetInstance().GetSoundClip("Build2.wav");
-	this->speaker.lock()->transform.SetPosition(this->transform.GetPosition()); //global position came from 0, 0, 0?
+	this->speaker.lock()->transform.SetPosition(this->transform.GetPosition()); // global position came from 0, 0, 0?
 	this->speaker.lock()->SetRandomPitch(0.8f, 1.0f);
 	this->speaker.lock()->SetGain(1.0f);
 	this->speaker.lock()->Play(clip);
 
 	this->MeshObject::Start();
 
-	//collider.Init();
+	// collider.Init();
 
-	//colliderChild->ShowDebug(true);
+	// colliderChild->ShowDebug(true);
 
 	auto frame = this->factory->CreateGameObjectOfType<MeshObject>().lock();
 	frame->SetMesh(AssetManager::GetInstance().GetMeshObjData("Buildings/Turret.glb:Mesh_2"));
@@ -78,7 +85,6 @@ void Turret::Tick() {
 		this->SetTargetClosest();
 		this->lastAttemptedTargeting = Time::GetInstance().GetSessionTime();
 	}
-	
 }
 
 void Turret::SetTarget(std::weak_ptr<GameObject3D> target) { this->target = target; }
@@ -144,8 +150,7 @@ void Turret::Fire() {
 		auto colliderobj = colliderobjWeak.lock();
 		colliderobj->StartDeathTimer(0.05f);
 		colliderobj->SetMesh(meshdata);
-		colliderobj->GetMesh().SetMaterial(
-			0, AssetManager::GetInstance().GetMaterialWeakPtr("turretLaser").lock());
+		colliderobj->GetMesh().SetMaterial(0, AssetManager::GetInstance().GetMaterialWeakPtr("turretLaser").lock());
 		colliderobj->SetCastShadow(false);
 		colliderobj->transform.SetPosition(
 			DirectX::XMVectorAdd(posVec, DirectX::XMVectorScale(lookVec, rayCastData.distance / 2)));
@@ -185,12 +190,12 @@ void Turret::SetDirection(DirectX::XMVECTOR newDirection) {
 	if (angle <= maxStep) {
 		newDir = desiredDir;
 	} else {
-		float step = std::min(angle, maxStep);
+		float step = (angle < maxStep) ? angle : maxStep;
 
 		DirectX::XMVECTOR axis = DirectX::XMVector3Normalize(DirectX::XMVector3Cross(currentDir, desiredDir));
 
 		if (DirectX::XMVector3LengthSq(axis).m128_f32[0] < 0.0001f) {
-			//axis = DirectX::XMVectorSet(0, 1, 0, 0); // fallback axis
+			// axis = DirectX::XMVectorSet(0, 1, 0, 0); // fallback axis
 			axis = DirectX::XMVector3Orthogonal(currentDir);
 		}
 
@@ -201,9 +206,43 @@ void Turret::SetDirection(DirectX::XMVECTOR newDirection) {
 
 	turret->transform.SetDirection(newDir);
 
-	DirectX::XMVECTOR frameDir{newDir.m128_f32[0], 0, newDir.m128_f32[2]};
+	DirectX::XMVECTOR frameDir = DirectX::XMVectorSet(newDir.m128_f32[0], 0, newDir.m128_f32[2], 0);
 	frameDir = DirectX::XMVector3Normalize(frameDir);
 
 	auto frame = this->framePart.lock();
 	frame->transform.SetDirection(frameDir);
+}
+
+void Turret::RemoveInteract(std::shared_ptr<Player> /*player*/) {
+	if (auto gameManager = GameManager::GetInstance(); gameManager && gameManager->GetInCombat()) {
+		return;
+	}
+
+	auto parentWeak = this->GetParent();
+	if (parentWeak.expired()) return;
+
+	auto room = std::dynamic_pointer_cast<Room>(parentWeak.lock());
+	if (!room) return;
+
+	room->RemoveBuiltObject();
+
+	auto promptWeak = this->factory->FindObjectOfType<UI::InteractionPrompt>();
+	if (!promptWeak.expired()) {
+		auto prompt = promptWeak.lock();
+		if (prompt) prompt->Hide();
+	}
+}
+
+void Turret::HoverRemove() {
+	auto promptWeak = this->factory->FindObjectOfType<UI::InteractionPrompt>();
+	if (promptWeak.expired()) return;
+	auto prompt = promptWeak.lock();
+	if (!prompt) return;
+
+	std::string txt = "Press \"R\" to discard turret";
+	if (auto gameManager = GameManager::GetInstance(); gameManager && gameManager->GetInCombat()) {
+		txt = "Can't remove during attacks";
+	}
+
+	prompt->Show(txt, this->transform.GetGlobalPosition());
 }

@@ -2,8 +2,11 @@
 #include "UI/canvasObject.h"
 #include "UI/interactionPrompt.h"
 #include "UI/text.h"
+#include "core/input/inputManager.h"
 #include "core/window.h"
+#include "game/gameManager.h"
 #include "gameObjects/cameraObject.h"
+#include "gameObjects/room.h"
 #include "rendering/renderQueue.h"
 
 // d3d11
@@ -30,7 +33,7 @@ void ResourceGenerator::Start() {
 	SoundClip* clip = AssetManager::GetInstance().GetSoundClip("SpaceshipAmbiance.wav");
 	this->speaker = this->factory->CreateStaticGameObject<SoundSourceObject>();
 	this->speaker.lock()->SetParent(this->GetPtr());
-	this->speaker.lock()->LoopSoundEffect(0); //0 = loops forever
+	this->speaker.lock()->LoopSoundEffect(0); // 0 = loops forever
 	this->speaker.lock()->SetRandomPitch(0.8f, 1.1f);
 	this->speaker.lock()->SetGain(0.7f);
 	this->speaker.lock()->Play(clip);
@@ -59,6 +62,28 @@ ResourceType ResourceGenerator::GetResourceType() const { return this->resourceT
 void ResourceGenerator::SetResourceType(ResourceType type) { this->resourceType = type; }
 
 void ResourceGenerator::Interact(std::shared_ptr<Player> player) {
+	if (auto gameManager = GameManager::GetInstance(); gameManager && gameManager->GetInCombat()) {
+		return;
+	}
+
+	if (InputManager::GetInstance().WasKeyPressed('R')) {
+		auto parentWeak = this->GetParent();
+		if (parentWeak.expired()) return;
+
+		auto room = std::dynamic_pointer_cast<Room>(parentWeak.lock());
+		if (!room) return;
+
+		room->RemoveBuiltObject();
+
+		auto promptWeak = this->factory->FindObjectOfType<UI::InteractionPrompt>();
+		if (!promptWeak.expired()) {
+			auto prompt = promptWeak.lock();
+			if (prompt) prompt->Hide();
+		}
+
+		return;
+	}
+
 	float currentTime = Time::GetInstance().GetSessionTime();
 	float amountGenerated = (currentTime - this->lastGenerated) * this->generatedPerSecond + this->change;
 
@@ -68,24 +93,17 @@ void ResourceGenerator::Interact(std::shared_ptr<Player> player) {
 
 	this->lastGenerated = currentTime;
 
-	//player->resources.GetResource(this->resourceType).IncrementAmount(amountGenerated);
+	// player->resources.GetResource(this->resourceType).IncrementAmount(amountGenerated);
 	player->resources.GetResource(ResourceType::Titanium).IncrementAmount(amountGenerated);
 	player->resources.GetResource(ResourceType::CarbonFiber).IncrementAmount(amountGenerated);
 	player->resources.GetResource(ResourceType::Circuit).IncrementAmount(amountGenerated);
 	player->resources.GetResource(ResourceType::Lubricant).IncrementAmount(amountGenerated);
 
-
 	// hide interaction prompt for a short time so text disappears when interacting
-	try {
-		auto promptWeak = this->factory->FindObjectOfType<UI::InteractionPrompt>();
-		if (!promptWeak.expired()) {
-			auto prompt = promptWeak.lock();
-			if (prompt) prompt->Hide();
-		}
-	} catch (const std::exception& e) {
-		Logger::Error("ResourceGenerator::Interact Hide prompt exception: ", e.what());
-	} catch (...) {
-		Logger::Error("ResourceGenerator::Interact Hide prompt unknown exception");
+	auto promptWeak = this->factory->FindObjectOfType<UI::InteractionPrompt>();
+	if (!promptWeak.expired()) {
+		auto prompt = promptWeak.lock();
+		if (prompt) prompt->Hide();
 	}
 
 	// disable showing the prompt for 1 second
@@ -93,20 +111,20 @@ void ResourceGenerator::Interact(std::shared_ptr<Player> player) {
 }
 
 void ResourceGenerator::Hover() {
-	try {
-		float currentTime = Time::GetInstance().GetSessionTime();
-		if (currentTime < this->hoverDisabledUntil) return;
-		auto promptWeak = this->factory->FindObjectOfType<UI::InteractionPrompt>();
-		if (promptWeak.expired()) return;
-		auto prompt = promptWeak.lock();
-		if (!prompt) return;
+	float currentTime = Time::GetInstance().GetSessionTime();
+	if (currentTime < this->hoverDisabledUntil) return;
+	auto promptWeak = this->factory->FindObjectOfType<UI::InteractionPrompt>();
+	if (promptWeak.expired()) return;
+	auto prompt = promptWeak.lock();
+	if (!prompt) return;
 
-		std::string txt = "Press \"F\" to collect resources";
-		DirectX::XMVECTOR worldPos = this->transform.GetGlobalPosition();
-		prompt->Show(txt, worldPos);
-	} catch (const std::exception& e) {
-		Logger::Error("ResourceGenerator::Hover exception: ", e.what());
-	} catch (...) {
-		Logger::Error("ResourceGenerator::Hover unknown exception");
+	bool inCombat = GameManager::GetInstance() && GameManager::GetInstance()->GetInCombat();
+	std::string txt = "Press \"F\" to collect resources";
+	if (inCombat) {
+		txt = "Can't collect during attacks";
+	} else {
+		txt += "\nPress \"R\" to discard generator";
 	}
+	DirectX::XMVECTOR worldPos = this->transform.GetGlobalPosition();
+	prompt->Show(txt, worldPos);
 }

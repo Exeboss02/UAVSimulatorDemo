@@ -10,6 +10,8 @@
 #include <functional>
 #include <string>
 
+static constexpr bool DISABLE_IMGUI = true;
+
 class ImguiManager {
 public:
 	ImguiManager() = default;

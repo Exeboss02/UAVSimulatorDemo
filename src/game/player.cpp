@@ -232,17 +232,19 @@ void Player::Tick() {
 	// Update HUD with current resources
 	if (this->hud) this->hud->Update(this->resources, this->health);
 
-	ImGui::Begin("GameManager testing");
-	if (ImGui::Button("Win")) {
-		GameManager::GetInstance()->Win();
+	if (!DISABLE_IMGUI) {
+		ImGui::Begin("GameManager testing");
+		if (ImGui::Button("Win")) {
+			GameManager::GetInstance()->Win();
+		}
+		if (ImGui::Button("Loose")) {
+			GameManager::GetInstance()->Loose();
+		}
+		if (ImGui::Button("Player died")) {
+			GameManager::GetInstance()->PlayerDied();
+		}
+		ImGui::End();
 	}
-	if (ImGui::Button("Loose")) {
-		GameManager::GetInstance()->Loose();
-	}
-	if (ImGui::Button("Player died")) {
-		GameManager::GetInstance()->PlayerDied();
-	}
-	ImGui::End();
 
 	this->healthFragment += Time::GetInstance().GetDeltaTime() * this->healthRegenPerMin / 60;
 
@@ -314,10 +316,13 @@ void Player::UpdateCamera() {
 		this->ShowQuitToMenuPrompt();
 	}
 
-	// Skip game input if ImGui is capturing mouse or keyboard
-	if (ImGui::GetIO().WantCaptureMouse || ImGui::GetIO().WantCaptureKeyboard) {
-		return;
+	if (!DISABLE_IMGUI) {
+		// Skip game input if ImGui is capturing mouse or keyboard
+		if (ImGui::GetIO().WantCaptureMouse || ImGui::GetIO().WantCaptureKeyboard) {
+			return;
+		}
 	}
+
 
 	if (this->keyBoardInput.ToggleCamera()) {
 		this->showCursor = !this->showCursor;

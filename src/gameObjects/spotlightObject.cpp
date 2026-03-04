@@ -109,10 +109,12 @@ void SpotlightObject::ShowInHierarchy()
 {
 	this->GameObject3D::ShowInHierarchy();
 
-	ImGui::Text("Spotlight");
-	float intensity = this->data.intensity;
-	ImGui::SliderFloat("Intensity", &intensity, 0.0f, 200.0f);
-	this->data.intensity = intensity;
+	if (!DISABLE_IMGUI) {	
+		ImGui::Text("Spotlight");
+		float intensity = this->data.intensity;
+		ImGui::SliderFloat("Intensity", &intensity, 0.0f, 200.0f);
+		this->data.intensity = intensity;
+	}
 }
 
 void SpotlightObject::OnDestroy() {

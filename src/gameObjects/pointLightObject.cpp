@@ -92,10 +92,13 @@ void PointLightObject::SaveToJson(nlohmann::json& data) {
 void PointLightObject::ShowInHierarchy() {
 	this->GameObject3D::ShowInHierarchy();
 
-	ImGui::Text("PointLight");
-	float intensity = this->data.intensity;
-	ImGui::SliderFloat("Intensity", &intensity, 0.0f, 200.0f);
-	this->data.intensity = intensity;
+	if (!DISABLE_IMGUI) {
+		ImGui::Text("PointLight");
+		float intensity = this->data.intensity;
+		ImGui::SliderFloat("Intensity", &intensity, 0.0f, 200.0f);
+		this->data.intensity = intensity;
+	}
+
 }
 
 void PointLightObject::OnDestroy() {

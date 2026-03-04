@@ -15,16 +15,6 @@ CameraObject::CameraObject()
 }
 
 void CameraObject::Tick() {
-	// if (this->thisCameraId != CameraObject::mainCamera->thisCameraId) {
-	//	ImGui::SetNextWindowSize(ImVec2(150, 120.f));
-	//	ImGui::Begin("MainCamera");
-	//	ImGui::Text("Switch camera");
-	//	std::string buttonText = "Camera " + std::to_string(this->thisCameraId);
-	//	if (ImGui::Button(buttonText.c_str())) {
-	//		CameraObject::mainCamera = this;
-	//	}
-	//	ImGui::End();
-	// }
 }
 
 void CameraObject::LateTick() { /*UpdateCameraMatrix();*/ }
@@ -146,12 +136,14 @@ void CameraObject::SaveToJson(nlohmann::json& data) {
 void CameraObject::ShowInHierarchy() {
 	this->GameObject3D::ShowInHierarchy();
 
-	ImGui::Text("CameraObject");
+	if (!DISABLE_IMGUI) {
+		ImGui::Text("CameraObject");
 
-	if (ImGui::Button("Set Main")) {
-		SetMainCamera();
+		if (ImGui::Button("Set Main")) {
+			SetMainCamera();
+		}
+		ImGui::SliderFloat("FOV", &this->fieldOfView, 1.0f, 120.0f);
 	}
-	ImGui::SliderFloat("FOV", &this->fieldOfView, 1.0f, 120.0f);
 }
 
 size_t CameraObject::GetCameraId() { return this->cameraId; }

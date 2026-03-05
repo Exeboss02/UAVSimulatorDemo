@@ -106,15 +106,25 @@ float4 main(PixelShaderInput input) : SV_TARGET
         float3 lightDir = normalize(LightToHit);
         float lightCosAngle = dot(lightDir.xyz, normalize(lightdata.direction));
         
+        static const float cos10 = cos(3.14159265f / 18.0f);
+        static const float sin10 = sin(3.14159265f / 18.0f);
         if (lightCosAngle > lightdata.spotCosAngle && islit)
         {
+            // last 10 degrees fades
+            float outerCos = lightdata.spotCosAngle;
+            float outerSin = sqrt(1.0f - outerCos * outerCos);
+
+            float innerCos = outerCos * cos10 + outerSin * sin10;
+
+            float lightFade = clamp((lightCosAngle - outerCos) / (innerCos - outerCos), 0.0f, 1.0f);
+            
             float3 L = normalize(-LightToHit);
             float3 V = normalize(-camToPixel);
             float3 halfwayVector = normalize(L + V);
             
             float distSq = max(dot(LightToHit, LightToHit), 1e-6f);
           
-            float intensity = (1.0f / distSq) * lightdata.intensity;
+            float intensity = (1.0f / distSq) * lightdata.intensity * lightFade;
 
             float nDotL = dot(normal, L);
             float nDotHalf = dot(normal, halfwayVector);

@@ -4,6 +4,7 @@
 #include "gameObjects/cameraObject.h"
 #include "gameObjects/rayVis.h"
 #include "utilities/logger.h"
+#include "utilities/time.h"
 #include <memory>
 #include <numbers>
 
@@ -21,6 +22,7 @@ void Gun::Shoot(bool pressedTrigger, bool triggerDown) {
 		break;
 	case (FireMode::AUTOMATIC):
 		if (triggerDown == false) {
+			this->continuousFireTime = 0.0f;
 			return;
 		}
 		break;
@@ -41,12 +43,34 @@ void Gun::Shoot(bool pressedTrigger, bool triggerDown) {
 
 	DirectX::XMVECTOR lookVec;
 	DirectX::XMVECTOR posVec;
+	std::shared_ptr<GameObject3D> muzzleLocked = this->muzzle.lock();
+
+	//bullet spread
+	switch (this->fireMode) {
+	case (FireMode::SEMIAUTOMATIC):
+		lookVec = this->muzzle.lock()->transform.GetGlobalForward();
+		break;
+	case (FireMode::AUTOMATIC): 
+	{
+		float bulletSpread = this->maxBulletSpread * (this->continuousFireTime / this->timeToMaxBulletSpread);
+		float randomP = this->GetRandomValueInRange(0, bulletSpread * 2 + 0.0001f);
+		float randomY = this->GetRandomValueInRange(0, bulletSpread * 2 + 0.0001f);
+		muzzleLocked->transform.SetRotationRPY(0, (randomP - bulletSpread / 2) * std::numbers::pi / 180,
+											   (randomY - bulletSpread / 2) * std::numbers::pi / 180);
+		lookVec = this->muzzle.lock()->transform.GetGlobalForward();
+		muzzleLocked->transform.SetRotationRPY(0, 0, 0);
+		continuousFireTime += Time::GetInstance().GetDeltaTime();
+		break;
+	}
+
+	default:
+		break;
+	}
+	
 
 	if (auto parentCameraShared = this->parentCamera.lock()) {
-		lookVec = this->parentCamera.lock()->transform.GetGlobalForward();
 		posVec = this->parentCamera.lock()->transform.GetGlobalPosition();
 	} else {
-		lookVec = this->muzzle.lock()->transform.GetGlobalForward();
 		posVec = this->muzzle.lock()->transform.GetGlobalPosition();
 	}
 
@@ -196,4 +220,14 @@ void Gun::VisulalizeShootBasedOnMuzzle(DirectX::XMVECTOR lookVec, DirectX::XMVEC
 	DirectX::XMFLOAT3 scale(0.01f, 0.01f, distance / 2);
 	colliderobj->transform.SetScale(DirectX::XMLoadFloat3(&scale));
 	// end of rayVis
+}
+
+float Gun::GetRandomValueInRange(float min, float max) { 
+	
+	int tempMin = min * 100000;
+	int tempMax = max * 100000;
+	int tempRand = tempMin + rand() % (tempMax - tempMin);
+	float randomVal = tempRand / 100000.0f;
+
+	return randomVal;
 }

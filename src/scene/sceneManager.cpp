@@ -93,8 +93,11 @@ void SceneManager::WireButtonEvents(UI::Button* button) {
 
 void SceneManager::SceneTick() {
 #ifdef TIMER_DEBUG
-	ImGui::Begin("Scene tick");
 	const auto start{std::chrono::steady_clock::now()};
+
+	if (!DISABLE_IMGUI) {
+		ImGui::Begin("Scene tick");
+	}
 #endif
 
 	if (!this->mainScene.get()) {
@@ -111,8 +114,12 @@ void SceneManager::SceneTick() {
 #ifdef TIMER_DEBUG
 	const auto end{std::chrono::steady_clock::now()};
 	const std::chrono::duration<double> elapsedSeconds{end - start};
-	ImGui::Text(("Scene tick time: " + std::to_string(elapsedSeconds.count())).c_str());
-	ImGui::End();
+
+	if (!DISABLE_IMGUI) {
+		ImGui::Text(("Scene tick time: " + std::to_string(elapsedSeconds.count())).c_str());
+		ImGui::End();
+	}
+
 #endif
 }
 
@@ -283,18 +290,21 @@ void SceneManager::SetMainCameraInScene(std::shared_ptr<Scene>& scene) {
 void SceneManager::TogglePause(bool enable) { this->isPaused = enable; }
 
 void SceneManager::SkyboxMenu() {
-	if (ImGui::MenuItem("Old town")) {
-		RenderQueue::ChangeSkybox("cubeMap.dds");
+	if (!DISABLE_IMGUI) {
+		if (ImGui::MenuItem("Old town")) {
+			RenderQueue::ChangeSkybox("cubeMap.dds");
+		}
+		if (ImGui::MenuItem("Space")) {
+			RenderQueue::ChangeSkybox("bright_space.dds");
+		}
+		if (ImGui::MenuItem("Asteroid")) {
+			RenderQueue::ChangeSkybox("bright_asteroid.dds");
+		}
+		if (ImGui::MenuItem("Planet")) {
+			RenderQueue::ChangeSkybox("bright_planet.dds");
+		}
 	}
-	if (ImGui::MenuItem("Space")) {
-		RenderQueue::ChangeSkybox("bright_space.dds");
-	}
-	if (ImGui::MenuItem("Asteroid")) {
-		RenderQueue::ChangeSkybox("bright_asteroid.dds");
-	}
-	if (ImGui::MenuItem("Planet")) {
-		RenderQueue::ChangeSkybox("bright_planet.dds");
-	}
+
 }
 
 void SceneManager::SaveSceneToCurrentFile() {

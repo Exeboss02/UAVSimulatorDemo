@@ -31,17 +31,22 @@ LRESULT Window::StaticWindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM 
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 LRESULT Window::WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) {
-	ImGui_ImplWin32_WndProcHandler(hWnd, message, wParam, lParam);
+	if (!DISABLE_IMGUI) {
+		ImGui_ImplWin32_WndProcHandler(hWnd, message, wParam, lParam);
+	}
 
 	if (message == WM_KEYDOWN) {
 		if (wParam == VK_F11) {
 			this->ToggleFullscreen(!this->isFullscreen);
-			return 0;
+			return TRUE;
 		}
 	} else if (message == WM_DESTROY) {
 		// close the application entirely
 		PostQuitMessage(0);
-		return 0;
+		return TRUE;
+	} else if (message == WM_CLOSE) {
+		PostQuitMessage(0);
+		return TRUE;
 	}
 
 	bool result = InputManager::GetInstance().ReadMessage(hWnd, message, wParam, lParam);
@@ -66,7 +71,7 @@ LRESULT Window::WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam
 					}
 				}
 			}
-			return 0;
+			return TRUE;
 		}
 	}
 
@@ -132,6 +137,7 @@ Window::Window(const HINSTANCE instance, int nCmdShow, const std::string name, c
 	WNDCLASSEX wc = {.cbSize = sizeof(WNDCLASSEX),
 					 .lpfnWndProc = Window::StaticWindowProc,
 					 .hInstance = this->instance,
+					 .hCursor = LoadCursor(nullptr, IDC_ARROW), // default cursor, fixes endless startapp cursor
 					 .lpszClassName = CLASS_NAME};
 
 	if (!RegisterClassEx(&wc)) {

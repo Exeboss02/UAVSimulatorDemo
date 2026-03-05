@@ -115,7 +115,7 @@ void Player::Start() {
 	std::function<void(std::weak_ptr<GameObject3D>, std::weak_ptr<Collider>)> function = [&](std::weak_ptr<GameObject3D> gameObject3D, std::weak_ptr<Collider> collider) {
 		this->OnCollision(gameObject3D, collider);
 
-		if (auto mine = dynamic_pointer_cast<Mine>(gameObject3D.lock())) {
+		if (auto mine = std::dynamic_pointer_cast<Mine>(gameObject3D.lock())) {
 			Logger::Log("Hit Mine");
 		}
 	};
@@ -232,17 +232,19 @@ void Player::Tick() {
 	// Update HUD with current resources
 	if (this->hud) this->hud->Update(this->resources, this->health);
 
-	ImGui::Begin("GameManager testing");
-	if (ImGui::Button("Win")) {
-		GameManager::GetInstance()->Win();
+	if (!DISABLE_IMGUI) {
+		ImGui::Begin("GameManager testing");
+		if (ImGui::Button("Win")) {
+			GameManager::GetInstance()->Win();
+		}
+		if (ImGui::Button("Loose")) {
+			GameManager::GetInstance()->Loose();
+		}
+		if (ImGui::Button("Player died")) {
+			GameManager::GetInstance()->PlayerDied();
+		}
+		ImGui::End();
 	}
-	if (ImGui::Button("Loose")) {
-		GameManager::GetInstance()->Loose();
-	}
-	if (ImGui::Button("Player died")) {
-		GameManager::GetInstance()->PlayerDied();
-	}
-	ImGui::End();
 
 	if (this->healthRegenDelayTimer < 0) {
 		this->healthFragment += Time::GetInstance().GetDeltaTime() * this->healthRegenPerSec;
@@ -303,10 +305,6 @@ void Player::PhysicsTick() {
 
 	// reset isGrounded, this gets set to true in OnCollision
 	this->isGrounded = false;
-
-			if(GetAsyncKeyState(VK_SPACE))Logger::Warn("PLAYER PRESSED JUMP!!!!!!!!!!!!!!");
-		Logger::Warn("linear velocity: ", std::to_string(this->linearVelocity.x), ", ", std::to_string(this->linearVelocity.y), ", ",
-				std::to_string(this->linearVelocity.z));
 }
 
 void Player::UpdateCamera() {
@@ -316,10 +314,13 @@ void Player::UpdateCamera() {
 		this->ShowQuitToMenuPrompt();
 	}
 
-	// Skip game input if ImGui is capturing mouse or keyboard
-	if (ImGui::GetIO().WantCaptureMouse || ImGui::GetIO().WantCaptureKeyboard) {
-		return;
+	if (!DISABLE_IMGUI) {
+		// Skip game input if ImGui is capturing mouse or keyboard
+		if (ImGui::GetIO().WantCaptureMouse || ImGui::GetIO().WantCaptureKeyboard) {
+			return;
+		}
 	}
+
 
 	if (this->keyBoardInput.ToggleCamera()) {
 		this->showCursor = !this->showCursor;
@@ -567,11 +568,11 @@ void Player::Interact() {
 
 			if (discardPressed) {
 				if (isDiscardableBuild) {
-					hitCollider->Interact(static_pointer_cast<Player>(this->GetPtr()));
+					hitCollider->Interact(std::static_pointer_cast<Player>(this->GetPtr()));
 				}
 			} else {
 				if (!isDiscardOnlyBuild) {
-					hitCollider->Interact(static_pointer_cast<Player>(this->GetPtr()));
+					hitCollider->Interact(std::static_pointer_cast<Player>(this->GetPtr()));
 				}
 			}
 			hitString = "hit";

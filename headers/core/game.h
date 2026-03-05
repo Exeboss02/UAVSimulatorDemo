@@ -15,7 +15,7 @@ public:
 	// audio manager has been moved to scene manager for better access
 
 private:
-	ImguiManager imguiManager;
+	std::unique_ptr<ImguiManager> imguiManager;
 	Renderer renderer;
 	std::unique_ptr<SceneManager> sceneManager;
 };

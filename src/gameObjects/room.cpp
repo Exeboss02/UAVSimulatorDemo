@@ -77,7 +77,7 @@ void Room::Start() {
 
 		meshobj->SetParent(this->GetPtr());
 
-		MeshObjData meshdata = AssetManager::GetInstance().GetMeshObjData("SpaceShip/room2.glb:Mesh_0");
+		MeshObjData meshdata = AssetManager::GetInstance().GetMeshObjData("SpaceShip/RoomWithPlate.glb:Mesh_0");
 
 		meshobj->SetMesh(meshdata);
 
@@ -88,7 +88,7 @@ void Room::Start() {
 
 		meshobj->SetParent(this->GetPtr());
 
-		MeshObjData meshdata = AssetManager::GetInstance().GetMeshObjData("SpaceShip/room2.glb:Mesh_4");
+		MeshObjData meshdata = AssetManager::GetInstance().GetMeshObjData("SpaceShip/RoomWithPlate.glb:Mesh_4");
 		meshobj->SetMesh(meshdata);
 
 		this->floor = meshobj;

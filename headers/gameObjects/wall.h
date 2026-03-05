@@ -27,7 +27,7 @@ public:
 
 private:
 	inline static const std::array<std::string, 3> wallMeshIdentifiers{
-		"SpaceShip/room2.glb:Mesh_3", "SpaceShip/room2.glb:Mesh_1", "SpaceShip/room2.glb:Mesh_2"};
+		"SpaceShip/RoomWithPlate.glb:Mesh_3", "SpaceShip/RoomWithPlate.glb:Mesh_1", "SpaceShip/RoomWithPlate.glb:Mesh_2"};
 
 	std::weak_ptr<BoxCollider> interactable;
 

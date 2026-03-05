@@ -26,11 +26,14 @@ SoundSourceObject::SoundSourceObject()
 		ALint sampleOffset;
 		alGetSourcei(this->sources[i], AL_SAMPLE_OFFSET, &sampleOffset);
 		this->lastSampleOffsets.push_back(sampleOffset);
+
+		ALfloat referenceDistance = 7.0f;  // Sound is full volume at 1 meter
+		ALfloat maxDistance = 150.0f;       // Sound reaches 0 volume at 150 meters
+		alSourcef(this->sources[i], AL_REFERENCE_DISTANCE, referenceDistance);
+		alSourcef(this->sources[i], AL_MAX_DISTANCE, maxDistance);
 	}
 
-	//ALint state = 0;
-	//this->GetSourceState(0, state);
-	//Logger::Log("source state: " + std::to_string(state));
+
 }
 
 SoundSourceObject::~SoundSourceObject()

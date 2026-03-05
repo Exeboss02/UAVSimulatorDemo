@@ -17,7 +17,7 @@ void Turret::Start() {
 	collider->transform.SetScale(2, 2, 2);
 	collider->transform.SetPosition(0, 0.5, 0);
 	collider->SetParent(this->GetPtr());
-	collider->SetTag(Tag::INTERACTABLE | Tag::OBJECT);
+	collider->SetTag(Tag::INTERACTABLE | Tag::OBJECT | Tag::FRIENDLY);
 	collider->SetOnInteract([&](std::shared_ptr<Player> player) { this->RemoveInteract(player); });
 	collider->SetOnHover([&] { this->HoverRemove(); });
 
@@ -30,7 +30,7 @@ void Turret::Start() {
 	SoundClip* clip = AssetManager::GetInstance().GetSoundClip("Build2.wav");
 	this->speaker.lock()->transform.SetPosition(this->transform.GetPosition()); // global position came from 0, 0, 0?
 	this->speaker.lock()->SetRandomPitch(0.8f, 1.0f);
-	this->speaker.lock()->SetGain(1.0f);
+	this->speaker.lock()->SetGain(0.7f);
 	this->speaker.lock()->Play(clip);
 
 	this->MeshObject::Start();

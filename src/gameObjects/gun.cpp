@@ -4,14 +4,18 @@
 #include "gameObjects/cameraObject.h"
 #include "gameObjects/rayVis.h"
 #include "utilities/logger.h"
+#include "utilities/time.h"
 #include <memory>
 #include <numbers>
+#include <random>
 
 Gun::Gun() {}
 
 Gun::~Gun() {}
 
 void Gun::Shoot(bool pressedTrigger, bool triggerDown) {
+
+	
 
 	switch (this->fireMode) {
 	case (FireMode::SEMIAUTOMATIC):
@@ -21,7 +25,20 @@ void Gun::Shoot(bool pressedTrigger, bool triggerDown) {
 		break;
 	case (FireMode::AUTOMATIC):
 		if (triggerDown == false) {
+			if (this->continuousFireTime > 0) {
+				this->continuousFireTime -= Time::GetInstance().GetDeltaTime() * 3.0f;
+			}  
+			
+			if (this->continuousFireTime < 0) {
+				this->continuousFireTime = 0.0f;
+			}
 			return;
+		} else {
+		
+		if (this->continuousFireTime <= this->timeToMaxBulletSpread) {
+				continuousFireTime += Time::GetInstance().GetDeltaTime();
+			}
+		
 		}
 		break;
 
@@ -32,6 +49,7 @@ void Gun::Shoot(bool pressedTrigger, bool triggerDown) {
 	if (!this->shootCoolDown.TimeIsUp()) {
 		return;
 	}
+
 	this->shootCoolDown.Reset();
 
 	SoundClip* shootClip = AssetManager::GetInstance().GetSoundClip(this->soundClipShootPath);
@@ -41,19 +59,41 @@ void Gun::Shoot(bool pressedTrigger, bool triggerDown) {
 
 	DirectX::XMVECTOR lookVec;
 	DirectX::XMVECTOR posVec;
+	std::shared_ptr<GameObject3D> muzzleLocked = this->muzzle.lock();
+
+	//bullet spread
+	switch (this->fireMode) {
+	case (FireMode::SEMIAUTOMATIC):
+		lookVec = this->muzzle.lock()->transform.GetGlobalForward();
+		break;
+	case (FireMode::AUTOMATIC): 
+	{
+		float bulletSpread = this->maxBulletSpread * (this->continuousFireTime / this->timeToMaxBulletSpread);
+		float randomP = this->GetRandomValueInRange(0, bulletSpread * 2);
+		float randomY = this->GetRandomValueInRange(0, bulletSpread * 2);
+		muzzleLocked->transform.SetRotationRPY(0, (randomP - bulletSpread) * std::numbers::pi / 180,
+											   (randomY - bulletSpread) * std::numbers::pi / 180);
+		lookVec = this->muzzle.lock()->transform.GetGlobalForward();
+		muzzleLocked->transform.SetRotationRPY(0, 0, 0);
+
+		break;
+	}
+
+	default:
+		break;
+	}
+	
 
 	if (auto parentCameraShared = this->parentCamera.lock()) {
-		lookVec = this->parentCamera.lock()->transform.GetGlobalForward();
 		posVec = this->parentCamera.lock()->transform.GetGlobalPosition();
 	} else {
-		lookVec = this->muzzle.lock()->transform.GetGlobalForward();
 		posVec = this->muzzle.lock()->transform.GetGlobalPosition();
 	}
 
 	Ray ray{Vector3D{posVec}, Vector3D{lookVec}};
 	RayCastData rayCastData;
 
-	bool didHit = PhysicsQueue::GetInstance().castRay(ray, rayCastData, ~Tag::NOIGNORE, Tag::PLAYER);
+	bool didHit = PhysicsQueue::GetInstance().castRay(ray, rayCastData, ~Tag::NOIGNORE, Tag::PLAYER | Tag::FRIENDLY);
 	std::string hitString;
 	if (didHit) {
 		auto hitCollider = rayCastData.hitColider.lock();
@@ -196,4 +236,11 @@ void Gun::VisulalizeShootBasedOnMuzzle(DirectX::XMVECTOR lookVec, DirectX::XMVEC
 	DirectX::XMFLOAT3 scale(0.01f, 0.01f, distance / 2);
 	colliderobj->transform.SetScale(DirectX::XMLoadFloat3(&scale));
 	// end of rayVis
+}
+
+float Gun::GetRandomValueInRange(float min, float max) {
+	static std::mt19937 gen(std::random_device{}());
+
+	std::uniform_real_distribution<float> dist(min, max);
+	return dist(gen);
 }

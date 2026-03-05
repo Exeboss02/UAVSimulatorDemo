@@ -60,20 +60,11 @@ void GameManager::Start() {
 
 	this->idleTimeTimer = this->idleTime;
 
-	// Master Volume
-	AudioManager::GetInstance().SetMasterMusicVolume(0.5f);
-	AudioManager::GetInstance().SetMasterSoundEffectsVolume(0.5f);
-
 	// Battle music
 	this->buildMusicWaitTimer.Initialize(5);
 	AudioManager::GetInstance().AddMusicTrackStandardFolder("LethalContact.wav", "contact");
 	AudioManager::GetInstance().LoopMusicTrack("contact", true);
 	AudioManager::GetInstance().SetGain("contact", 0.4f);
-
-	// Main menu music
-	AudioManager::GetInstance().AddMusicTrackStandardFolder("CourageDemo.wav", "courage");
-	// AudioManager::GetInstance().LoopMusicTrack("courage", true);
-	AudioManager::GetInstance().SetGain("courage", 0.4f);
 
 	DirectX::XMVECTOR offset = {};
 	offset.m128_f32[1] = -2;
@@ -81,7 +72,8 @@ void GameManager::Start() {
 	this->shipSpeaker = this->factory->CreateStaticGameObject<SoundSourceObject>();
 	this->shipSpeaker.lock()->transform.SetPosition(DirectX::XMVectorAdd(this->GetPlayerSpawnPoint(), offset));
 	SoundClip* buildMusic = AssetManager::GetInstance().GetSoundClip("GTAinBerlin.wav");
-	this->shipSpeaker.lock()->SetGain(1.0f);
+	this->shipSpeaker.lock()->SetGain(0.6f);
+	this->shipSpeaker.lock()->LoopSoundEffect(0);
 	this->shipSpeaker.lock()->Play(buildMusic);
 }
 
@@ -262,7 +254,7 @@ void GameManager::Win() {
 												"You know, AI stuff.",
 												"But, hey, you managed to escape the pirates,",
 												"so, you won?"};
-
+		
 		const float startY = -220.0f;
 		const float lineSpacing = 40.0f;
 		for (size_t index = 0; index < lines.size(); ++index) {
@@ -429,10 +421,10 @@ void GameManager::EndRound() {
 	}
 
 	if (auto player = this->player.lock()) {
-		player->resources.carbonFiber.IncrementAmount(30 + this->currentRound * 5);
 		player->resources.titanium.IncrementAmount(30 + this->currentRound * 5);
-		player->resources.circuit.IncrementAmount(30 + this->currentRound * 5);
-		player->resources.lubricant.IncrementAmount(30 + this->currentRound * 5);
+		player->resources.carbonFiber.IncrementAmount(15 + this->currentRound * 3);
+		player->resources.lubricant.IncrementAmount(10 + this->currentRound * 2);
+		player->resources.circuit.IncrementAmount(1 + this->currentRound * 0.2);
 	}
 
 	if (auto sm = this->storyManager.lock()) {
@@ -463,7 +455,8 @@ void GameManager::AudioHandling() {
 				this->isFading = true;
 				this->isPlayingCombatMusic = false;
 				this->isPlayingBuildMusic = false;
-				this->shipSpeaker.lock()->SetGain(1.0f);
+				this->shipSpeaker.lock()->SetGain(0.6f);
+					this->shipSpeaker.lock()->StopLoopingSoundEffect();
 			}
 
 			if (!this->isPlayingBuildMusic) {
@@ -473,10 +466,11 @@ void GameManager::AudioHandling() {
 					this->isPlayingBuildMusic = true;
 					this->isFading = false;
 					this->isPlayingCombatMusic = false;
-					this->shipSpeaker.lock()->SetGain(1.0f);
+					this->shipSpeaker.lock()->SetGain(0.6f);
 					this->buildMusicWaitTimer.Reset();
 
 					SoundClip* buildMusic = AssetManager::GetInstance().GetSoundClip("GTAinBerlin.wav");
+					this->shipSpeaker.lock()->LoopSoundEffect(0);
 					this->shipSpeaker.lock()->Play(buildMusic);
 				}
 			}

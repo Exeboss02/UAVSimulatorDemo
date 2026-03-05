@@ -27,7 +27,6 @@ AudioManager::AudioManager()
 
 	ALfloat listenerOrient[] = { 0.0f, 0.0f, -1.0f, 0.0f, -1.0f, 0.0f }; // Forward: Z, Up: Y
 	alListenerfv(AL_ORIENTATION, listenerOrient);
-
 }
 
 AudioManager::~AudioManager()

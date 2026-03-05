@@ -20,6 +20,11 @@ void ResourceGenerator::Start() {
 	//this->transform.SetScale(0.5f, 1.2f, 0.5f);
 	//this->transform.SetPosition(0, 1.8f, 0);
 
+	this->titanium.SetGenerationSpeed(60);
+	this->carbonFiber.SetGenerationSpeed(30);
+	this->lubricant.SetGenerationSpeed(20);
+	this->circuits.SetGenerationSpeed(0);
+
 	auto interactCollider = this->factory->CreateStaticGameObject<BoxCollider>();
 	interactCollider->SetParent(this->GetPtr());
 	// mark this collider as interactable so player raycasts can filter hits
@@ -35,7 +40,7 @@ void ResourceGenerator::Start() {
 	this->speaker.lock()->SetParent(this->GetPtr());
 	this->speaker.lock()->LoopSoundEffect(0); // 0 = loops forever
 	this->speaker.lock()->SetRandomPitch(0.8f, 1.1f);
-	this->speaker.lock()->SetGain(0.7f);
+	this->speaker.lock()->SetGain(0.25f);
 	this->speaker.lock()->Play(clip);
 
 	SoundClip* buildClip = AssetManager::GetInstance().GetSoundClip("Build2.wav");
@@ -48,18 +53,6 @@ void ResourceGenerator::Start() {
 
 	this->MeshObject::Start();
 }
-
-void ResourceGenerator::SetGenerationSpeed(float generatedPerSecond) { this->generatedPerSecond = generatedPerSecond; }
-
-size_t ResourceGenerator::GetCurrentlyGenerated() const {
-	float currentTime = Time::GetInstance().GetSessionTime();
-	size_t amountGenerated = static_cast<size_t>((currentTime - this->lastGenerated) * this->generatedPerSecond);
-	return amountGenerated;
-}
-
-ResourceType ResourceGenerator::GetResourceType() const { return this->resourceType; }
-
-void ResourceGenerator::SetResourceType(ResourceType type) { this->resourceType = type; }
 
 void ResourceGenerator::Interact(std::shared_ptr<Player> player) {
 	if (auto gameManager = GameManager::GetInstance(); gameManager && gameManager->GetInCombat()) {
@@ -84,20 +77,18 @@ void ResourceGenerator::Interact(std::shared_ptr<Player> player) {
 		return;
 	}
 
+	// player->resources.GetResource(this->resourceType).IncrementAmount(amountGenerated);
+	player->resources.GetResource(ResourceType::Titanium).IncrementAmount(this->titanium.TakeCurrentlyGenerated(this->lastGenerated));
+	player->resources.GetResource(ResourceType::CarbonFiber)
+		.IncrementAmount(this->carbonFiber.TakeCurrentlyGenerated(this->lastGenerated));
+	player->resources.GetResource(ResourceType::Circuit)
+		.IncrementAmount(this->circuits.TakeCurrentlyGenerated(this->lastGenerated));
+	player->resources.GetResource(ResourceType::Lubricant)
+		.IncrementAmount(this->lubricant.TakeCurrentlyGenerated(this->lastGenerated));
+
 	float currentTime = Time::GetInstance().GetSessionTime();
-	float amountGenerated = (currentTime - this->lastGenerated) * this->generatedPerSecond + this->change;
-
-	size_t amountGained = static_cast<size_t>(amountGenerated);
-
-	this->change = amountGenerated - amountGained;
 
 	this->lastGenerated = currentTime;
-
-	// player->resources.GetResource(this->resourceType).IncrementAmount(amountGenerated);
-	player->resources.GetResource(ResourceType::Titanium).IncrementAmount(amountGenerated);
-	player->resources.GetResource(ResourceType::CarbonFiber).IncrementAmount(amountGenerated);
-	player->resources.GetResource(ResourceType::Circuit).IncrementAmount(amountGenerated);
-	player->resources.GetResource(ResourceType::Lubricant).IncrementAmount(amountGenerated);
 
 	// hide interaction prompt for a short time so text disappears when interacting
 	auto promptWeak = this->factory->FindObjectOfType<UI::InteractionPrompt>();
@@ -127,4 +118,30 @@ void ResourceGenerator::Hover() {
 	}
 	DirectX::XMVECTOR worldPos = this->transform.GetGlobalPosition();
 	prompt->Show(txt, worldPos);
+}
+
+size_t ResourceGenerator::GeneratorElement::GetCurrentlyGenerated(float lastGenerated) const {
+	float currentTime = Time::GetInstance().GetSessionTime();
+	float timePast = currentTime - lastGenerated;
+
+	size_t amountGenerated = static_cast<size_t>((timePast) * this->speed / 60 + this->change);
+	return amountGenerated;
+}
+
+float ResourceGenerator::GeneratorElement::GetGenerationSpeed() const { 
+	return this->speed; }
+
+void ResourceGenerator::GeneratorElement::SetGenerationSpeed(float matPerMin) { this->speed = matPerMin; }
+
+size_t ResourceGenerator::GeneratorElement::TakeCurrentlyGenerated(float lastGenerated) { 
+	float currentTime = Time::GetInstance().GetSessionTime();
+	float timePast = currentTime - lastGenerated;
+
+	float amountGenerated = timePast * this->speed / 60 + this->change;
+
+	size_t amountGained = static_cast<size_t>(amountGenerated);
+
+	this->change = amountGenerated - amountGained;
+
+	return amountGained;
 }

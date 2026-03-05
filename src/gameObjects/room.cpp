@@ -38,8 +38,7 @@ void Room::CreateRoom(WallIndex wallIndex) {
 
 	if (auto storyManager = GameManager::GetInstance()->GetStoryManager().lock()) {
 		storyManager->FinishStoryCheck(StoryChecks::BuildRoom);
-	}
-	else {
+	} else {
 		std::string error = "Failed to get story manager";
 		Logger::Error(error);
 		throw std::runtime_error(error);
@@ -124,10 +123,22 @@ void Room::Start() {
 
 		meshobj->SetWAllIndex(i);
 
-		DirectX::XMVECTOR distanceVector = DirectX::XMVectorSubtract(GameManager::GetInstance()->GetPlayerSpawnPoint(),
-																	 meshobj->transform.GetGlobalPosition());
-		float distance = DirectX::XMVectorGetX(DirectX::XMVector3Length(distanceVector));
-		meshobj->SetWallCost((distance - 3), 0, 0, 0);
+		auto roomFacingWallOffset = this->GetNeighborOffset(static_cast<Room::WallIndex>(i));
+
+		auto roomPos = this->transform.GetPosition();
+
+		float neighborRoomX = roomFacingWallOffset[0] * SpaceShip::ROOM_SIZE + roomPos.m128_f32[0];
+		float neighborRoomY = roomFacingWallOffset[1] * SpaceShip::ROOM_SIZE + roomPos.m128_f32[2];
+
+		DirectX::XMVECTOR roomFacingWallPos = {neighborRoomX, neighborRoomY};
+
+		DirectX::XMVECTOR firstRoomPos = {SpaceShip::START_ROOM_X * SpaceShip::ROOM_SIZE,
+										  SpaceShip::START_ROOM_Y * SpaceShip::ROOM_SIZE};
+		DirectX::XMVECTOR distanceVector = DirectX::XMVectorSubtract(firstRoomPos, roomFacingWallPos);
+
+		float distanceSquared = DirectX::XMVectorGetX(DirectX::XMVector2Dot(distanceVector, distanceVector));
+		float distance = sqrtf(distanceSquared);
+		meshobj->SetWallCost(distance * 0.5 + distanceSquared * 0.15, 0, 0, 0);
 
 		this->walls[i] = meshobj;
 	}
@@ -143,9 +154,14 @@ void Room::Start() {
 	buildCollider->SetName("BuildCollider" + std::to_string(this->factory->GetNextID()));
 	buildCollider->SetTag(Tag::INTERACTABLE);
 	buildCollider->SetIgnoreTag(Tag::PLAYER);
-	// Maybe tweak positionW
+	buildCollider->SetOnInteract([&](std::shared_ptr<Player> player) {
+		if (this->builtObject.expired() && !GameManager::GetInstance()->GetInCombat()) {
+			this->ShowBuildMenu(player);
+		}
+	});
+	buildCollider->SetOnHover([&] { this->Hover(); });
+	buildCollider->SetTag(Tag::INTERACTABLE);
 	this->buildSlot = buildCollider;
-	this->EnableBuildSlotInteractions();
 
 	auto spotLight = this->factory->CreateGameObjectOfType<SpotlightObject>().lock();
 	spotLight->SetParent(this->GetPtr());
@@ -445,7 +461,6 @@ void Room::ShowBuildMenu(std::shared_ptr<Player> player) {
 							p->SetInputEnabled(true);
 						}
 
-
 						if (auto storyManager = GameManager::GetInstance()->GetStoryManager().lock()) {
 							storyManager->FinishStoryCheck(StoryChecks::BuiltBuildable);
 						}
@@ -542,24 +557,14 @@ void Room::EnableBuildSlotInteractions() {
 	if (this->buildSlot.expired()) return;
 	auto slot = this->buildSlot.lock();
 	if (!slot) return;
-
-	slot->SetOnInteract([&](std::shared_ptr<Player> player) {
-		if (this->builtObject.expired() && !GameManager::GetInstance()->GetInCombat()) {
-			this->ShowBuildMenu(player);
-		}
-	});
-	slot->SetOnHover([&] { this->Hover(); });
-	slot->SetTag(Tag::INTERACTABLE);
+	slot->transform.Move({0, 1000, 0});
 }
 
 void Room::DisableBuildSlotInteractions() {
 	if (this->buildSlot.expired()) return;
 	auto slot = this->buildSlot.lock();
 	if (!slot) return;
-
-	slot->SetOnHover([] {});
-	slot->SetOnInteract([](std::shared_ptr<Player>) {});
-	slot->SetTag(Tag::OBJECT);
+	slot->transform.Move({0, -1000, 0});
 }
 
 bool Room::RemoveBuiltObject() {

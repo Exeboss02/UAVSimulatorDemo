@@ -7,6 +7,7 @@
 void Mine::Start() {
 	auto collider = this->factory->CreateStaticGameObject<SphereCollider>();
 	collider->SetDynamic(false);
+	collider->SetTag(Tag::PLAYER);
 	collider->SetIgnoreTag(~Tag::ENEMY);
 	collider->SetParent(this->GetPtr());
 	collider->SetSolid(false);

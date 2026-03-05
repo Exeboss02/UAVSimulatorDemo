@@ -11,6 +11,7 @@
 #include <cstdlib>
 #include <format>
 #include <random>
+#include "core/imguiManager.h"
 
 std::weak_ptr<GameManager> GameManager::instance;
 
@@ -155,31 +156,41 @@ void GameManager::Tick() {
 	} else if (currentRound < this->rounds.size()) {
 
 		if (this->idleTimeTimer > 0) {
-			this->idleTimeTimer -= Time::GetInstance().GetDeltaTime();
+			if (!this->storyManager.expired() && !this->storyManager.lock()->GetStoryPlaying()) {
+				this->idleTimeTimer -= Time::GetInstance().GetDeltaTime();
+			}
 		} else {
 			SpawnNextRound();
 		}
 	}
 
+	if (this->storyManager.expired()) {
+		std::string error = "Story Manager expired before it should";
+		Logger::Error(error);
+		throw std::runtime_error(error);
+	}
+
 	// If not in a round currently and we haven't completed all rounds, showTime == True
-	bool showTime = !this->GetInCombat() && (this->currentRound != this->rounds.size());
+	bool showTime = !this->GetInCombat() && (this->currentRound != this->rounds.size()) && !this->storyManager.lock()->GetStoryPlaying();
 
 	// Display current round info in player hud
 	this->GetPlayer()->hud->SetRoundIndicator(this->rounds.size() - this->GetCurrentRound(), this->idleTimeTimer,
 											  showTime);
 
-	ImGui::Begin("Rounds");
-	if (this->inCombat) {
-		ImGui::Text(std::format("Enemies: {}", this->enemies.size()).c_str());
-	} else {
-		ImGui::Text(std::format("Idle time: {}", this->idleTimeTimer).c_str());
-	}
-	ImGui::Text(std::format("Current round: {}", this->currentRound).c_str());
+	if (!DISABLE_IMGUI) {
+		ImGui::Begin("Rounds");
+		if (this->inCombat) {
+			ImGui::Text(std::format("Enemies: {}", this->enemies.size()).c_str());
+		} else {
+			ImGui::Text(std::format("Idle time: {}", this->idleTimeTimer).c_str());
+		}
+		ImGui::Text(std::format("Current round: {}", this->currentRound).c_str());
 
-	if (ImGui::Button("Start next round")) {
-		SpawnNextRound();
+		if (ImGui::Button("Start next round")) {
+			SpawnNextRound();
+		}
+		ImGui::End();
 	}
-	ImGui::End();
 
 	this->AudioHandling();
 }
@@ -402,6 +413,8 @@ void GameManager::SpawnRound(size_t roundIndex) {
 	} else {
 		Logger::Error("Failed to create enemy path.");
 	}
+
+	this->GetPlayer()->hud->SetObjective("Defend against the pirate attack!");
 
 	this->unspawnedEnemies = this->rounds[roundIndex].enemyCount;
 

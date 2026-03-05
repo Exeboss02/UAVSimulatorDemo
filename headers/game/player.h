@@ -56,7 +56,7 @@ public:
 	void GunAnimation();
 
 	void SetCameraRotation(float r, float p, float y);
-	void OnCollision(std::weak_ptr<GameObject3D> gameObject3D);
+	void OnCollision(std::weak_ptr<GameObject3D> gameObject3D, std::weak_ptr<Collider> collider);
 	void OnHit(float value);
 
 	// Show or hide the OS cursor and enable UI interaction
@@ -98,7 +98,11 @@ public:
 	/// <param name="gun"></param>
 	void addGun(Guns gunType);
 
+	void SetHealthRegenDelay(float delay);
+
 private:
+	float healthRegenDelayTimer = 0;
+	float healthRegenDelay = 5;
 	float input[2] = {};
 	bool inputEnabled = true;
 	bool showCursor = true;
@@ -106,7 +110,7 @@ private:
 	Health health;
 
 	float healthFragment = 0;
-	float healthRegenPerMin = 15;
+	float healthRegenPerSec = 10;
 
 	float cameraRotation[3];
 

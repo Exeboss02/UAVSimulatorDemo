@@ -62,18 +62,24 @@ namespace
 
 ImguiManager::ImguiManager(HWND hwnd, ID3D11Device *device, ID3D11DeviceContext *immediateContext)
 {
-	this->InitalizeImgui(hwnd, device, immediateContext);
+	if (!DISABLE_IMGUI)
+		this->InitalizeImgui(hwnd, device, immediateContext);
 }
 
 ImguiManager::~ImguiManager()
 {
-	ImGui_ImplDX11_Shutdown();
-	ImGui_ImplWin32_Shutdown();
-	ImGui::DestroyContext();
+	if (!DISABLE_IMGUI) {
+		ImGui_ImplDX11_Shutdown();
+		ImGui_ImplWin32_Shutdown();
+		ImGui::DestroyContext();
+	}
+
 }
 
 void ImguiManager::InitalizeImgui(HWND hwnd, ID3D11Device *device, ID3D11DeviceContext *immediateContext)
 {
+	if (DISABLE_IMGUI) return;
+
 	// Setup Dear ImGui context
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
@@ -90,24 +96,28 @@ void ImguiManager::InitalizeImgui(HWND hwnd, ID3D11Device *device, ID3D11DeviceC
 
 void ImguiManager::ImguiAtFrameStart()
 {
-	// (Your code process and dispatch Win32 messages)
-	// Start the Dear ImGui frame
-	ImGui_ImplDX11_NewFrame();
-	ImGui_ImplWin32_NewFrame();
-	ImGui::NewFrame();
-	// ImGui::ShowDemoWindow(); // Show demo window! :)
-	this->MainMenuImGui();
-	this->WindowOptionsImGui();
-	this->ConsoleImGui();
+	if (!DISABLE_IMGUI) {
+		// (Your code process and dispatch Win32 messages)
+		// Start the Dear ImGui frame
+		ImGui_ImplDX11_NewFrame();
+		ImGui_ImplWin32_NewFrame();
+		ImGui::NewFrame();
+		// ImGui::ShowDemoWindow(); // Show demo window! :)
+		this->MainMenuImGui();
+		this->WindowOptionsImGui();
+		this->ConsoleImGui();
+	}
 }
 
 void ImguiManager::ImguiAtFrameEnd()
 {
-	// Rendering
-	// (Your code clears your framebuffer, renders your other stuff etc.)
-	ImGui::Render();
-	ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
-	// (Your code calls swapchain's Present() function)
+	if (!DISABLE_IMGUI) {
+		// Rendering
+		// (Your code clears your framebuffer, renders your other stuff etc.)
+		ImGui::Render();
+		ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
+		// (Your code calls swapchain's Present() function)
+	}
 }
 
 void ImguiManager::SetResolutionChangeCallback(std::function<void(UINT, UINT)> callback)

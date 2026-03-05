@@ -427,11 +427,15 @@ void Renderer::CreateRenderMap(RenderMap& renderMap, CameraObject& camera) {
 	}
 
 #ifdef DEBUG_TIMER
+
 	const auto finsihedRenderMap{std::chrono::steady_clock::now()};
 	const std::chrono::duration<double> elapsedSeconds{finsihedRenderMap - start};
-	ImGui::Text(("Render map creation: " + std::to_string(elapsedSeconds.count()) + " : " +
-				 std::to_string(this->visibleObjectsMainCamera.size()))
-					.c_str());
+
+	if (!DISABLE_IMGUI) {
+		ImGui::Text(("Render map creation: " + std::to_string(elapsedSeconds.count()) + " : " +
+					 std::to_string(this->visibleObjectsMainCamera.size()))
+						.c_str());
+	}
 #endif // DEBUG_TIMER
 }
 
@@ -479,8 +483,13 @@ void Renderer::CreateCheapRenderMap(CheapRenderMap& renderMap, CameraObject& cam
 #ifdef DEBUG_TIMER
 	const auto finsihedRenderMap{std::chrono::steady_clock::now()};
 	const std::chrono::duration<double> elapsedSeconds{finsihedRenderMap - start};
-	ImGui::Text(("Cheap Render map: " + std::to_string(elapsedSeconds.count()) + " : " + std::to_string(objects.size()))
-					.c_str());
+
+
+	if (!DISABLE_IMGUI) {
+		ImGui::Text(
+			("Cheap Render map: " + std::to_string(elapsedSeconds.count()) + " : " + std::to_string(objects.size()))
+				.c_str());
+	}
 #endif // DEBUG_TIMER
 }
 
@@ -508,7 +517,11 @@ void Renderer::CreateSpotlightRenderMap(CheapRenderMap& renderMap, CameraObject&
 #ifdef DEBUG_TIMER
 	const auto finsihedRenderMap{std::chrono::steady_clock::now()};
 	const std::chrono::duration<double> elapsedSeconds{finsihedRenderMap - start};
-	ImGui::Text(("Spotlight Render map: " + std::to_string(elapsedSeconds.count())).c_str());
+
+
+	if (!DISABLE_IMGUI) {
+		ImGui::Text(("Spotlight Render map: " + std::to_string(elapsedSeconds.count())).c_str());
+	}
 #endif // DEBUG_TIMER
 }
 
@@ -564,9 +577,13 @@ size_t Renderer::FillRenderMap(RenderMap& renderMap, CameraObject& camera) {
 #ifdef DEBUG_TIMER
 	const auto finsihedRenderMap{std::chrono::steady_clock::now()};
 	const std::chrono::duration<double> elapsedSeconds{finsihedRenderMap - start};
-	ImGui::Text(
-		("Render map fill: " + std::to_string(elapsedSeconds.count()) + " : " + std::to_string(renderQueue.size()))
-			.c_str());
+
+
+	if (!DISABLE_IMGUI) {
+		ImGui::Text(
+			("Render map fill: " + std::to_string(elapsedSeconds.count()) + " : " + std::to_string(renderQueue.size()))
+				.c_str());
+	}
 #endif // DEBUG_TIMER
 
 	return renderQueue.size();
@@ -609,8 +626,13 @@ void Renderer::LoadShaders() {
 }
 
 void Renderer::Render() {
+	//SetCursor(LoadCursor(NULL, IDC_ARROW));
+
 #ifdef DEBUG_TIMER
-	ImGui::Begin("Timer");
+	if (!DISABLE_IMGUI) {
+		ImGui::Begin("Timer");
+	}
+
 	const auto start{std::chrono::steady_clock::now()};
 #endif // DEBUG_TIMER
 
@@ -630,7 +652,11 @@ void Renderer::Render() {
 #ifdef DEBUG_TIMER
 	const auto afterShadow{std::chrono::steady_clock::now()};
 	const std::chrono::duration<double> elapsed_seconds{afterShadow - beforeShadow};
-	ImGui::Text(("Shadow pass: " + std::to_string(elapsed_seconds.count())).c_str());
+	if (!DISABLE_IMGUI) {
+		ImGui::Text(("Shadow pass: " + std::to_string(elapsed_seconds.count())).c_str());
+
+	}
+
 #endif // DEBUG_TIMER
 
 	RenderPass();
@@ -638,7 +664,12 @@ void Renderer::Render() {
 #ifdef DEBUG_TIMER
 	const auto afterRenderPass{std::chrono::steady_clock::now()};
 	const std::chrono::duration<double> elapsed_seconds2{afterRenderPass - afterShadow};
-	ImGui::Text(("Entire renderpass function: " + std::to_string(elapsed_seconds2.count())).c_str());
+
+	if (!DISABLE_IMGUI) {
+		ImGui::Text(("Entire renderpass function: " + std::to_string(elapsed_seconds2.count())).c_str());
+
+	}
+
 #endif // DEBUG_TIMER
 
 	// Unbinding shadowmaps to allow input on them again
@@ -651,8 +682,12 @@ void Renderer::Render() {
 #ifdef DEBUG_TIMER
 	const auto afterRender{std::chrono::steady_clock::now()};
 	const std::chrono::duration<double> elapsed_seconds3{afterRender - start};
-	ImGui::Text(("Entire Render function: " + std::to_string(elapsed_seconds3.count())).c_str());
-	ImGui::End();
+
+	if (!DISABLE_IMGUI) {
+		ImGui::Text(("Entire Render function: " + std::to_string(elapsed_seconds3.count())).c_str());
+		ImGui::End();
+	}
+
 #endif // DEBUG_TIMER
 
 	this->renderQueue.recalculateDynamic = false;
@@ -724,7 +759,11 @@ void Renderer::RenderPass() {
 #ifdef DEBUG_TIMER
 	const auto afterBinds{std::chrono::steady_clock::now()};
 	const std::chrono::duration<double> elapsed_seconds{afterBinds - start};
-	ImGui::Text(("Render pass setup: " + std::to_string(elapsed_seconds.count())).c_str());
+
+	if (!DISABLE_IMGUI) {
+		ImGui::Text(("Render pass setup: " + std::to_string(elapsed_seconds.count())).c_str());
+	}
+
 
 	const auto startColorPass{std::chrono::steady_clock::now()};
 #endif // DEBUG_TIMER
@@ -734,7 +773,11 @@ void Renderer::RenderPass() {
 #ifdef DEBUG_TIMER
 	const auto endColorPass{std::chrono::steady_clock::now()};
 	const std::chrono::duration<double> elapsedSeconds{endColorPass - startColorPass};
-	ImGui::Text(("Color pass: " + std::to_string(elapsedSeconds.count())).c_str());
+
+	if (!DISABLE_IMGUI) {
+		ImGui::Text(("Color pass: " + std::to_string(elapsedSeconds.count())).c_str());
+	}
+
 #endif // DEBUG_TIMER
 
 	// Render UI in a separate pass
@@ -882,10 +925,13 @@ void Renderer::RenderUI() {
 	this->immediateContext->OMSetBlendState(nullptr, nullptr, 0xffffffff);
 	this->BindRasterizerState(this->standardRasterizerState.get());
 
-#ifdef DEBUG_TIMER
+#ifdef DEBUG_TIMER		
 	const auto endUIPass{std::chrono::steady_clock::now()};
 	const std::chrono::duration<double> elapsedSeconds2{endUIPass - startUIPass};
-	ImGui::Text(("UI pass: " + std::to_string(elapsedSeconds2.count())).c_str());
+
+	if (!DISABLE_IMGUI) {
+		ImGui::Text(("UI pass: " + std::to_string(elapsedSeconds2.count())).c_str());
+	}
 #endif // DEBUG_TIMER
 }
 
@@ -897,6 +943,9 @@ void Renderer::ShadowPass() {
 		this->currentVertexShader = this->vertexShader.get();
 	}
 	this->GetContext()->PSSetShader(nullptr, nullptr, 0);
+
+	// Make sure that depth stencil state from ui pass isn't left over from last frame
+	this->immediateContext->OMSetDepthStencilState(this->depthBuffer->GetDepthStencilState(), 1);
 
 	this->SpotLightShadowPass();
 	this->PointLightShadowPass();

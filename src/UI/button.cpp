@@ -144,81 +144,82 @@ void UI::Button::ShowInHierarchy() {
 	// Show generic widget options first
 	Widget::ShowInHierarchy();
 
-	ImGui::Separator();
-	ImGui::Text("Button settings:");
-
-	// Label
-	char buf[128];
-	std::string cur = this->label;
-	std::strncpy(buf, cur.c_str(), sizeof(buf));
-	if (ImGui::InputText("Label", buf, sizeof(buf))) {
-		this->label = std::string(buf);
-		this->SetName(this->label);
-	}
-
-	float labelSize = this->GetLabelFontSize();
-	if (ImGui::DragFloat("Label Font Size", &labelSize, 0.1f, 6.0f, 128.0f, "%.1f")) {
-		this->SetLabelFontSize(labelSize);
-	}
-
-	// Interaction readouts
-	ImGui::Text("Hovered: %s", this->hovered ? "true" : "false");
-	ImGui::Text("Pressed: %s", this->pressed ? "true" : "false");
-
-	// Color
-	float col[4] = {this->color.x, this->color.y, this->color.z, this->color.w};
-	if (ImGui::ColorEdit4("Color", col)) {
-		this->color.x = col[0];
-		this->color.y = col[1];
-		this->color.z = col[2];
-		this->color.w = col[3];
-
-		// Keep material in sync if assigned
-		if (this->material) {
-			this->material->color[0] = this->color.x;
-			this->material->color[1] = this->color.y;
-			this->material->color[2] = this->color.z;
-			this->material->color[3] = this->color.w;
+	if (!DISABLE_IMGUI) {
+		ImGui::Separator();
+		ImGui::Text("Button settings:");
+		// Label
+		char buf[128];
+		std::string cur = this->label;
+		std::strncpy(buf, cur.c_str(), sizeof(buf));
+		if (ImGui::InputText("Label", buf, sizeof(buf))) {
+			this->label = std::string(buf);
+			this->SetName(this->label);
 		}
-	}
 
-	ImGui::Separator();
+		float labelSize = this->GetLabelFontSize();
+		if (ImGui::DragFloat("Label Font Size", &labelSize, 0.1f, 6.0f, 128.0f, "%.1f")) {
+			this->SetLabelFontSize(labelSize);
+		}
 
-	// Event IDs (editable in the editor). Use 0 for none.
-	int clickId = this->onClickEventID;
-	if (ImGui::InputInt("OnClick Event ID", &clickId)) {
-		SetOnClickEventID_Wire(clickId);
-	}
+		// Interaction readouts
+		ImGui::Text("Hovered: %s", this->hovered ? "true" : "false");
+		ImGui::Text("Pressed: %s", this->pressed ? "true" : "false");
 
-	int pressedId = this->onPressedEventID;
-	if (ImGui::InputInt("OnPressed Event ID", &pressedId)) {
-		SetOnPressedEventID_Wire(pressedId);
-	}
+		// Color
+		float col[4] = {this->color.x, this->color.y, this->color.z, this->color.w};
+		if (ImGui::ColorEdit4("Color", col)) {
+			this->color.x = col[0];
+			this->color.y = col[1];
+			this->color.z = col[2];
+			this->color.w = col[3];
 
-	int releasedId = this->onReleasedEventID;
-	if (ImGui::InputInt("OnReleased Event ID", &releasedId)) {
-		SetOnReleasedEventID_Wire(releasedId);
-	}
+			// Keep material in sync if assigned
+			if (this->material) {
+				this->material->color[0] = this->color.x;
+				this->material->color[1] = this->color.y;
+				this->material->color[2] = this->color.z;
+				this->material->color[3] = this->color.w;
+			}
+		}
 
-	int hoverId = this->onHoverEventID;
-	if (ImGui::InputInt("OnHover Event ID", &hoverId)) {
-		SetOnHoverEventID_Wire(hoverId);
-	}
+		ImGui::Separator();
 
-	ImGui::Separator();
-	// Alignment controls
-	ImGui::Text("Label alignment:");
-	// Horizontal
-	const char* hItems[] = {"Left", "Center", "Right"};
-	int hCur = static_cast<int>(this->GetHorizontalAlign());
-	if (ImGui::Combo("Horizontal", &hCur, hItems, IM_ARRAYSIZE(hItems))) {
-		this->SetHorizontalAlign(static_cast<Button::HorizontalAlign>(hCur));
-	}
-	// Vertical
-	const char* vItems[] = {"Top", "Middle", "Bottom"};
-	int vCur = static_cast<int>(this->GetVerticalAlign());
-	if (ImGui::Combo("Vertical", &vCur, vItems, IM_ARRAYSIZE(vItems))) {
-		this->SetVerticalAlign(static_cast<Button::VerticalAlign>(vCur));
+		// Event IDs (editable in the editor). Use 0 for none.
+		int clickId = this->onClickEventID;
+		if (ImGui::InputInt("OnClick Event ID", &clickId)) {
+			SetOnClickEventID_Wire(clickId);
+		}
+
+		int pressedId = this->onPressedEventID;
+		if (ImGui::InputInt("OnPressed Event ID", &pressedId)) {
+			SetOnPressedEventID_Wire(pressedId);
+		}
+
+		int releasedId = this->onReleasedEventID;
+		if (ImGui::InputInt("OnReleased Event ID", &releasedId)) {
+			SetOnReleasedEventID_Wire(releasedId);
+		}
+
+		int hoverId = this->onHoverEventID;
+		if (ImGui::InputInt("OnHover Event ID", &hoverId)) {
+			SetOnHoverEventID_Wire(hoverId);
+		}
+
+		ImGui::Separator();
+		// Alignment controls
+		ImGui::Text("Label alignment:");
+		// Horizontal
+		const char* hItems[] = {"Left", "Center", "Right"};
+		int hCur = static_cast<int>(this->GetHorizontalAlign());
+		if (ImGui::Combo("Horizontal", &hCur, hItems, IM_ARRAYSIZE(hItems))) {
+			this->SetHorizontalAlign(static_cast<Button::HorizontalAlign>(hCur));
+		}
+		// Vertical
+		const char* vItems[] = {"Top", "Middle", "Bottom"};
+		int vCur = static_cast<int>(this->GetVerticalAlign());
+		if (ImGui::Combo("Vertical", &vCur, vItems, IM_ARRAYSIZE(vItems))) {
+			this->SetVerticalAlign(static_cast<Button::VerticalAlign>(vCur));
+		}
 	}
 }
 

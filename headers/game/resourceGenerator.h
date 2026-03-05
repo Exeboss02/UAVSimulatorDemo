@@ -10,19 +10,26 @@ class Text;
 }
 
 class ResourceGenerator : public MeshObject {
+	class GeneratorElement {
+	public:
+		size_t GetCurrentlyGenerated(float lastGenerated) const;
+		float GetGenerationSpeed() const;
+		void SetGenerationSpeed(float matPerMin);
+		size_t TakeCurrentlyGenerated(float lastGenerated);
+
+	private:
+		float change = 0;
+		float speed = 2;
+	};
 public:
 	void Start() override;
 
-	void SetGenerationSpeed(float generatedPerSecond);
-
-	size_t GetCurrentlyGenerated() const;
-
-	ResourceType GetResourceType() const;
-
-	void SetResourceType(ResourceType type);
+	GeneratorElement titanium;
+	GeneratorElement carbonFiber;
+	GeneratorElement lubricant;
+	GeneratorElement circuits;
 
 private:
-	ResourceType resourceType = ResourceType::Titanium;
 
 	void Interact(std::shared_ptr<Player> player);
 	void Hover();
@@ -30,11 +37,10 @@ private:
 	// time until Hover() is allowed to show prompt again (session time)
 	float hoverDisabledUntil = 0.0f;
 
-	float generatedPerSecond = 1;
-
 	std::weak_ptr<SphereCollider> interactCollider;
 
 	float change = 0;
 
 	std::weak_ptr<SoundSourceObject> speaker;
+
 };

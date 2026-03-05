@@ -254,7 +254,7 @@ void GameManager::Win() {
 												"You know, AI stuff.",
 												"But, hey, you managed to escape the pirates,",
 												"so, you won?"};
-
+		
 		const float startY = -220.0f;
 		const float lineSpacing = 40.0f;
 		for (size_t index = 0; index < lines.size(); ++index) {
@@ -444,10 +444,10 @@ void GameManager::EndRound() {
 	}
 
 	if (auto player = this->player.lock()) {
-		player->resources.carbonFiber.IncrementAmount(30 + this->currentRound * 5);
 		player->resources.titanium.IncrementAmount(30 + this->currentRound * 5);
-		player->resources.circuit.IncrementAmount(30 + this->currentRound * 5);
-		player->resources.lubricant.IncrementAmount(30 + this->currentRound * 5);
+		player->resources.carbonFiber.IncrementAmount(15 + this->currentRound * 3);
+		player->resources.lubricant.IncrementAmount(10 + this->currentRound * 2);
+		player->resources.circuit.IncrementAmount(1 + this->currentRound * 0.2);
 	}
 
 	if (auto sm = this->storyManager.lock()) {

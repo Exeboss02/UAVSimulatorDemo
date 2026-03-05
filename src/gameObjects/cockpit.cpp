@@ -17,10 +17,10 @@ void Cockpit::Start() {
 	coreCollider->SetTag(Tag::PLAYER);
 
 	auto coreMesh = this->factory->CreateStaticGameObject<MeshObject>();
+	coreMesh->SetMesh(AssetManager::GetInstance().GetMeshObjData("meshes/core.glb:Mesh_0"));
 	coreMesh->SetParent(this->GetPtr());
 	coreMesh->transform.SetPosition(0, 2, 0);
 	coreMesh->transform.SetScale(1, 1.2f, 1);
-	coreMesh->SetMesh(AssetManager::GetInstance().GetMeshObjData("meshes/core.glb:Mesh_0"));
 
 	// Update core health on hud
 	GameManager::GetInstance()->GetPlayer()->hud->SetCoreHealthText(this->health.Get());
@@ -32,21 +32,21 @@ void Cockpit::Start() {
 			Logger::Log("Core Died");
 
 			// create tempspeaker
-			// SoundClip* deathClip = AssetManager::GetInstance().GetSoundClip("BigExplosion2.wav");
-			// std::weak_ptr<SoundSourceObject> deathSpeaker = this->factory->CreateStaticGameObject<SoundSourceObject>();
-			// deathSpeaker.lock()->SetDeleteWhenFinnished(true);
-			// deathSpeaker.lock()->transform.SetPosition(this->transform.GetGlobalPosition());
-			// deathSpeaker.lock()->Play(deathClip);
-			// GameManager::GetInstance()->Loose();
+			SoundClip* deathClip = AssetManager::GetInstance().GetSoundClip("BigExplosion2.wav");
+			std::weak_ptr<SoundSourceObject> deathSpeaker = this->factory->CreateStaticGameObject<SoundSourceObject>();
+			deathSpeaker.lock()->SetDeleteWhenFinnished(true);
+			deathSpeaker.lock()->transform.SetPosition(this->transform.GetGlobalPosition());
+			deathSpeaker.lock()->Play(deathClip);
+			GameManager::GetInstance()->Loose();
 		}
 
 		// Update core health on hud
 		GameManager::GetInstance()->GetPlayer()->hud->SetCoreHealthText(this->health.Get());
 
-		// SoundClip* damageClip = AssetManager::GetInstance().GetSoundClip("SmallExplotion.wav");
-		// this->speaker.lock()->SetDeleteWhenFinnished(true);
-		// this->speaker.lock()->transform.SetPosition(this->transform.GetGlobalPosition());
-		// this->speaker.lock()->Play(damageClip);
+		SoundClip* damageClip = AssetManager::GetInstance().GetSoundClip("SmallExplotion.wav");
+		this->speaker.lock()->SetDeleteWhenFinnished(true);
+		this->speaker.lock()->transform.SetPosition(this->transform.GetGlobalPosition());
+		this->speaker.lock()->Play(damageClip);
 	});
 
 	coreCollider->transform.SetPosition(0, 2, 0);
@@ -90,9 +90,9 @@ void Cockpit::Start() {
 
 	auto spotLight = this->factory->CreateGameObjectOfType<SpotlightObject>().lock();
 	spotLight->SetParent(this->GetPtr());
-	spotLight->transform.SetPosition({0, 4.5, 0});
+	spotLight->transform.SetPosition({0, 4.5, 2});
 	spotLight->transform.SetRotationRPY(0, std::numbers::pi / 2, 0);
-	spotLight->SetAngle(120.);
+	spotLight->SetAngle(140.);
 	spotLight->SetIntensity(30.0f);
 
 

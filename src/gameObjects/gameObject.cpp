@@ -112,42 +112,47 @@ void GameObject::SaveToJson(nlohmann::json& data) {
 }
 
 void GameObject::ShowInHierarchy() { 
-	ImGui::InputText("Name", this->imguiName, sizeof(this->imguiName));
+	if (!DISABLE_IMGUI) {
+		ImGui::InputText("Name", this->imguiName, sizeof(this->imguiName));
 
-	ImGui::SameLine();
+		ImGui::SameLine();
 
-	if (ImGui::Button("Apply")) {
-		this->name = this->imguiName; 
-	}
-
-	ImGui::Separator();
-	ImGui::Text("Object details.");
-
-	ImGui::Text(std::format("Static: {}", this->GetIsStatic() ? "true" : "false").c_str());
-
-	if (ImGui::Checkbox("Is Active", &this->imguiIsActive)) {
-		SetActive(this->imguiIsActive);
-	}
-
-	if (ImGui::Button("Delete")) {
-		this->factory->QueueDeleteGameObject(this->GetPtr());
-	}
-
-	ImGui::SameLine();
-	if (this->factory->GetSelected().expired()) {
-		if (ImGui::Button("Select")) {
-			std::weak_ptr<GameObject> me = this->GetPtr();
-			this->factory->SetSelected(me);
+		if (ImGui::Button("Apply")) {
+			this->name = this->imguiName;
 		}
-	} else if (this->factory->GetSelected().lock().get() != this->GetPtr().get()) {
-		if (ImGui::Button("Reparent selected")) {
-			this->factory->GetSelected().lock()->SetParent(this->GetPtr());
-			std::weak_ptr<GameObject> emptyObj = std::make_shared<GameObject>();
-			this->factory->SetSelected(emptyObj);
+
+		ImGui::Separator();
+		ImGui::Text("Object details.");
+
+		ImGui::Text(std::format("Static: {}", this->GetIsStatic() ? "true" : "false").c_str());
+
+		if (ImGui::Checkbox("Is Active", &this->imguiIsActive)) {
+			SetActive(this->imguiIsActive);
 		}
-	} else {
-		ImGui::Text("Selected");
+
+		if (ImGui::Button("Delete")) {
+			this->factory->QueueDeleteGameObject(this->GetPtr());
+		}
+
+		ImGui::SameLine();
+		if (this->factory->GetSelected().expired()) {
+			if (ImGui::Button("Select")) {
+				std::weak_ptr<GameObject> me = this->GetPtr();
+				this->factory->SetSelected(me);
+			}
+		} else if (this->factory->GetSelected().lock().get() != this->GetPtr().get()) {
+			if (ImGui::Button("Reparent selected")) {
+				this->factory->GetSelected().lock()->SetParent(this->GetPtr());
+				std::weak_ptr<GameObject> emptyObj = std::make_shared<GameObject>();
+				this->factory->SetSelected(emptyObj);
+			}
+		} else {
+			ImGui::Text("Selected");
+		}
 	}
+
+
+	
 }
 
 void GameObject::SetName(std::string newName) 

@@ -10,7 +10,7 @@ void Mine::Start() {
 	collider->SetIgnoreTag(~Tag::ENEMY);
 	collider->SetParent(this->GetPtr());
 	collider->SetSolid(false);
-	collider->SetOnCollision([&](std::weak_ptr<GameObject> trigger) { this->OnExplode(); });
+	collider->SetOnCollision([&](std::weak_ptr<GameObject> trigger, std::weak_ptr<Collider> collider) { this->OnExplode(); });
 
 	collider->transform.SetScale(5, 5, 5);
 

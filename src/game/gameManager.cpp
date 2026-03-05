@@ -11,13 +11,11 @@
 #include <cstdlib>
 #include <format>
 #include <random>
+#include "core/imguiManager.h"
 
 std::weak_ptr<GameManager> GameManager::instance;
 
-GameManager::~GameManager()
-{
-	this->shipSpeaker.lock()->Stop();
-}
+GameManager::~GameManager() { this->shipSpeaker.lock()->Stop(); }
 
 GameManager::GameManager()
 	: playerSpawnPoint(DirectX::XMVectorSet(140.0, 5.0, -23.0f, 0.0)), currentRound(0), inCombat(false),
@@ -62,20 +60,11 @@ void GameManager::Start() {
 
 	this->idleTimeTimer = this->idleTime;
 
-	// Master Volume
-	AudioManager::GetInstance().SetMasterMusicVolume(0.5f);
-	AudioManager::GetInstance().SetMasterSoundEffectsVolume(0.5f);
-
 	// Battle music
 	this->buildMusicWaitTimer.Initialize(5);
 	AudioManager::GetInstance().AddMusicTrackStandardFolder("LethalContact.wav", "contact");
 	AudioManager::GetInstance().LoopMusicTrack("contact", true);
 	AudioManager::GetInstance().SetGain("contact", 0.4f);
-
-	// Main menu music
-	AudioManager::GetInstance().AddMusicTrackStandardFolder("CourageDemo.wav", "courage");
-	// AudioManager::GetInstance().LoopMusicTrack("courage", true);
-	AudioManager::GetInstance().SetGain("courage", 0.4f);
 
 	DirectX::XMVECTOR offset = {};
 	offset.m128_f32[1] = -2;
@@ -83,7 +72,8 @@ void GameManager::Start() {
 	this->shipSpeaker = this->factory->CreateStaticGameObject<SoundSourceObject>();
 	this->shipSpeaker.lock()->transform.SetPosition(DirectX::XMVectorAdd(this->GetPlayerSpawnPoint(), offset));
 	SoundClip* buildMusic = AssetManager::GetInstance().GetSoundClip("GTAinBerlin.wav");
-	this->shipSpeaker.lock()->SetGain(1.0f);
+	this->shipSpeaker.lock()->SetGain(0.6f);
+	this->shipSpeaker.lock()->LoopSoundEffect(0);
 	this->shipSpeaker.lock()->Play(buildMusic);
 }
 
@@ -158,23 +148,41 @@ void GameManager::Tick() {
 	} else if (currentRound < this->rounds.size()) {
 
 		if (this->idleTimeTimer > 0) {
-			this->idleTimeTimer -= Time::GetInstance().GetDeltaTime();
+			if (!this->storyManager.expired() && !this->storyManager.lock()->GetStoryPlaying()) {
+				this->idleTimeTimer -= Time::GetInstance().GetDeltaTime();
+			}
 		} else {
 			SpawnNextRound();
 		}
 	}
 
-	ImGui::Begin("Rounds");
-	if (this->inCombat) {
-		ImGui::Text(std::format("Enemies: {}", this->enemies.size()).c_str());
-	} else {
-		ImGui::Text(std::format("Idle time: {}", this->idleTimeTimer).c_str());
+	if (this->storyManager.expired()) {
+		std::string error = "Story Manager expired before it should";
+		Logger::Error(error);
+		throw std::runtime_error(error);
 	}
-	ImGui::Text(std::format("Current round: {}", this->currentRound).c_str());
-	if (ImGui::Button("Start next round")) {
-		SpawnNextRound();
+
+	// If not in a round currently and we haven't completed all rounds, showTime == True
+	bool showTime = !this->GetInCombat() && (this->currentRound != this->rounds.size()) && !this->storyManager.lock()->GetStoryPlaying();
+
+	// Display current round info in player hud
+	this->GetPlayer()->hud->SetRoundIndicator(this->rounds.size() - this->GetCurrentRound(), this->idleTimeTimer,
+											  showTime);
+
+	if (!DISABLE_IMGUI) {
+		ImGui::Begin("Rounds");
+		if (this->inCombat) {
+			ImGui::Text(std::format("Enemies: {}", this->enemies.size()).c_str());
+		} else {
+			ImGui::Text(std::format("Idle time: {}", this->idleTimeTimer).c_str());
+		}
+		ImGui::Text(std::format("Current round: {}", this->currentRound).c_str());
+
+		if (ImGui::Button("Start next round")) {
+			SpawnNextRound();
+		}
+		ImGui::End();
 	}
-	ImGui::End();
 
 	this->AudioHandling();
 }
@@ -228,27 +236,6 @@ void GameManager::Win() {
 		}
 	} catch (...) {
 	}
-
-	// Full-screen opaque black background
-	//{
-	//	auto bgWeak = this->factory->CreateGameObjectOfType<UI::Image>();
-	//	if (!bgWeak.expired()) {
-	//		auto bg = bgWeak.lock();
-	//		bg->SetName("Win_Background");
-	//		bg->SetImage("assets/images/test.png");
-	//		bg->SetAnchor(UI::Anchor::TopLeft);
-	//		bg->SetSize(UI::Vec2{canvasWidth, canvasHeight});
-	//		bg->SetPosition(UI::Vec2{0.0f, 0.0f});
-	//		bg->SetTint(DirectX::XMFLOAT4{0.0f, 0.0f, 0.0f, 1.0f});
-	//		bg->SetVisible(true);
-	//		bg->SetZIndex(100);
-	//		std::weak_ptr<GameObject> me = canvasShared->GetPtr();
-	//		bg->SetParent(me);
-	//		canvasShared->AddChild(std::static_pointer_cast<UI::Widget>(bg));
-	//		RenderQueue::AddUIWidget(bg);
-	//		this->winBackground = bg;
-	//	}
-	//}
 
 	this->winTitle.reset();
 
@@ -339,7 +326,7 @@ void GameManager::Loose() {
 
 	this->factory->QueueLoadScene((FilepathHolder::GetAssetsDirectory() / "scenes/MainMenu.scene").string());
 	ShowCursor(true);
-	//this->ReloadScene();
+	// this->ReloadScene();
 }
 
 void GameManager::SpawnNextRound() { this->SpawnRound(this->currentRound); }
@@ -395,6 +382,8 @@ void GameManager::SpawnRound(size_t roundIndex) {
 	} else {
 		Logger::Error("Failed to create enemy path.");
 	}
+
+	this->GetPlayer()->hud->SetObjective("Defend against the pirate attack!");
 
 	this->unspawnedEnemies = this->rounds[roundIndex].enemyCount;
 
@@ -466,7 +455,8 @@ void GameManager::AudioHandling() {
 				this->isFading = true;
 				this->isPlayingCombatMusic = false;
 				this->isPlayingBuildMusic = false;
-				this->shipSpeaker.lock()->SetGain(1.0f);
+				this->shipSpeaker.lock()->SetGain(0.6f);
+					this->shipSpeaker.lock()->StopLoopingSoundEffect();
 			}
 
 			if (!this->isPlayingBuildMusic) {
@@ -476,10 +466,11 @@ void GameManager::AudioHandling() {
 					this->isPlayingBuildMusic = true;
 					this->isFading = false;
 					this->isPlayingCombatMusic = false;
-					this->shipSpeaker.lock()->SetGain(1.0f);
+					this->shipSpeaker.lock()->SetGain(0.6f);
 					this->buildMusicWaitTimer.Reset();
 
 					SoundClip* buildMusic = AssetManager::GetInstance().GetSoundClip("GTAinBerlin.wav");
+					this->shipSpeaker.lock()->LoopSoundEffect(0);
 					this->shipSpeaker.lock()->Play(buildMusic);
 				}
 			}

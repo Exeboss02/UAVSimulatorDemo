@@ -108,14 +108,14 @@ void Player::Start() {
 		colliderobj->transform.SetScale(DirectX::XMLoadFloat3(&scale));
 		colliderobj->SetParent(this->GetPtr());
 		colliderobj->SetTag(Tag::PLAYER);
-		// colliderobj->SetIgnoreTag(~Tag::FLOOR);
-		colliderobj->SetName("PlayerCollider " + std::to_string(this->factory->GetNextID()));
+		colliderobj->SetIgnoreTag(~Tag::FLOOR);
+		colliderobj->SetName("GroundCheck " + std::to_string(this->factory->GetNextID()));
 	}
 
-	std::function<void(std::weak_ptr<GameObject3D>)> function = [&](std::weak_ptr<GameObject3D> gameObject3D) {
-		this->OnCollision(gameObject3D);
+	std::function<void(std::weak_ptr<GameObject3D>, std::weak_ptr<Collider>)> function = [&](std::weak_ptr<GameObject3D> gameObject3D, std::weak_ptr<Collider> collider) {
+		this->OnCollision(gameObject3D, collider);
 
-		if (auto mine = dynamic_pointer_cast<Mine>(gameObject3D.lock())) {
+		if (auto mine = std::dynamic_pointer_cast<Mine>(gameObject3D.lock())) {
 			Logger::Log("Hit Mine");
 		}
 	};
@@ -232,19 +232,25 @@ void Player::Tick() {
 	// Update HUD with current resources
 	if (this->hud) this->hud->Update(this->resources, this->health);
 
-	ImGui::Begin("GameManager testing");
-	if (ImGui::Button("Win")) {
-		GameManager::GetInstance()->Win();
+	if (!DISABLE_IMGUI) {
+		ImGui::Begin("GameManager testing");
+		if (ImGui::Button("Win")) {
+			GameManager::GetInstance()->Win();
+		}
+		if (ImGui::Button("Loose")) {
+			GameManager::GetInstance()->Loose();
+		}
+		if (ImGui::Button("Player died")) {
+			GameManager::GetInstance()->PlayerDied();
+		}
+		ImGui::End();
 	}
-	if (ImGui::Button("Loose")) {
-		GameManager::GetInstance()->Loose();
-	}
-	if (ImGui::Button("Player died")) {
-		GameManager::GetInstance()->PlayerDied();
-	}
-	ImGui::End();
 
-	this->healthFragment += Time::GetInstance().GetDeltaTime() * this->healthRegenPerMin / 60;
+	if (this->healthRegenDelayTimer < 0) {
+		this->healthFragment += Time::GetInstance().GetDeltaTime() * this->healthRegenPerSec;
+	} else {
+		this->healthRegenDelayTimer -= Time::GetInstance().GetDeltaTime();
+	}
 
 	if (this->healthFragment > 1) {
 		int generatedHealth = this->healthFragment;
@@ -256,9 +262,6 @@ void Player::Tick() {
 void Player::PhysicsTick() {
 	float fixedDeltaTime = Time::GetInstance().GetFixedDeltaTime();
 
-	// Logger::Log(std::to_string(this->linearVelocity.x), ", ", std::to_string(this->linearVelocity.y), ", ",
-	//			std::to_string(this->linearVelocity.z));
-
 	std::shared_ptr<CameraObject> cam = this->camera.lock();
 
 	if (!cam) {
@@ -268,9 +271,6 @@ void Player::PhysicsTick() {
 
 	this->linearVelocity.x = 0;
 	this->linearVelocity.z = 0;
-	if (this->isGrounded) {
-		this->linearVelocity.y = 0;
-	}
 
 	this->moveVector = {};
 	this->moveVector = DirectX::XMVectorAdd(
@@ -314,10 +314,13 @@ void Player::UpdateCamera() {
 		this->ShowQuitToMenuPrompt();
 	}
 
-	// Skip game input if ImGui is capturing mouse or keyboard
-	if (ImGui::GetIO().WantCaptureMouse || ImGui::GetIO().WantCaptureKeyboard) {
-		return;
+	if (!DISABLE_IMGUI) {
+		// Skip game input if ImGui is capturing mouse or keyboard
+		if (ImGui::GetIO().WantCaptureMouse || ImGui::GetIO().WantCaptureKeyboard) {
+			return;
+		}
 	}
+
 
 	if (this->keyBoardInput.ToggleCamera()) {
 		this->showCursor = !this->showCursor;
@@ -413,7 +416,7 @@ void Player::SetInputEnabled(bool enabled) {
 	}
 }
 
-void Player::SetHealthRegen(float healthPerMin) { this->healthRegenPerMin = healthPerMin; }
+void Player::SetHealthRegen(float healthPerMin) { this->healthRegenPerSec = healthPerMin; }
 
 void Player::ShowQuitToMenuPrompt() {
 	if (this->hud) {
@@ -451,13 +454,10 @@ void Player::IncrementHealth(int hp) { this->health.Increment(hp); }
 
 int Player::GetHealth() const { return this->health.Get(); }
 
-void Player::OnCollision(std::weak_ptr<GameObject3D> gameObject3D) {
-	if (gameObject3D.expired()) return;
+void Player::OnCollision(std::weak_ptr<GameObject3D> gameObject3D, std::weak_ptr<Collider> collider) {
+	if (gameObject3D.expired() && collider.expired()) return;
 
-	std::string name = gameObject3D.lock()->GetName();
-	std::shared_ptr<SpaceShip> spaceShip = std::dynamic_pointer_cast<SpaceShip>(gameObject3D.lock());
-
-	if (spaceShip) {
+	if (collider.lock()->GetTag() & Tag::FLOOR) {
 		this->isGrounded = true;
 	}
 }
@@ -470,7 +470,7 @@ void Player::OnHit(float value) {
 		this->hurtSpeaker.lock()->Play(hurtClip);
 		return;
 	}
-
+	this->healthRegenDelayTimer = this->healthRegenDelay;
 	SoundClip* hurtClip = AssetManager::GetInstance().GetSoundClip("DeathScream.wav"); // temp sound clip
 	this->hurtSpeaker.lock()->SetRandomPitch(0.9f, 1.1f);
 	this->hurtSpeaker.lock()->Play(hurtClip);
@@ -568,11 +568,11 @@ void Player::Interact() {
 
 			if (discardPressed) {
 				if (isDiscardableBuild) {
-					hitCollider->Interact(static_pointer_cast<Player>(this->GetPtr()));
+					hitCollider->Interact(std::static_pointer_cast<Player>(this->GetPtr()));
 				}
 			} else {
 				if (!isDiscardOnlyBuild) {
-					hitCollider->Interact(static_pointer_cast<Player>(this->GetPtr()));
+					hitCollider->Interact(std::static_pointer_cast<Player>(this->GetPtr()));
 				}
 			}
 			hitString = "hit";
@@ -654,4 +654,8 @@ void Player::addGun(Guns gunType) {
 	} else {
 		this->gun = gunWeak;
 	}
+}
+
+void Player::SetHealthRegenDelay(float delay) { 
+	this->healthRegenDelay = delay; 
 }

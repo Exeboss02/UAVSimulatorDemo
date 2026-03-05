@@ -76,6 +76,9 @@ void RenderQueue::AddLightObject(std::weak_ptr<GameObject> newSpotlightObject) {
 
 	auto light = std::static_pointer_cast<SpotlightObject>(newSpotlightObject.lock());
 
+	// This really only works so long as lights can't be destroyed (which they can't atm)
+	light->SetRenderIndex(instance->lightRenderQueue.size());
+
 	instance->lightRenderQueue.push_back(light);
 }
 

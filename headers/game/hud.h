@@ -44,6 +44,10 @@ public:
 	void SetStoryTextVisibility(bool visible);
 
 	void SetCoreHealthText(int health);
+	void SetRoundIndicator(size_t roundsLeft, float timeUntilNextRound, bool showTime);
+
+	void SetObjective(const std::string& objective);
+	void SetObjectiveVisible(bool visible);
 
 private:
 	std::weak_ptr<UI::Text> MakeText(const std::string& name, const std::string& text, float x, float y, float width,
@@ -78,8 +82,11 @@ private:
 	std::weak_ptr<UI::Image> bloodOverlay;
 
 	std::weak_ptr<UI::Text> storyText;
+	std::weak_ptr<UI::Text> objective;
 
 	std::weak_ptr<Crosshair> crosshair;
+
+	std::weak_ptr<UI::Text> roundIndicator;
 
 	// Shared prompt created once and reused for interactions
 	std::weak_ptr<UI::InteractionPrompt> interactionPrompt;
@@ -89,6 +96,8 @@ private:
 	std::weak_ptr<UI::Button> quitYesButton;
 	std::weak_ptr<UI::Button> quitNoButton;
 	std::weak_ptr<UI::Image> quitBackground;
+
+
 	bool quitPromptVisible = false;
 
 	std::function<void()> onQuitPromptHidden;

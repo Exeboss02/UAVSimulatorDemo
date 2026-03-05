@@ -11,6 +11,7 @@
 #include <cstdlib>
 #include <format>
 #include <random>
+#include "core/imguiManager.h"
 
 std::weak_ptr<GameManager> GameManager::instance;
 
@@ -171,18 +172,20 @@ void GameManager::Tick() {
 	this->GetPlayer()->hud->SetRoundIndicator(this->rounds.size() - this->GetCurrentRound(), this->idleTimeTimer,
 											  showTime);
 
-	ImGui::Begin("Rounds");
-	if (this->inCombat) {
-		ImGui::Text(std::format("Enemies: {}", this->enemies.size()).c_str());
-	} else {
-		ImGui::Text(std::format("Idle time: {}", this->idleTimeTimer).c_str());
-	}
-	ImGui::Text(std::format("Current round: {}", this->currentRound).c_str());
+	if (!DISABLE_IMGUI) {
+		ImGui::Begin("Rounds");
+		if (this->inCombat) {
+			ImGui::Text(std::format("Enemies: {}", this->enemies.size()).c_str());
+		} else {
+			ImGui::Text(std::format("Idle time: {}", this->idleTimeTimer).c_str());
+		}
+		ImGui::Text(std::format("Current round: {}", this->currentRound).c_str());
 
-	if (ImGui::Button("Start next round")) {
-		SpawnNextRound();
+		if (ImGui::Button("Start next round")) {
+			SpawnNextRound();
+		}
+		ImGui::End();
 	}
-	ImGui::End();
 
 	this->AudioHandling();
 }

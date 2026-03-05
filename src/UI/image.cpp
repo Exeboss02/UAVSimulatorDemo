@@ -10,29 +10,31 @@ std::string UI::Image::GetImage() const { return this->image; }
 void UI::Image::ShowInHierarchy() {
 	Widget::ShowInHierarchy();
 
-	ImGui::Separator();
-	ImGui::Text("Image settings:");
+	if (!DISABLE_IMGUI) {
+		ImGui::Separator();
+		ImGui::Text("Image settings:");
 
-	if (this->imageEditBuffer.empty()) {
-		this->imageEditBuffer.resize(512);
-		std::fill(this->imageEditBuffer.begin(), this->imageEditBuffer.end(), 0);
-		std::strncpy(this->imageEditBuffer.data(), this->image.c_str(), this->imageEditBuffer.size() - 1);
+		if (this->imageEditBuffer.empty()) {
+			this->imageEditBuffer.resize(512);
+			std::fill(this->imageEditBuffer.begin(), this->imageEditBuffer.end(), 0);
+			std::strncpy(this->imageEditBuffer.data(), this->image.c_str(), this->imageEditBuffer.size() - 1);
+		}
+
+		if (ImGui::InputText("Image", this->imageEditBuffer.data(), static_cast<int>(this->imageEditBuffer.size()))) {
+			this->image = std::string(this->imageEditBuffer.data());
+		}
+
+		// Tint
+		float col[4] = {this->tint.x, this->tint.y, this->tint.z, this->tint.w};
+		if (ImGui::ColorEdit4("Tint", col)) {
+			this->tint.x = col[0];
+			this->tint.y = col[1];
+			this->tint.z = col[2];
+			this->tint.w = col[3];
+		}
+
+		ImGui::Separator();
 	}
-
-	if (ImGui::InputText("Image", this->imageEditBuffer.data(), static_cast<int>(this->imageEditBuffer.size()))) {
-		this->image = std::string(this->imageEditBuffer.data());
-	}
-
-	// Tint
-	float col[4] = {this->tint.x, this->tint.y, this->tint.z, this->tint.w};
-	if (ImGui::ColorEdit4("Tint", col)) {
-		this->tint.x = col[0];
-		this->tint.y = col[1];
-		this->tint.z = col[2];
-		this->tint.w = col[3];
-	}
-
-	ImGui::Separator();
 }
 
 void UI::Image::LoadFromJson(const nlohmann::json& data) {

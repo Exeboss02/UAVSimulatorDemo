@@ -17,7 +17,7 @@ void Turret::Start() {
 	collider->transform.SetScale(2, 2, 2);
 	collider->transform.SetPosition(0, 0.5, 0);
 	collider->SetParent(this->GetPtr());
-	collider->SetTag(Tag::INTERACTABLE | Tag::OBJECT);
+	collider->SetTag(Tag::INTERACTABLE | Tag::OBJECT | Tag::FRIENDLY);
 	collider->SetOnInteract([&](std::shared_ptr<Player> player) { this->RemoveInteract(player); });
 	collider->SetOnHover([&] { this->HoverRemove(); });
 

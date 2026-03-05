@@ -30,7 +30,7 @@ void Player::Start() {
 	this->SetPreviousPhysicsPosition(spawnPoint);
 
 	this->resources.titanium.SetAmount(20);
-	this->resources.lubricant.SetAmount(10);
+	this->resources.lubricant.SetAmount(20);
 
 	// adding camera
 	auto cameraWeak = this->factory->CreateGameObjectOfType<CameraObject>();

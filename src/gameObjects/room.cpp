@@ -154,9 +154,14 @@ void Room::Start() {
 	buildCollider->SetName("BuildCollider" + std::to_string(this->factory->GetNextID()));
 	buildCollider->SetTag(Tag::INTERACTABLE);
 	buildCollider->SetIgnoreTag(Tag::PLAYER);
-	// Maybe tweak positionW
+	buildCollider->SetOnInteract([&](std::shared_ptr<Player> player) {
+		if (this->builtObject.expired() && !GameManager::GetInstance()->GetInCombat()) {
+			this->ShowBuildMenu(player);
+		}
+	});
+	buildCollider->SetOnHover([&] { this->Hover(); });
+	buildCollider->SetTag(Tag::INTERACTABLE);
 	this->buildSlot = buildCollider;
-	this->EnableBuildSlotInteractions();
 
 	auto spotLight = this->factory->CreateGameObjectOfType<SpotlightObject>().lock();
 	spotLight->SetParent(this->GetPtr());
@@ -552,24 +557,14 @@ void Room::EnableBuildSlotInteractions() {
 	if (this->buildSlot.expired()) return;
 	auto slot = this->buildSlot.lock();
 	if (!slot) return;
-
-	slot->SetOnInteract([&](std::shared_ptr<Player> player) {
-		if (this->builtObject.expired() && !GameManager::GetInstance()->GetInCombat()) {
-			this->ShowBuildMenu(player);
-		}
-	});
-	slot->SetOnHover([&] { this->Hover(); });
-	slot->SetTag(Tag::INTERACTABLE);
+	slot->transform.Move({0, 1000, 0});
 }
 
 void Room::DisableBuildSlotInteractions() {
 	if (this->buildSlot.expired()) return;
 	auto slot = this->buildSlot.lock();
 	if (!slot) return;
-
-	slot->SetOnHover([] {});
-	slot->SetOnInteract([](std::shared_ptr<Player>) {});
-	slot->SetTag(Tag::OBJECT);
+	slot->transform.Move({0, -1000, 0});
 }
 
 bool Room::RemoveBuiltObject() {

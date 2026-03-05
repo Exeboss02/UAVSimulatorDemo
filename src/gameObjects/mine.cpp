@@ -7,22 +7,15 @@
 void Mine::Start() {
 	auto collider = this->factory->CreateStaticGameObject<SphereCollider>();
 	collider->SetDynamic(false);
-	collider->SetTag(Tag::PLAYER);
+	collider->SetTag(Tag::FRIENDLY | Tag::INTERACTABLE | Tag::OBJECT);
 	collider->SetIgnoreTag(~Tag::ENEMY);
 	collider->SetParent(this->GetPtr());
 	collider->SetSolid(false);
 	collider->SetOnCollision([&](std::weak_ptr<GameObject> trigger, std::weak_ptr<Collider> collider) { this->OnExplode(); });
-
+	collider->SetOnInteract([&](std::shared_ptr<Player> player) { this->RemoveInteract(player); });
+	collider->SetOnHover([&] { this->HoverRemove(); });
 	collider->transform.SetScale(5, 5, 5);
 
-	auto interactCollider = this->factory->CreateStaticGameObject<BoxCollider>();
-	interactCollider->SetParent(this->GetPtr());
-	interactCollider->SetSolid(false);
-	interactCollider->SetTag(Tag::INTERACTABLE | Tag::OBJECT);
-	interactCollider->transform.SetScale(2, 1, 2);
-	interactCollider->transform.SetPosition(0, 1, 0);
-	interactCollider->SetOnInteract([&](std::shared_ptr<Player> player) { this->RemoveInteract(player); });
-	interactCollider->SetOnHover([&] { this->HoverRemove(); });
 
 	this->SetMesh(AssetManager::GetInstance().GetMeshObjData("meshes/mine.glb:Mesh_0"));
 

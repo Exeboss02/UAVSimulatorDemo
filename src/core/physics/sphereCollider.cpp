@@ -149,7 +149,7 @@ bool SphereCollider::IntersectWithRay(const Ray& ray, float& distance, float max
 	
 	float radius = this->GetDiameter() / 2.0f;
 	if (originToCenter.Length() - radius > maxDistance) {
-		false;
+		return false;
 	}
 	float projectionDist = originToCenter * ray.direction;
 

@@ -54,7 +54,7 @@ void FootBall::OnCollision(std::weak_ptr<GameObject3D> gameObject3D, std::weak_p
 
     if(!rigidBody) return;
 
-    if(collider.lock()->GetTag() & (Tag::FLOOR | Tag::PLAYER | Tag::WALL))
+    if(collider.lock()->GetTag() & Tag::PLAYER)
     {
         DirectX::XMVECTOR newVelocity = DirectX::XMLoadFloat3(&rigidBody->linearVelocity);
         newVelocity = DirectX::XMVectorScale(newVelocity, 8);

@@ -30,7 +30,7 @@ void Cockpit::Start() {
     offset.m128_f32[2] = 0;
 	auto footBall = this->factory->CreateStaticGameObject<FootBall>();
 	footBall->transform.SetPosition(DirectX::XMVectorAdd(GameManager::GetInstance()->GetPlayerSpawnPoint(), offset));
-	footBall->transform.SetScale(1, 1, 1);
+	footBall->transform.SetScale(2, 2, 2);
 
 	// Update core health on hud
 	GameManager::GetInstance()->GetPlayer()->hud->SetCoreHealthText(this->health.Get());

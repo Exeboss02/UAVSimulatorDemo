@@ -180,6 +180,12 @@ bool RigidBody::Collision(std::weak_ptr<RigidBody> rigidbody, int& nrOfCollision
 				// Remove the normal component from the velocity
 				DirectX::XMVECTOR newVelocity = DirectX::XMVectorSubtract(velocity, normalComponent);
 				DirectX::XMStoreFloat3(&this->linearVelocity, newVelocity);
+
+				//if bouncy
+				if(thisCollider->GetBouncy())
+				{
+					DirectX::XMVECTOR newVelocity = DirectX::XMLoadFloat3(&this->linearVelocity);
+				}
 			}
 		}
 	}

@@ -148,6 +148,8 @@ public:
 	void SetSolid(bool solid);
 	bool GetDynamic();
 	void SetDynamic(bool dynamic);
+	void SetBouncy(bool bouncy);
+	bool GetBouncy();
 
 	void ShowDebug(bool show);
 
@@ -159,6 +161,8 @@ private:
 	bool solid = true;
 	bool dynamic = false;
 	bool hasInitializedPreviousPosition = false;
+
+	bool bouncy = false;
 
 	float extraCullingDistanceSquared = 0;
 

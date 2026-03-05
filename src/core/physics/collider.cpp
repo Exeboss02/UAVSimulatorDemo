@@ -379,4 +379,16 @@ bool Collider::GetDynamic() { return this->dynamic; }
 
 void Collider::SetDynamic(bool dynamic) { this->dynamic = dynamic; }
 
-void Collider::ShowDebug(bool show) { this->meshObjectChild.lock()->SetActive(show); }
+void Collider::ShowDebug(bool show) {
+	this->meshObjectChild.lock()->SetActive(show);
+}
+
+void Collider::SetBouncy(bool bouncy)
+{
+	this->bouncy = bouncy;
+}
+
+bool Collider::GetBouncy()
+{
+	return this->bouncy;
+}

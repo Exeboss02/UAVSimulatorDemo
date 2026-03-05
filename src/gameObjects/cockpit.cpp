@@ -37,7 +37,7 @@ void Cockpit::Start() {
 			// deathSpeaker.lock()->SetDeleteWhenFinnished(true);
 			// deathSpeaker.lock()->transform.SetPosition(this->transform.GetGlobalPosition());
 			// deathSpeaker.lock()->Play(deathClip);
-			// GameManager::GetInstance()->Loose();
+			GameManager::GetInstance()->Loose();
 		}
 
 		// Update core health on hud

@@ -11,7 +11,7 @@
 #include <string>
 
 // Gets rid of all calls to ImGui including initialization
-static constexpr bool DISABLE_IMGUI = true;
+static constexpr bool DISABLE_IMGUI = false;
 
 class ImguiManager {
 public:

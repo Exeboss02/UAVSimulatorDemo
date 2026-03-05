@@ -29,7 +29,8 @@ void Player::Start() {
 	this->SetPhysicsPosition(spawnPoint);
 	this->SetPreviousPhysicsPosition(spawnPoint);
 
-	this->resources.titanium.SetAmount(10000);
+	this->resources.titanium.SetAmount(20);
+	this->resources.lubricant.SetAmount(20);
 
 	// adding camera
 	auto cameraWeak = this->factory->CreateGameObjectOfType<CameraObject>();
@@ -149,6 +150,8 @@ void Player::Start() {
 		this->SetInputEnabled(true);
 		this->SetShowCursor(false);
 	});
+
+	this->SetShowCursor(false);
 }
 
 void Player::Tick() {

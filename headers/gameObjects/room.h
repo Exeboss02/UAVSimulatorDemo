@@ -118,7 +118,7 @@ private:
 
 	float hoverDisabledUntil = 0.0f;
 
-	CostHandler turretCost = CostHandler(10, 20, 0, 10);
-	CostHandler mineCost = CostHandler(0, 0, 10, 0);
-	CostHandler generatorCost = CostHandler(10, 10, 10, 10);
+	CostHandler turretCost = CostHandler(10, 30, 15, 1);
+	CostHandler mineCost = CostHandler(0, 10, 30, 0);
+	CostHandler generatorCost = CostHandler(10, 10, 20, 1);
 };

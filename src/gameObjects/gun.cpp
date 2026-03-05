@@ -57,6 +57,7 @@ void Gun::Shoot(bool pressedTrigger, bool triggerDown) {
 		float randomY = this->GetRandomValueInRange(0, bulletSpread * 2 + 0.0001f);
 		muzzleLocked->transform.SetRotationRPY(0, (randomP - bulletSpread / 2) * std::numbers::pi / 180,
 											   (randomY - bulletSpread / 2) * std::numbers::pi / 180);
+		Logger::Error("P: ", (randomP - bulletSpread / 2), "Y: ", (randomY - bulletSpread / 2));
 		lookVec = this->muzzle.lock()->transform.GetGlobalForward();
 		muzzleLocked->transform.SetRotationRPY(0, 0, 0);
 		continuousFireTime += Time::GetInstance().GetDeltaTime();

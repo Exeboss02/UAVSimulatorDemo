@@ -71,13 +71,10 @@ void Gun::Shoot(bool pressedTrigger, bool triggerDown) {
 		float bulletSpread = this->maxBulletSpread * (this->continuousFireTime / this->timeToMaxBulletSpread);
 		float randomP = this->GetRandomValueInRange(0, bulletSpread * 2);
 		float randomY = this->GetRandomValueInRange(0, bulletSpread * 2);
-		muzzleLocked->transform.SetRotationRPY(0, (randomP - bulletSpread / 2) * std::numbers::pi / 180,
-											   (randomY - bulletSpread / 2) * std::numbers::pi / 180);
-		Logger::Error("P: ", bulletSpread);
+		muzzleLocked->transform.SetRotationRPY(0, (randomP - bulletSpread) * std::numbers::pi / 180,
+											   (randomY - bulletSpread) * std::numbers::pi / 180);
 		lookVec = this->muzzle.lock()->transform.GetGlobalForward();
 		muzzleLocked->transform.SetRotationRPY(0, 0, 0);
-
-		
 
 		break;
 	}

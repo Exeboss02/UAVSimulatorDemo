@@ -49,14 +49,21 @@ void MusicTrackManager::Play(std::string id)
 
 	else
 	{
-		this->musicTracks[id]->Play();
+		musicTrack->second->Play();
 		this->activeTracks.push_back(this->musicTracks[id]);
 	}
 }
 
 void MusicTrackManager::Stop(std::string id)
 {
-	this->musicTracks[id]->Stop();
+
+	auto musicTrack = this->musicTracks.find(id);
+	if (musicTrack == this->musicTracks.end()) {
+		Logger::Log("couldn't stop music track " + id);
+		return;
+	}
+
+	musicTrack->second->Stop();
 	
 	for (int i = 0; i < this->activeTracks.size(); i++)
 	{
@@ -72,80 +79,69 @@ void MusicTrackManager::Stop(std::string id)
 
 void MusicTrackManager::FadeInPlay(std::string id, float startGain, float seconds)
 {
-	MusicTrack* track = this->musicTracks[id];
-
-	if (!track)
-	{
-		Logger::Error("FadeInPlay() couldn't find: " + id);
+	auto musicTrack = this->musicTracks.find(id);
+	if (musicTrack == this->musicTracks.end()) {
+		Logger::Log("couldn't FadeInPLay music track " + id);
 		return;
 	}
 
-	track->FadeIn(startGain, seconds);
+	musicTrack->second->FadeIn(startGain, seconds);
 	this->Play(id);
 }
 
 void MusicTrackManager::FadeOutStop(std::string id, float seconds)
 {
-	MusicTrack* track = this->musicTracks[id];
-
-	if (!track)
-	{
-		Logger::Error("FadeOutStop() couldn't find: " + id);
+	auto musicTrack = this->musicTracks.find(id);
+	if (musicTrack == this->musicTracks.end()) {
+		Logger::Log("couldn't FadeOutStop music track " + id);
 		return;
 	}
 
-	track->FadeOut(seconds);
+	musicTrack->second->FadeOut(seconds);
 }
 
 void MusicTrackManager::GetMusicTrackSourceState(std::string id, ALint& sourceState)
 {
-	MusicTrack* track = this->musicTracks[id];
-
-	if (!track)
-	{
-		Logger::Error("GetMusicTrackSourceState() couldn't find: " + id);
+	auto musicTrack = this->musicTracks.find(id);
+	if (musicTrack == this->musicTracks.end()) {
+		Logger::Log("couldn't GetMusicTrackSourceState on music track " + id);
 		return;
 	}
 
-	this->musicTracks[id]->GetSourceState(sourceState);
+	musicTrack->second->GetSourceState(sourceState);
 }
 
 void MusicTrackManager::SetGain(std::string id, float gain)
 {
-	MusicTrack* track = this->musicTracks[id];
-
-	if (!track)
-	{
-		Logger::Error("SetGain() couldn't find: " + id);
+	auto musicTrack = this->musicTracks.find(id);
+	if (musicTrack == this->musicTracks.end()) {
+		Logger::Log("couldn't SetGain on music track " + id);
 		return;
 	}
 
-	track->SetGain(gain);
+	musicTrack->second->SetGain(gain);
 }
 
 void MusicTrackManager::SetPitch(std::string id, float pitch)
 {
-	MusicTrack* track = this->musicTracks[id];
-
-	if (!track)
-	{
-		Logger::Error("SetPitch() couldn't find: " + id);
+	auto musicTrack = this->musicTracks.find(id);
+	if (musicTrack == this->musicTracks.end()) {
+		Logger::Log("couldn't SetPitch on music track " + id);
 		return;
 	}
 
-	track->SetPitch(pitch);
+	musicTrack->second->SetPitch(pitch);
 }
 
 MusicTrack* MusicTrackManager::GetMusicTrack(std::string id)
 {
-	MusicTrack* track = this->musicTracks[id];
-
-	if (!track)
-	{
-		Logger::Log("Couldn't find music track: " + id);
+	auto musicTrack = this->musicTracks.find(id);
+	if (musicTrack == this->musicTracks.end()) {
+		Logger::Log("couldn't GetMusicTrack " + id);
+		return nullptr;
 	}
 
-	return track;
+	return musicTrack->second;
 }
 
 void MusicTrackManager::LoopMusicTrack(std::string id, bool shouldLoop)

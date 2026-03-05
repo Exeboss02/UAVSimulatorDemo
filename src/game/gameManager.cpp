@@ -60,10 +60,6 @@ void GameManager::Start() {
 
 	this->idleTimeTimer = this->idleTime;
 
-	// Master Volume
-	AudioManager::GetInstance().SetMasterMusicVolume(0.5f);
-	AudioManager::GetInstance().SetMasterSoundEffectsVolume(0.5f);
-
 	// Battle music
 	this->buildMusicWaitTimer.Initialize(5);
 	AudioManager::GetInstance().AddMusicTrackStandardFolder("LethalContact.wav", "contact");
@@ -77,6 +73,7 @@ void GameManager::Start() {
 	this->shipSpeaker.lock()->transform.SetPosition(DirectX::XMVectorAdd(this->GetPlayerSpawnPoint(), offset));
 	SoundClip* buildMusic = AssetManager::GetInstance().GetSoundClip("GTAinBerlin.wav");
 	this->shipSpeaker.lock()->SetGain(0.7f);
+	this->shipSpeaker.lock()->LoopSoundEffect(0);
 	this->shipSpeaker.lock()->Play(buildMusic);
 }
 
@@ -459,6 +456,7 @@ void GameManager::AudioHandling() {
 				this->isPlayingCombatMusic = false;
 				this->isPlayingBuildMusic = false;
 				this->shipSpeaker.lock()->SetGain(0.7f);
+					this->shipSpeaker.lock()->StopLoopingSoundEffect();
 			}
 
 			if (!this->isPlayingBuildMusic) {
@@ -472,6 +470,7 @@ void GameManager::AudioHandling() {
 					this->buildMusicWaitTimer.Reset();
 
 					SoundClip* buildMusic = AssetManager::GetInstance().GetSoundClip("GTAinBerlin.wav");
+					this->shipSpeaker.lock()->LoopSoundEffect(0);
 					this->shipSpeaker.lock()->Play(buildMusic);
 				}
 			}

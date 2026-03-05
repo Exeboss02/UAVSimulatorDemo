@@ -276,6 +276,10 @@ void MusicTrack::UpdateBufferStream()
 	if (state == AL_PLAYING)
 	{
 		float deltaTime = Time::GetInstance().GetDeltaTime();
+
+		//to prevent tick spam when loading assets etc
+		if(deltaTime > 1.0f) return;
+
 		this->playTime += deltaTime;
 
 		if (this->fadeInTime > 0 && this->currentFadeInTime < this->fadeInTime)

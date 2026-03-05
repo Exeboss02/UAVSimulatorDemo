@@ -61,7 +61,7 @@ void Enemy::Start() {
 	//Create speaker object
     this->speaker = this->factory->CreateGameObjectOfType<SoundSourceObject>();
     this->speaker.lock()->SetParent(this->GetPtr());
-	this->speaker.lock()->SetGain(1.0f);
+	this->speaker.lock()->SetGain(0.85f);
 	
 
 	collider->SetOnHit([&](float damage) {

@@ -23,9 +23,8 @@ protected:
 	std::string soundClipShootPath = "";
 	float damage = 20;
 	float fireRate = 0.3f;
-	float minBulletSpread = 10.0f;
-	float maxBulletSpread = 50.0f;
-	float timeToMaxBulletSpread = 5.0f;
+	float maxBulletSpread = 0.0f;
+	float timeToMaxBulletSpread = 0.0f;
 	float continuousFireTime = 0.0f;
 	DirectX::XMFLOAT3 muzzlePosition = DirectX::XMFLOAT3(0,0,0);
 	DirectX::XMFLOAT3 visualPosition = DirectX::XMFLOAT3(0, 0, 0);

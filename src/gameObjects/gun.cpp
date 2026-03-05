@@ -7,12 +7,15 @@
 #include "utilities/time.h"
 #include <memory>
 #include <numbers>
+#include <random>
 
 Gun::Gun() {}
 
 Gun::~Gun() {}
 
 void Gun::Shoot(bool pressedTrigger, bool triggerDown) {
+
+	
 
 	switch (this->fireMode) {
 	case (FireMode::SEMIAUTOMATIC):
@@ -22,8 +25,20 @@ void Gun::Shoot(bool pressedTrigger, bool triggerDown) {
 		break;
 	case (FireMode::AUTOMATIC):
 		if (triggerDown == false) {
-			this->continuousFireTime = 0.0f;
+			if (this->continuousFireTime > 0) {
+				this->continuousFireTime -= Time::GetInstance().GetDeltaTime() * 3.0f;
+			}  
+			
+			if (this->continuousFireTime < 0) {
+				this->continuousFireTime = 0.0f;
+			}
 			return;
+		} else {
+		
+		if (this->continuousFireTime <= this->timeToMaxBulletSpread) {
+				continuousFireTime += Time::GetInstance().GetDeltaTime();
+			}
+		
 		}
 		break;
 
@@ -34,6 +49,7 @@ void Gun::Shoot(bool pressedTrigger, bool triggerDown) {
 	if (!this->shootCoolDown.TimeIsUp()) {
 		return;
 	}
+
 	this->shootCoolDown.Reset();
 
 	SoundClip* shootClip = AssetManager::GetInstance().GetSoundClip(this->soundClipShootPath);
@@ -53,14 +69,16 @@ void Gun::Shoot(bool pressedTrigger, bool triggerDown) {
 	case (FireMode::AUTOMATIC): 
 	{
 		float bulletSpread = this->maxBulletSpread * (this->continuousFireTime / this->timeToMaxBulletSpread);
-		float randomP = this->GetRandomValueInRange(0, bulletSpread * 2 + 0.0001f);
-		float randomY = this->GetRandomValueInRange(0, bulletSpread * 2 + 0.0001f);
+		float randomP = this->GetRandomValueInRange(0, bulletSpread * 2);
+		float randomY = this->GetRandomValueInRange(0, bulletSpread * 2);
 		muzzleLocked->transform.SetRotationRPY(0, (randomP - bulletSpread / 2) * std::numbers::pi / 180,
 											   (randomY - bulletSpread / 2) * std::numbers::pi / 180);
-		Logger::Error("P: ", (randomP - bulletSpread / 2), "Y: ", (randomY - bulletSpread / 2));
+		Logger::Error("P: ", bulletSpread);
 		lookVec = this->muzzle.lock()->transform.GetGlobalForward();
 		muzzleLocked->transform.SetRotationRPY(0, 0, 0);
-		continuousFireTime += Time::GetInstance().GetDeltaTime();
+
+		
+
 		break;
 	}
 
@@ -223,12 +241,9 @@ void Gun::VisulalizeShootBasedOnMuzzle(DirectX::XMVECTOR lookVec, DirectX::XMVEC
 	// end of rayVis
 }
 
-float Gun::GetRandomValueInRange(float min, float max) { 
-	
-	int tempMin = min * 100000;
-	int tempMax = max * 100000;
-	int tempRand = tempMin + rand() % (tempMax - tempMin);
-	float randomVal = tempRand / 100000.0f;
+float Gun::GetRandomValueInRange(float min, float max) {
+	static std::mt19937 gen(std::random_device{}());
 
-	return randomVal;
+	std::uniform_real_distribution<float> dist(min, max);
+	return dist(gen);
 }

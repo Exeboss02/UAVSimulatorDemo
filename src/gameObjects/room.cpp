@@ -76,7 +76,7 @@ void Room::Start() {
 
 		meshobj->SetParent(this->GetPtr());
 
-		MeshObjData meshdata = AssetManager::GetInstance().GetMeshObjData("SpaceShip/room2.glb:Mesh_0");
+		MeshObjData meshdata = AssetManager::GetInstance().GetMeshObjData("SpaceShip/RoomWithPlate.glb:Mesh_4");
 
 		meshobj->SetMesh(meshdata);
 
@@ -653,11 +653,12 @@ bool Room::TryBuildGenerator() {
 		auto gen = this->factory->CreateStaticGameObject<ResourceGenerator>();
 
 		gen->SetParent(this->GetPtr());
-		gen->transform.SetPosition(0, 1.5, 0);
+		//gen->transform.SetPosition(0, 1.5, 0);
+		gen->transform.SetPosition(0, 1.6f, 0);
 
 		DirectX::XMFLOAT3 shipScale;
 		DirectX::XMStoreFloat3(&shipScale, this->transform.GetGlobalScale());
-		gen->transform.SetScale(DirectX::XMVECTOR({(1.0f / shipScale.x), (1.0f / shipScale.y), (1.0f / shipScale.z)}));
+		gen->transform.SetScale(DirectX::XMVECTOR({(1.0f / shipScale.x), (1.8f / shipScale.y), (1.0f / shipScale.z)}));
 
 		this->builtObject = static_pointer_cast<GameObject3D>(gen.Get());
 
@@ -702,7 +703,7 @@ bool Room::TryBuildTurret() {
 		auto turret = this->factory->CreateStaticGameObject<Turret>();
 
 		turret->SetParent(this->GetPtr());
-		turret->transform.SetPosition(0, 0.6, 0);
+		turret->transform.SetPosition(0, 0.6f, 0);
 
 		DirectX::XMFLOAT3 shipScale;
 		DirectX::XMStoreFloat3(&shipScale, this->transform.GetGlobalScale());
@@ -753,12 +754,12 @@ bool Room::TryBuildMine() {
 		auto mine = this->factory->CreateStaticGameObject<Mine>();
 
 		mine->SetParent(this->GetPtr());
-		mine->transform.SetPosition(slot->transform.GetPosition());
+		mine->transform.SetPosition(0, 1.3f, 0);
 		mine->SetName("Mine");
 
 		DirectX::XMFLOAT3 shipScale;
 		DirectX::XMStoreFloat3(&shipScale, this->transform.GetGlobalScale());
-		mine->transform.SetScale(DirectX::XMVECTOR({(1.0f / shipScale.x), (1.0f / shipScale.y), (1.0f / shipScale.z)}));
+		mine->transform.SetScale(DirectX::XMVECTOR({(0.8f / shipScale.x), (0.8f / shipScale.y), (0.8f / shipScale.z)}));
 
 		// Make the room build slot work again after the mine explodes
 		mine->SetPostExplosion([&] {

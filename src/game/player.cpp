@@ -150,6 +150,8 @@ void Player::Start() {
 		this->SetInputEnabled(true);
 		this->SetShowCursor(false);
 	});
+
+	this->SetShowCursor(false);
 }
 
 void Player::Tick() {

@@ -33,7 +33,7 @@ private:
 
 	inline static std::string logString = "";
 
-	inline static LogType logLevel = LogType::log; //change here to get only logtype and higher
+	inline static LogType logLevel = LogType::error; //change here to get only logtype and higher
 
 
 	static constexpr const char* colors[3] = {"\033[0m", "\033[33m", "\033[31m"};

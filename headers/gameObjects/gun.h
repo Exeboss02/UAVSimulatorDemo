@@ -23,6 +23,9 @@ protected:
 	std::string soundClipShootPath = "";
 	float damage = 20;
 	float fireRate = 0.3f;
+	float maxBulletSpread = 0.0f;
+	float timeToMaxBulletSpread = 0.0f;
+	float continuousFireTime = 0.0f;
 	DirectX::XMFLOAT3 muzzlePosition = DirectX::XMFLOAT3(0,0,0);
 	DirectX::XMFLOAT3 visualPosition = DirectX::XMFLOAT3(0, 0, 0);
 	DirectX::XMFLOAT3 visualScale = DirectX::XMFLOAT3(1, 1, 1);
@@ -31,7 +34,7 @@ protected:
 	enum FireMode {
 		SEMIAUTOMATIC, 
 		AUTOMATIC
-	}fireMode;
+	}fireMode = FireMode::SEMIAUTOMATIC;
 	
 
 private:
@@ -51,5 +54,7 @@ private:
 	/// used when gun shoots from muzzle
 	/// </summary>
 	void VisulalizeShootBasedOnMuzzle(DirectX::XMVECTOR lookVec, DirectX::XMVECTOR posVec, float distance);
+
+	float GetRandomValueInRange(float min, float max);
 
 };

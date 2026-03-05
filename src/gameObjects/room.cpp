@@ -16,6 +16,8 @@
 #include "gameObjects/turret.h"
 #include "rendering/renderQueue.h"
 #include "utilities/time.h"
+
+// std
 #include <format>
 #include <numbers>
 
@@ -38,8 +40,7 @@ void Room::CreateRoom(WallIndex wallIndex) {
 
 	if (auto storyManager = GameManager::GetInstance()->GetStoryManager().lock()) {
 		storyManager->FinishStoryCheck(StoryChecks::BuildRoom);
-	}
-	else {
+	} else {
 		std::string error = "Failed to get story manager";
 		Logger::Error(error);
 		throw std::runtime_error(error);
@@ -445,7 +446,6 @@ void Room::ShowBuildMenu(std::shared_ptr<Player> player) {
 							p->SetInputEnabled(true);
 						}
 
-
 						if (auto storyManager = GameManager::GetInstance()->GetStoryManager().lock()) {
 							storyManager->FinishStoryCheck(StoryChecks::BuiltBuildable);
 						}
@@ -607,7 +607,8 @@ bool Room::RemoveBuiltObject() {
 	if (!this->GetParent().expired()) {
 		auto spaceship = static_pointer_cast<SpaceShip>(GetParent().lock());
 		auto centerNode = this->pathfindingNodes[0];
-		if (spaceship && centerNode && spaceship->GetPathfinder()->AddVertex(centerNode)) {
+		if (spaceship && centerNode) {
+			spaceship->GetPathfinder()->AddVertex(centerNode);
 			unsigned int edgeCostCenterToOuter = static_cast<unsigned int>(this->size / 3);
 			for (size_t i = 1; i < this->pathfindingNodes.size(); ++i) {
 				if (this->pathfindingNodes[i]) {

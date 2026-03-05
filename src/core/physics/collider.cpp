@@ -387,9 +387,6 @@ void Collider::ShowDebug(bool show) {
 
 	this->meshObjectChild.lock()->SetActive(show);
 }
-void Collider::ShowDebug(bool show) {
-	this->meshObjectChild.lock()->SetActive(show);
-}
 
 void Collider::SetBouncy(bool bouncy)
 {

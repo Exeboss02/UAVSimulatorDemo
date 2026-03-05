@@ -54,7 +54,7 @@ private:
 
 	// Shooting
 	const float damage = 5.f;
-	const float shootRange = 20.f;
+	const float shootRange = 30.f;
 	bool canShoot;
 	const float shotCooldown;
 	float timeSinceLastShot;

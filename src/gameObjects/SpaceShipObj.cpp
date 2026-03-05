@@ -75,14 +75,18 @@ void SpaceShip::Tick() {
 	this->GameObject3D::Tick();
 	static int pos[2]{};
 
-	ImGui::Begin("Rooms");
-	ImGui::InputInt2("cords", pos);
-	bool roomCreator = ImGui::Button("Create Room");
-	ImGui::End();
+	if (!DISABLE_IMGUI) {
+		ImGui::Begin("Rooms");
+		ImGui::InputInt2("cords", pos);
+		bool roomCreator = ImGui::Button("Create Room");
+		ImGui::End();
 
-	if (roomCreator) {
-		this->CreateRoom(pos[0], pos[1]);
+		if (roomCreator) {
+			this->CreateRoom(pos[0], pos[1]);
+		}
+
 	}
+
 }
 
 void SpaceShip::Start() {

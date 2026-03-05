@@ -8,6 +8,7 @@
 #include <memory>
 #include <nlohmann/json.hpp>
 #include <vector>
+#include "core/imguiManager.h"
 
 class Scene;
 class GameObjectFactory;

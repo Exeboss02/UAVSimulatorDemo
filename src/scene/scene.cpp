@@ -188,73 +188,78 @@ void Scene::CallStartOnAll() {
 }
 
 void Scene::ShowHierarchy() {
-	if (!ImguiManager::showObjectHierarchy) return;
+	if (!DISABLE_IMGUI) {
+		if (!ImguiManager::showObjectHierarchy) return;
 
-	ImGui::SetNextWindowSize(ImVec2(400.f, 500.f), ImGuiCond_FirstUseEver);
-	ImGui::Begin("Object Hierarchy", &ImguiManager::showObjectHierarchy, ImGuiWindowFlags_MenuBar);
+		ImGui::SetNextWindowSize(ImVec2(400.f, 500.f), ImGuiCond_FirstUseEver);
+		ImGui::Begin("Object Hierarchy", &ImguiManager::showObjectHierarchy, ImGuiWindowFlags_MenuBar);
 
-	// Create GameObjects button
-	if (ImGui::Button("Create")) ImGui::OpenPopup("select_gameobject");
-	if (ImGui::BeginPopup("select_gameobject")) {
-		if (ImGui::Selectable("GameObject")) {
-			this->CreateGameObjectOfType<GameObject>();
-		}
-		if (ImGui::Selectable("GameObject3D")) {
-			this->CreateGameObjectOfType<GameObject3D>();
-		}
-		if (ImGui::Selectable("MeshObject")) {
-			this->CreateGameObjectOfType<MeshObject>();
-		}
-		if (ImGui::Selectable("CameraObject")) {
-			this->CreateGameObjectOfType<CameraObject>();
-		}
-		if (ImGui::Selectable("DebugCamera")) {
-			this->CreateGameObjectOfType<DebugCamera>();
-		}
-		if (ImGui::Selectable("SpotlightObject")) {
-			this->CreateGameObjectOfType<SpotlightObject>();
-		}
-		if (ImGui::Selectable("Canvas")) {
-			this->CreateGameObjectOfType<UI::CanvasObject>();
+		// Create GameObjects button
+		if (ImGui::Button("Create")) ImGui::OpenPopup("select_gameobject");
+		if (ImGui::BeginPopup("select_gameobject")) {
+			if (ImGui::Selectable("GameObject")) {
+				this->CreateGameObjectOfType<GameObject>();
+			}
+			if (ImGui::Selectable("GameObject3D")) {
+				this->CreateGameObjectOfType<GameObject3D>();
+			}
+			if (ImGui::Selectable("MeshObject")) {
+				this->CreateGameObjectOfType<MeshObject>();
+			}
+			if (ImGui::Selectable("CameraObject")) {
+				this->CreateGameObjectOfType<CameraObject>();
+			}
+			if (ImGui::Selectable("DebugCamera")) {
+				this->CreateGameObjectOfType<DebugCamera>();
+			}
+			if (ImGui::Selectable("SpotlightObject")) {
+				this->CreateGameObjectOfType<SpotlightObject>();
+			}
+			if (ImGui::Selectable("Canvas")) {
+				this->CreateGameObjectOfType<UI::CanvasObject>();
+			}
+
+			ImGui::EndPopup();
 		}
 
-		ImGui::EndPopup();
+		if (!this->GetSelected().expired()) {
+			ImGui::SameLine();
+			if (ImGui::Button("Reparent selected to root")) {
+				std::weak_ptr<GameObject> emptyObj = std::make_shared<GameObject>();
+				this->GetSelected().lock()->SetParent(emptyObj);
+				this->SetSelected(emptyObj);
+			}
+		}
+
+		// Create the object hierarchy
+		for (size_t i = 0; i < this->gameObjects.size(); i++) {
+			std::weak_ptr<GameObject> gameObject = this->gameObjects[i];
+			if (gameObject.lock()->parent.expired()) {
+				ShowHierarchyRecursive(gameObject);
+			}
+		}
+
+		ImGui::End();
 	}
-
-	if (!this->GetSelected().expired()) {
-		ImGui::SameLine();
-		if (ImGui::Button("Reparent selected to root")) {
-			std::weak_ptr<GameObject> emptyObj = std::make_shared<GameObject>();
-			this->GetSelected().lock()->SetParent(emptyObj);
-			this->SetSelected(emptyObj);
-		}
-	}
-
-	// Create the object hierarchy
-	for (size_t i = 0; i < this->gameObjects.size(); i++) {
-		std::weak_ptr<GameObject> gameObject = this->gameObjects[i];
-		if (gameObject.lock()->parent.expired()) {
-			ShowHierarchyRecursive(gameObject);
-		}
-	}
-
-	ImGui::End();
 }
 
 void Scene::ShowHierarchyRecursive(std::weak_ptr<GameObject> gameObject) {
-	if (ImGui::TreeNode(gameObject.lock()->GetName().c_str())) {
-		gameObject.lock()->ShowInHierarchy();
-		ImGui::Separator();
-		if (gameObject.lock()->children.size() > 0) {
-			if (ImGui::TreeNode("Children")) {
-				for (size_t i = 0; i < gameObject.lock()->children.size(); i++) {
-					ShowHierarchyRecursive(gameObject.lock()->children[i]);
+	if (!DISABLE_IMGUI) {
+		if (ImGui::TreeNode(gameObject.lock()->GetName().c_str())) {
+			gameObject.lock()->ShowInHierarchy();
+			ImGui::Separator();
+			if (gameObject.lock()->children.size() > 0) {
+				if (ImGui::TreeNode("Children")) {
+					for (size_t i = 0; i < gameObject.lock()->children.size(); i++) {
+						ShowHierarchyRecursive(gameObject.lock()->children[i]);
+					}
+					ImGui::TreePop();
 				}
-				ImGui::TreePop();
 			}
-		}
-		ImGui::TreePop();
-	};
+			ImGui::TreePop();
+		};
+	}
+
 }
 
 const std::vector<std::shared_ptr<GameObject>>& Scene::GetGameObjects() const { return this->gameObjects; }

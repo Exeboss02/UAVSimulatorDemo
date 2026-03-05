@@ -121,122 +121,126 @@ void UI::CanvasObject::ShowInHierarchy() {
 	// Show the common GameObject UI first
 	GameObject::ShowInHierarchy();
 
-	ImGui::Separator();
-	ImGui::Text("Canvas options:");
+	if (!DISABLE_IMGUI) {
+		ImGui::Separator();
+		ImGui::Text("Canvas options:");
 
-	if (!this->HasCanvas()) {
-		ImGui::Text("No Canvas assigned.");
-		return;
-	}
+		if (!this->HasCanvas()) {
+			ImGui::Text("No Canvas assigned.");
+			return;
+		}
 
-	auto canvas = this->GetCanvas();
-	if (!canvas) return;
+		auto canvas = this->GetCanvas();
+		if (!canvas) return;
 
-	// Size
-	UI::Vec2 size = canvas->GetSize();
-	if (ImGui::InputFloat2("Size", &size.x)) {
-		canvas->SetSize(size);
-	}
+		// Size
+		UI::Vec2 size = canvas->GetSize();
+		if (ImGui::InputFloat2("Size", &size.x)) {
+			canvas->SetSize(size);
+		}
 
-	// Children
-	const auto& children = canvas->GetChildren();
-	ImGui::Text("Children: %d", static_cast<int>(children.size()));
-	ImGui::SameLine();
-	if (ImGui::Button("Add Widget")) {
-		ImGui::OpenPopup("add_widget_popup");
-	}
+		// Children
+		const auto& children = canvas->GetChildren();
+		ImGui::Text("Children: %d", static_cast<int>(children.size()));
+		ImGui::SameLine();
+		if (ImGui::Button("Add Widget")) {
+			ImGui::OpenPopup("add_widget_popup");
+		}
 
-	if (ImGui::BeginPopup("add_widget_popup")) {
-		if (ImGui::Selectable("Button")) {
-			if (this->factory) {
-				auto newWidgetWeak = this->factory->CreateGameObjectOfType<UI::Button>();
-				if (!newWidgetWeak.expired()) {
-					auto newWidget = newWidgetWeak.lock();
-					newWidget->SetName("Button");
-					newWidget->SetPosition({200, 200});
-					newWidget->SetSize({100, 20});
-					std::weak_ptr<GameObject> me = this->GetPtr();
-					newWidget->SetParent(me);
-					this->AddChild(std::static_pointer_cast<UI::Widget>(newWidget));
+		if (ImGui::BeginPopup("add_widget_popup")) {
+			if (ImGui::Selectable("Button")) {
+				if (this->factory) {
+					auto newWidgetWeak = this->factory->CreateGameObjectOfType<UI::Button>();
+					if (!newWidgetWeak.expired()) {
+						auto newWidget = newWidgetWeak.lock();
+						newWidget->SetName("Button");
+						newWidget->SetPosition({200, 200});
+						newWidget->SetSize({100, 20});
+						std::weak_ptr<GameObject> me = this->GetPtr();
+						newWidget->SetParent(me);
+						this->AddChild(std::static_pointer_cast<UI::Widget>(newWidget));
 
-					RenderQueue::AddUIWidget(newWidget);
+						RenderQueue::AddUIWidget(newWidget);
+					}
+				}
+			}
+			if (ImGui::Selectable("Text")) {
+				if (this->factory) {
+					auto newWidgetWeak = this->factory->CreateGameObjectOfType<UI::Text>();
+					if (!newWidgetWeak.expired()) {
+						auto newWidget = newWidgetWeak.lock();
+						newWidget->SetName("Text");
+						newWidget->SetText("Text");
+						newWidget->SetPosition({50, 50});
+						newWidget->SetSize({100, 20});
+						std::weak_ptr<GameObject> me = this->GetPtr();
+						newWidget->SetParent(me);
+						this->AddChild(std::static_pointer_cast<UI::Widget>(newWidget));
+
+						RenderQueue::AddUIWidget(newWidget);
+					}
+				}
+			}
+			if (ImGui::Selectable("Image")) {
+				if (this->factory) {
+					auto newWidgetWeak = this->factory->CreateGameObjectOfType<UI::Image>();
+					if (!newWidgetWeak.expired()) {
+						auto newWidget = newWidgetWeak.lock();
+						newWidget->SetName("Image");
+						newWidget->SetPosition({50, 50});
+						newWidget->SetSize({100, 100});
+						newWidget->SetImage("assets/images/test.png");
+						std::weak_ptr<GameObject> me = this->GetPtr();
+						newWidget->SetParent(me);
+						this->AddChild(std::static_pointer_cast<UI::Widget>(newWidget));
+
+						RenderQueue::AddUIWidget(newWidget);
+					}
+				}
+			}
+			if (ImGui::Selectable("Crosshair")) {
+				if (this->factory) {
+					auto newWidgetWeak = this->factory->CreateGameObjectOfType<Crosshair>();
+					if (!newWidgetWeak.expired()) {
+						auto newWidget = newWidgetWeak.lock();
+						newWidget->SetName("Crosshair");
+						// Default size centered in canvas
+						auto sz = this->GetCanvas()->GetSize();
+						newWidget->SetSize({32, 32});
+						newWidget->SetPosition({(sz.x - 32.0f) * 0.5f, (sz.y - 32.0f) * 0.5f});
+						newWidget->SetCrosshairImage("assets/images/crosshair.png");
+						newWidget->SetVisible(true);
+						std::weak_ptr<GameObject> me = this->GetPtr();
+						newWidget->SetParent(me);
+						this->AddChild(std::static_pointer_cast<UI::Widget>(newWidget));
+						RenderQueue::AddUIWidget(newWidget);
+					}
+				}
+			}
+			ImGui::EndPopup();
+		}
+		if (!children.empty()) {
+			for (size_t i = 0; i < children.size(); ++i) {
+				auto& child = children[i];
+				if (!child) continue;
+
+				ImGui::Bullet();
+				ImGui::SameLine();
+				ImGui::TextUnformatted(child->GetName().c_str());
+				ImGui::SameLine();
+				if (ImGui::Button((std::string("Select##canvas_child_") + std::to_string(i)).c_str())) {
+					std::weak_ptr<GameObject> w = std::static_pointer_cast<GameObject>(child);
+					this->factory->SetSelected(w);
 				}
 			}
 		}
-		if (ImGui::Selectable("Text")) {
-			if (this->factory) {
-				auto newWidgetWeak = this->factory->CreateGameObjectOfType<UI::Text>();
-				if (!newWidgetWeak.expired()) {
-					auto newWidget = newWidgetWeak.lock();
-					newWidget->SetName("Text");
-					newWidget->SetText("Text");
-					newWidget->SetPosition({50, 50});
-					newWidget->SetSize({100, 20});
-					std::weak_ptr<GameObject> me = this->GetPtr();
-					newWidget->SetParent(me);
-					this->AddChild(std::static_pointer_cast<UI::Widget>(newWidget));
 
-					RenderQueue::AddUIWidget(newWidget);
-				}
-			}
-		}
-		if (ImGui::Selectable("Image")) {
-			if (this->factory) {
-				auto newWidgetWeak = this->factory->CreateGameObjectOfType<UI::Image>();
-				if (!newWidgetWeak.expired()) {
-					auto newWidget = newWidgetWeak.lock();
-					newWidget->SetName("Image");
-					newWidget->SetPosition({50, 50});
-					newWidget->SetSize({100, 100});
-					newWidget->SetImage("assets/images/test.png");
-					std::weak_ptr<GameObject> me = this->GetPtr();
-					newWidget->SetParent(me);
-					this->AddChild(std::static_pointer_cast<UI::Widget>(newWidget));
-
-					RenderQueue::AddUIWidget(newWidget);
-				}
-			}
-		}
-		if (ImGui::Selectable("Crosshair")) {
-			if (this->factory) {
-				auto newWidgetWeak = this->factory->CreateGameObjectOfType<Crosshair>();
-				if (!newWidgetWeak.expired()) {
-					auto newWidget = newWidgetWeak.lock();
-					newWidget->SetName("Crosshair");
-					// Default size centered in canvas
-					auto sz = this->GetCanvas()->GetSize();
-					newWidget->SetSize({32, 32});
-					newWidget->SetPosition({(sz.x - 32.0f) * 0.5f, (sz.y - 32.0f) * 0.5f});
-					newWidget->SetCrosshairImage("assets/images/crosshair.png");
-					newWidget->SetVisible(true);
-					std::weak_ptr<GameObject> me = this->GetPtr();
-					newWidget->SetParent(me);
-					this->AddChild(std::static_pointer_cast<UI::Widget>(newWidget));
-					RenderQueue::AddUIWidget(newWidget);
-				}
-			}
-		}
-		ImGui::EndPopup();
-	}
-	if (!children.empty()) {
-		for (size_t i = 0; i < children.size(); ++i) {
-			auto& child = children[i];
-			if (!child) continue;
-
-			ImGui::Bullet();
-			ImGui::SameLine();
-			ImGui::TextUnformatted(child->GetName().c_str());
-			ImGui::SameLine();
-			if (ImGui::Button((std::string("Select##canvas_child_") + std::to_string(i)).c_str())) {
-				std::weak_ptr<GameObject> w = std::static_pointer_cast<GameObject>(child);
-				this->factory->SetSelected(w);
-			}
+		if (ImGui::Button("Clear Canvas Children")) {
+			this->Clear();
 		}
 	}
 
-	if (ImGui::Button("Clear Canvas Children")) {
-		this->Clear();
-	}
+	
 }
 
 void UI::CanvasObject::LoadFromJson(const nlohmann::json& data) {

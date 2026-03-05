@@ -121,39 +121,41 @@ void UI::Widget::ShowInHierarchy() {
 	// First display common GameObject inspector
 	GameObject::ShowInHierarchy();
 
-	ImGui::Separator();
-	ImGui::Text("Widget settings:");
+	if (!DISABLE_IMGUI) {
+		ImGui::Separator();
+		ImGui::Text("Widget settings:");
 
-	// Position
-	Vec2 pos = this->GetPosition();
-	if (ImGui::InputFloat2("Position", &pos.x)) {
-		this->SetPosition(pos);
+		// Position
+		Vec2 pos = this->GetPosition();
+		if (ImGui::InputFloat2("Position", &pos.x)) {
+			this->SetPosition(pos);
+		}
+
+		// Size
+		Vec2 size = this->GetSize();
+		if (ImGui::InputFloat2("Size", &size.x)) {
+			this->SetSize(size);
+		}
+
+		// Visibility / enabled
+		bool vis = this->IsVisible();
+		if (ImGui::Checkbox("Visible", &vis)) {
+			this->SetVisible(vis);
+		}
+
+		bool en = this->isEnabled();
+		if (ImGui::Checkbox("Enabled", &en)) {
+			this->SetEnabled(en);
+		}
+
+		// Z-index
+		int z = this->GetZIndex();
+		if (ImGui::InputInt("Z Index", &z)) {
+			this->SetZIndex(z);
+		}
+
+		ImGui::Separator();
 	}
-
-	// Size
-	Vec2 size = this->GetSize();
-	if (ImGui::InputFloat2("Size", &size.x)) {
-		this->SetSize(size);
-	}
-
-	// Visibility / enabled
-	bool vis = this->IsVisible();
-	if (ImGui::Checkbox("Visible", &vis)) {
-		this->SetVisible(vis);
-	}
-
-	bool en = this->isEnabled();
-	if (ImGui::Checkbox("Enabled", &en)) {
-		this->SetEnabled(en);
-	}
-
-	// Z-index
-	int z = this->GetZIndex();
-	if (ImGui::InputInt("Z Index", &z)) {
-		this->SetZIndex(z);
-	}
-
-	ImGui::Separator();
 }
 
 void UI::Widget::OnDestroy() {

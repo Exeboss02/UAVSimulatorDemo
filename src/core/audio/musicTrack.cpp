@@ -295,7 +295,7 @@ void MusicTrack::UpdateBufferStream()
 			this->currentFadeOutTime += deltaTime;
 			this->currentGain = ((this->fadeOutTime - this->currentFadeOutTime) / this->fadeOutTime) * this->targetGain;
 
-			if (this->currentGain <= 0.001f)
+			if (this->currentGain <= 0.0001f)
 			{
 				this->Stop();
 

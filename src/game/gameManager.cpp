@@ -72,7 +72,7 @@ void GameManager::Start() {
 	this->shipSpeaker = this->factory->CreateStaticGameObject<SoundSourceObject>();
 	this->shipSpeaker.lock()->transform.SetPosition(DirectX::XMVectorAdd(this->GetPlayerSpawnPoint(), offset));
 	SoundClip* buildMusic = AssetManager::GetInstance().GetSoundClip("GTAinBerlin.wav");
-	this->shipSpeaker.lock()->SetGain(0.7f);
+	this->shipSpeaker.lock()->SetGain(0.6f);
 	this->shipSpeaker.lock()->LoopSoundEffect(0);
 	this->shipSpeaker.lock()->Play(buildMusic);
 }
@@ -455,7 +455,7 @@ void GameManager::AudioHandling() {
 				this->isFading = true;
 				this->isPlayingCombatMusic = false;
 				this->isPlayingBuildMusic = false;
-				this->shipSpeaker.lock()->SetGain(0.7f);
+				this->shipSpeaker.lock()->SetGain(0.6f);
 					this->shipSpeaker.lock()->StopLoopingSoundEffect();
 			}
 
@@ -466,7 +466,7 @@ void GameManager::AudioHandling() {
 					this->isPlayingBuildMusic = true;
 					this->isFading = false;
 					this->isPlayingCombatMusic = false;
-					this->shipSpeaker.lock()->SetGain(0.7f);
+					this->shipSpeaker.lock()->SetGain(0.6f);
 					this->buildMusicWaitTimer.Reset();
 
 					SoundClip* buildMusic = AssetManager::GetInstance().GetSoundClip("GTAinBerlin.wav");

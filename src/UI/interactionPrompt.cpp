@@ -6,7 +6,6 @@
 #include "gameObjects/gameObject.h"
 #include "gameObjects/gameObjectFactory.h"
 #include "rendering/renderQueue.h"
-#include <DirectXMath.h>
 
 void UI::InteractionPrompt::Start() {
 	if (!this->factory) return;
@@ -29,7 +28,7 @@ void UI::InteractionPrompt::Start() {
 	this->textWidget = textShared;
 }
 
-void UI::InteractionPrompt::Show(const std::string& text, DirectX::XMVECTOR worldPos) {
+void UI::InteractionPrompt::Show(const std::string& text) {
 	if (this->textWidget.expired()) return;
 	auto textShared = this->textWidget.lock();
 	if (!textShared) return;

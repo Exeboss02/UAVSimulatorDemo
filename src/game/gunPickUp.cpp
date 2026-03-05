@@ -63,8 +63,7 @@ void GunPickUp::Hover() {
 		if (!prompt) return;
 
 		std::string txt = std::format("Repair rifle, Cost {}", this->gunCost.getCostString());
-		DirectX::XMVECTOR worldPos = this->transform.GetGlobalPosition();
-		prompt->Show(txt, worldPos);
+		prompt->Show(txt);
 	} catch (const std::exception& e) {
 		Logger::Error("GunPickUp::Hover exception: ", e.what());
 	} catch (...) {

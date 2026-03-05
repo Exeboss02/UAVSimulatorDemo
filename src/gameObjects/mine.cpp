@@ -32,8 +32,8 @@ void Mine::Start() {
 	speaker.lock()->SetGain(1.0f);
 	speaker.lock()->Play(clip);
 
-	this->transform.SetPosition(0, 1.0f, 0);
-	this->transform.SetScale(0.5f, 0.5f, 0.5f);
+	//this->transform.SetPosition(0, 1.0f, 0);
+	//this->transform.SetScale(0.5f, 0.5f, 0.5f);
 
 	// this looks crazy, but feels okey
 	this->range = 15;

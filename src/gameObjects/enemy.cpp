@@ -350,8 +350,7 @@ bool Enemy::ShootAtPlayer(const float deltaTime) {
 	Ray ray{Vector3D(headPosition), Vector3D(rayDirection)};
 	RayCastData rayCastData = {};
 
-	bool didHit = PhysicsQueue::GetInstance().castRay(ray, rayCastData, Tag::PLAYER, Tag::ENEMY, this->shootRange);
-	this->VisualizeRay(headPosition, rayDirection, rayCastData.distance);
+	bool didHit = PhysicsQueue::GetInstance().castRay(ray, rayCastData, Tag::PLAYER, Tag::ENEMY | Tag::INTERACTABLE, this->shootRange);
 
 	if (!didHit) {
 		return false;
@@ -385,13 +384,13 @@ bool Enemy::ShootAtPlayer(const float deltaTime) {
 		DirectX::XMVECTOR missDir = DirectX::XMVectorAdd(
 			rayDirection, DirectX::XMVectorSet(rX, rY, rZ, 0.0f)); // Add some random offset
 
-		//this->VisualizeRay(adjustedPos, missDir, rayCastData.distance);
+		this->VisualizeRay(headPosition, missDir, rayCastData.distance);
 	} 
 	else {
 		rayCastData.hitColider.lock()->Hit(this->damage);
 		Logger::Log("Enemy shooting at player - HIT!");
 		this->canShoot = false;
-		//this->VisualizeRay(adjustedPos, rayDirection, rayCastData.distance);
+		this->VisualizeRay(headPosition, rayDirection, rayCastData.distance);
 
 		if(!this->speaker.expired()) {
 			SoundClip* shootClip = AssetManager::GetInstance().GetSoundClip("Laser2.wav"); //temporary clip

@@ -14,6 +14,7 @@
 #include "gameObjects/turret.h"
 #include "game/gunPickUp.h"
 #include "game/musicPlayer.h"
+#include "game/footBall.h"
 
 // std
 #include <Windows.h>
@@ -54,6 +55,7 @@ SceneManager::SceneManager(Renderer* rend)
 	this->objectFromString.RegisterType<UI::Text>(NAMEOF(UI::Text));
 	this->objectFromString.RegisterType<Crosshair>(NAMEOF(Crosshair));
 	this->objectFromString.RegisterType<UI::Image>(NAMEOF(UI::Image));
+	this->objectFromString.RegisterType<FootBall>(NAMEOF(FootBall));
 
 	// Game specific
 	this->objectFromString.RegisterType<Player>(NAMEOF(Player)); // Game specific

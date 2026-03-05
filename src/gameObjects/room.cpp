@@ -16,6 +16,8 @@
 #include "gameObjects/turret.h"
 #include "rendering/renderQueue.h"
 #include "utilities/time.h"
+
+// std
 #include <format>
 #include <numbers>
 
@@ -540,8 +542,7 @@ void Room::Hover() {
 		if (auto gameManager = GameManager::GetInstance(); gameManager && gameManager->GetInCombat()) {
 			txt = "Can't build during attacks";
 		}
-		DirectX::XMVECTOR worldPos = this->transform.GetGlobalPosition();
-		prompt->Show(txt, worldPos);
+		prompt->Show(txt);
 	} catch (const std::exception& e) {
 		Logger::Error("Room::Hover exception: ", e.what());
 	} catch (...) {
@@ -613,7 +614,8 @@ bool Room::RemoveBuiltObject() {
 	if (!this->GetParent().expired()) {
 		auto spaceship = static_pointer_cast<SpaceShip>(GetParent().lock());
 		auto centerNode = this->pathfindingNodes[0];
-		if (spaceship && centerNode && spaceship->GetPathfinder()->AddVertex(centerNode)) {
+		if (spaceship && centerNode) {
+			spaceship->GetPathfinder()->AddVertex(centerNode);
 			unsigned int edgeCostCenterToOuter = static_cast<unsigned int>(this->size / 3);
 			for (size_t i = 1; i < this->pathfindingNodes.size(); ++i) {
 				if (this->pathfindingNodes[i]) {

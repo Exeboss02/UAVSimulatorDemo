@@ -654,7 +654,7 @@ bool Room::TryBuildGenerator() {
 
 		gen->SetParent(this->GetPtr());
 		//gen->transform.SetPosition(0, 1.5, 0);
-		gen->transform.SetPosition(0, 1.8f, 0);
+		gen->transform.SetPosition(0, 1.6f, 0);
 
 		DirectX::XMFLOAT3 shipScale;
 		DirectX::XMStoreFloat3(&shipScale, this->transform.GetGlobalScale());

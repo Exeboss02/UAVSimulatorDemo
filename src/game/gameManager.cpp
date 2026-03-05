@@ -69,18 +69,13 @@ void GameManager::Start() {
 	AudioManager::GetInstance().LoopMusicTrack("contact", true);
 	AudioManager::GetInstance().SetGain("contact", 0.4f);
 
-	// Main menu music
-	AudioManager::GetInstance().AddMusicTrackStandardFolder("CourageDemo.wav", "courage");
-	// AudioManager::GetInstance().LoopMusicTrack("courage", true);
-	AudioManager::GetInstance().SetGain("courage", 0.4f);
-
 	DirectX::XMVECTOR offset = {};
 	offset.m128_f32[1] = -2;
 	offset.m128_f32[2] = 26;
 	this->shipSpeaker = this->factory->CreateStaticGameObject<SoundSourceObject>();
 	this->shipSpeaker.lock()->transform.SetPosition(DirectX::XMVectorAdd(this->GetPlayerSpawnPoint(), offset));
 	SoundClip* buildMusic = AssetManager::GetInstance().GetSoundClip("GTAinBerlin.wav");
-	this->shipSpeaker.lock()->SetGain(1.0f);
+	this->shipSpeaker.lock()->SetGain(0.7f);
 	this->shipSpeaker.lock()->Play(buildMusic);
 }
 
@@ -460,7 +455,7 @@ void GameManager::AudioHandling() {
 				this->isFading = true;
 				this->isPlayingCombatMusic = false;
 				this->isPlayingBuildMusic = false;
-				this->shipSpeaker.lock()->SetGain(1.0f);
+				this->shipSpeaker.lock()->SetGain(0.7f);
 			}
 
 			if (!this->isPlayingBuildMusic) {
@@ -470,7 +465,7 @@ void GameManager::AudioHandling() {
 					this->isPlayingBuildMusic = true;
 					this->isFading = false;
 					this->isPlayingCombatMusic = false;
-					this->shipSpeaker.lock()->SetGain(1.0f);
+					this->shipSpeaker.lock()->SetGain(0.7f);
 					this->buildMusicWaitTimer.Reset();
 
 					SoundClip* buildMusic = AssetManager::GetInstance().GetSoundClip("GTAinBerlin.wav");

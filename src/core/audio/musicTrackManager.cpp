@@ -20,6 +20,12 @@ MusicTrackManager::~MusicTrackManager()
 
 void MusicTrackManager::AddMusicTrackStandardFolder(std::string filename, std::string id)
 {
+	if(this->musicTracks.contains(id))
+	{
+		Logger::Warn("MusicTrack ", id, " is already loaded!");
+		return;
+	}
+
 	MusicTrack* newTrack = new MusicTrack();
 
 	if (!newTrack->Initialize((FilepathHolder::GetAssetsDirectory() / "audio" / "music" / filename).string(), id))
@@ -174,6 +180,12 @@ void MusicTrackManager::Tick() {
 
 void MusicTrackManager::AddMusicTrack(std::string path, std::string id)
 {
+	if(this->musicTracks.contains(id))
+	{
+		Logger::Warn("MusicTrack ", id, " is already loaded!");
+		return;
+	}
+
 	MusicTrack* newTrack = new MusicTrack();
 
 	if (!newTrack->Initialize(path, id))

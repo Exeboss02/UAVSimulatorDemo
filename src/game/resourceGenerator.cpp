@@ -35,7 +35,7 @@ void ResourceGenerator::Start() {
 	this->speaker.lock()->SetParent(this->GetPtr());
 	this->speaker.lock()->LoopSoundEffect(0); // 0 = loops forever
 	this->speaker.lock()->SetRandomPitch(0.8f, 1.1f);
-	this->speaker.lock()->SetGain(0.7f);
+	this->speaker.lock()->SetGain(0.4f);
 	this->speaker.lock()->Play(clip);
 
 	SoundClip* buildClip = AssetManager::GetInstance().GetSoundClip("Build2.wav");

@@ -115,7 +115,7 @@ void Player::Start() {
 	std::function<void(std::weak_ptr<GameObject3D>, std::weak_ptr<Collider>)> function = [&](std::weak_ptr<GameObject3D> gameObject3D, std::weak_ptr<Collider> collider) {
 		this->OnCollision(gameObject3D, collider);
 
-		if (auto mine = dynamic_pointer_cast<Mine>(gameObject3D.lock())) {
+		if (auto mine = std::dynamic_pointer_cast<Mine>(gameObject3D.lock())) {
 			Logger::Log("Hit Mine");
 		}
 	};
@@ -567,11 +567,11 @@ void Player::Interact() {
 
 			if (discardPressed) {
 				if (isDiscardableBuild) {
-					hitCollider->Interact(static_pointer_cast<Player>(this->GetPtr()));
+					hitCollider->Interact(std::static_pointer_cast<Player>(this->GetPtr()));
 				}
 			} else {
 				if (!isDiscardOnlyBuild) {
-					hitCollider->Interact(static_pointer_cast<Player>(this->GetPtr()));
+					hitCollider->Interact(std::static_pointer_cast<Player>(this->GetPtr()));
 				}
 			}
 			hitString = "hit";

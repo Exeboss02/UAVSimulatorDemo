@@ -56,7 +56,6 @@ void MusicTrackManager::Play(std::string id)
 
 void MusicTrackManager::Stop(std::string id)
 {
-
 	auto musicTrack = this->musicTracks.find(id);
 	if (musicTrack == this->musicTracks.end()) {
 		Logger::Log("couldn't stop music track " + id);

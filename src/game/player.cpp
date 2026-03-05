@@ -305,10 +305,6 @@ void Player::PhysicsTick() {
 
 	// reset isGrounded, this gets set to true in OnCollision
 	this->isGrounded = false;
-
-			if(GetAsyncKeyState(VK_SPACE))Logger::Warn("PLAYER PRESSED JUMP!!!!!!!!!!!!!!");
-		Logger::Warn("linear velocity: ", std::to_string(this->linearVelocity.x), ", ", std::to_string(this->linearVelocity.y), ", ",
-				std::to_string(this->linearVelocity.z));
 }
 
 void Player::UpdateCamera() {

@@ -225,7 +225,7 @@ void SoundSourceObject::SetRandomPitch(float minPitch, float maxPitch) {
 
 void SoundSourceObject::SetGain(float gain)
 {
-	this->gain = gain;
+	this->gain = std::clamp(gain, 0.0f, 1.0f);
 
 	for (int i = 0; i < this->nrOfSources; i++)
 	{

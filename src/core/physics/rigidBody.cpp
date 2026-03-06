@@ -43,6 +43,11 @@ void RigidBody::LatePhysicsTick() {
 	// position will be lerped between the last physics pos and this new valid physics pos
 
 	// collision checks should happen after this in sceneManager
+
+	//Rotation
+	float deltaTime = Time::GetInstance().GetFixedDeltaTime();
+	DirectX::XMVECTOR angularRotation = DirectX::XMVectorScale(DirectX::XMLoadFloat3(&this->angularVelocity), deltaTime);
+	this->transform.Rotate(angularRotation.m128_f32[0], angularRotation.m128_f32[1], angularRotation.m128_f32[2]);
 }
 
 DirectX::XMVECTOR RigidBody::GetPhysicsPosition() { return this->physicsPosition; }

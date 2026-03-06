@@ -8,11 +8,11 @@ void FootBall::Start()
 {
     this->RigidBody::Start();
 
-    auto collider = this->factory->CreateGameObjectOfType<SphereCollider>();
-	collider.lock()->SetDynamic(true);
-	collider.lock()->SetParent(this->GetPtr());
-	collider.lock()->SetSolid(true);
-    collider.lock()->SetBouncy(true);
+    this->collider = this->factory->CreateGameObjectOfType<SphereCollider>();
+	this->collider.lock()->SetDynamic(true);
+	this->collider.lock()->SetParent(this->GetPtr());
+	this->collider.lock()->SetSolid(true);
+    this->collider.lock()->SetBouncy(true);
 
     this->gravity = true;
 
@@ -44,6 +44,15 @@ void FootBall::Tick()
 
     // DirectX::XMVECTOR pos = this->transform.GetGlobalPosition();
     // Logger::Error("pos: ", pos.m128_f32[0], ", ", pos.m128_f32[1], ", ", pos.m128_f32[2]);
+}
+
+void FootBall::PhysicsTick()
+{
+    //Rotation, should maybe be moved to rigidbody logic with lock axis bool's
+    float radius = this->collider.lock()->GetDiameter();
+    this->angularVelocity = DirectX::XMFLOAT3(this->linearVelocity.z * (1 / radius) * 50, 0, -this->linearVelocity.x * (1 / radius) * 50);
+
+    this->RigidBody::PhysicsTick();
 }
 
 void FootBall::OnCollision(std::weak_ptr<GameObject3D> gameObject3D, std::weak_ptr<Collider> collider)

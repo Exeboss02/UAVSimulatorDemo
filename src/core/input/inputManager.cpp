@@ -96,6 +96,18 @@ std::array<int, 2> InputManager::GetMouseMovement() const {
 		return this->mouseMovement;
 	}
 
+	const bool isWindowFocused = GetForegroundWindow() == this->currentWindowHandle;
+	const bool isWinDown = (GetAsyncKeyState(VK_LWIN) & 0x8000) || (GetAsyncKeyState(VK_RWIN) & 0x8000);
+	const bool isShiftDown = GetAsyncKeyState(VK_SHIFT) & 0x8000;
+	const bool isSDown = GetAsyncKeyState('S') & 0x8000;
+	const bool isSnippingShortcutActive = isWinDown && isShiftDown && isSDown;
+
+	// Avoid forcing the cursor to center while OS overlays (e.g. Win+Shift+S snip)
+	// are active or when the game window is not focused.
+	if (!isWindowFocused || isSnippingShortcutActive) {
+		return this->mouseMovement;
+	}
+
 	RECT windowRect;
 	GetClientRect(this->currentWindowHandle, &windowRect); // Get the window size
 

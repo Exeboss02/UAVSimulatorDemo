@@ -387,3 +387,13 @@ void Collider::ShowDebug(bool show) {
 
 	this->meshObjectChild.lock()->SetActive(show);
 }
+
+void Collider::SetBouncy(bool bouncy)
+{
+	this->bouncy = bouncy;
+}
+
+bool Collider::GetBouncy()
+{
+	return this->bouncy;
+}

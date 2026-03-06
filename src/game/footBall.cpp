@@ -16,7 +16,7 @@ void FootBall::Start()
 
     this->gravity = true;
 
-    auto meshData = AssetManager::GetInstance().GetMeshObjData("meshes/indicatorSphere05.glb:Mesh_0");
+    auto meshData = AssetManager::GetInstance().GetMeshObjData("meshes/ball.glb:Mesh_0");
 
     auto visualMeshObject = this->factory->CreateGameObjectOfType<MeshObject>();
     visualMeshObject.lock()->SetMesh(meshData);

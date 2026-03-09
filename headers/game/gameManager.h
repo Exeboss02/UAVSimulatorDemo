@@ -4,9 +4,10 @@
 #include "game/player.h"
 #include "game/storyManager.h"
 #include "gameObjects/SpaceShipObj.h"
-#include "gameObjects/enemy.h"
+#include "gameObjects/enemies/enemy.h"
+#include "gameObjects/enemies/drone.h"
 #include "gameObjects/gameObject3D.h"
-#include "gameObjects/testEnemy.h"
+#include "gameObjects/enemies/testEnemy.h"
 
 namespace UI {
 class Image;

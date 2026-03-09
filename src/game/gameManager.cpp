@@ -415,7 +415,7 @@ void GameManager::SpawnRound(size_t roundIndex) {
 }
 
 void GameManager::SpawnEnemy(size_t atBreachpoint) {
-	auto enemy = this->factory->CreateGameObjectOfType<Enemy>();
+	auto enemy = this->factory->CreateGameObjectOfType<Drone>();
 
 	if (auto enemyPtr = enemy.lock()) {
 		if (atBreachpoint >= this->paths.size()) {

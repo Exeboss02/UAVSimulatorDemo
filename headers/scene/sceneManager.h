@@ -11,7 +11,7 @@
 #include "gameObjects/cameraObject.h"
 #include "gameObjects/debugCamera.h"
 #include "gameObjects/meshObject.h"
-#include "gameObjects/testEnemy.h"
+#include "gameObjects/enemies/testEnemy.h"
 #include "rendering/renderer.h"
 #include "scene/objectFromStringFactory.h"
 #include "utilities/masterVolume.h"

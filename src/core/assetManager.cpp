@@ -232,6 +232,24 @@ void AssetManager::CreateDefaultAssets() {
 	this->GetMeshObjData("Buildings/Turret.glb:Mesh_0");
 	this->GetMeshObjData("enemies/NewEnemy.glb:Mesh_0");
 	this->GetMeshObjData("enemies/piratebot2.glb:Mesh_0");
+
+	auto resourceGenerator = this->GetMeshObjData("meshes/generator.glb:Mesh_0");
+	auto sideMat = std::static_pointer_cast<GenericMaterial>(resourceGenerator.GetMaterial(2).lock());
+	auto sideTexture = sideMat->diffuseTexture;
+
+	auto newSideMaterial = std::make_shared<UnlitMaterial>(this->d3d11Device);
+	newSideMaterial->unlitShader = pixelShaderUnlit;
+	newSideMaterial->diffuseTexture = sideTexture;
+	AddMaterial("newGeneratorSide", newSideMaterial);
+
+	auto enemyHead = this->GetMeshObjData("enemies/NewEnemy.glb:Mesh_1");
+	auto enemyHeadMat = std::static_pointer_cast<GenericMaterial>(enemyHead.GetMaterial(3).lock());
+	auto enemyEyeTexture = enemyHeadMat->diffuseTexture;
+	
+	auto enemyEyeMaterial = std::make_shared<UnlitMaterial>(this->d3d11Device);
+	enemyEyeMaterial->unlitShader = pixelShaderUnlit;
+	enemyEyeMaterial->diffuseTexture = enemyEyeTexture;
+	AddMaterial("eyeMaterial", enemyEyeMaterial);
 }
 
 void AssetManager::AddShader(std::string identifier, std::shared_ptr<Shader> shader) {

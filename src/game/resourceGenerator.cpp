@@ -56,6 +56,9 @@ void ResourceGenerator::Start() {
 
 void ResourceGenerator::Interact(std::shared_ptr<Player> player) {
 	if (InputManager::GetInstance().WasKeyPressed('R')) {
+		if (GameManager::GetInstance()->GetInCombat()) {
+			return;
+		}
 		auto parentWeak = this->GetParent();
 		if (parentWeak.expired()) return;
 
@@ -112,7 +115,9 @@ void ResourceGenerator::Hover() {
 	);
 		
 	txt += "Press \"F\" to collect resources";
-	txt += "\nPress \"R\" to discard generator";
+	if (!GameManager::GetInstance()->GetInCombat()) {
+		txt += "\nPress \"R\" to discard generator";
+	}
 	prompt->Show(txt);
 }
 

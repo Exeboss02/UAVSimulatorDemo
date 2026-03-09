@@ -17,6 +17,7 @@ class CanvasObject;
 struct Round {
 	size_t enemyCount;
 	size_t breachPoints;
+	float timeUntilNext = 30;
 };
 
 class GameManager : public GameObject {
@@ -98,7 +99,7 @@ private:
 	float enemySpawnDelay;
 
 	float idleTimeTimer;
-	const float idleTime;
+	const float startIdleTime;
 
 	size_t unspawnedEnemies;
 

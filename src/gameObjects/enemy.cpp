@@ -363,7 +363,7 @@ bool Enemy::ShootAtPlayer(const float deltaTime) {
 	}
 
 	DirectX::XMVECTOR forward = this->head.lock()->transform.GetGlobalForward();
-	if (!DirectX::XMVector4NearEqual(forward, rayDirection, DirectX::XMVectorSet(0.2f, 1.f, 0.2f, 0.2f))) {
+	if (!DirectX::XMVector4NearEqual(forward, rayDirection, DirectX::XMVectorSet(0.1f, 1.f, 0.1f, 0.2f))) {
 		return true;
 	}
 

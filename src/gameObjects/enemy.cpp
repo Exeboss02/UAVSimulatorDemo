@@ -35,10 +35,12 @@ void Enemy::Start() {
 	meshObj->transform.SetScale({0.3, 0.3, 0.3});
 	//meshObj->transform.SetRotationRPY({0, -DirectX::XM_PIDIV2, 0});
 	meshObj->transform.SetPosition(0.f, -0.8f, 0.f);
+	meshObj->transform.SetRotationRPY({0, 0, 0});
 
 	auto headParent = this->factory->CreateGameObjectOfType<GameObject3D>().lock();
 	//headParent->SetParent(this->GetPtr());
-	meshObj->transform.SetRotationRPY({0, 0, 0});
+	headParent->transform.SetPosition(
+		DirectX::XMVectorAdd(this->transform.GetGlobalPosition(), this->headOffsetFromBody));
 	this->head = headParent;
 
 	auto head = this->factory->CreateGameObjectOfType<MeshObject>().lock();
@@ -49,7 +51,6 @@ void Enemy::Start() {
 	head->transform.SetPosition({0.0, -0.4, 0.0});
 	head->transform.SetRotationRPY({0, -DirectX::XM_PIDIV2, 0});
 	head->SetParent(headParent);
-
 
 	auto collider = this->factory->CreateGameObjectOfType<SphereCollider>().lock();
 	collider->transform.SetScale({2, 2, 2});
@@ -90,18 +91,25 @@ void Enemy::Start() {
 
 void Enemy::Tick() {
 	float dt = Time::GetInstance().GetDeltaTime();
+	
 	this->UpdateShootCooldown(dt);
 	this->UpdateSlowEffect(dt);
 	this->IsStuckOnPath(dt);
 	
 	if (this->maxPathIndex != 0 && !this->hasFinishedPath) {
 		this->MoveAlongPath(dt);
-		this->ShootAtPlayer();
+		
+		if (!this->ShootAtPlayer(dt)) {
+			this->RotateHead(this->direction, dt);
+		}
 	} else {
 		this->ShootAtCore();
 		this->RotateHead(this->direction, dt * 2);
 	}
-	this->head.lock()->transform.SetPosition(DirectX::XMVectorAdd(this->transform.GetGlobalPosition(), this->headOffsetFromBody));
+	if (!this->head.expired()) {
+		this->head.lock()->transform.SetPosition(
+			DirectX::XMVectorAdd(this->transform.GetGlobalPosition(), this->headOffsetFromBody));
+	}
 }
 
 void Enemy::SlowDownEnemy(float durationInSec) {
@@ -190,22 +198,22 @@ void Enemy::MoveAlongPath(const float deltaTime) {
 
 	if (auto player = this->factory->FindObjectOfType<Player>().lock()) {
 		DirectX::XMVECTOR toPlayer = DirectX::XMVectorSubtract(player->transform.GetGlobalPosition(), this->transform.GetGlobalPosition());
-
-		float distanceToPlayer = DirectX::XMVectorGetX(DirectX::XMVector4Length(toPlayer));
-		if (distanceToPlayer < this->shootRange) {
-			toPlayer = DirectX::XMVector3Normalize(toPlayer);
-			this->RotateHead(toPlayer, deltaTime);
-		} 
-		else { // If player is out of range, rotate head towards movement direction
-			this->RotateHead(this->direction, deltaTime);
-		}
+		
+		//float distanceToPlayer = DirectX::XMVectorGetX(DirectX::XMVector4Length(toPlayer));
+		//if (distanceToPlayer < this->shootRange) {
+		//	toPlayer = DirectX::XMVector3Normalize(toPlayer);
+		//	this->RotateHead(toPlayer, deltaTime);
+		//} 
+		//else { // If player is out of range, rotate head towards movement direction
+		//	this->RotateHead(this->direction, deltaTime);
+		//}
 	}
 
-	this->transform.Move(this->direction, this->movementSpeed * deltaTime);
 	if (this->head.expired()) {
 		Logger::Log("Enemy has no head to move.");
 		return;
 	}
+	this->transform.Move(this->direction, this->movementSpeed * deltaTime);
 }
 
 bool Enemy::IsAtCurrentPathNode() {
@@ -317,84 +325,81 @@ void Enemy::ShootAtCore() {
 	}
 }
 
-void Enemy::ShootAtPlayer() {
-	if (!this->canShoot) return;
-
+bool Enemy::ShootAtPlayer(const float deltaTime) {
 	auto player = this->factory->FindObjectOfType<Player>().lock();
 	if (!player) {
 		Logger::Log("Enemy couldn't find player.");
-		return;
+		return false;
 	}
 	if (this->head.expired()) {
 		Logger::Error("Enemy has no head to shoot from.");
-		return;
+		return false;
 	}
 
 	DirectX::XMVECTOR headPosition = this->head.lock()->transform.GetGlobalPosition();
 	DirectX::XMVECTOR playerPosition = player->transform.GetGlobalPosition();
 	DirectX::XMVECTOR rayDirection = DirectX::XMVectorSubtract(playerPosition, headPosition);
-	float rayLength = DirectX::XMVectorGetX(DirectX::XMVector4Length(rayDirection));
-	rayDirection = DirectX::XMVector3Normalize(rayDirection);
+	float rayLength = DirectX::XMVectorGetX(DirectX::XMVector3Length(rayDirection));
 
 	if (rayLength > this->shootRange) {
-		return; // Player is out of range, don't shoot
+		return false;
+	}
+
+	rayDirection = DirectX::XMVector3Normalize(rayDirection);
+
+	Ray ray{Vector3D(headPosition), Vector3D(rayDirection)};
+	RayCastData rayCastData = {};
+
+	bool didHit = PhysicsQueue::GetInstance().castRay(ray, rayCastData, Tag::PLAYER, Tag::ENEMY | Tag::INTERACTABLE, this->shootRange);
+
+	if (!didHit) {
+		return false;
+	}
+
+	this->RotateHead(rayDirection, deltaTime);
+
+	if (!this->canShoot) {
+		return true;
 	}
 
 	DirectX::XMVECTOR forward = this->head.lock()->transform.GetGlobalForward();
-
-	// Check if forward is close to rayDirection, if not, don't shoot (enemy is not facing player)
 	if (!DirectX::XMVector4NearEqual(forward, rayDirection, DirectX::XMVectorSet(0.2f, 1.f, 0.2f, 0.2f))) {
-		return; // Enemy is not facing player enough to shoot
+		return true;
 	}
 
-	// Offset ray origin to avoid hitting self
-	DirectX::XMVECTOR adjustedPos = DirectX::XMVectorAdd(headPosition, DirectX::XMVectorScale(rayDirection, 0.5f));
-	float maxDistance = rayLength + 1.f; // add small bias
+	std::random_device rd;
+	std::mt19937 gen(rd());
+	std::uniform_real_distribution<float> dist(0.0f, 1.0f);
+	float random = dist(gen);
+	if (this->playerHitAccuracy < random) {
+		Logger::Log("Enemy shooting at player - MISSED!");
+		this->canShoot = false;
 
-	Ray ray{Vector3D(adjustedPos), Vector3D(rayDirection)};
-	RayCastData rayCastData = {};
+		// Alter the ray direction to visually indicate a miss
+		std::uniform_real_distribution<float> dist2(0.1f, 0.17f);
+		float rX = dist2(gen);
+		float rY = dist2(gen);
+		float rZ = dist2(gen);
 
-	bool didHit = PhysicsQueue::GetInstance().castRay(ray, rayCastData, Tag::PLAYER, Tag::ENEMY, maxDistance);
+		DirectX::XMVECTOR missDir = DirectX::XMVectorAdd(
+			rayDirection, DirectX::XMVectorSet(rX, rY, rZ, 0.0f)); // Add some random offset
 
-	if (didHit) {
-		if (auto hitCollider = rayCastData.hitColider.lock()) {
-			if (hitCollider->GetParent().lock().get() == player.get()) {
+		this->VisualizeRay(headPosition, missDir, rayCastData.distance);
+	} 
+	else {
+		rayCastData.hitColider.lock()->Hit(this->damage);
+		Logger::Log("Enemy shooting at player - HIT!");
+		this->canShoot = false;
+		this->VisualizeRay(headPosition, rayDirection, rayCastData.distance);
 
-				std::random_device rd;
-				std::mt19937 gen(rd());
-				std::uniform_real_distribution<float> dist(0.0f, 1.0f);
-				float random = dist(gen);
-				if (this->playerHitAccuracy < random) {
-					Logger::Log("Enemy shooting at player - MISSED!");
-					this->canShoot = false;
-
-					// Alter the ray direction to visually indicate a miss
-					std::uniform_real_distribution<float> dist2(0.1f, 0.17f);
-					float rX = dist2(gen);
-					float rY = dist2(gen);
-					float rZ = dist2(gen);
-
-					DirectX::XMVECTOR missDir = DirectX::XMVectorAdd(
-						rayDirection, DirectX::XMVectorSet(rX, rY, rZ, 0.0f)); // Add some random offset
-
-					this->VisualizeRay(adjustedPos, missDir, rayCastData.distance);
-					return;
-				}
-
-				rayCastData.hitColider.lock()->Hit(this->damage);
-				Logger::Log("Enemy shooting at player - HIT!");
-				this->canShoot = false;
-				this->VisualizeRay(adjustedPos, rayDirection, rayCastData.distance);
-
-				if(!this->speaker.expired())
-				{
-					SoundClip* shootClip = AssetManager::GetInstance().GetSoundClip("Laser2.wav"); //temporary clip
-					this->speaker.lock()->SetRandomPitch(0.9f, 1.1f);
-					this->speaker.lock()->Play(shootClip);
-				}
-			}
+		if(!this->speaker.expired()) {
+			SoundClip* shootClip = AssetManager::GetInstance().GetSoundClip("Laser2.wav"); //temporary clip
+			this->speaker.lock()->SetRandomPitch(0.9f, 1.1f);
+			this->speaker.lock()->Play(shootClip);
 		}
 	}
+
+	return true;
 }
 
 void Enemy::RotateBody(const float deltaTime) {
@@ -424,7 +429,7 @@ void Enemy::RotateHead(DirectX::XMVECTOR& newDirection, const float deltaTime) {
 	float dot = DirectX::XMVectorGetX(DirectX::XMVector3Dot(currentDir, newDirection));
 	dot = std::clamp(dot, -1.0f, 1.0f);
 
-	float maxStep = this->rotationSpeed * 0.3f * deltaTime;
+	float maxStep = this->rotationSpeed * 0.5f * deltaTime;
 
 	DirectX::XMVECTOR newDir;
 

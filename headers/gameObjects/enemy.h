@@ -54,7 +54,7 @@ private:
 
 	// Shooting
 	const float damage = 5.f;
-	const float shootRange = 15.f;
+	const float shootRange = 30.f;
 	bool canShoot;
 	const float shotCooldown;
 	float timeSinceLastShot;
@@ -80,7 +80,7 @@ private:
 	void IsStuckOnPath(const float deltaTime);
 
 	void ShootAtCore();
-	void ShootAtPlayer();
+	bool ShootAtPlayer(const float deltaTime);
 
 	void RotateBody(const float deltaTime);
 	void RotateHead(DirectX::XMVECTOR& newDirection, const float deltaTime);

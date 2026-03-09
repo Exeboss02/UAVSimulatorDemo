@@ -65,6 +65,8 @@ public:
 	void SkyboxMenu();
 
 private:
+	bool IsCreditsScrollFinished(const std::shared_ptr<Scene>& scene) const;
+
 	std::shared_ptr<Scene> mainScene;
 	std::shared_ptr<Scene> emptyScene;
 	ObjectFromStringFactory objectFromString;

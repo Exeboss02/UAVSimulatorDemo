@@ -17,8 +17,8 @@ public:
 	/// <param name="rayCastData"></param>
 	/// <param name="colliders"></param>
 	/// <returns></returns>
-	bool castRay(Ray& ray, RayCastData& rayCastData, size_t targetTag,
-				 size_t tagsToIgnore, std::vector<std::weak_ptr<Collider>>& colliders,
+	bool castRay(Ray& ray, RayCastData& rayCastData, size_t targetTag, size_t tagsToIgnore,
+				 size_t rayTags, std::vector<std::weak_ptr<Collider>>& colliders,
 				 float maxDistance);
 
 	

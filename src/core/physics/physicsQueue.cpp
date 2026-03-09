@@ -189,12 +189,12 @@ void PhysicsQueue::SolveCollisions() {
     this->nrOfCollisionTestOnTick = 0;
 }
 
-bool PhysicsQueue::castRay(Ray& ray, RayCastData& rayCastData, size_t targetTag, size_t tagsToIgnore, float maxDistance)
-{
+bool PhysicsQueue::castRay(Ray& ray, RayCastData& rayCastData, size_t targetTag, size_t tagsToIgnore,
+						   size_t rayTags, float maxDistance) {
     for (int i = allColiders.size() - 1; i >= 0; i--) {
 		if (this->allColiders[i].expired()) {
 			this->allColiders.erase(this->allColiders.begin() + i);
 		}
 	}
-	return this->rayCaster.castRay(ray, rayCastData, targetTag, tagsToIgnore, this->allColiders, maxDistance);
+	return this->rayCaster.castRay(ray, rayCastData, targetTag, tagsToIgnore, rayTags, this->allColiders, maxDistance);
 }

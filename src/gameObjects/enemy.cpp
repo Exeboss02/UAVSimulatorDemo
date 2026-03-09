@@ -350,7 +350,8 @@ bool Enemy::ShootAtPlayer(const float deltaTime) {
 	Ray ray{Vector3D(headPosition), Vector3D(rayDirection)};
 	RayCastData rayCastData = {};
 
-	bool didHit = PhysicsQueue::GetInstance().castRay(ray, rayCastData, Tag::PLAYER, Tag::ENEMY | Tag::INTERACTABLE, this->shootRange);
+	bool didHit = PhysicsQueue::GetInstance().castRay(ray, rayCastData, Tag::PLAYER, Tag::ENEMY | Tag::INTERACTABLE,
+													  Tag::NOIGNORE, this->shootRange);
 
 	if (!didHit) {
 		return false;

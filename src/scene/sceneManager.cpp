@@ -8,7 +8,7 @@
 #include "game/crosshair.h"
 #include "game/events.h"
 #include "game/gameManager.h"
-#include "gameObjects/enemy.h"
+#include "gameObjects/enemies/enemy.h"
 #include "gameObjects/pointLightObject.h"
 #include "gameObjects/room.h"
 #include "gameObjects/turret.h"

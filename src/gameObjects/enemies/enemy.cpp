@@ -1,4 +1,4 @@
-#include "gameObjects/enemy.h"
+#include "gameObjects/enemies/enemy.h"
 
 #include "core/assetManager.h"
 #include "core/physics/physicsQueue.h"

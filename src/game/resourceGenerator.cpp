@@ -55,10 +55,6 @@ void ResourceGenerator::Start() {
 }
 
 void ResourceGenerator::Interact(std::shared_ptr<Player> player) {
-	if (auto gameManager = GameManager::GetInstance(); gameManager && gameManager->GetInCombat()) {
-		return;
-	}
-
 	if (InputManager::GetInstance().WasKeyPressed('R')) {
 		auto parentWeak = this->GetParent();
 		if (parentWeak.expired()) return;
@@ -109,13 +105,14 @@ void ResourceGenerator::Hover() {
 	auto prompt = promptWeak.lock();
 	if (!prompt) return;
 
-	bool inCombat = GameManager::GetInstance() && GameManager::GetInstance()->GetInCombat();
-	std::string txt = "Press \"F\" to collect resources";
-	if (inCombat) {
-		txt = "Can't collect during attacks";
-	} else {
-		txt += "\nPress \"R\" to discard generator";
-	}
+	std::string txt = std::format("Titanium: {}\nLubricant: {}\nCarbon Fiber: {}\n\n", 
+		this->titanium.GetCurrentlyGenerated(this->lastGenerated),
+		this->lubricant.GetCurrentlyGenerated(this->lastGenerated),
+		this->carbonFiber.GetCurrentlyGenerated(this->lastGenerated)
+	);
+		
+	txt += "Press \"F\" to collect resources";
+	txt += "\nPress \"R\" to discard generator";
 	prompt->Show(txt);
 }
 

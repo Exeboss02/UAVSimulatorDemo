@@ -31,6 +31,7 @@ void Player::Start() {
 
 	this->resources.titanium.SetAmount(20);
 	this->resources.lubricant.SetAmount(20);
+	this->resources.carbonFiber.SetAmount(2);
 
 	// adding camera
 	auto cameraWeak = this->factory->CreateGameObjectOfType<CameraObject>();

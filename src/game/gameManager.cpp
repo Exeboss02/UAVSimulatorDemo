@@ -58,6 +58,7 @@ void GameManager::Start() {
 	this->rounds.push_back(Round{50, 3});
 	this->rounds.push_back(Round{80, 3});
 
+
 	this->idleTimeTimer = this->idleTime;
 
 	// Battle music

@@ -59,6 +59,8 @@ private:
 	void DisplayObjective(size_t round);
 
 	bool playing = false;
+
+	// Part 0 is pre-story, as such final story part == storyParts.size()
 	size_t currentStoryPart = 0;
 
 	struct StoryCheck {

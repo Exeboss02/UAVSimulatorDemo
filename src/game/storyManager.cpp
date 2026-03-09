@@ -47,10 +47,8 @@ void StoryManager::PlayNextStoryPart() {
 	this->currentStoryPart++;
 	this->playing = true;
 
-	if (this->currentStoryPart == this->storyParts.size() - 1) {
-		Logger::Log("Last round");
+	if (this->currentStoryPart == this->storyParts.size()) {
 		if (auto button = this->factory->FindObjectOfType<EmergenceExitButton>().lock()) {
-			Logger::Log("yo");
 			button->SetState(EmergenceExitButton::State::PostTouchUp);
 		}
 	}

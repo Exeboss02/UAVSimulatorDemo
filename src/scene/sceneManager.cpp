@@ -15,6 +15,7 @@
 #include "game/gunPickUp.h"
 #include "game/musicPlayer.h"
 #include "game/footBall.h"
+#include "game/startButton.h"
 
 // std
 #include <Windows.h>
@@ -62,6 +63,7 @@ SceneManager::SceneManager(Renderer* rend)
 	this->objectFromString.RegisterType<GameManager>(NAMEOF(GameManager));
 	this->objectFromString.RegisterType<GunPickUp>(NAMEOF(GunPickUp));
 	this->objectFromString.RegisterType<MusicPlayer>(NAMEOF(MusicPlayer));
+	this->objectFromString.RegisterType<StartButton>(NAMEOF(StartButton));
 
 
 	CreateNewScene(this->emptyScene);

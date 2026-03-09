@@ -4,6 +4,7 @@
 #include "game/gunPickUp.h"
 #include "gameObjects/SpaceShipObj.h"
 #include "gameObjects/emergencyExitButton.h"
+#include "game/startButton.h"
 #include "gameObjects/room.h"
 #include "utilities/aStar.h"
 #include <numbers>
@@ -77,6 +78,10 @@ void Cockpit::Start() {
 	auto emergencyButton = this->factory->CreateStaticGameObject<EmergenceExitButton>();
 	emergencyButton->transform.SetPosition(4.43, 2, 2);
 	emergencyButton->SetParent(this->GetPtr());
+
+	auto startButton = this->factory->CreateStaticGameObject<StartButton>();
+	startButton->transform.SetPosition(4.43, 2, 3);
+	startButton->SetParent(this->GetPtr());
 
 	auto gunPickUp = this->factory->CreateStaticGameObject<GunPickUp>();
 	gunPickUp->transform.SetPosition(-4, 1.45, 2.3);

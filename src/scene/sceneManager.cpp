@@ -7,14 +7,14 @@
 #include "core/filepathHolder.h"
 #include "game/crosshair.h"
 #include "game/events.h"
+#include "game/footBall.h"
 #include "game/gameManager.h"
+#include "game/gunPickUp.h"
+#include "game/musicPlayer.h"
 #include "gameObjects/enemy.h"
 #include "gameObjects/pointLightObject.h"
 #include "gameObjects/room.h"
 #include "gameObjects/turret.h"
-#include "game/gunPickUp.h"
-#include "game/musicPlayer.h"
-#include "game/footBall.h"
 
 // std
 #include <Windows.h>
@@ -62,7 +62,6 @@ SceneManager::SceneManager(Renderer* rend)
 	this->objectFromString.RegisterType<GameManager>(NAMEOF(GameManager));
 	this->objectFromString.RegisterType<GunPickUp>(NAMEOF(GunPickUp));
 	this->objectFromString.RegisterType<MusicPlayer>(NAMEOF(MusicPlayer));
-
 
 	CreateNewScene(this->emptyScene);
 	this->emptyScene->CreateGameObjectOfType<CameraObject>();
@@ -199,6 +198,17 @@ void SceneManager::LoadSceneFromFile(const std::string& filePath) {
 	this->eventManager->RegisterCallback(static_cast<int>(ButtonEvent::PLAY_SOUND),
 										 []() { Logger::Log("Sound is being played"); });
 
+	this->eventManager->RegisterCallback(static_cast<int>(ButtonEvent::MAIN_MENU), [this]() {
+		Logger::Log("MAIN_MENU event triggered: loading MAIN_MENU scene");
+		this->mainScene->QueueLoadScene((FilepathHolder::GetAssetsDirectory() / "scenes" / "MainMenu.scene").string());
+	});
+
+	this->eventManager->RegisterCallback(static_cast<int>(ButtonEvent::CREDITS), [this]() {
+		Logger::Log("CREDITS event triggered: loading END_CREDITS scene");
+		this->mainScene->QueueLoadScene(
+			(FilepathHolder::GetAssetsDirectory() / "scenes" / "EndCredits.scene").string());
+	});
+
 	// After all objects are started, wire any buttons that were created/modified in the editor
 	for (const auto& go : this->mainScene->GetGameObjects()) {
 		if (auto btn = dynamic_cast<UI::Button*>(go.get())) {
@@ -306,7 +316,6 @@ void SceneManager::SkyboxMenu() {
 			RenderQueue::ChangeSkybox("bright_planet.dds");
 		}
 	}
-
 }
 
 void SceneManager::SaveSceneToCurrentFile() {

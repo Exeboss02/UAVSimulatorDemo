@@ -1,0 +1,126 @@
+{
+    "gameObjects":  [
+                        {
+                            "fov":  80.0,
+                            "name":  "CreditsCamera",
+                            "transform":  {
+                                              "position":  [
+                                                               0.0,
+                                                               0.0,
+                                                               0.0
+                                                           ],
+                                              "rotation":  [
+                                                               0.0,
+                                                               0.0,
+                                                               0.0,
+                                                               1.0
+                                                           ],
+                                              "scale":  [
+                                                            1.0,
+                                                            1.0,
+                                                            1.0
+                                                        ]
+                                          },
+                            "type":  "CameraObject"
+                        },
+                        {
+                            "canvas":  {
+                                           "scaleMode":  "pixel",
+                                           "size":  [
+                                                        1920.0,
+                                                        1080.0
+                                                    ]
+                                       },
+                            "children":  [
+                                             {
+                                                 "color":  [
+                                                               0.0,
+                                                               0.0,
+                                                               0.0,
+                                                               1.0
+                                                           ],
+                                                 "enabled":  false,
+                                                 "hAlign":  "center",
+                                                 "label":  "",
+                                                 "labelFontSize":  18.0,
+                                                 "name":  "Background",
+                                                 "transform":  {
+                                                                   "position":  [
+                                                                                    0.0,
+                                                                                    0.0
+                                                                                ],
+                                                                   "size":  [
+                                                                                1920.0,
+                                                                                1080.0
+                                                                            ]
+                                                               },
+                                                 "type":  "UI::Button",
+                                                 "vAlign":  "middle",
+                                                 "visible":  true,
+                                                 "zIndex":  -10
+                                             },
+                                             {
+                                                 "color":  [
+                                                               0.30980393290519714,
+                                                               0.16078431904315948,
+                                                               0.3490196168422699,
+                                                               1.0
+                                                           ],
+                                                 "enabled":  true,
+                                                 "hAlign":  "center",
+                                                 "label":  "MAIN MENU",
+                                                 "labelFontSize":  28.0,
+                                                 "name":  "MainMenu",
+                                                 "onClickEvent":  8,
+                                                 "transform":  {
+                                                                   "position":  [
+                                                                                    810.0,
+                                                                                    980.0
+                                                                                ],
+                                                                   "size":  [
+                                                                                300.0,
+                                                                                60.0
+                                                                            ]
+                                                               },
+                                                 "type":  "UI::Button",
+                                                 "vAlign":  "middle",
+                                                 "visible":  true,
+                                                 "zIndex":  5
+                                             },
+                                             {
+                                                 "autoScroll":  true,
+                                                 "color":  [
+                                                               1.0,
+                                                               1.0,
+                                                               1.0,
+                                                               1.0
+                                                           ],
+                                                 "enabled":  true,
+                                                 "font":  "assets/fonts/lucon.ttf",
+                                                 "fontSize":  42.0,
+                                                 "name":  "CreditsText",
+                                                 "scrollLoop":  false,
+                                                 "scrollResetY":  1180.0,
+                                                 "scrollSpeed":  -75,
+                                                 "scrollTopLimitY":  -196.0,
+                                                 "text":  "STARLESS PATH\n\n\nBad Gnome Interactive\n\nSebastian Einarsson\nSimon F. Nilsson\nHampus Eklund\nDag Ohlin\nGabriel Abrahamsson Wiklund\nMax Augustsson\n\n\nSpecial Thanks\nOur playtesters\n\n\nThanks for playing!",
+                                                 "transform":  {
+                                                                   "position":  [
+                                                                                    200.0,
+                                                                                    1250.0
+                                                                                ],
+                                                                   "size":  [
+                                                                                420.0,
+                                                                                950.0
+                                                                            ]
+                                                               },
+                                                 "type":  "UI::Text",
+                                                 "visible":  true,
+                                                 "zIndex":  1
+                                             }
+                                         ],
+                            "name":  "Canvas",
+                            "type":  "UI::CanvasObject"
+                        }
+                    ]
+}

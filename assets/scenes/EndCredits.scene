@@ -39,7 +39,7 @@
                                                                0.0,
                                                                1.0
                                                            ],
-                                                 "enabled":  false,
+                                                 "enabled":  true,
                                                  "hAlign":  "center",
                                                  "label":  "",
                                                  "labelFontSize":  18.0,
@@ -60,34 +60,6 @@
                                                  "zIndex":  -10
                                              },
                                              {
-                                                 "color":  [
-                                                               0.30980393290519714,
-                                                               0.16078431904315948,
-                                                               0.3490196168422699,
-                                                               1.0
-                                                           ],
-                                                 "enabled":  true,
-                                                 "hAlign":  "center",
-                                                 "label":  "MAIN MENU",
-                                                 "labelFontSize":  28.0,
-                                                 "name":  "MainMenu",
-                                                 "onClickEvent":  8,
-                                                 "transform":  {
-                                                                   "position":  [
-                                                                                    810.0,
-                                                                                    980.0
-                                                                                ],
-                                                                   "size":  [
-                                                                                300.0,
-                                                                                60.0
-                                                                            ]
-                                                               },
-                                                 "type":  "UI::Button",
-                                                 "vAlign":  "middle",
-                                                 "visible":  true,
-                                                 "zIndex":  5
-                                             },
-                                             {
                                                  "autoScroll":  true,
                                                  "color":  [
                                                                1.0,
@@ -103,7 +75,7 @@
                                                  "scrollResetY":  1180.0,
                                                  "scrollSpeed":  -75,
                                                  "scrollTopLimitY":  -196.0,
-                                                 "text":  "STARLESS PATH\n\n\nBad Gnome Interactive\n\nSebastian Einarsson\nSimon F. Nilsson\nHampus Eklund\nDag Ohlin\nGabriel Abrahamsson Wiklund\nMax Augustsson\n\n\nSpecial Thanks\nOur playtesters\n\n\nThanks for playing!",
+                                                 "text":  "STARLESS PATH\n\n\nBad Gnome Interactive\nSebastian Einarsson\nSimon F. Nilsson\nHampus Eklund\nDag Ohlin\nGabriel Abrahamsson Wiklund\nMax Augustsson\n\n\n\n\n\nSprint 1\nThe groundworks of the engine\nRenderer\nImGUI overlay\nObject loader\n\n\nSprint 2\nGimp rooms\nRendering bugs\nSkyboxes\nShadow mapping\nScene editing\nUI widgets\nNormal mapping\nVisible raycasts for debugging\nA* pathing for enemies\nDefence logic\n\n\nSprint 3\nHigh resolution text rendering\nCockpit\nModels\nMain menu\nBuild menu\nWin menu\nGame loop\n\n\nSpecial Thanks\nOur playtesters\n\n\n\n\n\nThanks for playing!",
                                                  "transform":  {
                                                                    "position":  [
                                                                                     200.0,

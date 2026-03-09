@@ -17,6 +17,7 @@
 
 void ResourceGenerator::Start() {
 	this->SetMesh(AssetManager::GetInstance().GetMeshObjData("meshes/generator.glb:Mesh_0"));
+	this->GetMesh().SetMaterial(2, AssetManager::GetInstance().GetMaterialWeakPtr("newGeneratorSide").lock());
 	//this->transform.SetScale(0.5f, 1.2f, 0.5f);
 	//this->transform.SetPosition(0, 1.8f, 0);
 
@@ -55,11 +56,10 @@ void ResourceGenerator::Start() {
 }
 
 void ResourceGenerator::Interact(std::shared_ptr<Player> player) {
-	if (auto gameManager = GameManager::GetInstance(); gameManager && gameManager->GetInCombat()) {
-		return;
-	}
-
 	if (InputManager::GetInstance().WasKeyPressed('R')) {
+		if (GameManager::GetInstance()->GetInCombat()) {
+			return;
+		}
 		auto parentWeak = this->GetParent();
 		if (parentWeak.expired()) return;
 
@@ -109,11 +109,14 @@ void ResourceGenerator::Hover() {
 	auto prompt = promptWeak.lock();
 	if (!prompt) return;
 
-	bool inCombat = GameManager::GetInstance() && GameManager::GetInstance()->GetInCombat();
-	std::string txt = "Press \"F\" to collect resources";
-	if (inCombat) {
-		txt = "Can't collect during attacks";
-	} else {
+	std::string txt = std::format("Titanium: {}\nLubricant: {}\nCarbon Fiber: {}\n\n", 
+		this->titanium.GetCurrentlyGenerated(this->lastGenerated),
+		this->lubricant.GetCurrentlyGenerated(this->lastGenerated),
+		this->carbonFiber.GetCurrentlyGenerated(this->lastGenerated)
+	);
+		
+	txt += "Press \"F\" to collect resources";
+	if (!GameManager::GetInstance()->GetInCombat()) {
 		txt += "\nPress \"R\" to discard generator";
 	}
 	prompt->Show(txt);

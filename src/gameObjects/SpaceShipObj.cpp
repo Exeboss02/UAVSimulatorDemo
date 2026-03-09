@@ -1,8 +1,8 @@
 #include "gameObjects/SpaceShipObj.h"
 #include "core/assetManager.h"
 #include "gameObjects/meshObject.h"
-#include "gameObjects/testEnemy.h"
-#include "gameObjects/enemy.h"
+#include "gameObjects/enemies/testEnemy.h"
+#include "gameObjects/enemies/enemy.h"
 #include "imgui.h"
 #include <array>
 #include "gameObjects/cockpit.h"

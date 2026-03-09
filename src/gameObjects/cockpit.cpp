@@ -54,10 +54,12 @@ void Cockpit::Start() {
 		// Update core health on hud
 		GameManager::GetInstance()->GetPlayer()->hud->SetCoreHealthText(this->health.Get());
 
-		SoundClip* damageClip = AssetManager::GetInstance().GetSoundClip("SmallExplotion.wav");
-		this->speaker.lock()->SetDeleteWhenFinnished(true);
-		this->speaker.lock()->transform.SetPosition(this->transform.GetGlobalPosition());
-		this->speaker.lock()->Play(damageClip);
+		if(!this->speaker.expired())
+		{
+			SoundClip* damageClip = AssetManager::GetInstance().GetSoundClip("SmallExplotion.wav");
+			this->speaker.lock()->transform.SetPosition(this->transform.GetGlobalPosition());
+			this->speaker.lock()->Play(damageClip);
+		}
 	});
 
 	coreCollider->transform.SetPosition(0, 2, 0);
@@ -80,7 +82,7 @@ void Cockpit::Start() {
 	emergencyButton->SetParent(this->GetPtr());
 
 	auto startButton = this->factory->CreateStaticGameObject<StartButton>();
-	startButton->transform.SetPosition(4.43, 2, 3);
+	startButton->transform.SetPosition(0, 2, -2);
 	startButton->SetParent(this->GetPtr());
 
 	auto gunPickUp = this->factory->CreateStaticGameObject<GunPickUp>();

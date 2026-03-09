@@ -6,6 +6,7 @@
 #include "game/crosshair.h"
 #include "gameObjects/cameraObject.h"
 #include "rendering/renderQueue.h"
+#include "utilities/time.h"
 
 namespace UI {
 
@@ -101,7 +102,7 @@ void CanvasObject::Start() {
 }
 
 void CanvasObject::Tick() {
-	if (this->canvas) this->canvas->Update(0.0f);
+	if (this->canvas) this->canvas->Update(Time::GetInstance().GetDeltaTime());
 }
 
 void CanvasObject::OnDestroy() {

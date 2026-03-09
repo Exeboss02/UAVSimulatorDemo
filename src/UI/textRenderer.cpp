@@ -56,13 +56,13 @@ void TextRenderer::Render(void* context) {
 		}
 
 		float safeFontSize = sub.fontSize > 0 ? sub.fontSize : 16.0f;
-		float safeX = std::max(0.0f, sub.position.x);
-		float safeY = std::max(0.0f, sub.position.y);
+		float drawX = sub.position.x;
+		float drawY = sub.position.y;
 
 		UINT color = ((UINT) (sub.color.w * 255) << 24) | ((UINT) (sub.color.z * 255) << 16) |
 					 ((UINT) (sub.color.y * 255) << 8) | ((UINT) (sub.color.x * 255));
 
-		fw1FontWrapper->DrawString(deviceContext, wtext.c_str(), wfont.c_str(), safeFontSize, safeX, safeY, color,
+		fw1FontWrapper->DrawString(deviceContext, wtext.c_str(), wfont.c_str(), safeFontSize, drawX, drawY, color,
 								   FW1_RESTORESTATE);
 	}
 	submissions.clear();

@@ -5,6 +5,7 @@
 #include "game/storyManager.h"
 #include "gameObjects/SpaceShipObj.h"
 #include "gameObjects/enemies/enemy.h"
+#include "gameObjects/enemies/drone.h"
 #include "gameObjects/gameObject3D.h"
 #include "gameObjects/enemies/testEnemy.h"
 

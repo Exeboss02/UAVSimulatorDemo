@@ -8,7 +8,7 @@
 #include "game/crosshair.h"
 #include "game/events.h"
 #include "game/gameManager.h"
-#include "gameObjects/enemies/enemy.h"
+#include "gameObjects/enemies/drone.h"
 #include "gameObjects/pointLightObject.h"
 #include "gameObjects/room.h"
 #include "gameObjects/turret.h"
@@ -46,7 +46,7 @@ SceneManager::SceneManager(Renderer* rend)
 	this->objectFromString.RegisterType<TestPlayer>(NAMEOF(TestPlayer));
 	this->objectFromString.RegisterType<Turret>(NAMEOF(Turret));
 	this->objectFromString.RegisterType<TestEnemy>(NAMEOF(TestEnemy));
-	this->objectFromString.RegisterType<Enemy>(NAMEOF(Enemy));
+	this->objectFromString.RegisterType<Drone>(NAMEOF(Drone));
 
 	// UI widget types
 	this->objectFromString.RegisterType<UI::CanvasObject>(NAMEOF(UI::CanvasObject));

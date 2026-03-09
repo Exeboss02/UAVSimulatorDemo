@@ -4,9 +4,10 @@
 #include "game/player.h"
 #include "game/storyManager.h"
 #include "gameObjects/SpaceShipObj.h"
-#include "gameObjects/enemy.h"
+#include "gameObjects/enemies/enemy.h"
+#include "gameObjects/enemies/drone.h"
 #include "gameObjects/gameObject3D.h"
-#include "gameObjects/testEnemy.h"
+#include "gameObjects/enemies/testEnemy.h"
 
 namespace UI {
 class Image;
@@ -17,6 +18,7 @@ class CanvasObject;
 struct Round {
 	size_t enemyCount;
 	size_t breachPoints;
+	float timeUntilNext = 30;
 };
 
 class GameManager : public GameObject {
@@ -98,7 +100,7 @@ private:
 	float enemySpawnDelay;
 
 	float idleTimeTimer;
-	const float idleTime;
+	const float startIdleTime;
 
 	size_t unspawnedEnemies;
 

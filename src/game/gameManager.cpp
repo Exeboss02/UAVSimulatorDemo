@@ -19,7 +19,7 @@ GameManager::~GameManager() { this->shipSpeaker.lock()->Stop(); }
 
 GameManager::GameManager()
 	: playerSpawnPoint(DirectX::XMVectorSet(140.0, 5.0, -23.0f, 0.0)), currentRound(0), inCombat(false),
-	  enemySpawnTimer(1), unspawnedEnemies(0), enemySpawnDelay(2), idleTime(30), idleTimeTimer(0) {}
+	  enemySpawnTimer(1), unspawnedEnemies(0), enemySpawnDelay(2), startIdleTime(10), idleTimeTimer(0) {}
 
 void GameManager::Start() {
 	if (GameManager::instance.expired()) {
@@ -47,8 +47,8 @@ void GameManager::Start() {
 
 	// Set up rounds
 	this->rounds.reserve(10);
-	this->rounds.push_back(Round{3, 1});
-	this->rounds.push_back(Round{5, 1});
+	this->rounds.push_back(Round{3, 1, 10});
+	this->rounds.push_back(Round{5, 1, 20});
 	this->rounds.push_back(Round{7, 1});
 	this->rounds.push_back(Round{10, 2});
 	this->rounds.push_back(Round{15, 2});
@@ -58,7 +58,8 @@ void GameManager::Start() {
 	this->rounds.push_back(Round{50, 3});
 	this->rounds.push_back(Round{80, 3});
 
-	this->idleTimeTimer = this->idleTime;
+
+	this->idleTimeTimer = this->startIdleTime;
 
 	// Battle music
 	this->buildMusicWaitTimer.Initialize(5);
@@ -414,7 +415,7 @@ void GameManager::SpawnRound(size_t roundIndex) {
 }
 
 void GameManager::SpawnEnemy(size_t atBreachpoint) {
-	auto enemy = this->factory->CreateGameObjectOfType<Enemy>();
+	auto enemy = this->factory->CreateGameObjectOfType<Drone>();
 
 	if (auto enemyPtr = enemy.lock()) {
 		if (atBreachpoint >= this->paths.size()) {
@@ -436,8 +437,8 @@ void GameManager::SpawnEnemy(size_t atBreachpoint) {
 void GameManager::EndRound() {
 	Logger::Log("Finished round");
 	this->inCombat = false;
+	this->idleTimeTimer = this->rounds[this->currentRound].timeUntilNext;
 	this->currentRound++;
-	this->idleTimeTimer = this->idleTime;
 
 	if (this->currentRound >= this->rounds.size()) {
 		// Let storymanager do the winning

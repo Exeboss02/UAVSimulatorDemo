@@ -7,8 +7,12 @@
 #include "core/filepathHolder.h"
 #include "game/crosshair.h"
 #include "game/events.h"
+#include "game/footBall.h"
 #include "game/gameManager.h"
-#include "gameObjects/enemy.h"
+#include "gameObjects/enemies/drone.h"
+#include "game/gunPickUp.h"
+#include "game/musicPlayer.h"
+#include "gameObjects/enemies/enemy.h"
 #include "gameObjects/pointLightObject.h"
 #include "gameObjects/room.h"
 #include "gameObjects/turret.h"
@@ -19,12 +23,38 @@
 
 // std
 #include <Windows.h>
+#include <filesystem>
 
 // Very good macro, please don't remove
 #define NAMEOF(x) #x
 
 // Define static active instance
 SceneManager* SceneManager::activeInstance = nullptr;
+
+namespace {
+bool IsEndCreditsScenePath(const std::string& scenePath) {
+	if (scenePath.empty()) return false;
+	return std::filesystem::path(scenePath).filename().string() == "EndCredits.scene";
+}
+} // namespace
+
+bool SceneManager::IsCreditsScrollFinished(const std::shared_ptr<Scene>& scene) const {
+	if (!scene) return false;
+
+	for (const auto& go : scene->GetGameObjects()) {
+		auto* text = dynamic_cast<UI::Text*>(go.get());
+		if (!text || text->GetName() != "CreditsText") continue;
+
+		if (!text->IsAutoScrollEnabled() || text->IsScrollLoopEnabled() || text->GetScrollSpeed() >= 0.0f) {
+			return false;
+		}
+
+		const float currentBottom = text->GetPosition().y + text->GetSize().y;
+		return currentBottom < text->GetScrollTopLimitY();
+	}
+
+	return false;
+}
 
 SceneManager::SceneManager(Renderer* rend)
 	: mainScene(nullptr), renderer(rend), objectFromString(), isPaused(false),
@@ -47,7 +77,7 @@ SceneManager::SceneManager(Renderer* rend)
 	this->objectFromString.RegisterType<TestPlayer>(NAMEOF(TestPlayer));
 	this->objectFromString.RegisterType<Turret>(NAMEOF(Turret));
 	this->objectFromString.RegisterType<TestEnemy>(NAMEOF(TestEnemy));
-	this->objectFromString.RegisterType<Enemy>(NAMEOF(Enemy));
+	this->objectFromString.RegisterType<Drone>(NAMEOF(Drone));
 
 	// UI widget types
 	this->objectFromString.RegisterType<UI::CanvasObject>(NAMEOF(UI::CanvasObject));
@@ -113,6 +143,13 @@ void SceneManager::SceneTick() {
 
 	this->mainScene->SceneTick(this->isPaused);
 	this->mainScene->SceneLateTick(this->isPaused);
+
+	if (IsEndCreditsScenePath(this->currentScenePath) && this->mainScene->queuedScene.empty() &&
+		this->IsCreditsScrollFinished(this->mainScene)) {
+		Logger::Log("End credits finished: returning to MAIN_MENU scene");
+		this->mainScene->QueueLoadScene((FilepathHolder::GetAssetsDirectory() / "scenes" / "MainMenu.scene").string());
+	}
+
 	PhysicsQueue::GetInstance().ResetPhysicsTickCounter();
 
 #ifdef TIMER_DEBUG
@@ -200,6 +237,17 @@ void SceneManager::LoadSceneFromFile(const std::string& filePath) {
 
 	this->eventManager->RegisterCallback(static_cast<int>(ButtonEvent::PLAY_SOUND),
 										 []() { Logger::Log("Sound is being played"); });
+
+	this->eventManager->RegisterCallback(static_cast<int>(ButtonEvent::MAIN_MENU), [this]() {
+		Logger::Log("MAIN_MENU event triggered: loading MAIN_MENU scene");
+		this->mainScene->QueueLoadScene((FilepathHolder::GetAssetsDirectory() / "scenes" / "MainMenu.scene").string());
+	});
+
+	this->eventManager->RegisterCallback(static_cast<int>(ButtonEvent::CREDITS), [this]() {
+		Logger::Log("CREDITS event triggered: loading END_CREDITS scene");
+		this->mainScene->QueueLoadScene(
+			(FilepathHolder::GetAssetsDirectory() / "scenes" / "EndCredits.scene").string());
+	});
 
 	// After all objects are started, wire any buttons that were created/modified in the editor
 	for (const auto& go : this->mainScene->GetGameObjects()) {
@@ -308,7 +356,6 @@ void SceneManager::SkyboxMenu() {
 			RenderQueue::ChangeSkybox("bright_planet.dds");
 		}
 	}
-
 }
 
 void SceneManager::SaveSceneToCurrentFile() {

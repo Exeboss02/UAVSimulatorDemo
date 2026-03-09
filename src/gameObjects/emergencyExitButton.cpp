@@ -1,11 +1,15 @@
 #include "gameObjects/emergencyExitButton.h"
 #include "game/gameManager.h"
+#include "UI/interactionPrompt.h"
 
 void EmergenceExitButton::Start() { 
 	auto collider = this->factory->CreateStaticGameObject<SphereCollider>();
 	collider->SetOnInteract([&](std::shared_ptr<Player> player) {
 		this->OnInteract(player); 
 	});
+	collider->SetOnHover([&] { this->Hover(); });
+	collider->SetTag(Tag::INTERACTABLE);
+
 	collider->SetParent(this->GetPtr());
 	collider->transform.SetScale(4, 4, 4);
 
@@ -23,6 +27,13 @@ void EmergenceExitButton::Start() {
 	this->SetName("Emergency Button " + std::to_string(this->factory->GetNextID()));
 
 	this->MeshObject::Start();
+}
+
+void EmergenceExitButton::Hover() { 
+	auto promptWeak = this->factory->FindObjectOfType<UI::InteractionPrompt>();
+	if (auto prompt = promptWeak.lock()) {
+		prompt->Show("Press");
+	}
 }
 
 void EmergenceExitButton::SetState(EmergenceExitButton::State state) {

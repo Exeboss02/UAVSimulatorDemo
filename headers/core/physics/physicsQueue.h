@@ -65,7 +65,8 @@ public:
     /// <param name="maxDistance"></param>
     /// <returns></returns>
 	bool castRay(Ray& ray, RayCastData& rayCastData, size_t targetTag = ~Tag::NOIGNORE,
-				 size_t tagsToIgnore = Tag::NOIGNORE, float maxDistance = (std::numeric_limits<float>::max)());
+				 size_t tagsToIgnore = Tag::NOIGNORE, size_t rayTags = Tag::NOIGNORE,
+				 float maxDistance = (std::numeric_limits<float>::max)());
 
 private:
     PhysicsQueue();

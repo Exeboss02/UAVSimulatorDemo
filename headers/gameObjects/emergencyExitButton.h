@@ -13,6 +13,8 @@ public:
 
 	void Start() override;
 
+	void Hover();
+
 	void SetState(State state);
 
 private:

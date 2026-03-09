@@ -82,7 +82,7 @@ void Cockpit::Start() {
 	emergencyButton->SetParent(this->GetPtr());
 
 	auto startButton = this->factory->CreateStaticGameObject<StartButton>();
-	startButton->transform.SetPosition(0, 2, -2);
+	startButton->transform.SetPosition(0, 1.35, -3);
 	startButton->SetParent(this->GetPtr());
 
 	auto gunPickUp = this->factory->CreateStaticGameObject<GunPickUp>();
@@ -180,6 +180,7 @@ void Cockpit::createVisualsAndColiders() {
 		colliderobj->transform.SetScale(DirectX::XMLoadFloat3(&scale));
 		colliderobj->SetParent(this->GetPtr());
 		colliderobj->SetTag(Tag::WALL);
+		colliderobj->SetIgnoreTag(Tag::INTERACTABLE);
 		//auto col = colliderobj.Get();
 		//colliderobj.Init();
 		//col->ShowDebug(true);

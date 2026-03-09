@@ -16,9 +16,6 @@
 #include "gameObjects/pointLightObject.h"
 #include "gameObjects/room.h"
 #include "gameObjects/turret.h"
-#include "game/gunPickUp.h"
-#include "game/musicPlayer.h"
-#include "game/footBall.h"
 #include "game/startButton.h"
 
 // std

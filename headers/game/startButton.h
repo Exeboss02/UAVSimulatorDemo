@@ -7,9 +7,9 @@
 class StartButton : public MeshObject {
 public:
 	void Start() override;
+	void Hover();
 
 private:
-	std::weak_ptr<MeshObject> sign;
 	std::weak_ptr<SphereCollider> collider;
 	void OnInteract(std::shared_ptr<Player> player);
 };

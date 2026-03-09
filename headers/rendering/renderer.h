@@ -30,6 +30,8 @@
 #include <functional>
 #include <unordered_map>
 
+static constexpr bool ENABLE_D3D_DEBUG_LAYER = false;
+
 namespace UI {
 class Widget;
 }

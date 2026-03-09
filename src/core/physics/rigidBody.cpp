@@ -43,6 +43,11 @@ void RigidBody::LatePhysicsTick() {
 	// position will be lerped between the last physics pos and this new valid physics pos
 
 	// collision checks should happen after this in sceneManager
+
+	//Rotation
+	float deltaTime = Time::GetInstance().GetFixedDeltaTime();
+	DirectX::XMVECTOR angularRotation = DirectX::XMVectorScale(DirectX::XMLoadFloat3(&this->angularVelocity), deltaTime);
+	this->transform.Rotate(angularRotation.m128_f32[0], angularRotation.m128_f32[1], angularRotation.m128_f32[2]);
 }
 
 DirectX::XMVECTOR RigidBody::GetPhysicsPosition() { return this->physicsPosition; }
@@ -179,7 +184,22 @@ bool RigidBody::Collision(std::weak_ptr<RigidBody> rigidbody, int& nrOfCollision
 
 				// Remove the normal component from the velocity
 				DirectX::XMVECTOR newVelocity = DirectX::XMVectorSubtract(velocity, normalComponent);
-				DirectX::XMStoreFloat3(&this->linearVelocity, newVelocity);
+
+				//if bouncy
+				if(thisCollider->GetBouncy())
+				{
+					newVelocity = DirectX::XMLoadFloat3(&this->linearVelocity);
+					newVelocity = DirectX::XMVector4Reflect(newVelocity, contactNormal);
+					newVelocity = DirectX::XMVectorScale(newVelocity, 0.8f);
+				}
+				if(otherCollider->GetBouncy())
+				{
+					newVelocity = DirectX::XMLoadFloat3(&rigidbody.lock()->linearVelocity);
+					newVelocity = DirectX::XMVector4Reflect(newVelocity, contactNormal);
+					newVelocity = DirectX::XMVectorScale(newVelocity, 0.8f);
+				}
+
+				DirectX::XMStoreFloat3(&rigidbody.lock()->linearVelocity, newVelocity);
 			}
 		}
 	}
@@ -237,6 +257,15 @@ bool RigidBody::Collision(std::weak_ptr<Collider> collider, int& nrOfCollisionTe
 
 			// Remove the normal component from the velocity
 			DirectX::XMVECTOR newVelocity = DirectX::XMVectorSubtract(velocity, normalComponent);
+
+			//if bouncy
+			if(thisCollider->GetBouncy())
+			{
+				newVelocity = DirectX::XMLoadFloat3(&this->linearVelocity);
+				newVelocity = DirectX::XMVector4Reflect(newVelocity, contactNormal);
+				newVelocity = DirectX::XMVectorScale(newVelocity, 0.8f);
+			}
+
 			DirectX::XMStoreFloat3(&this->linearVelocity, newVelocity);
 		}
 	}

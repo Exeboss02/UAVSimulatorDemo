@@ -185,8 +185,7 @@ void Wall::Hover() {
 			}
 		} catch (...) {
 		}
-		DirectX::XMVECTOR worldPos = this->transform.GetGlobalPosition();
-		prompt->Show(txt, worldPos);
+		prompt->Show(txt);
 	} catch (const std::exception& e) {
 		Logger::Error("Wall::Hover exception: ", e.what());
 	} catch (...) {

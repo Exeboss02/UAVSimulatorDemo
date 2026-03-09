@@ -147,7 +147,6 @@ void UI::Button::ShowInHierarchy() {
 	if (!DISABLE_IMGUI) {
 		ImGui::Separator();
 		ImGui::Text("Button settings:");
-
 		// Label
 		char buf[128];
 		std::string cur = this->label;
@@ -155,6 +154,11 @@ void UI::Button::ShowInHierarchy() {
 		if (ImGui::InputText("Label", buf, sizeof(buf))) {
 			this->label = std::string(buf);
 			this->SetName(this->label);
+		}
+
+		float labelSize = this->GetLabelFontSize();
+		if (ImGui::DragFloat("Label Font Size", &labelSize, 0.1f, 6.0f, 128.0f, "%.1f")) {
+			this->SetLabelFontSize(labelSize);
 		}
 
 		// Interaction readouts
@@ -303,7 +307,7 @@ void UI::Button::LoadFromJson(const nlohmann::json& data) {
 			this->vAlign = Button::VerticalAlign::BOTTOM;
 	}
 
-	if(data.contains("labelFontSize") && data["labelFontSize"].is_number()) {
+	if (data.contains("labelFontSize") && data["labelFontSize"].is_number()) {
 		this->labelFontSize = data["labelFontSize"].get<float>();
 	}
 }

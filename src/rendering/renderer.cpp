@@ -192,10 +192,10 @@ void Renderer::CreateDeviceAndSwapChain(const Window& window) {
 	swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;
 	swapChainDesc.Flags = 0;
 
-	HRESULT hr =
-		D3D11CreateDeviceAndSwapChain(nullptr, D3D_DRIVER_TYPE_HARDWARE, nullptr, D3D11_CREATE_DEVICE_DEBUG, nullptr, 0,
-									  D3D11_SDK_VERSION, &swapChainDesc, this->swapChain.GetAddressOf(),
-									  this->device.GetAddressOf(), nullptr, this->immediateContext.GetAddressOf());
+	HRESULT hr = D3D11CreateDeviceAndSwapChain(
+		nullptr, D3D_DRIVER_TYPE_HARDWARE, nullptr, ENABLE_D3D_DEBUG_LAYER ? D3D11_CREATE_DEVICE_DEBUG : 0, nullptr,
+		0, D3D11_SDK_VERSION, &swapChainDesc,
+		this->swapChain.GetAddressOf(), this->device.GetAddressOf(), nullptr, this->immediateContext.GetAddressOf());
 
 	if (FAILED(hr)) {
 		throw std::runtime_error("Failed to create device and swapchain, Error: " + hr);

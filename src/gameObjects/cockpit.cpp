@@ -8,6 +8,7 @@
 #include "utilities/aStar.h"
 #include <numbers>
 #include "gameObjects/spotlightObject.h"
+#include "game/footBall.h"
 
 void Cockpit::Start() {
 	this->SetName("Cockpit");
@@ -21,6 +22,15 @@ void Cockpit::Start() {
 	coreMesh->SetParent(this->GetPtr());
 	coreMesh->transform.SetPosition(0, 2, 0);
 	coreMesh->transform.SetScale(1, 1.2f, 1);
+
+
+	//FootBall
+    DirectX::XMVECTOR offset = {};
+    offset.m128_f32[0] = -3;
+    offset.m128_f32[2] = 5;
+	auto footBall = this->factory->CreateStaticGameObject<FootBall>();
+	footBall->transform.SetPosition(DirectX::XMVectorAdd(GameManager::GetInstance()->GetPlayerSpawnPoint(), offset));
+	footBall->transform.SetScale(1.1f, 1.1f, 1.1f);
 
 	// Update core health on hud
 	GameManager::GetInstance()->GetPlayer()->hud->SetCoreHealthText(this->health.Get());

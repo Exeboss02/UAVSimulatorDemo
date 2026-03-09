@@ -16,6 +16,8 @@ void Rifle01::Start() {
 	this->damage = 10;
 	this->gunPosition = DirectX::XMFLOAT3(-0.4f, -0.4f, 0.7f);
 	this->fireMode = FireMode::AUTOMATIC;
+	this->maxBulletSpread = 5.0f;
+	this->timeToMaxBulletSpread = 5.0f;
 
 	Gun::Start();
 }

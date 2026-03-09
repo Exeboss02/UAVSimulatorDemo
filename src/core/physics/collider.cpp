@@ -4,7 +4,7 @@
 #include "core/physics/rigidBody.h"
 #include "core/physics/physicsQueue.h" //are here to prevent circular dependecies
 
-#define SHOW_COLLIDER
+// #define SHOW_COLLIDER
 
 Collider::Collider()
 {
@@ -379,4 +379,21 @@ bool Collider::GetDynamic() { return this->dynamic; }
 
 void Collider::SetDynamic(bool dynamic) { this->dynamic = dynamic; }
 
-void Collider::ShowDebug(bool show) { this->meshObjectChild.lock()->SetActive(show); }
+void Collider::ShowDebug(bool show) { 
+	if (this->meshObjectChild.expired()) {
+		Logger::Error("Called ShowDebug on collider with no mesh object. Maybe turn on SHOW_COLLIDERS?");
+		return;
+	}
+
+	this->meshObjectChild.lock()->SetActive(show);
+}
+
+void Collider::SetBouncy(bool bouncy)
+{
+	this->bouncy = bouncy;
+}
+
+bool Collider::GetBouncy()
+{
+	return this->bouncy;
+}

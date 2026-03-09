@@ -121,7 +121,7 @@ public:
 
 private:
 	int id = -1;
-	int nrOfSources = 6;
+	int nrOfSources = 4;
 	int sourceIndex = 0;
 	ALuint* sources;
 	AudioInstruction currentInstructionSet;

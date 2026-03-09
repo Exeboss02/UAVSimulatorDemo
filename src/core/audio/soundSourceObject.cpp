@@ -109,7 +109,7 @@ void SoundSourceObject::Play(SoundClip* soundClip) //pointer referece?
 		ALint state;
 		alGetSourcei(this->sources[index], AL_SOURCE_STATE, &state);
 
-		if (state != AL_PLAYING)
+		if (state != AL_PLAYING && state != AL_PAUSED)
 		{
 			alSourcei(this->sources[index], AL_BUFFER, (ALint)soundClip->buffer); //can a copy occur here?
 			alSourcePlay(this->sources[index]);
@@ -121,6 +121,7 @@ void SoundSourceObject::Play(SoundClip* soundClip) //pointer referece?
 	}
 
 	// No free source, overwrite the next
+	alSourceStop(this->sources[this->sourceIndex]);
 	alSourcei(this->sources[this->sourceIndex], AL_BUFFER, (ALint)soundClip->buffer);
 	alSourcePlay(this->sources[this->sourceIndex]);
 
@@ -224,7 +225,7 @@ void SoundSourceObject::SetRandomPitch(float minPitch, float maxPitch) {
 
 void SoundSourceObject::SetGain(float gain)
 {
-	this->gain = gain;
+	this->gain = std::clamp(gain, 0.0f, 1.0f);
 
 	for (int i = 0; i < this->nrOfSources; i++)
 	{

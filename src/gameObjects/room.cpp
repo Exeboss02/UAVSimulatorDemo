@@ -16,6 +16,8 @@
 #include "gameObjects/turret.h"
 #include "rendering/renderQueue.h"
 #include "utilities/time.h"
+
+// std
 #include <format>
 #include <numbers>
 
@@ -38,8 +40,7 @@ void Room::CreateRoom(WallIndex wallIndex) {
 
 	if (auto storyManager = GameManager::GetInstance()->GetStoryManager().lock()) {
 		storyManager->FinishStoryCheck(StoryChecks::BuildRoom);
-	}
-	else {
+	} else {
 		std::string error = "Failed to get story manager";
 		Logger::Error(error);
 		throw std::runtime_error(error);
@@ -77,7 +78,7 @@ void Room::Start() {
 
 		meshobj->SetParent(this->GetPtr());
 
-		MeshObjData meshdata = AssetManager::GetInstance().GetMeshObjData("SpaceShip/room2.glb:Mesh_0");
+		MeshObjData meshdata = AssetManager::GetInstance().GetMeshObjData("SpaceShip/RoomWithPlate.glb:Mesh_4");
 
 		meshobj->SetMesh(meshdata);
 
@@ -124,10 +125,22 @@ void Room::Start() {
 
 		meshobj->SetWAllIndex(i);
 
-		DirectX::XMVECTOR distanceVector = DirectX::XMVectorSubtract(GameManager::GetInstance()->GetPlayerSpawnPoint(),
-																	 meshobj->transform.GetGlobalPosition());
-		float distance = DirectX::XMVectorGetX(DirectX::XMVector3Length(distanceVector));
-		meshobj->SetWallCost((distance - 3), 0, 0, 0);
+		auto roomFacingWallOffset = this->GetNeighborOffset(static_cast<Room::WallIndex>(i));
+
+		auto roomPos = this->transform.GetPosition();
+
+		float neighborRoomX = roomFacingWallOffset[0] * SpaceShip::ROOM_SIZE + roomPos.m128_f32[0];
+		float neighborRoomY = roomFacingWallOffset[1] * SpaceShip::ROOM_SIZE + roomPos.m128_f32[2];
+
+		DirectX::XMVECTOR roomFacingWallPos = {neighborRoomX, neighborRoomY};
+
+		DirectX::XMVECTOR firstRoomPos = {SpaceShip::START_ROOM_X * SpaceShip::ROOM_SIZE,
+										  SpaceShip::START_ROOM_Y * SpaceShip::ROOM_SIZE};
+		DirectX::XMVECTOR distanceVector = DirectX::XMVectorSubtract(firstRoomPos, roomFacingWallPos);
+
+		float distanceSquared = DirectX::XMVectorGetX(DirectX::XMVector2Dot(distanceVector, distanceVector));
+		float distance = sqrtf(distanceSquared);
+		meshobj->SetWallCost(distance * 0.5 + distanceSquared * 0.15, 0, 0, 0);
 
 		this->walls[i] = meshobj;
 	}
@@ -143,9 +156,14 @@ void Room::Start() {
 	buildCollider->SetName("BuildCollider" + std::to_string(this->factory->GetNextID()));
 	buildCollider->SetTag(Tag::INTERACTABLE);
 	buildCollider->SetIgnoreTag(Tag::PLAYER);
-	// Maybe tweak positionW
+	buildCollider->SetOnInteract([&](std::shared_ptr<Player> player) {
+		if (this->builtObject.expired() && !GameManager::GetInstance()->GetInCombat()) {
+			this->ShowBuildMenu(player);
+		}
+	});
+	buildCollider->SetOnHover([&] { this->Hover(); });
+	buildCollider->SetTag(Tag::INTERACTABLE);
 	this->buildSlot = buildCollider;
-	this->EnableBuildSlotInteractions();
 
 	auto spotLight = this->factory->CreateGameObjectOfType<SpotlightObject>().lock();
 	spotLight->SetParent(this->GetPtr());
@@ -445,7 +463,6 @@ void Room::ShowBuildMenu(std::shared_ptr<Player> player) {
 							p->SetInputEnabled(true);
 						}
 
-
 						if (auto storyManager = GameManager::GetInstance()->GetStoryManager().lock()) {
 							storyManager->FinishStoryCheck(StoryChecks::BuiltBuildable);
 						}
@@ -525,8 +542,7 @@ void Room::Hover() {
 		if (auto gameManager = GameManager::GetInstance(); gameManager && gameManager->GetInCombat()) {
 			txt = "Can't build during attacks";
 		}
-		DirectX::XMVECTOR worldPos = this->transform.GetGlobalPosition();
-		prompt->Show(txt, worldPos);
+		prompt->Show(txt);
 	} catch (const std::exception& e) {
 		Logger::Error("Room::Hover exception: ", e.what());
 	} catch (...) {
@@ -542,24 +558,14 @@ void Room::EnableBuildSlotInteractions() {
 	if (this->buildSlot.expired()) return;
 	auto slot = this->buildSlot.lock();
 	if (!slot) return;
-
-	slot->SetOnInteract([&](std::shared_ptr<Player> player) {
-		if (this->builtObject.expired() && !GameManager::GetInstance()->GetInCombat()) {
-			this->ShowBuildMenu(player);
-		}
-	});
-	slot->SetOnHover([&] { this->Hover(); });
-	slot->SetTag(Tag::INTERACTABLE);
+	slot->transform.Move({0, 1000, 0});
 }
 
 void Room::DisableBuildSlotInteractions() {
 	if (this->buildSlot.expired()) return;
 	auto slot = this->buildSlot.lock();
 	if (!slot) return;
-
-	slot->SetOnHover([] {});
-	slot->SetOnInteract([](std::shared_ptr<Player>) {});
-	slot->SetTag(Tag::OBJECT);
+	slot->transform.Move({0, -1000, 0});
 }
 
 bool Room::RemoveBuiltObject() {
@@ -608,7 +614,8 @@ bool Room::RemoveBuiltObject() {
 	if (!this->GetParent().expired()) {
 		auto spaceship = static_pointer_cast<SpaceShip>(GetParent().lock());
 		auto centerNode = this->pathfindingNodes[0];
-		if (spaceship && centerNode && spaceship->GetPathfinder()->AddVertex(centerNode)) {
+		if (spaceship && centerNode) {
+			spaceship->GetPathfinder()->AddVertex(centerNode);
 			unsigned int edgeCostCenterToOuter = static_cast<unsigned int>(this->size / 3);
 			for (size_t i = 1; i < this->pathfindingNodes.size(); ++i) {
 				if (this->pathfindingNodes[i]) {
@@ -648,11 +655,12 @@ bool Room::TryBuildGenerator() {
 		auto gen = this->factory->CreateStaticGameObject<ResourceGenerator>();
 
 		gen->SetParent(this->GetPtr());
-		gen->transform.SetPosition(0, 1.5, 0);
+		//gen->transform.SetPosition(0, 1.5, 0);
+		gen->transform.SetPosition(0, 1.6f, 0);
 
 		DirectX::XMFLOAT3 shipScale;
 		DirectX::XMStoreFloat3(&shipScale, this->transform.GetGlobalScale());
-		gen->transform.SetScale(DirectX::XMVECTOR({(1.0f / shipScale.x), (1.0f / shipScale.y), (1.0f / shipScale.z)}));
+		gen->transform.SetScale(DirectX::XMVECTOR({(1.0f / shipScale.x), (1.8f / shipScale.y), (1.0f / shipScale.z)}));
 
 		this->builtObject = static_pointer_cast<GameObject3D>(gen.Get());
 
@@ -697,7 +705,7 @@ bool Room::TryBuildTurret() {
 		auto turret = this->factory->CreateStaticGameObject<Turret>();
 
 		turret->SetParent(this->GetPtr());
-		turret->transform.SetPosition(0, 0.6, 0);
+		turret->transform.SetPosition(0, 0.6f, 0);
 
 		DirectX::XMFLOAT3 shipScale;
 		DirectX::XMStoreFloat3(&shipScale, this->transform.GetGlobalScale());
@@ -748,12 +756,12 @@ bool Room::TryBuildMine() {
 		auto mine = this->factory->CreateStaticGameObject<Mine>();
 
 		mine->SetParent(this->GetPtr());
-		mine->transform.SetPosition(slot->transform.GetPosition());
+		mine->transform.SetPosition(0, 1.3f, 0);
 		mine->SetName("Mine");
 
 		DirectX::XMFLOAT3 shipScale;
 		DirectX::XMStoreFloat3(&shipScale, this->transform.GetGlobalScale());
-		mine->transform.SetScale(DirectX::XMVECTOR({(1.0f / shipScale.x), (1.0f / shipScale.y), (1.0f / shipScale.z)}));
+		mine->transform.SetScale(DirectX::XMVECTOR({(0.8f / shipScale.x), (0.8f / shipScale.y), (0.8f / shipScale.z)}));
 
 		// Make the room build slot work again after the mine explodes
 		mine->SetPostExplosion([&] {

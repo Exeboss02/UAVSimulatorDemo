@@ -12,6 +12,7 @@ public:
 
 	bool gravity = true;
 	DirectX::XMFLOAT3 linearVelocity = {};
+	DirectX::XMFLOAT3 angularVelocity = {};
 
 	void Start() override;
 	void Tick() override;

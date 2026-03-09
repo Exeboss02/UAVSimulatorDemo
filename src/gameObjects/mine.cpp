@@ -7,21 +7,15 @@
 void Mine::Start() {
 	auto collider = this->factory->CreateStaticGameObject<SphereCollider>();
 	collider->SetDynamic(false);
+	collider->SetTag(Tag::FRIENDLY | Tag::INTERACTABLE | Tag::OBJECT);
 	collider->SetIgnoreTag(~Tag::ENEMY);
 	collider->SetParent(this->GetPtr());
 	collider->SetSolid(false);
 	collider->SetOnCollision([&](std::weak_ptr<GameObject> trigger, std::weak_ptr<Collider> collider) { this->OnExplode(); });
-
+	collider->SetOnInteract([&](std::shared_ptr<Player> player) { this->RemoveInteract(player); });
+	collider->SetOnHover([&] { this->HoverRemove(); });
 	collider->transform.SetScale(5, 5, 5);
 
-	auto interactCollider = this->factory->CreateStaticGameObject<BoxCollider>();
-	interactCollider->SetParent(this->GetPtr());
-	interactCollider->SetSolid(false);
-	interactCollider->SetTag(Tag::INTERACTABLE | Tag::OBJECT);
-	interactCollider->transform.SetScale(2, 1, 2);
-	interactCollider->transform.SetPosition(0, 1, 0);
-	interactCollider->SetOnInteract([&](std::shared_ptr<Player> player) { this->RemoveInteract(player); });
-	interactCollider->SetOnHover([&] { this->HoverRemove(); });
 
 	this->SetMesh(AssetManager::GetInstance().GetMeshObjData("meshes/mine.glb:Mesh_0"));
 
@@ -32,8 +26,8 @@ void Mine::Start() {
 	speaker.lock()->SetGain(1.0f);
 	speaker.lock()->Play(clip);
 
-	this->transform.SetPosition(0, 1.0f, 0);
-	this->transform.SetScale(0.5f, 0.5f, 0.5f);
+	//this->transform.SetPosition(0, 1.0f, 0);
+	//this->transform.SetScale(0.5f, 0.5f, 0.5f);
 
 	// this looks crazy, but feels okey
 	this->range = 15;
@@ -120,5 +114,7 @@ void Mine::HoverRemove() {
 		txt = "Can't remove during attacks";
 	}
 
-	prompt->Show(txt, this->transform.GetGlobalPosition());
+	prompt->SetOffset(0.0f, -120.0f);
+	prompt->Show(txt);
+	prompt->SetOffset(0.0f, -50.0f);
 }

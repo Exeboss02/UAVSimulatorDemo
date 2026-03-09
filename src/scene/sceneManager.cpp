@@ -12,7 +12,7 @@
 #include "gameObjects/enemies/drone.h"
 #include "game/gunPickUp.h"
 #include "game/musicPlayer.h"
-#include "gameObjects/enemy.h"
+#include "gameObjects/enemies/enemy.h"
 #include "gameObjects/pointLightObject.h"
 #include "gameObjects/room.h"
 #include "gameObjects/turret.h"

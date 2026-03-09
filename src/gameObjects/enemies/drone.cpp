@@ -44,6 +44,7 @@ void Drone::Start() {
 	auto head = this->factory->CreateGameObjectOfType<MeshObject>().lock();
 
 	meshData = AssetManager::GetInstance().GetMeshObjData("enemies/NewEnemy.glb:Mesh_1");
+	meshData.SetMaterial(3, AssetManager::GetInstance().GetMaterialWeakPtr("eyeMaterial").lock());
 	head->SetMesh(meshData);
 	head->transform.SetScale({0.15, 0.15, 0.15});
 	head->transform.SetPosition({0.0, -0.4, 0.0});

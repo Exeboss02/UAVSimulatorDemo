@@ -6,13 +6,14 @@ RayCaster::RayCaster() {}
 RayCaster::~RayCaster() {}
 
 bool RayCaster::castRay(Ray& ray, RayCastData& rayCastData, size_t targetTag, size_t tagsToIgnore,
+						size_t rayTags,
 						std::vector<std::weak_ptr<Collider>>& colliders, float maxDistance) 
 {
 	int currentClosest = -1;
 	float closestDistance = std::numeric_limits<float>::max();
 	for (size_t i = 0; i < colliders.size(); i++) {
 		std::shared_ptr<Collider> colliderToCheck = colliders[i].lock();
-		if (tagsToIgnore & colliderToCheck->GetTag()) {
+		if (tagsToIgnore & colliderToCheck->GetTag() || rayTags & colliderToCheck->GetIgnoreTag()) {
 			continue;
 		}
 		bool didHit = false;

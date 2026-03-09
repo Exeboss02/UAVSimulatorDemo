@@ -1,4 +1,4 @@
-#include "gameObjects/testEnemy.h"
+#include "gameObjects/enemies/testEnemy.h"
 #include <DirectXMath.h>
 
 #include "core/assetManager.h"

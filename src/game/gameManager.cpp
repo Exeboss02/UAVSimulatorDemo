@@ -55,8 +55,8 @@ void GameManager::Start() {
 	this->rounds.push_back(Round{20, 2, 30, 1.6f});
 	this->rounds.push_back(Round{25, 2, 30, 1.5f});
 	this->rounds.push_back(Round{35, 2, 30, 1.4f});
-	this->rounds.push_back(Round{50, 3, 30, 1.2f});
-	this->rounds.push_back(Round{80, 3, 30, 1.0f});
+	this->rounds.push_back(Round{45, 3, 30, 1.2f});
+	this->rounds.push_back(Round{65, 3, 30, 1.0f});
 
 
 	this->idleTimeTimer = this->startIdleTime;

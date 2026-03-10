@@ -8,8 +8,7 @@
 
 Drone::Drone() : Enemy() {
 	this->health = Health(100);
-	this->movementSpeed = 5.0f;
-	this->rotationSpeed = 5.0f;
+	this->rotationSpeed = 2.0f;
 
 	this->damage = 5.f;
 	this->shootRange = 30.f;
@@ -114,7 +113,7 @@ bool Drone::ShootAtPlayer(const float deltaTime) {
 	Ray ray{Vector3D(headPosition), Vector3D(rayDirection)};
 	RayCastData rayCastData = {};
 
-	bool didHit = PhysicsQueue::GetInstance().castRay(ray, rayCastData, Tag::PLAYER, Tag::ENEMY | Tag::INTERACTABLE,
+	bool didHit = PhysicsQueue::GetInstance().castRay(ray, rayCastData, Tag::PLAYER, Tag::ENEMY | Tag::INTERACTABLE, Tag::ENEMY_ATTACK,
 													  this->shootRange);
 
 	if (!didHit) {

@@ -31,9 +31,6 @@ void StartButton::OnInteract(std::shared_ptr<Player> player)
 	if(storyManager.get() && player.get())
 	{
 		storyManager->SetPlaying(false);
-		size_t storyPart = storyManager->GetCurrentStoryPart();
-		storyPart++;
-		storyManager->SetCurrentStoryPart(storyPart);
 		player->hud->SetStoryTextVisibility(false);
 	}
 

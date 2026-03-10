@@ -1,5 +1,6 @@
 #include "game/startButton.h"
 #include "game/gameManager.h"
+#include "game/player.h"
 #include "UI/interactionPrompt.h"
 
 void StartButton::Start()
@@ -10,6 +11,7 @@ void StartButton::Start()
 	});
 	collider->SetOnHover([&] { this->Hover(); });
 	collider->SetParent(this->GetPtr());
+	collider->SetSolid(false);
 	collider->transform.SetScale(4, 4, 4);
 
 	this->transform.SetRotationRPY(3.14f, 3.14f, 1.57f);
@@ -24,6 +26,16 @@ void StartButton::Start()
 
 void StartButton::OnInteract(std::shared_ptr<Player> player)
 {
+	std::shared_ptr<StoryManager> storyManager = GameManager::GetInstance()->GetStoryManager().lock();
+	if(storyManager.get() && player.get())
+	{
+		storyManager->SetPlaying(false);
+		size_t storyPart = storyManager->GetCurrentStoryPart();
+		storyPart++;
+		storyManager->SetCurrentStoryPart(storyPart);
+		player->hud->SetStoryTextVisibility(false);
+	}
+
     if(!GameManager::GetInstance()->GetInCombat())
     {
         GameManager::GetInstance()->SpawnNextRound();

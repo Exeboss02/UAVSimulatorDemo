@@ -40,6 +40,19 @@ void StoryManager::LoadStory(std::filesystem::path path) {
 	this->endScreenText = storyJson["endScreenText"].get<std::string>();
 }
 
+void StoryManager::SetCurrentStoryPart(size_t part)
+{
+	this->currentStoryPart = part;
+}
+
+size_t StoryManager::GetCurrentStoryPart() { return this->currentStoryPart; }
+
+void StoryManager::SetPlaying(bool playing)
+{
+	this->playing = playing;
+	this->storyPause = !playing;
+}
+
 void StoryManager::PlayNextStoryPart() {
 	if (currentStoryPart >= this->storyParts.size()) {
 		return;

@@ -52,6 +52,10 @@ public:
 	void Start() override;
 	bool GetStoryPlaying() const;
 
+	void SetCurrentStoryPart(size_t part);
+	size_t GetCurrentStoryPart();
+	void SetPlaying(bool playing);
+
 private:
 	bool storyPause = false;
 

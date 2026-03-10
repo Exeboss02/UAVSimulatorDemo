@@ -8,8 +8,8 @@
 
 Drone::Drone() : Enemy() {
 	this->health = Health(100);
-	this->movementSpeed = 5.0f;
-	this->rotationSpeed = 5.0f;
+	this->movementSpeed = 7.0f;
+	this->rotationSpeed = 2.0f;
 
 	this->damage = 5.f;
 	this->shootRange = 30.f;

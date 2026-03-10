@@ -18,7 +18,8 @@ class CanvasObject;
 struct Round {
 	size_t enemyCount;
 	size_t breachPoints;
-	float timeUntilNext = 30;
+	float timeUntilNext;
+	float enemySpawnDelay;
 };
 
 class GameManager : public GameObject {
@@ -46,9 +47,6 @@ public:
 
 	std::shared_ptr<Player> GetPlayer();
 	const std::vector<std::weak_ptr<Enemy>>& GetEnemies();
-
-	const float& GetSpawnDelay();
-	void SetSpawnDelay(float& newSpawnDelay);
 
 	DirectX::XMVECTOR GetPlayerSpawnPoint();
 
@@ -97,7 +95,6 @@ private:
 	std::vector<Path> paths;
 
 	float enemySpawnTimer;
-	float enemySpawnDelay;
 
 	float idleTimeTimer;
 	const float startIdleTime;

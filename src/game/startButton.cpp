@@ -10,6 +10,7 @@ void StartButton::Start()
 		this->OnInteract(player); 
 	});
 	collider->SetOnHover([&] { this->Hover(); });
+	collider->SetTag(Tag::INTERACTABLE);
 	collider->SetParent(this->GetPtr());
 	collider->SetSolid(false);
 	collider->transform.SetScale(4, 4, 4);

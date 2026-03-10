@@ -73,6 +73,7 @@ void Wall::SpawnInteractables() {
 	colliderobj->SetOnInteract([&](std::shared_ptr<Player> playerShared) { this->Interact(playerShared); });
 	colliderobj->SetOnHover([&] { this->Hover(); });
 	colliderobj->SetTag(Tag::INTERACTABLE);
+	colliderobj->SetIgnoreTag(Tag::PLAYER_ATTACK | Tag::ENEMY_ATTACK);
 	colliderobj->SetSolid(false);
 	colliderobj->SetName("Interactable " + std::to_string(this->factory->GetNextID()));
 

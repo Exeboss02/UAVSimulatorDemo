@@ -29,7 +29,7 @@ void ResourceGenerator::Start() {
 	auto interactCollider = this->factory->CreateStaticGameObject<BoxCollider>();
 	interactCollider->SetParent(this->GetPtr());
 	// mark this collider as interactable so player raycasts can filter hits
-	interactCollider->SetTag(Tag::INTERACTABLE | Tag::OBJECT);
+	interactCollider->SetTag(Tag::SOLID_INTERACTABLE | Tag::OBJECT);
 	interactCollider->SetOnInteract([&](std::shared_ptr<Player> player) { this->Interact(player); });
 	interactCollider->SetOnHover([&] { this->Hover(); });
 	interactCollider->transform.SetScale(1, 1, 1);

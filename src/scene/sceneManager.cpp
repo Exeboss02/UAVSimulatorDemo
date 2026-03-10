@@ -16,6 +16,7 @@
 #include "gameObjects/pointLightObject.h"
 #include "gameObjects/room.h"
 #include "gameObjects/turret.h"
+#include "game/rotatingCamera.h"
 #include "game/startButton.h"
 
 // std
@@ -90,6 +91,8 @@ SceneManager::SceneManager(Renderer* rend)
 	this->objectFromString.RegisterType<GameManager>(NAMEOF(GameManager));
 	this->objectFromString.RegisterType<GunPickUp>(NAMEOF(GunPickUp));
 	this->objectFromString.RegisterType<MusicPlayer>(NAMEOF(MusicPlayer));
+
+	this->objectFromString.RegisterType<RotatingCamera>(NAMEOF(RotatingCamera));
 	this->objectFromString.RegisterType<StartButton>(NAMEOF(StartButton));
 
 

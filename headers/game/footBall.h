@@ -11,6 +11,7 @@ public:
     void Tick() override;
     void PhysicsTick() override;
     void OnCollision(std::weak_ptr<GameObject3D> gameObject3D, std::weak_ptr<Collider> collider);
+    void OnHit(float value);
 
 private:
     std::weak_ptr<SphereCollider> collider;

@@ -93,7 +93,7 @@ void Gun::Shoot(bool pressedTrigger, bool triggerDown) {
 	Ray ray{Vector3D{posVec}, Vector3D{lookVec}};
 	RayCastData rayCastData;
 
-	bool didHit = PhysicsQueue::GetInstance().castRay(ray, rayCastData, ~Tag::NOIGNORE, Tag::PLAYER | Tag::FRIENDLY);
+	bool didHit = PhysicsQueue::GetInstance().castRay(ray, rayCastData, ~Tag::NOIGNORE, Tag::PLAYER | Tag::FRIENDLY, Tag::PLAYER_ATTACK);
 	std::string hitString;
 	if (didHit) {
 		auto hitCollider = rayCastData.hitColider.lock();

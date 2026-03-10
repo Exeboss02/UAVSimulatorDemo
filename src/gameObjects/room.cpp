@@ -155,7 +155,7 @@ void Room::Start() {
 	buildCollider->SetSolid(false);
 	buildCollider->SetName("BuildCollider" + std::to_string(this->factory->GetNextID()));
 	buildCollider->SetTag(Tag::INTERACTABLE);
-	buildCollider->SetIgnoreTag(Tag::PLAYER);
+	buildCollider->SetIgnoreTag(Tag::PLAYER | Tag::PLAYER_ATTACK);
 	buildCollider->SetOnInteract([&](std::shared_ptr<Player> player) {
 		if (this->builtObject.expired() && !GameManager::GetInstance()->GetInCombat()) {
 			this->ShowBuildMenu(player);

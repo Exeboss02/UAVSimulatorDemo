@@ -58,6 +58,16 @@ void GameManager::Start() {
 	this->rounds.push_back(Round{45, 3, 30, 1.2f});
 	this->rounds.push_back(Round{65, 3, 30, 1.0f});
 
+	int randomInt = RandomInt(0, 1);
+	if(randomInt == 0)
+	{
+		RenderQueue::ChangeSkybox("bright_space.dds");
+	}
+	else
+	{
+		RenderQueue::ChangeSkybox("bright_asteroid.dds");
+	}
+
 
 	this->idleTimeTimer = this->startIdleTime;
 

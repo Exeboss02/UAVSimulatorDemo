@@ -5,6 +5,7 @@
 #include "nlohmann/json.hpp"
 #include "utilities/logger.h"
 #include <iostream>
+#include "game/gameManager.h"
 
 StoryManager::StoryManager() {
 	this->LoadStory(FilepathHolder::GetAssetsDirectory() / "story/chapter1.json");

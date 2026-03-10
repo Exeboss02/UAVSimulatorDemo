@@ -93,6 +93,7 @@ public:
 
 private:
 	const size_t maximumSpotlights;
+	const size_t maximumSpotlightShadowCasters;
 
 	// struct WorldMatrixBufferContainer {
 	//	DirectX::XMFLOAT4X4 worldMatrix;
@@ -100,8 +101,9 @@ private:
 	// };
 
 	struct LightCountBufferContainer {
-		uint32_t spotlightCount;
-		float padding[3];
+		uint32_t shadowCasters;
+		uint32_t nonShadowCasters;
+		float padding[2];
 	};
 
 	// DirectX11 specific stuff:

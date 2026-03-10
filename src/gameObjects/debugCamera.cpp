@@ -33,7 +33,7 @@ void DebugCamera::Tick() {
 
 	static bool showCursor = true;
 
-	if (keyboardInput.ToggleCamera()) {
+	if (keyboardInput.ToggleCamera() && !DISABLE_IMGUI) {
 		showCursor = !showCursor;
 		ShowCursor(showCursor);
 	}

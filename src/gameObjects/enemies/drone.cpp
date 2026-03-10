@@ -77,7 +77,7 @@ void Drone::Tick() {
 void Drone::SetMoveSpeedMode(MoveSpeedMode mode) {
 	switch (mode) {
 	case MoveSpeedMode::NORMAL:
-		this->movementSpeed = 2.0f;
+		this->movementSpeed = 2.5f;
 		break;
 	case MoveSpeedMode::SLOWED:
 		this->movementSpeed = 1.0f;

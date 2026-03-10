@@ -69,6 +69,8 @@ void StoryManager::PlayNextStoryPart() {
 
 	if (!this->RoundIsChecked(GameManager::GetInstance()->GetCurrentRound())) {
 		this->storyPause = true;
+	} else {
+		this->storyPause = false;
 	}
 
 	Logger::Log("Playing next storypart");

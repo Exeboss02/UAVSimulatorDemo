@@ -347,7 +347,7 @@ void GameManager::SpawnRound(size_t roundIndex) {
 		EndRound();
 	}
 
-	if (roundIndex < 0 || roundIndex > this->rounds.size()) {
+	if (roundIndex < 0 || roundIndex >= this->rounds.size()) {
 		Logger::Error("Invalid round index.");
 		return;
 	}

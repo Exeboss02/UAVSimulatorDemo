@@ -45,6 +45,7 @@ void Player::Start() {
 
 	this->storySpeaker = this->factory->CreateGameObjectOfType<SoundSourceObject>();
 	this->storySpeaker.lock()->SetParent(this->GetPtr());
+	this->storySpeaker.lock()->SetGain(0.7f);
 
 	// adding gun
 	this->addGun(Guns::pistol);

@@ -58,6 +58,8 @@ void GameManager::Start() {
 	this->rounds.push_back(Round{45, 3, 45, 1.2f});
 	this->rounds.push_back(Round{65, 3, 45, 1.0f});
 
+
+
 	int randomInt = RandomInt(0, 1);
 	if(randomInt == 0)
 	{

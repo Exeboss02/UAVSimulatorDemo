@@ -4,6 +4,7 @@
 #include "game/gunPickUp.h"
 #include "gameObjects/SpaceShipObj.h"
 #include "gameObjects/emergencyExitButton.h"
+#include "game/startButton.h"
 #include "gameObjects/room.h"
 #include "utilities/aStar.h"
 #include <numbers>
@@ -53,10 +54,12 @@ void Cockpit::Start() {
 		// Update core health on hud
 		GameManager::GetInstance()->GetPlayer()->hud->SetCoreHealthText(this->health.Get());
 
-		SoundClip* damageClip = AssetManager::GetInstance().GetSoundClip("SmallExplotion.wav");
-		this->speaker.lock()->SetDeleteWhenFinnished(true);
-		this->speaker.lock()->transform.SetPosition(this->transform.GetGlobalPosition());
-		this->speaker.lock()->Play(damageClip);
+		if(!this->speaker.expired())
+		{
+			SoundClip* damageClip = AssetManager::GetInstance().GetSoundClip("SmallExplotion.wav");
+			this->speaker.lock()->transform.SetPosition(this->transform.GetGlobalPosition());
+			this->speaker.lock()->Play(damageClip);
+		}
 	});
 
 	coreCollider->transform.SetPosition(0, 2, 0);
@@ -77,6 +80,10 @@ void Cockpit::Start() {
 	auto emergencyButton = this->factory->CreateStaticGameObject<EmergenceExitButton>();
 	emergencyButton->transform.SetPosition(4.43, 2, 2);
 	emergencyButton->SetParent(this->GetPtr());
+
+	auto startButton = this->factory->CreateStaticGameObject<StartButton>();
+	startButton->transform.SetPosition(0, 1.35, -3);
+	startButton->SetParent(this->GetPtr());
 
 	auto gunPickUp = this->factory->CreateStaticGameObject<GunPickUp>();
 	gunPickUp->transform.SetPosition(-4, 1.45, 2.3);
@@ -173,6 +180,7 @@ void Cockpit::createVisualsAndColiders() {
 		colliderobj->transform.SetScale(DirectX::XMLoadFloat3(&scale));
 		colliderobj->SetParent(this->GetPtr());
 		colliderobj->SetTag(Tag::WALL);
+		colliderobj->SetIgnoreTag(Tag::PLAYER_INTERACT);
 		//auto col = colliderobj.Get();
 		//colliderobj.Init();
 		//col->ShowDebug(true);

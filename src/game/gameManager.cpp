@@ -75,7 +75,7 @@ void GameManager::Start() {
 	this->buildMusicWaitTimer.Initialize(5);
 	AudioManager::GetInstance().AddMusicTrackStandardFolder("LethalContact.wav", "contact");
 	AudioManager::GetInstance().LoopMusicTrack("contact", true);
-	AudioManager::GetInstance().SetGain("contact", 0.4f);
+	AudioManager::GetInstance().SetGain("contact", 0.5f);
 
 	DirectX::XMVECTOR offset = {};
 	offset.m128_f32[1] = -2;
@@ -347,7 +347,7 @@ void GameManager::SpawnRound(size_t roundIndex) {
 		EndRound();
 	}
 
-	if (roundIndex < 0 || roundIndex > this->rounds.size()) {
+	if (roundIndex < 0 || roundIndex >= this->rounds.size()) {
 		Logger::Error("Invalid round index.");
 		return;
 	}

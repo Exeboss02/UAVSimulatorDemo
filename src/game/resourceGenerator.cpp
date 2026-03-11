@@ -18,6 +18,7 @@
 void ResourceGenerator::Start() {
 	this->SetMesh(AssetManager::GetInstance().GetMeshObjData("meshes/generator.glb:Mesh_0"));
 	this->GetMesh().SetMaterial(2, AssetManager::GetInstance().GetMaterialWeakPtr("newGeneratorSide").lock());
+	this->SetCastShadow(false);
 	//this->transform.SetScale(0.5f, 1.2f, 0.5f);
 	//this->transform.SetPosition(0, 1.8f, 0);
 

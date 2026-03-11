@@ -11,7 +11,8 @@ struct PixelShaderInput
 
 cbuffer SpotlightCountBuffer : register(b0)
 {
-    int spotlightCount;
+    int spotlightShadowCasterCount;
+    int spotlightNonShadowCasterCount;
 };
 
 cbuffer PointlightCountBuffer : register(b2)
@@ -87,7 +88,7 @@ float4 main(PixelShaderInput input) : SV_TARGET
     }
         
     // Seems structured buffer might be made larger than the number of lights, as such we do need to use ugly constant buffer
-    for (int i = 0; i < spotlightCount; i++)
+    for (int i = 0; i < spotlightShadowCasterCount + spotlightNonShadowCasterCount; i++)
     {
         Spotlight lightdata = spotlightBuffer[i];
                 
@@ -96,11 +97,15 @@ float4 main(PixelShaderInput input) : SV_TARGET
         
         float2 uv = float2(ndc.x * 0.5f + 0.5f, ndc.y * -0.5f + 0.5f);
         
-        float sceneDepth = ndc.z;
-        float mapDepth = shadowMaps.SampleLevel(shadowSampler, float3(uv, i), 0.f).r;
+        bool islit = true;
         
-        bool islit = (mapDepth + bias) >= sceneDepth;
+        if (i < spotlightShadowCasterCount)
+        {
+            float sceneDepth = ndc.z;
+            float mapDepth = shadowMaps.SampleLevel(shadowSampler, float3(uv, i), 0.f).r;
         
+            islit = (mapDepth + bias) >= sceneDepth;
+        }  
         
         float3 LightToHit = input.worldPosition.xyz - lightdata.position;
         float3 lightDir = normalize(LightToHit);

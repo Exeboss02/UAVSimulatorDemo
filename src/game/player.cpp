@@ -326,7 +326,7 @@ void Player::UpdateCamera() {
 	}
 
 
-	if (this->keyBoardInput.ToggleCamera()) {
+	if (this->keyBoardInput.ToggleCamera() && !DISABLE_IMGUI) {
 		this->showCursor = !this->showCursor;
 		ShowCursor(this->showCursor);
 		this->canShoot = !this->canShoot;

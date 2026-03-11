@@ -5,6 +5,7 @@
 #include "nlohmann/json.hpp"
 #include "utilities/logger.h"
 #include <iostream>
+#include "game/gameManager.h"
 
 StoryManager::StoryManager() {
 	this->LoadStory(FilepathHolder::GetAssetsDirectory() / "story/chapter1.json");
@@ -40,6 +41,19 @@ void StoryManager::LoadStory(std::filesystem::path path) {
 	this->endScreenText = storyJson["endScreenText"].get<std::string>();
 }
 
+void StoryManager::SetCurrentStoryPart(size_t part)
+{
+	this->currentStoryPart = part;
+}
+
+size_t StoryManager::GetCurrentStoryPart() { return this->currentStoryPart; }
+
+void StoryManager::SetPlaying(bool playing)
+{
+	this->playing = playing;
+	this->storyPause = !playing;
+}
+
 void StoryManager::PlayNextStoryPart() {
 	if (currentStoryPart >= this->storyParts.size()) {
 		return;
@@ -55,6 +69,8 @@ void StoryManager::PlayNextStoryPart() {
 
 	if (!this->RoundIsChecked(GameManager::GetInstance()->GetCurrentRound())) {
 		this->storyPause = true;
+	} else {
+		this->storyPause = false;
 	}
 
 	Logger::Log("Playing next storypart");

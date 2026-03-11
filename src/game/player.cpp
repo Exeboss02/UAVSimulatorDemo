@@ -129,15 +129,15 @@ void Player::Start() {
 	// SFX
 	this->walkSpeaker = this->factory->CreateGameObjectOfType<SoundSourceObject>();
 	this->walkSpeaker.lock()->SetParent(this->GetPtr());
-	this->walkSpeaker.lock()->SetGain(0.85f);
+	this->walkSpeaker.lock()->SetGain(1.0f);
 
 	this->jumpSpeaker = this->factory->CreateGameObjectOfType<SoundSourceObject>();
 	this->jumpSpeaker.lock()->SetParent(this->GetPtr());
-	this->jumpSpeaker.lock()->SetGain(0.5f);
+	this->jumpSpeaker.lock()->SetGain(1.0f);
 
 	this->hurtSpeaker = this->factory->CreateGameObjectOfType<SoundSourceObject>();
 	this->hurtSpeaker.lock()->SetParent(this->GetPtr());
-	this->hurtSpeaker.lock()->SetGain(0.3f);
+	this->hurtSpeaker.lock()->SetGain(0.4f);
 
 	this->soundClips.push_back(AssetManager::GetInstance().GetSoundClip("Step1.wav"));
 	this->soundClips.push_back(AssetManager::GetInstance().GetSoundClip("Step2.wav"));
@@ -220,7 +220,7 @@ void Player::Tick() {
 		if (!this->hasPlayedLandSound) {
 			SoundClip* clip = AssetManager::GetInstance().GetSoundClip("Land.wav");
 			this->jumpSpeaker.lock()->SetRandomPitch(0.7f, 1.0f);
-			this->jumpSpeaker.lock()->SetGain(0.15f);
+			this->jumpSpeaker.lock()->SetGain(0.4f);
 			this->jumpSpeaker.lock()->Play(clip);
 			this->hasPlayedLandSound = true;
 		}
@@ -296,7 +296,7 @@ void Player::PhysicsTick() {
 		// Play jump sound
 		SoundClip* clip = AssetManager::GetInstance().GetSoundClip("Jump.wav");
 		this->jumpSpeaker.lock()->SetRandomPitch(0.9f, 1.2f);
-		this->jumpSpeaker.lock()->SetGain(0.5f);
+		this->jumpSpeaker.lock()->SetGain(1.0f);
 		this->jumpSpeaker.lock()->Play(clip);
 	}
 
@@ -326,7 +326,7 @@ void Player::UpdateCamera() {
 	}
 
 
-	if (this->keyBoardInput.ToggleCamera()) {
+	if (this->keyBoardInput.ToggleCamera() && !DISABLE_IMGUI) {
 		this->showCursor = !this->showCursor;
 		ShowCursor(this->showCursor);
 		this->canShoot = !this->canShoot;
@@ -512,14 +512,14 @@ void Player::Interact() {
 		Ray ray{Vector3D{posVec}, Vector3D{lookVec}};
 		RayCastData rayCastData;
 
-		bool didHit = PhysicsQueue::GetInstance().castRay(ray, rayCastData, Tag::INTERACTABLE, Tag::PLAYER,
-														  Tag::NOIGNORE,
+		bool didHit = PhysicsQueue::GetInstance().castRay(ray, rayCastData, Tag::INTERACTABLE | Tag::SOLID_INTERACTABLE, Tag::PLAYER,
+														  Tag::PLAYER_INTERACT,
 														  this->interactDistance);
 		std::string hitString;
 		if (didHit) {
 
 			auto hitCollider = rayCastData.hitColider.lock();
-			if (hitCollider && (hitCollider->GetTag() & Tag::INTERACTABLE)) {
+			if (hitCollider) {
 				hitCollider->Hover();
 				hitString = "hit";
 			} else {
@@ -553,7 +553,7 @@ void Player::Interact() {
 		Ray ray{Vector3D{posVec}, Vector3D{lookVec}};
 		RayCastData rayCastData;
 
-		bool didHit = PhysicsQueue::GetInstance().castRay(ray, rayCastData, ~Tag::NOIGNORE, Tag::PLAYER, Tag::NOIGNORE,
+		bool didHit = PhysicsQueue::GetInstance().castRay(ray, rayCastData, Tag::INTERACTABLE | Tag::SOLID_INTERACTABLE, Tag::PLAYER, Tag::PLAYER_INTERACT,
 														  this->interactDistance);
 		std::string hitString;
 		if (didHit) {

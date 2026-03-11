@@ -19,7 +19,7 @@ GameManager::~GameManager() { this->shipSpeaker.lock()->Stop(); }
 
 GameManager::GameManager()
 	: playerSpawnPoint(DirectX::XMVectorSet(140.0, 5.0, -23.0f, 0.0)), currentRound(0), inCombat(false),
-	  enemySpawnTimer(1), unspawnedEnemies(0), enemySpawnDelay(2), startIdleTime(10), idleTimeTimer(0) {}
+	  enemySpawnTimer(1), unspawnedEnemies(0), startIdleTime(10), idleTimeTimer(0) {}
 
 void GameManager::Start() {
 	if (GameManager::instance.expired()) {
@@ -47,16 +47,26 @@ void GameManager::Start() {
 
 	// Set up rounds
 	this->rounds.reserve(10);
-	this->rounds.push_back(Round{3, 1, 10});
-	this->rounds.push_back(Round{5, 1, 20});
-	this->rounds.push_back(Round{7, 1});
-	this->rounds.push_back(Round{10, 2});
-	this->rounds.push_back(Round{15, 2});
-	this->rounds.push_back(Round{20, 2});
-	this->rounds.push_back(Round{25, 2});
-	this->rounds.push_back(Round{35, 2});
-	this->rounds.push_back(Round{50, 3});
-	this->rounds.push_back(Round{80, 3});
+	this->rounds.push_back(Round{3, 1, 10, 2});
+	this->rounds.push_back(Round{5, 1, 20, 2});
+	this->rounds.push_back(Round{7, 1, 30, 2});
+	this->rounds.push_back(Round{10, 2, 30, 1.8f});
+	this->rounds.push_back(Round{15, 2, 30, 1.7f});
+	this->rounds.push_back(Round{20, 2, 30, 1.6f});
+	this->rounds.push_back(Round{25, 2, 30, 1.5f});
+	this->rounds.push_back(Round{35, 2, 30, 1.4f});
+	this->rounds.push_back(Round{45, 3, 30, 1.2f});
+	this->rounds.push_back(Round{65, 3, 30, 1.0f});
+
+	int randomInt = RandomInt(0, 1);
+	if(randomInt == 0)
+	{
+		RenderQueue::ChangeSkybox("bright_space.dds");
+	}
+	else
+	{
+		RenderQueue::ChangeSkybox("bright_asteroid.dds");
+	}
 
 
 	this->idleTimeTimer = this->startIdleTime;
@@ -65,7 +75,7 @@ void GameManager::Start() {
 	this->buildMusicWaitTimer.Initialize(5);
 	AudioManager::GetInstance().AddMusicTrackStandardFolder("LethalContact.wav", "contact");
 	AudioManager::GetInstance().LoopMusicTrack("contact", true);
-	AudioManager::GetInstance().SetGain("contact", 0.4f);
+	AudioManager::GetInstance().SetGain("contact", 0.5f);
 
 	DirectX::XMVECTOR offset = {};
 	offset.m128_f32[1] = -2;
@@ -128,7 +138,7 @@ void GameManager::Tick() {
 					SpawnEnemy(i);
 				}
 
-				this->enemySpawnTimer = this->enemySpawnDelay;
+				this->enemySpawnTimer = this->rounds[this->currentRound].enemySpawnDelay;
 			}
 		}
 
@@ -337,7 +347,7 @@ void GameManager::SpawnRound(size_t roundIndex) {
 		EndRound();
 	}
 
-	if (roundIndex < 0 || roundIndex > this->rounds.size()) {
+	if (roundIndex < 0 || roundIndex >= this->rounds.size()) {
 		Logger::Error("Invalid round index.");
 		return;
 	}
@@ -515,10 +525,6 @@ const size_t& GameManager::GetCurrentRound() { return this->currentRound; }
 std::shared_ptr<Player> GameManager::GetPlayer() { return this->player.lock(); }
 
 const std::vector<std::weak_ptr<Enemy>>& GameManager::GetEnemies() { return this->enemies; }
-
-const float& GameManager::GetSpawnDelay() { return this->enemySpawnDelay; }
-
-void GameManager::SetSpawnDelay(float& newSpawnDelay) { this->enemySpawnDelay = newSpawnDelay; }
 
 DirectX::XMVECTOR GameManager::GetPlayerSpawnPoint() { return this->playerSpawnPoint; }
 

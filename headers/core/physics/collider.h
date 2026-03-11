@@ -15,18 +15,20 @@ static const DirectX::XMFLOAT3 localBoxCorners[8] = {{-1, -1, -1}, {+1, -1, -1},
 /// <returns></returns>
 enum Tag 
 {
-	NOIGNORE       = 0,  	  // 0
-    PLAYER         = 1 << 0,  // 1
-    PLAYER_ATTACK  = 1 << 1,  // 2
-    ENEMY          = 1 << 2,  // 4
-    ENEMY_ATTACK   = 1 << 3,  // 8
-    GROUND         = 1 << 4,  // 16
-    FLOOR          = 1 << 5,  // 32
-    OBJECT         = 1 << 6,  // 64
-    WALL           = 1 << 7,  // 128
-    INTERACTABLE   = 1 << 8,  // 256
-    DISTANCE       = 1 << 9,  // 512
-    FRIENDLY       = 1 << 10, // 1024
+	NOIGNORE           = 0,  	  // 0
+    PLAYER             = 1 << 0,  // 1
+    PLAYER_ATTACK      = 1 << 1,  // 2
+    ENEMY              = 1 << 2,  // 4
+    ENEMY_ATTACK       = 1 << 3,  // 8
+    GROUND             = 1 << 4,  // 16
+    FLOOR              = 1 << 5,  // 32
+    OBJECT             = 1 << 6,  // 64
+    WALL         	   = 1 << 7,  // 128
+    INTERACTABLE       = 1 << 8,  // 256
+    DISTANCE           = 1 << 9,  // 512
+    FRIENDLY           = 1 << 10, // 1024
+	SOLID_INTERACTABLE = 1 << 11, // 2048
+	PLAYER_INTERACT    = 1 << 12, // 4096
  };
 
 enum ColliderType { BOX, SPHERE, NONE };

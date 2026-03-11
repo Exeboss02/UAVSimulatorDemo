@@ -15,7 +15,8 @@
 
 Renderer::Renderer()
 	: viewport(), currentPixelShader(nullptr), currentVertexShader(nullptr), currentRasterizerState(nullptr),
-	  currentMaterial(nullptr), maximumSpotlights(16),
+	  currentMaterial(nullptr), maximumSpotlights(64),
+	  maximumSpotlightShadowCasters(2),
 	  staticObjectsTree({-SpaceShip::ROOM_SIZE, -20, -SpaceShip::ROOM_SIZE},
 						{SpaceShip::ROOM_SIZE * (SpaceShip::SHIP_MAX_SIZE_X + 1), 20,
 						 SpaceShip::ROOM_SIZE * (SpaceShip::SHIP_MAX_SIZE_Y + 1)},
@@ -36,7 +37,7 @@ void Renderer::Init(const Window& window) {
 	// Initialize FW1FontWrapper for text rendering
 	UI::TextRenderer::GetInstance().InitializeFW1(this->device.Get());
 
-	this->spotLightShadows.Init(this->device.Get(), 256, this->maximumSpotlights);
+	this->spotLightShadows.Init(this->device.Get(), 256, this->maximumSpotlightShadowCasters);
 
 	this->spotLightViewPort = {
 		.TopLeftX = 0,
@@ -47,7 +48,7 @@ void Renderer::Init(const Window& window) {
 		.MaxDepth = 1.0f,
 	};
 
-	this->pointLightShadows.Init(this->device.Get(), 256, this->maximumSpotlights);
+	this->pointLightShadows.Init(this->device.Get(), 256, this->maximumSpotlightShadowCasters);
 
 	this->pointLightViewPort = this->spotLightViewPort;
 }
@@ -451,6 +452,7 @@ void Renderer::CreateCheapRenderMap(CheapRenderMap& renderMap, CameraObject& cam
 
 	for (size_t i = 0; i < objects.size(); i++) {
 		std::shared_ptr<MeshObject> meshObject = objects[i].lock();
+		if (!meshObject) continue; // Idk how the object could possibly been destroyed at this point  after previous checks but it has been somehow
 
 		if (!meshObject->IsActive() || meshObject->IsHidden()) continue;
 
@@ -509,7 +511,7 @@ void Renderer::CreateSpotlightRenderMap(CheapRenderMap& renderMap, CameraObject&
 			  std::back_inserter(visible));
 
 	auto dynamicObjects = GetVisibleDynamicObjects(camera, true);
-	visible.reserve(dynamicObjects.size());
+	visible.reserve(visible.size() + dynamicObjects.size());
 	std::move(dynamicObjects.begin(), dynamicObjects.end(), std::back_inserter(visible));
 
 	CreateCheapRenderMap(renderMap, camera, visible);
@@ -546,6 +548,9 @@ size_t Renderer::FillRenderMap(RenderMap& renderMap, CameraObject& camera) {
 
 	for (auto& meshObjectWeak : renderQueue) {
 		std::shared_ptr<MeshObject> meshObject = meshObjectWeak.lock();
+		if (!meshObject)
+			continue; // Idk how the object could possibly been destroyed at this point  after previous checks but it
+					  // has been somehow
 
 		if (!meshObject->IsActive() || meshObject->IsHidden()) continue;
 
@@ -983,16 +988,17 @@ void Renderer::SpotLightShadowPass() {
 				  return aDst < bDst;
 			  });
 
-	const uint32_t lightCount = std::min<uint32_t>(this->spotLightRenderQueue.size(), this->maximumSpotlights);
+	const uint32_t lightCount = std::min<uint32_t>(this->spotLightRenderQueue.size(), this->maximumSpotlightShadowCasters);
 
 	for (uint32_t i = 0; i < lightCount; i++) {
-		if ((this->spotLightRenderQueue)[i].expired()) {
-			// This should remove deleted lights
-			Logger::Log("The renderer deleted a light");
-			this->spotLightRenderQueue.erase(this->spotLightRenderQueue.begin() + i);
-			i--;
-			continue;
-		}
+		// Lol deleting lights doesn't work anyways, no point of this check
+		//if ((this->spotLightRenderQueue)[i].expired()) {
+		//	// This should remove deleted lights
+		//	Logger::Log("The renderer deleted a light");
+		//	this->spotLightRenderQueue.erase(this->spotLightRenderQueue.begin() + i);
+		//	i--;
+		//	continue;
+		//}
 
 		auto light = (this->spotLightRenderQueue)[i].lock();
 
@@ -1021,7 +1027,7 @@ void Renderer::SpotLightShadowPass() {
 }
 
 void Renderer::PointLightShadowPass() {
-	uint32_t lightCount = std::min<uint32_t>(this->pointLightRenderQueue.size(), this->maximumSpotlights);
+	uint32_t lightCount = std::min<uint32_t>(this->pointLightRenderQueue.size(), this->maximumSpotlightShadowCasters);
 
 	for (uint32_t i = 0; i < lightCount; i++) {
 		if (this->pointLightRenderQueue[i].expired()) {
@@ -1029,7 +1035,7 @@ void Renderer::PointLightShadowPass() {
 			Logger::Log("The renderer deleted a light");
 			this->pointLightRenderQueue.erase(this->pointLightRenderQueue.begin() + i);
 			i--;
-			lightCount = std::min<uint32_t>(this->pointLightRenderQueue.size(), this->maximumSpotlights);
+			lightCount = std::min<uint32_t>(this->pointLightRenderQueue.size(), this->maximumSpotlightShadowCasters);
 			continue;
 		}
 
@@ -1252,7 +1258,10 @@ void Renderer::BindLights() {
 		}
 
 		// Updates and binds light count constant buffer
-		Renderer::LightCountBufferContainer lightCountContainer = {lightCount, 1, 1, 1};
+		Renderer::LightCountBufferContainer lightCountContainer = {
+			std::min((uint32_t) this->maximumSpotlightShadowCasters, lightCount),
+			lightCount > this->maximumSpotlightShadowCasters ? lightCount - this->maximumSpotlightShadowCasters : 0, 1,
+			1};
 		this->spotlightCountBuffer->UpdateBuffer(this->immediateContext.Get(), &lightCountContainer);
 		ID3D11Buffer* buf = this->spotlightCountBuffer->GetBuffer();
 		this->immediateContext->PSSetConstantBuffers(0, 1, &buf);

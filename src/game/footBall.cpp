@@ -14,6 +14,12 @@ void FootBall::Start()
 	this->collider.lock()->SetSolid(true);
     this->collider.lock()->SetBouncy(true);
 
+    std::function<void(float)> hitFunction = [&](float value)
+    {
+        this->OnHit(value);
+    };
+    this->collider.lock()->SetOnHit(hitFunction);
+
     this->gravity = true;
 
     auto meshData = AssetManager::GetInstance().GetMeshObjData("meshes/ball.glb:Mesh_0");
@@ -30,12 +36,11 @@ void FootBall::Start()
     offset.m128_f32[2] = 0;
 	this->transform.SetPosition(DirectX::XMVectorAdd(GameManager::GetInstance()->GetPlayerSpawnPoint(), offset));
 
-    std::function<void(std::weak_ptr<GameObject3D>, std::weak_ptr<Collider>)> function = [&](std::weak_ptr<GameObject3D> gameObject3D, std::weak_ptr<Collider> collider)
+    std::function<void(std::weak_ptr<GameObject3D>, std::weak_ptr<Collider>)> collideFunction = [&](std::weak_ptr<GameObject3D> gameObject3D, std::weak_ptr<Collider> collider)
     {
 	    this->OnCollision(gameObject3D, collider);
     };
-
-    this->SetAllOnCollisionFunction(function);
+    this->SetAllOnCollisionFunction(collideFunction);
 }
 
 void FootBall::Tick()
@@ -70,5 +75,18 @@ void FootBall::OnCollision(std::weak_ptr<GameObject3D> gameObject3D, std::weak_p
         newVelocity = DirectX::XMVectorScale(newVelocity, 0.3f);
         newVelocity.m128_f32[1] += 0.2f;
         DirectX::XMStoreFloat3(&this->linearVelocity, newVelocity);
+    }
+}
+
+void FootBall::OnHit(float value)
+{
+    if(GameManager::GetInstance()->GetPlayer().get())
+    {
+        DirectX::XMVECTOR playerPosition = GameManager::GetInstance()->GetPlayer()->transform.GetGlobalPosition();
+        DirectX::XMVECTOR direction = DirectX::XMVectorSubtract(this->transform.GetGlobalPosition(), playerPosition);
+        direction = DirectX::XMVector3Normalize(direction);
+        direction = DirectX::XMVectorScale(direction, 0.6f);
+        direction.m128_f32[1] += 0.2f;
+        DirectX::XMStoreFloat3(&this->linearVelocity, direction);
     }
 }

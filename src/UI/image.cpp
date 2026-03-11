@@ -8,7 +8,7 @@ void UI::Image::SetImage(const std::string& img) { this->image = img; }
 std::string UI::Image::GetImage() const { return this->image; }
 
 void UI::Image::ShowInHierarchy() {
-	Widget::ShowInHierarchy();
+	ScrollableWidget::ShowInHierarchy();
 
 	if (!DISABLE_IMGUI) {
 		ImGui::Separator();
@@ -33,12 +33,14 @@ void UI::Image::ShowInHierarchy() {
 			this->tint.w = col[3];
 		}
 
+		this->ShowScrollControlsInHierarchy();
+
 		ImGui::Separator();
 	}
 }
 
 void UI::Image::LoadFromJson(const nlohmann::json& data) {
-	this->Widget::LoadFromJson(data);
+	this->ScrollableWidget::LoadFromJson(data);
 
 	if (data.contains("image")) this->SetImage(data.at("image").get<std::string>());
 	if (data.contains("tint") && data["tint"].is_array() && data["tint"].size() == 4) {
@@ -50,13 +52,13 @@ void UI::Image::LoadFromJson(const nlohmann::json& data) {
 }
 
 void UI::Image::SaveToJson(nlohmann::json& data) {
-	this->Widget::SaveToJson(data);
+	this->ScrollableWidget::SaveToJson(data);
 	data["type"] = "UI::Image";
 	data["image"] = this->GetImage();
 	data["tint"] = {this->tint.x, this->tint.y, this->tint.z, this->tint.w};
 }
 
-void UI::Image::Update(float dt) { Widget::Update(dt); }
+void UI::Image::Update(float dt) { ScrollableWidget::Update(dt); }
 
 void UI::Image::Draw() {
 	if (!this->IsVisible()) {

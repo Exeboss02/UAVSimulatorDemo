@@ -1,13 +1,13 @@
 #pragma once
 
-#include "UI/widget.h"
+#include "UI/scrollableWidget.h"
 #include <DirectXMath.h>
 #include <string>
 #include <vector>
 
 namespace UI {
 
-class Text : public Widget {
+class Text : public ScrollableWidget {
 public:
 	Text() = default;
 	virtual ~Text() = default;
@@ -40,17 +40,6 @@ public:
 	void SetMaxWidth(float w);
 	float GetMaxWidth() const;
 
-	void SetAutoScroll(bool enabled);
-	bool IsAutoScrollEnabled() const;
-	void SetScrollSpeed(float pixelsPerSecond);
-	float GetScrollSpeed() const;
-	void SetScrollLoop(bool enabled);
-	bool IsScrollLoopEnabled() const;
-	void SetScrollResetY(float y);
-	float GetScrollResetY() const;
-	void SetScrollTopLimitY(float y);
-	float GetScrollTopLimitY() const;
-
 private:
 	std::string text = "Text";
 	std::string font;
@@ -64,13 +53,6 @@ private:
 	float fontSize = 16.0f;
 	bool rightAligned = false;
 	float maxWidth = 0.0f;
-
-	// Optional credits-style vertical auto scrolling.
-	bool autoScroll = false;
-	float scrollSpeed = 0.0f;
-	bool scrollLoop = false;
-	float scrollResetY = -1.0f;
-	float scrollTopLimitY = -200.0f;
 };
 
 } // namespace UI

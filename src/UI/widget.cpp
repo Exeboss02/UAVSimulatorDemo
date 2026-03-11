@@ -1,5 +1,6 @@
 #include "UI/widget.h"
 #include "UI/canvasObject.h"
+#include "core/window.h"
 
 // dx11
 #include <DirectXMath.h>
@@ -78,7 +79,7 @@ void UI::Widget::SetAnchor(Anchor anchor) {
 	this->CalculateTruePosition();
 }
 
-Anchor UI::Widget::GetAnchor() const { return this->anchor; }
+UI::Anchor UI::Widget::GetAnchor() const { return this->anchor; }
 
 void UI::Widget::SetVisible(bool visible) { this->visible = visible; }
 

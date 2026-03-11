@@ -28,6 +28,7 @@ enum Tag
     DISTANCE           = 1 << 9,  // 512
     FRIENDLY           = 1 << 10, // 1024
 	SOLID_INTERACTABLE = 1 << 11, // 2048
+	PLAYER_INTERACT    = 1 << 12, // 4096
  };
 
 enum ColliderType { BOX, SPHERE, NONE };

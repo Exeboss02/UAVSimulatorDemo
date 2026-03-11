@@ -180,7 +180,7 @@ void Cockpit::createVisualsAndColiders() {
 		colliderobj->transform.SetScale(DirectX::XMLoadFloat3(&scale));
 		colliderobj->SetParent(this->GetPtr());
 		colliderobj->SetTag(Tag::WALL);
-		colliderobj->SetIgnoreTag(Tag::INTERACTABLE);
+		colliderobj->SetIgnoreTag(Tag::PLAYER_INTERACT);
 		//auto col = colliderobj.Get();
 		//colliderobj.Init();
 		//col->ShowDebug(true);

@@ -513,7 +513,7 @@ void Player::Interact() {
 		RayCastData rayCastData;
 
 		bool didHit = PhysicsQueue::GetInstance().castRay(ray, rayCastData, Tag::INTERACTABLE | Tag::SOLID_INTERACTABLE, Tag::PLAYER,
-														  Tag::NOIGNORE,
+														  Tag::PLAYER_INTERACT,
 														  this->interactDistance);
 		std::string hitString;
 		if (didHit) {
@@ -553,7 +553,7 @@ void Player::Interact() {
 		Ray ray{Vector3D{posVec}, Vector3D{lookVec}};
 		RayCastData rayCastData;
 
-		bool didHit = PhysicsQueue::GetInstance().castRay(ray, rayCastData, Tag::INTERACTABLE | Tag::SOLID_INTERACTABLE, Tag::PLAYER, Tag::NOIGNORE,
+		bool didHit = PhysicsQueue::GetInstance().castRay(ray, rayCastData, Tag::INTERACTABLE | Tag::SOLID_INTERACTABLE, Tag::PLAYER, Tag::PLAYER_INTERACT,
 														  this->interactDistance);
 		std::string hitString;
 		if (didHit) {

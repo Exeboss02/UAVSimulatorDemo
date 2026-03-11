@@ -47,16 +47,28 @@ void GameManager::Start() {
 
 	// Set up rounds
 	this->rounds.reserve(10);
-	this->rounds.push_back(Round{3, 1, 10, 2});
-	this->rounds.push_back(Round{5, 1, 20, 2});
-	this->rounds.push_back(Round{7, 1, 30, 2});
-	this->rounds.push_back(Round{10, 2, 30, 1.8f});
-	this->rounds.push_back(Round{15, 2, 30, 1.7f});
-	this->rounds.push_back(Round{20, 2, 30, 1.6f});
-	this->rounds.push_back(Round{25, 2, 30, 1.5f});
-	this->rounds.push_back(Round{35, 2, 45, 1.4f});
-	this->rounds.push_back(Round{45, 3, 45, 1.2f});
-	this->rounds.push_back(Round{65, 3, 45, 1.0f});
+	//this->rounds.push_back(Round{3, 1, 10, 2});
+	//this->rounds.push_back(Round{5, 1, 20, 2});
+	//this->rounds.push_back(Round{7, 1, 30, 2});
+	//this->rounds.push_back(Round{10, 2, 30, 1.8f});
+	//this->rounds.push_back(Round{15, 2, 30, 1.7f});
+	//this->rounds.push_back(Round{20, 2, 30, 1.6f});
+	//this->rounds.push_back(Round{25, 2, 30, 1.5f});
+	//this->rounds.push_back(Round{35, 2, 45, 1.4f});
+	//this->rounds.push_back(Round{45, 3, 45, 1.2f});
+	//this->rounds.push_back(Round{65, 3, 45, 1.0f});
+	// 
+	this->rounds.push_back(Round{1, 1, 5, 1.0f});
+	this->rounds.push_back(Round{1, 1, 5, 1.0f});
+	this->rounds.push_back(Round{1, 1, 5, 1.0f});
+	this->rounds.push_back(Round{1, 1, 5, 1.0f});
+	this->rounds.push_back(Round{1, 1, 5, 1.0f});
+	this->rounds.push_back(Round{1, 1, 5, 1.0f});
+	this->rounds.push_back(Round{1, 1, 5, 1.0f});
+	this->rounds.push_back(Round{1, 1, 5, 1.0f});
+	this->rounds.push_back(Round{1, 1, 5, 1.0f});
+	this->rounds.push_back(Round{1, 1, 5, 1.0f});
+
 
 	int randomInt = RandomInt(0, 1);
 	if(randomInt == 0)

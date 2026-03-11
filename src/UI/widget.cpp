@@ -1,9 +1,59 @@
 #include "UI/widget.h"
 #include "UI/canvasObject.h"
+#include "core/window.h"
 
 // dx11
 #include <DirectXMath.h>
+#include <algorithm>
+#include <cctype>
 #include <nlohmann/json.hpp>
+#include <string>
+
+namespace {
+
+UI::Anchor AnchorFromString(std::string value) {
+	std::transform(value.begin(), value.end(), value.begin(),
+				   [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+
+	if (value == "topleft") return UI::Anchor::TopLeft;
+	if (value == "topright") return UI::Anchor::TopRight;
+	if (value == "topcenter") return UI::Anchor::TopCenter;
+	if (value == "midleft") return UI::Anchor::MidLeft;
+	if (value == "midright") return UI::Anchor::MidRight;
+	if (value == "midcenter") return UI::Anchor::MidCenter;
+	if (value == "bottomleft") return UI::Anchor::BottomLeft;
+	if (value == "bottomright") return UI::Anchor::BottomRight;
+	if (value == "bottomcenter") return UI::Anchor::BottomCenter;
+
+	return UI::Anchor::TopLeft;
+}
+
+const char* AnchorToString(UI::Anchor anchor) {
+	switch (anchor) {
+	case UI::Anchor::TopLeft:
+		return "TopLeft";
+	case UI::Anchor::TopRight:
+		return "TopRight";
+	case UI::Anchor::TopCenter:
+		return "TopCenter";
+	case UI::Anchor::MidLeft:
+		return "MidLeft";
+	case UI::Anchor::MidRight:
+		return "MidRight";
+	case UI::Anchor::MidCenter:
+		return "MidCenter";
+	case UI::Anchor::BottomLeft:
+		return "BottomLeft";
+	case UI::Anchor::BottomRight:
+		return "BottomRight";
+	case UI::Anchor::BottomCenter:
+		return "BottomCenter";
+	default:
+		return "TopLeft";
+	}
+}
+
+} // namespace
 
 UI::Widget::Widget(MeshObjData& mesh) { SetMesh(mesh); }
 
@@ -13,6 +63,9 @@ void UI::Widget::SetPosition(Vec2 pos) {
 }
 
 void UI::Widget::SetSize(Vec2 size) {
+	if (this->stretchToCanvas) {
+		this->stretchToCanvas = false;
+	}
 	this->size = size;
 	this->CalculateTruePosition();
 }
@@ -26,7 +79,7 @@ void UI::Widget::SetAnchor(Anchor anchor) {
 	this->CalculateTruePosition();
 }
 
-Anchor UI::Widget::GetAnchor() const { return this->anchor; }
+UI::Anchor UI::Widget::GetAnchor() const { return this->anchor; }
 
 void UI::Widget::SetVisible(bool visible) { this->visible = visible; }
 
@@ -73,6 +126,9 @@ void UI::Widget::SetZIndex(int z) { this->zIndex = z; }
 
 void UI::Widget::SetCanvasSize(Vec2 size) {
 	this->canvasSize = size;
+	if (this->stretchToCanvas) {
+		this->size = size;
+	}
 	this->CalculateTruePosition();
 }
 
@@ -212,6 +268,19 @@ void UI::Widget::LoadFromJson(const nlohmann::json& data) {
 	if (data.contains("zIndex")) {
 		this->SetZIndex(data.at("zIndex").get<int>());
 	}
+
+	if (data.contains("anchor") && data.at("anchor").is_string()) {
+		this->SetAnchor(AnchorFromString(data.at("anchor").get<std::string>()));
+	}
+
+	if (data.contains("stretchToCanvas") && data.at("stretchToCanvas").is_boolean()) {
+		this->stretchToCanvas = data.at("stretchToCanvas").get<bool>();
+		if (this->stretchToCanvas) {
+			this->SetPosition({0.0f, 0.0f});
+			this->size = this->canvasSize;
+			this->CalculateTruePosition();
+		}
+	}
 }
 
 void UI::Widget::SaveToJson(nlohmann::json& data) {
@@ -230,4 +299,6 @@ void UI::Widget::SaveToJson(nlohmann::json& data) {
 
 	// zIndex
 	data["zIndex"] = this->GetZIndex();
+	data["anchor"] = AnchorToString(this->GetAnchor());
+	data["stretchToCanvas"] = this->stretchToCanvas;
 }

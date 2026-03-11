@@ -33,6 +33,7 @@
                                        },
                             "children":  [
                                              {
+                                                 "anchor":  "TopLeft",
                                                  "color":  [
                                                                0.0,
                                                                0.0,
@@ -44,6 +45,7 @@
                                                  "label":  "",
                                                  "labelFontSize":  18.0,
                                                  "name":  "Background",
+                                                 "stretchToCanvas":  true,
                                                  "transform":  {
                                                                    "position":  [
                                                                                     0.0,
@@ -87,6 +89,90 @@
                                                                             ]
                                                                },
                                                  "type":  "UI::Text",
+                                                 "visible":  true,
+                                                 "zIndex":  1
+                                             },
+                                             {
+                                                 "anchor":  "TopCenter",
+                                                 "autoScroll":  true,
+                                                 "enabled":  true,
+                                                 "image":  "assets/images/test.png",
+                                                 "name":  "Sprint1ImagePlaceholder",
+                                                 "scrollLoop":  false,
+                                                 "scrollSpeed":  -75,
+                                                 "tint":  [
+                                                              1.0,
+                                                              1.0,
+                                                              1.0,
+                                                              1.0
+                                                          ],
+                                                 "transform":  {
+                                                                   "position":  [
+                                                                                    0.0,
+                                                                                    2120.0
+                                                                                ],
+                                                                   "size":  [
+                                                                                520.0,
+                                                                                260.0
+                                                                            ]
+                                                               },
+                                                 "type":  "UI::Image",
+                                                 "visible":  true,
+                                                 "zIndex":  1
+                                             },
+                                             {
+                                                 "anchor":  "TopCenter",
+                                                 "autoScroll":  true,
+                                                 "enabled":  true,
+                                                 "image":  "assets/images/test.png",
+                                                 "name":  "Sprint2ImagePlaceholder",
+                                                 "scrollLoop":  false,
+                                                 "scrollSpeed":  -75,
+                                                 "tint":  [
+                                                              1.0,
+                                                              1.0,
+                                                              1.0,
+                                                              1.0
+                                                          ],
+                                                 "transform":  {
+                                                                   "position":  [
+                                                                                    0.0,
+                                                                                    2760.0
+                                                                                ],
+                                                                   "size":  [
+                                                                                520.0,
+                                                                                260.0
+                                                                            ]
+                                                               },
+                                                 "type":  "UI::Image",
+                                                 "visible":  true,
+                                                 "zIndex":  1
+                                             },
+                                             {
+                                                 "anchor":  "TopCenter",
+                                                 "autoScroll":  true,
+                                                 "enabled":  true,
+                                                 "image":  "assets/images/test.png",
+                                                 "name":  "Sprint3ImagePlaceholder",
+                                                 "scrollLoop":  false,
+                                                 "scrollSpeed":  -75,
+                                                 "tint":  [
+                                                              1.0,
+                                                              1.0,
+                                                              1.0,
+                                                              1.0
+                                                          ],
+                                                 "transform":  {
+                                                                   "position":  [
+                                                                                    0.0,
+                                                                                    3420.0
+                                                                                ],
+                                                                   "size":  [
+                                                                                520.0,
+                                                                                260.0
+                                                                            ]
+                                                               },
+                                                 "type":  "UI::Image",
                                                  "visible":  true,
                                                  "zIndex":  1
                                              }

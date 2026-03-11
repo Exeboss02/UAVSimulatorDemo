@@ -1,6 +1,6 @@
 #pragma once
 
-#include "UI/widget.h"
+#include "UI/scrollableWidget.h"
 
 // std
 #include <DirectXMath.h>
@@ -8,7 +8,7 @@
 #include <vector>
 
 namespace UI {
-class Image : public Widget {
+class Image : public ScrollableWidget {
 public:
 	Image() = default;
 	virtual ~Image() = default;

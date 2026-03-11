@@ -109,17 +109,7 @@ void Text::ShowInHierarchy() {
 			this->color.w = col[3];
 		}
 
-		ImGui::Separator();
-		ImGui::Text("Scroll settings:");
-		ImGui::Checkbox("Auto Scroll", &this->autoScroll);
-		if (this->autoScroll) {
-			ImGui::DragFloat("Scroll Speed", &this->scrollSpeed, 1.0f, -2000.0f, 2000.0f, "%.1f px/s");
-			ImGui::Checkbox("Loop Scroll", &this->scrollLoop);
-			if (this->scrollLoop) {
-				ImGui::DragFloat("Scroll Top Limit Y", &this->scrollTopLimitY, 1.0f, -5000.0f, 5000.0f);
-				ImGui::DragFloat("Scroll Reset Y", &this->scrollResetY, 1.0f, -5000.0f, 5000.0f);
-			}
-		}
+		this->ShowScrollControlsInHierarchy();
 	}
 }
 
@@ -135,23 +125,8 @@ bool Text::IsRightAligned() const { return this->rightAligned; }
 void Text::SetMaxWidth(float w) { this->maxWidth = w; }
 float Text::GetMaxWidth() const { return this->maxWidth; }
 
-void Text::SetAutoScroll(bool enabled) { this->autoScroll = enabled; }
-bool Text::IsAutoScrollEnabled() const { return this->autoScroll; }
-
-void Text::SetScrollSpeed(float pixelsPerSecond) { this->scrollSpeed = pixelsPerSecond; }
-float Text::GetScrollSpeed() const { return this->scrollSpeed; }
-
-void Text::SetScrollLoop(bool enabled) { this->scrollLoop = enabled; }
-bool Text::IsScrollLoopEnabled() const { return this->scrollLoop; }
-
-void Text::SetScrollResetY(float y) { this->scrollResetY = y; }
-float Text::GetScrollResetY() const { return this->scrollResetY; }
-
-void Text::SetScrollTopLimitY(float y) { this->scrollTopLimitY = y; }
-float Text::GetScrollTopLimitY() const { return this->scrollTopLimitY; }
-
 void Text::LoadFromJson(const nlohmann::json& data) {
-	this->Widget::LoadFromJson(data);
+	this->ScrollableWidget::LoadFromJson(data);
 
 	if (data.contains("text")) this->SetText(data.at("text").get<std::string>());
 	if (data.contains("font")) this->SetFont(data.at("font").get<std::string>());
@@ -162,51 +137,19 @@ void Text::LoadFromJson(const nlohmann::json& data) {
 	}
 
 	if (data.contains("fontSize")) this->SetFontSize(data.at("fontSize").get<float>());
-	if (data.contains("autoScroll")) this->SetAutoScroll(data.at("autoScroll").get<bool>());
-	if (data.contains("scrollSpeed")) this->SetScrollSpeed(data.at("scrollSpeed").get<float>());
-	if (data.contains("scrollLoop")) this->SetScrollLoop(data.at("scrollLoop").get<bool>());
-	if (data.contains("scrollResetY")) this->SetScrollResetY(data.at("scrollResetY").get<float>());
-	if (data.contains("scrollTopLimitY")) this->SetScrollTopLimitY(data.at("scrollTopLimitY").get<float>());
 }
 
 void Text::SaveToJson(nlohmann::json& data) {
-	this->Widget::SaveToJson(data);
+	this->ScrollableWidget::SaveToJson(data);
 	data["type"] = "UI::Text";
 	data["text"] = this->GetText();
 	data["font"] = this->GetFont();
 	auto c = this->GetColor();
 	data["color"] = {c.x, c.y, c.z, c.w};
 	data["fontSize"] = this->GetFontSize();
-	data["autoScroll"] = this->IsAutoScrollEnabled();
-	if (this->IsAutoScrollEnabled()) {
-		data["scrollSpeed"] = this->GetScrollSpeed();
-		data["scrollLoop"] = this->IsScrollLoopEnabled();
-		if (this->IsScrollLoopEnabled()) {
-			data["scrollResetY"] = this->GetScrollResetY();
-			data["scrollTopLimitY"] = this->GetScrollTopLimitY();
-		}
-	}
 }
 
-void Text::Update(float dt) {
-	if (this->autoScroll && this->enabled) {
-		Vec2 localPos = this->position;
-		localPos.y += this->scrollSpeed * dt;
-		this->SetPosition(localPos);
-
-		if (this->scrollLoop && this->scrollSpeed < 0.0f) {
-			const float currentBottom = this->GetPosition().y + this->GetSize().y;
-			if (currentBottom < this->scrollTopLimitY) {
-				const float fallbackResetY = this->canvasSize.y + 20.0f;
-				localPos.y = (this->scrollResetY >= 0.0f) ? this->scrollResetY : fallbackResetY;
-				this->SetPosition(localPos);
-			}
-		}
-	}
-
-	// Update transform mapping
-	Widget::Update(dt);
-}
+void Text::Update(float dt) { ScrollableWidget::Update(dt); }
 
 void Text::Draw() {
 	if (!this->IsVisible()) {

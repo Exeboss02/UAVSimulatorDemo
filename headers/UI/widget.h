@@ -70,6 +70,8 @@ public:
 	void SetZIndex(int z);
 
 	void SetCanvasSize(Vec2 size);
+	void SetStretchToCanvas(bool enabled) { this->stretchToCanvas = enabled; this->CalculateTruePosition(); }
+	bool IsStretchToCanvas() const { return this->stretchToCanvas; }
 
 protected:
 	void CalculateTruePosition();
@@ -90,6 +92,7 @@ protected:
 	std::vector<std::shared_ptr<Widget>> children;
 
 	int zIndex = 0;
+	bool stretchToCanvas = false;
 };
 
 } // namespace UI

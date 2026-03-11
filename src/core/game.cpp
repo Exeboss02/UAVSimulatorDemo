@@ -2,15 +2,15 @@
 #include "core/filepathHolder.h"
 #include "core/imguiManager.h"
 #include "core/input/inputManager.h"
+#include "game/storyManager.h"
 #include "scene/sceneManager.h"
 #include "utilities/time.h"
 #include <chrono>
 #include <memory>
-#include "game/storyManager.h"
 
 // Game Loop
 void Game::Run(HINSTANCE hInstance, int nCmdShow) {
-	Window window(hInstance, nCmdShow, "Game Window");
+	Window window(hInstance, nCmdShow, "Starless Path");
 
 	FilepathHolder::SetDirectiories();
 

@@ -33,6 +33,7 @@
                                        },
                             "children":  [
                                              {
+                                                 "anchor":  "TopLeft",
                                                  "color":  [
                                                                0.0,
                                                                0.0,
@@ -44,6 +45,7 @@
                                                  "label":  "",
                                                  "labelFontSize":  18.0,
                                                  "name":  "Background",
+                                                 "stretchToCanvas":  true,
                                                  "transform":  {
                                                                    "position":  [
                                                                                     0.0,

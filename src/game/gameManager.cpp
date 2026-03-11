@@ -54,7 +54,7 @@ void GameManager::Start() {
 	this->rounds.push_back(Round{15, 2, 30, 1.7f});
 	this->rounds.push_back(Round{20, 2, 30, 1.6f});
 	this->rounds.push_back(Round{25, 2, 30, 1.5f});
-	this->rounds.push_back(Round{35, 2, 30, 1.4f});
+	this->rounds.push_back(Round{35, 2, 45, 1.4f});
 	this->rounds.push_back(Round{45, 3, 45, 1.2f});
 	this->rounds.push_back(Round{65, 3, 45, 1.0f});
 

@@ -20,7 +20,7 @@ void MusicPlayer::Start()
 	AudioManager::GetInstance().SetMasterSoundEffectsVolume(0.5f);
 
     // Main menu music
-	AudioManager::GetInstance().AddMusicTrackStandardFolder("CourageDemo.wav", "courage");
+	AudioManager::GetInstance().AddMusicTrackStandardFolder("Courage.wav", "courage");
 	AudioManager::GetInstance().LoopMusicTrack("courage", true);
 	AudioManager::GetInstance().SetGain("courage", 0.4f);
 

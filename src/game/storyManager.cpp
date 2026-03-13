@@ -50,14 +50,20 @@ size_t StoryManager::GetCurrentStoryPart() { return this->currentStoryPart; }
 
 void StoryManager::SetPlaying(bool playing)
 {
+	std::shared_ptr<Player> player = GameManager::GetInstance()->GetPlayer();
+	if(!player->storySpeaker.expired())
+	{
+		player->storySpeaker.lock()->Stop();
+	}
+
 	this->playing = playing;
-	this->storyPause = !playing;
 }
 
 void StoryManager::PlayNextStoryPart() {
 	if (currentStoryPart >= this->storyParts.size()) {
 		return;
 	}
+
 	this->currentStoryPart++;
 	this->playing = true;
 
@@ -158,7 +164,7 @@ bool StoryPart::PlayStoryPart(std::shared_ptr<Player> player) {
 		this->currentTextPart = 0;
 		if (auto speaker = player->storySpeaker.lock()) {
 			if (this->soundClip) {
-				// speaker->Play(this->soundClip);
+				speaker->Play(this->soundClip);
 			}
 		}
 		player->hud->SetStoryText(this->textParts[this->currentTextPart].GetText());

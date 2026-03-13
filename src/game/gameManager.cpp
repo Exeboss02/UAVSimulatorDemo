@@ -213,6 +213,7 @@ void GameManager::Win() {
 		playerPtr->transform.SetPosition(10000, 10000, 10000);
 		playerPtr->SetPhysicsPosition({10000, 10000, 10000});
 		playerPtr->SetPreviousPhysicsPosition({10000, 10000, 10000});
+		playerPtr->gravity = false;
 
 		playerPtr->SetInputEnabled(false);
 		playerPtr->SetShowCursor(true);

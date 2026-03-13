@@ -83,7 +83,9 @@ void GameManager::Start() {
 
 	this->idleTimeTimer = this->startIdleTime;
 
-	// Battle music
+	//Music handling
+	AudioManager::GetInstance().FadeOutStop("courage", 6.0f);
+
 	this->buildMusicWaitTimer.Initialize(5);
 	AudioManager::GetInstance().AddMusicTrackStandardFolder("LethalContact.wav", "contact");
 	AudioManager::GetInstance().LoopMusicTrack("contact", true);

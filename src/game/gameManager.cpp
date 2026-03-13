@@ -58,8 +58,6 @@ void GameManager::Start() {
 	this->rounds.push_back(Round{45, 3, 45, 1.2f});
 	this->rounds.push_back(Round{65, 3, 45, 1.0f});
 
-
-
 	int randomInt = RandomInt(0, 1);
 	if(randomInt == 0)
 	{
@@ -217,6 +215,7 @@ void GameManager::Win() {
 		playerPtr->transform.SetPosition(10000, 10000, 10000);
 		playerPtr->SetPhysicsPosition({10000, 10000, 10000});
 		playerPtr->SetPreviousPhysicsPosition({10000, 10000, 10000});
+		playerPtr->gravity = false;
 
 		playerPtr->SetInputEnabled(false);
 		playerPtr->SetShowCursor(true);
@@ -224,6 +223,11 @@ void GameManager::Win() {
 			playerPtr->hud->OnDestroy();
 		}
 		playerPtr->addGun(Player::Guns::none);
+		if (auto storySpeaker = playerPtr->storySpeaker.lock()) {
+			storySpeaker->Stop();
+		}
+
+		AudioManager::GetInstance().Play("courage");
 	}
 
 	// Try to find the main HUD canvas to place the win overlay on top

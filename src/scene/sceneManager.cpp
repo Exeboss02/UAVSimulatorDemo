@@ -6,18 +6,19 @@
 #include "core/eventManager.h"
 #include "core/filepathHolder.h"
 #include "game/crosshair.h"
+#include "game/drone.h"
 #include "game/events.h"
 #include "game/footBall.h"
 #include "game/gameManager.h"
-#include "gameObjects/enemies/drone.h"
 #include "game/gunPickUp.h"
 #include "game/musicPlayer.h"
+#include "game/rotatingCamera.h"
+#include "game/startButton.h"
+#include "gameObjects/enemies/drone.h"
 #include "gameObjects/enemies/enemy.h"
 #include "gameObjects/pointLightObject.h"
 #include "gameObjects/room.h"
 #include "gameObjects/turret.h"
-#include "game/rotatingCamera.h"
-#include "game/startButton.h"
 
 // std
 #include <Windows.h>
@@ -76,6 +77,7 @@ SceneManager::SceneManager(Renderer* rend)
 	this->objectFromString.RegisterType<Turret>(NAMEOF(Turret));
 	this->objectFromString.RegisterType<TestEnemy>(NAMEOF(TestEnemy));
 	this->objectFromString.RegisterType<Drone>(NAMEOF(Drone));
+	this->objectFromString.RegisterType<FPVDrone>(NAMEOF(FPVDrone));
 
 	// UI widget types
 	this->objectFromString.RegisterType<UI::CanvasObject>(NAMEOF(UI::CanvasObject));
@@ -94,7 +96,6 @@ SceneManager::SceneManager(Renderer* rend)
 
 	this->objectFromString.RegisterType<RotatingCamera>(NAMEOF(RotatingCamera));
 	this->objectFromString.RegisterType<StartButton>(NAMEOF(StartButton));
-
 
 	CreateNewScene(this->emptyScene);
 	this->emptyScene->CreateGameObjectOfType<CameraObject>();

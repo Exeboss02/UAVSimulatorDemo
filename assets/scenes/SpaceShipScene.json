@@ -23,7 +23,7 @@
           1.0
         ]
       },
-      "type": "Player",
+      "type": "FPVDrone",
       "name": "PLAYER",
       "gravity": true,
       "speed": 12,

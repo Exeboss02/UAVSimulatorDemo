@@ -173,7 +173,7 @@ void SceneManager::LoadScene(Scenes scene) {
 		LoadSceneFromFile((FilepathHolder::GetAssetsDirectory() / "scenes" / "MainMenu.scene").string());
 		break;
 	case Scenes::GAME:
-		LoadSceneFromFile((FilepathHolder::GetAssetsDirectory() / "scenes" / "SpaceShipScene.json").string());
+		LoadSceneFromFile((FilepathHolder::GetAssetsDirectory() / "scenes" / "playerScene.json").string());
 		break;
 	case Scenes::END_CREDITS:
 		LoadSceneFromFile((FilepathHolder::GetAssetsDirectory() / "scenes" / "EndCredits.scene").string());

@@ -1,6 +1,7 @@
 #include "game/drone.h"
 #include "core/input/inputManager.h"
 #include "utilities/time.h" // Assuming you have a time manager for DeltaTime
+#include "gameObjects/cameraObject.h"
 
 using namespace DirectX;
 
@@ -18,6 +19,8 @@ void FPVDrone::SetInput(float throttle, float roll, float pitch, float yaw) {
 
 void FPVDrone::Tick() {
 	GameObject3D::Tick();
+
+
 
 	InputManager::GetInstance().ReadControllerInput(this->controllerInput->GetControllerIndex());
 
@@ -117,4 +120,9 @@ void FPVDrone::Tick() {
 	// DirectX expects Pitch, Yaw, Roll ordering for this function
 	XMVECTOR deltaRotation = XMQuaternionRotationRollPitchYawFromVector(XMVectorScale(angularVelocity, dt));
 	transform.RotateQuaternion(deltaRotation);
+}
+
+void FPVDrone::Start() { 
+	auto cam = this->factory->CreateGameObjectOfType<CameraObject>().lock(); 
+	cam->SetParent(this->GetPtr());
 }

@@ -12,6 +12,7 @@ public:
 	virtual ~FPVDrone() = default;
 
 	virtual void Tick() override;
+	virtual void Start() override;
 
 	/// <summary>
 	/// Feed your controller inputs here every frame.

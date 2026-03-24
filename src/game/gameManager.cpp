@@ -179,8 +179,8 @@ void GameManager::Tick() {
 	bool showTime = !this->GetInCombat() && (this->currentRound != this->rounds.size()) && !this->storyManager.lock()->GetStoryPlaying();
 
 	// Display current round info in player hud
-	this->GetPlayer()->hud->SetRoundIndicator(this->rounds.size() - this->GetCurrentRound(), this->idleTimeTimer,
-											  showTime);
+	//this->GetPlayer()->hud->SetRoundIndicator(this->rounds.size() - this->GetCurrentRound(), this->idleTimeTimer,
+	//										  showTime);
 
 	if (!DISABLE_IMGUI) {
 		ImGui::Begin("Rounds");

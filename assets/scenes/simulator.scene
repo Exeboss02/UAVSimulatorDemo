@@ -48,7 +48,7 @@
       "dynamic": false
     },
       {
-      "meshIdentifier": "TexBox/TextureCube.glb:Mesh_0",
+      "meshIdentifier": "simulator/environment.glb:Mesh_0",
       "transform": {
         "position": [
           0.0,

@@ -2,7 +2,7 @@
 #include "core/input/inputManager.h"
 #include "utilities/time.h" // Assuming you have a time manager for DeltaTime
 #include "gameObjects/cameraObject.h"
-
+#include <algorithm>
 using namespace DirectX;
 
 FPVDrone::FPVDrone() : GameObject3D() {
@@ -34,7 +34,7 @@ void FPVDrone::Tick() {
 	if (abs(roll) < 0.1f) roll = 0.0f;
 
 	// Scale throttle so bottom is 0.0 and top is 1.0
-	float mappedThrottle = (throttle + 1.0f) / 2.0f;
+	float mappedThrottle = std::clamp(throttle, 0.0f, 1.0f);
 
 	SetInput(mappedThrottle, roll, pitch, yaw);
 

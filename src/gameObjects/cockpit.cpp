@@ -34,7 +34,7 @@ void Cockpit::Start() {
 	footBall->transform.SetScale(1.1f, 1.1f, 1.1f);
 
 	// Update core health on hud
-	GameManager::GetInstance()->GetPlayer()->hud->SetCoreHealthText(this->health.Get());
+	// GameManager::GetInstance()->GetPlayer()->hud->SetCoreHealthText(this->health.Get());
 
 	coreCollider->SetOnHit([&](float damage) {
 		this->health.Decrement(damage);

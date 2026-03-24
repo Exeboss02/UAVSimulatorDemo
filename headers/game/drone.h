@@ -39,7 +39,7 @@ private:
 	// --- Drone Specifications (Tuned for 5-inch racing drone) ---
 	float mass = 0.6f;				// kg
 	float gravity = 9.81f;			// m/s^2
-	float maxThrustPerMotor = 5.0f; // Newtons (Total thrust = 20N)
+	float maxThrustPerMotor = 7.0f; // Newtons (Total thrust = 20N)
 	float dragCoefficient = 0.3f;	// Air resistance
 	float maxAcroRate = 12.0f;		// Max rotation speed in rad/s
 

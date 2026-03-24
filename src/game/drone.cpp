@@ -2,7 +2,7 @@
 #include "core/input/inputManager.h"
 #include "utilities/time.h" // Assuming you have a time manager for DeltaTime
 #include "gameObjects/cameraObject.h"
-
+#include <algorithm>
 using namespace DirectX;
 
 FPVDrone::FPVDrone() : GameObject3D() {
@@ -20,12 +20,10 @@ void FPVDrone::SetInput(float throttle, float roll, float pitch, float yaw) {
 void FPVDrone::Tick() {
 	GameObject3D::Tick();
 
-
-
+	// 1. Fetch Inputs
 	InputManager::GetInstance().ReadControllerInput(this->controllerInput->GetControllerIndex());
 
-	// Inside your Game Loop or Player Controller:
-	float throttle = this->controllerInput->GetMovementVector()[1]; // Note: Xbox sticks center at 0. Map this to 0-1!
+	float throttle = this->controllerInput->GetMovementVector()[1];
 	float yaw = this->controllerInput->GetMovementVector()[0];
 	float pitch = this->controllerInput->GetLookVector()[1];
 	float roll = this->controllerInput->GetLookVector()[0];
@@ -35,27 +33,23 @@ void FPVDrone::Tick() {
 	if (abs(pitch) < 0.1f) pitch = 0.0f;
 	if (abs(roll) < 0.1f) roll = 0.0f;
 
-	// Throttle needs to be scaled so bottom is 0.0 and top is 1.0
-	float mappedThrottle = (throttle + 1.0f) / 2.0f;
+	// Scale throttle so bottom is 0.0 and top is 1.0
+	float mappedThrottle = std::clamp(throttle, 0.0f, 1.0f);
 
-	this->SetInput(mappedThrottle, roll, pitch, yaw);
+	SetInput(mappedThrottle, roll, pitch, yaw);
 
-	// Replace this with your engine's actual DeltaTime fetcher
-	float dt = Time::GetInstance().GetDeltaTime(); // Time::GetDeltaTime();
+	// Replace this with your engine's actual Delta Time!
+	float dt = Time::GetInstance().GetDeltaTime();
 	if (dt <= 0.0f) return;
 
 	// -----------------------------------------------------------
 	// 1. FLIGHT CONTROLLER (Acro Mode PID)
 	// -----------------------------------------------------------
-	// Map inputs to target angular rates (Pitch=X, Yaw=Y, Roll=Z)
-	// Note: Yaw is typically slower than Pitch/Roll on real drones
 	XMVECTOR targetRates =
 		XMVectorSet(inputPitch * maxAcroRate, inputYaw * (maxAcroRate * 0.7f), inputRoll * maxAcroRate, 0.0f);
 
-	// Error = Target - Current
 	XMVECTOR error = XMVectorSubtract(targetRates, angularVelocity);
 
-	// PD Controller: Torque = (Error * Kp) - (CurrentRate * Kd)
 	XMVECTOR pTerm = XMVectorScale(error, kp);
 	XMVECTOR dTerm = XMVectorScale(angularVelocity, kd);
 	XMVECTOR torqueCmd = XMVectorSubtract(pTerm, dTerm);
@@ -67,12 +61,11 @@ void FPVDrone::Tick() {
 	// -----------------------------------------------------------
 	// 2. MOTOR MIXER (Quad-X Configuration)
 	// -----------------------------------------------------------
-	float mFR = inputThrottle - tPitch + tYaw - tRoll; // Front-Right
-	float mRL = inputThrottle + tPitch + tYaw + tRoll; // Rear-Left
-	float mFL = inputThrottle - tPitch - tYaw + tRoll; // Front-Left
-	float mRR = inputThrottle + tPitch - tYaw - tRoll; // Rear-Right
+	float mFR = inputThrottle - tPitch + tYaw - tRoll;
+	float mRL = inputThrottle + tPitch + tYaw + tRoll;
+	float mFL = inputThrottle - tPitch - tYaw + tRoll;
+	float mRR = inputThrottle + tPitch - tYaw - tRoll;
 
-	// Clamp motors to physical limits [0% to 100% RPM]
 	mFR = std::max(0.0f, std::min(1.0f, mFR));
 	mRL = std::max(0.0f, std::min(1.0f, mRL));
 	mFL = std::max(0.0f, std::min(1.0f, mFL));
@@ -84,42 +77,59 @@ void FPVDrone::Tick() {
 	float totalThrustNormalized = mFR + mRL + mFL + mRR;
 	float totalThrustNewtons = totalThrustNormalized * maxThrustPerMotor;
 
-	// In your engine, {0,1,0} is Up. We rotate the Up vector by the drone's current rotation
-	// to get the direction the propellers are pushing.
-	XMVECTOR localUp = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
-	XMVECTOR worldThrust =
-		XMVectorScale(XMVector3Rotate(localUp, transform.GetRotationQuaternion()), totalThrustNewtons);
+	// Thrust pushes exactly out of the drone's physical top
+	XMVECTOR worldThrust = XMVectorScale(transform.GetGlobalUp(), totalThrustNewtons);
 
-	// Apply Gravity and Air Drag
 	XMVECTOR gravityVec = XMVectorSet(0.0f, -gravity * mass, 0.0f, 0.0f);
 	XMVECTOR dragVec = XMVectorScale(velocity, -dragCoefficient);
 
-	// F = M * A  =>  A = F / M
 	XMVECTOR netForce = XMVectorAdd(XMVectorAdd(worldThrust, gravityVec), dragVec);
 	XMVECTOR acceleration = XMVectorScale(netForce, 1.0f / mass);
 
-	// Integrate Velocity and Position
 	velocity = XMVectorAdd(velocity, XMVectorScale(acceleration, dt));
-	transform.Move(XMVectorScale(velocity, dt));
+
+	XMVECTOR currentPos = transform.GetPosition();
+	transform.SetPosition(XMVectorAdd(currentPos, XMVectorScale(velocity, dt)));
 
 	// -----------------------------------------------------------
 	// 4. ANGULAR PHYSICS (Rotation)
 	// -----------------------------------------------------------
-	// Convert motor differential thrust directly into angular acceleration for that snappy FPV feel
-	XMVECTOR angularAccel = XMVectorSet((mRL + mRR - mFL - mFR) * 20.0f, // Pitch accel (Rear vs Front)
-										(mFR + mFL - mRR - mRL) * 10.0f, // Yaw accel (CW vs CCW)
-										(mFL + mRL - mFR - mRR) * 20.0f, // Roll accel (Left vs Right)
-										0.0f);
+	// FIX 1: Corrected Motor Mixer math (Diagonals for Yaw, Front/Back for Pitch)
+	float pitchAccel = (mRL + mRR) - (mFL + mFR); // Rear vs Front
+	float yawAccel = (mFR + mRL) - (mFL + mRR);	  // CCW vs CW Diagonals
+	float rollAccel = (mFL + mRL) - (mFR + mRR);  // Left vs Right
+
+	XMVECTOR angularAccel = XMVectorSet(pitchAccel * 20.0f, yawAccel * 10.0f, rollAccel * 20.0f, 0.0f);
 
 	angularVelocity = XMVectorAdd(angularVelocity, XMVectorScale(angularAccel, dt));
+	angularVelocity = XMVectorScale(angularVelocity, 1.0f - (5.0f * dt)); // Angular drag
 
-	// Apply angular drag so the drone stops rotating instantly when sticks center
-	angularVelocity = XMVectorScale(angularVelocity, 1.0f - (5.0f * dt));
+	// FIX 2: Bulletproof Global Axis Rotation
+	// Extract the drone's exact current orientation in the world
+	XMVECTOR right = transform.GetGlobalRight();
+	XMVECTOR up = transform.GetGlobalUp();
+	XMVECTOR forward = transform.GetGlobalForward();
 
-	// Integrate angular velocity into a delta Quaternion and apply it to Transform
-	// DirectX expects Pitch, Yaw, Roll ordering for this function
-	XMVECTOR deltaRotation = XMQuaternionRotationRollPitchYawFromVector(XMVectorScale(angularVelocity, dt));
-	transform.RotateQuaternion(deltaRotation);
+	float dPitch = XMVectorGetX(angularVelocity) * dt;
+	float dYaw = XMVectorGetY(angularVelocity) * dt;
+	// We negate Roll because DirectX Left-Handed positive Z rotation rolls Left, not Right
+	float dRoll = -XMVectorGetZ(angularVelocity) * dt;
+
+	// Create 3 independent quaternions rotating around the True World Axes
+	XMVECTOR qPitch = XMQuaternionRotationAxis(right, dPitch);
+	XMVECTOR qYaw = XMQuaternionRotationAxis(up, dYaw);
+	XMVECTOR qRoll = XMQuaternionRotationAxis(forward, dRoll);
+
+	// Combine them into one global delta rotation
+	XMVECTOR qDelta = XMQuaternionMultiply(qPitch, qYaw);
+	qDelta = XMQuaternionMultiply(qDelta, qRoll);
+
+	// Apply it to the current rotation
+	XMVECTOR currentRot = transform.GetRotationQuaternion();
+	XMVECTOR newRot = XMQuaternionMultiply(currentRot, qDelta);
+	newRot = XMQuaternionNormalize(newRot);
+
+	transform.SetRotationQuaternion(newRot);
 }
 
 void FPVDrone::Start() { 

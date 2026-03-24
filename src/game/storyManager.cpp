@@ -121,12 +121,12 @@ void StoryManager::Tick() {
 
 void StoryManager::Start() {
 	this->GameObject::Start();
-	this->player = this->factory->FindObjectOfType<Player>();
-	if (player.expired()) {
-		std::string error = "No player was found when trying to create storyManager";
-		Logger::Error(error);
-		throw std::runtime_error(error);
-	}
+	//this->player = this->factory->FindObjectOfType<Player>();
+	//if (player.expired()) {
+	//	std::string error = "No player was found when trying to create storyManager";
+	//	Logger::Error(error);
+	//	throw std::runtime_error(error);
+	//}
 }
 
 bool StoryManager::GetStoryPlaying() const { return this->storyPause || this->playing; }

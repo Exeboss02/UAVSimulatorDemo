@@ -179,7 +179,7 @@ void SceneManager::LoadScene(Scenes scene) {
 		LoadSceneFromFile((FilepathHolder::GetAssetsDirectory() / "scenes" / "EndCredits.scene").string());
 		break;
 	case Scenes::DEMO:
-		LoadSceneFromFile((FilepathHolder::GetAssetsDirectory() / "scenes" / "testresult.json").string());
+		LoadSceneFromFile((FilepathHolder::GetAssetsDirectory() / "scenes" / "playerScene.json").string());
 		break;
 	default:
 		break;
@@ -227,7 +227,7 @@ void SceneManager::LoadSceneFromFile(const std::string& filePath) {
 	this->eventManager->RegisterCallback(static_cast<int>(ButtonEvent::PLAY), [this]() {
 		Logger::Log("PLAY event triggered: loading GAME scene");
 		this->mainScene->QueueLoadScene(
-			(FilepathHolder::GetAssetsDirectory() / "scenes" / "SpaceShipScene.json").string());
+			(FilepathHolder::GetAssetsDirectory() / "scenes" / "playerScene.json").string());
 	});
 
 	// register listener for Exit

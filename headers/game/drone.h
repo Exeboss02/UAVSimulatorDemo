@@ -6,6 +6,9 @@
 #include <algorithm>
 #include <memory>
 
+#include <windows.h>
+#include <mmsystem.h>
+
 class FPVDrone : public GameObject3D {
 public:
 	FPVDrone();
@@ -26,11 +29,32 @@ public:
 private:
 	std::shared_ptr<ControllerInput> controllerInput = std::make_shared<ControllerInput>(0);
 
+	//controller type
+	enum ControllerType {
+		XINPUT, RADIOMASTER } controllerType = ControllerType::XINPUT;
+
 	// --- Input State ---
 	float inputThrottle = 0.0f;
 	float inputRoll = 0.0f;
 	float inputPitch = 0.0f;
 	float inputYaw = 0.0f;
+
+	// --- RadioMaster Raw Mapping Data ---
+	// These define the raw 0-65535 boundaries for your sticks.
+	// A center value of 32767 is standard for spring-loaded axes.
+	struct AxisCalibration {
+		DWORD minVal = 0;
+		DWORD centerVal = 32767;
+		DWORD maxVal = 65535;
+	};
+
+	AxisCalibration calRoll;
+	AxisCalibration calPitch;
+	AxisCalibration calYaw;
+	AxisCalibration calThrottle; // Throttle usually doesn't need a center, just min/max
+
+	// Helper to normalize raw DWORD to -1.0 to 1.0 (or 0.0 to 1.0 for throttle)
+	float NormalizeAxis(DWORD rawValue, const AxisCalibration& cal, bool isThrottle);
 
 	// --- Physics State ---
 	DirectX::XMVECTOR velocity;
@@ -41,7 +65,7 @@ private:
 	float gravity = 9.81f;			// m/s^2
 	float maxThrustPerMotor = 7.0f; // Newtons (Total thrust = 20N)
 	float dragCoefficient = 0.3f;	// Air resistance
-	float maxAcroRate = 12.0f;		// Max rotation speed in rad/s
+	float maxAcroRate = 8.0f;		// Max rotation speed in rad/s
 
 	// --- Acro PID Gains ---
 	float kp = 4.0f;

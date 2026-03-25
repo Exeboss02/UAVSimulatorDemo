@@ -189,6 +189,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
   sndfile
   fastgltf
   xinput
+  winmm
 )
 
 # Shader compilation (fxc)

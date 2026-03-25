@@ -1,4 +1,5 @@
 #include "core/tools.h"
+#include "utilities/logger.h"
 
 DirectX::XMFLOAT3 FLOAT3ADD(DirectX::XMFLOAT3 vector, DirectX::XMFLOAT3 addVector)
 {
@@ -75,7 +76,8 @@ void PrintMatrix(const DirectX::XMFLOAT4X4& matrix)
 
 void PrintFloat3(const DirectX::XMFLOAT3 vector, std::string label)
 {
-    std::cout << label << ": " << vector.x << ", " << vector.y << ", " << vector.z << std::endl;
+    //std::cout << label << ": " << vector.x << ", " << vector.y << ", " << vector.z << std::endl;
+    Logger::Error(label, std::to_string(vector.x), ", ", std::to_string(vector.y), ", ", std::to_string(vector.z));
 }
 
 float GetLengthOfFLOAT3(const DirectX::XMFLOAT3& vector)

@@ -3,6 +3,7 @@
 #include "utilities/time.h" // Assuming you have a time manager for DeltaTime
 #include "gameObjects/cameraObject.h"
 #include <algorithm>
+#include "core/tools.h"
 using namespace DirectX;
 
 FPVDrone::FPVDrone() : RigidBody() {
@@ -36,7 +37,6 @@ void FPVDrone::SetInput(float throttle, float roll, float pitch, float yaw) {
 }
 
 void FPVDrone::PhysicsTick() {
-	RigidBody::PhysicsTick();
 
 	// 1. Fetch Inputs
 	InputManager::GetInstance().ReadControllerInput(this->controllerInput->GetControllerIndex());
@@ -122,6 +122,8 @@ void FPVDrone::PhysicsTick() {
 	float mFL = inputThrottle - tPitch - tYaw + tRoll;
 	float mRR = inputThrottle + tPitch - tYaw - tRoll;
 
+	Logger::Error("mFR: ", mFR, mRL, mFL, mRR);
+
 	mFR = std::max(0.0f, std::min(1.0f, mFR));
 	mRL = std::max(0.0f, std::min(1.0f, mRL));
 	mFL = std::max(0.0f, std::min(1.0f, mFL));
@@ -133,6 +135,9 @@ void FPVDrone::PhysicsTick() {
 	float totalThrustNormalized = mFR + mRL + mFL + mRR;
 	float totalThrustNewtons = totalThrustNormalized * maxThrustPerMotor;
 
+	// this->linearVelocity.x = 0;
+	// this->linearVelocity.y = 0;
+	// this->linearVelocity.z = 0;
 	DirectX::XMVECTOR velocity = DirectX::XMLoadFloat3(&this->linearVelocity);
 	
 	// Thrust pushes exactly out of the drone's physical top
@@ -145,10 +150,15 @@ void FPVDrone::PhysicsTick() {
 	XMVECTOR acceleration = XMVectorScale(netForce, 1.0f / mass);
 
 	velocity = XMVectorAdd(velocity, XMVectorScale(acceleration, dt));
+	//velocity = XMVectorAdd(worldThrust, gravityVec);
+	//velocity = gravityVec;
 	DirectX::XMFLOAT3 velocityf;
 	DirectX::XMStoreFloat3(&velocityf, velocity);
 
 	this->linearVelocity = velocityf;
+
+	//PrintFloat3(this->linearVelocity, "linear velocity last: ");
+	//Logger::Error("gravity", std::to_string(worldThrust.m128_f32[0]), ", ", std::to_string(worldThrust.m128_f32[1]), ", ", std::to_string(worldThrust.m128_f32[2]));
 
 	// -----------------------------------------------------------
 	// 4. ANGULAR PHYSICS (Rotation)
@@ -189,6 +199,10 @@ void FPVDrone::PhysicsTick() {
 	newRot = XMQuaternionNormalize(newRot);
 
 	transform.SetRotationQuaternion(newRot);
+
+	RigidBody::PhysicsTick();
+
+	//PrintFloat3(this->linearVelocity, "linear velocity last: ");
 }
 
 void FPVDrone::Start() { 

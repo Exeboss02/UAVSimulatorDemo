@@ -35,7 +35,7 @@ void RigidBody::LatePhysicsTick() {
 	this->GameObject3D::LatePhysicsTick();
 
 	// the total move for this frame
-	DirectX::XMVECTOR moveVector = XMLoadFloat3(&this->linearVelocity);
+	DirectX::XMVECTOR moveVector = DirectX::XMVectorScale(XMLoadFloat3(&this->linearVelocity), Time::GetInstance().GetFixedDeltaTime());
 
 	DirectX::XMVECTOR collisionCheckPosition = DirectX::XMVectorAdd(this->transform.GetPosition(), moveVector);
 	this->transform.SetPosition(collisionCheckPosition); // all velocity has been added, it will first be moved here,

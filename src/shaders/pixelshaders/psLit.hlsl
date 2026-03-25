@@ -70,7 +70,7 @@ float4 main(PixelShaderInput input) : SV_TARGET
     const float bias = 0.001f;
     float3 normal = normalize(input.normal);
     
-    float4 ambientColor = ambient;
+    float4 ambientColor = float4(1,1,1,1);
     float4 diffuseColor = 0;
     float4 specularColor = 0;
     float3 camToPixel = input.worldPosition.xyz - input.cameraPosition;

@@ -46,9 +46,13 @@
       "ignoreTag": 0,
       "solid": true,
       "dynamic": false
+    } 
+      ]
     },
-      {
-      "meshIdentifier": "TexBox/TextureCube.glb:Mesh_0",
+
+    {
+      "meshIdentifier": "Karlskrona/Bastion.glb:Mesh_0",
+      "name": "Bastion",
       "transform": {
         "position": [
           0.0,
@@ -68,159 +72,10 @@
         ]
       },
       "type": "MeshObject"
-    }
-      ]
     },
 
 
-    {
-      "transform": {
-        "position": [
-          0.0,
-          4.0,
-          0.0
-        ],
-        "rotation": [
-          0.0,
-          0.0,
-          0.0,
-          1.0
-        ],
-        "scale": [
-          2.0,
-          2.0,
-          35.0
-        ]
-      },
-      "name": "pillar",
-      "type": "GameObject3D",
-      "children": [
-      {
-      "transform": {
-        "position": [
-          0.0,
-          0.0,
-          0.0
-        ],
-        "rotation": [
-          0.0,
-          0.0,
-          0.0,
-          1.0
-        ],
-        "scale": [
-          1.0,
-          1.0,
-          1.0
-        ]
-      },
-      "type": "BoxCollider",
-      "tag": 0,
-      "ignoreTag": 0,
-      "solid": true,
-      "dynamic": false
-    },
-      {
-      "meshIdentifier": "TexBox/TextureCube.glb:Mesh_0",
-      "transform": {
-        "position": [
-          0.0,
-          0.0,
-          0.0
-        ],
-        "rotation": [
-          0.0,
-          0.0,
-          0.0,
-          1.0
-        ],
-        "scale": [
-          1.0,
-          1.0,
-          1.0
-        ]
-      },
-      "type": "MeshObject"
-    }
-      ]
-    },
-
-
-
-    {
-      "transform": {
-        "position": [
-          0.0,
-          8.0,
-          0.0
-        ],
-        "rotation": [
-          0.2,
-          0.6,
-          0.0,
-          1.0
-        ],
-        "scale": [
-          2.0,
-          2.0,
-          40.0
-        ]
-      },
-      "name": "otherPillar",
-      "type": "GameObject3D",
-      "children": [
-      {
-      "transform": {
-        "position": [
-          0.0,
-          0.0,
-          0.0
-        ],
-        "rotation": [
-          0.0,
-          0.0,
-          0.0,
-          1.0
-        ],
-        "scale": [
-          1.0,
-          1.0,
-          1.0
-        ]
-      },
-      "type": "BoxCollider",
-      "tag": 1,
-      "ignoreTag": 0,
-      "solid": true,
-      "dynamic": false
-    },
-      {
-      "meshIdentifier": "TexBox/TextureCube.glb:Mesh_0",
-      "transform": {
-        "position": [
-          0.0,
-          0.0,
-          0.0
-        ],
-        "rotation": [
-          0.0,
-          0.0,
-          0.0,
-          1.0
-        ],
-        "scale": [
-          1.0,
-          1.0,
-          1.0
-        ]
-      },
-      "type": "MeshObject"
-    }
-      ]
-    },
-
-
-    {
+    {              
       "transform": {
         "position": [
           0.0,

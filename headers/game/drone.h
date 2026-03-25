@@ -31,9 +31,7 @@ private:
 
 	//controller type
 	enum ControllerType {
-		XINPUT,
-		RADIOMASTER
-	} controllerType = ControllerType::XINPUT;
+		XINPUT, RADIOMASTER } controllerType = ControllerType::XINPUT;
 
 	// --- Input State ---
 	float inputThrottle = 0.0f;

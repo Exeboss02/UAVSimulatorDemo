@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <memory>
 #include "gameObjects/meshObject.h"
+#include "game/fpvTarget.h"
 
 #include <windows.h>
 #include <mmsystem.h>
@@ -27,9 +28,13 @@ public:
 	/// <param name="yaw">-1.0 to 1.0 (Left Stick X)</param>
 	void SetInput(float throttle, float roll, float pitch, float yaw);
 
+	
+
 private:
 
 	void rototatePropelers();
+
+	void ImGui();
 
 	std::weak_ptr<CameraObject> fpvCamera;
 	std::weak_ptr<CameraObject> chaseCamera;

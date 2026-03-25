@@ -48,8 +48,30 @@ void FPVDrone::rototatePropelers() {
 
 }
 
+void FPVDrone::ImGui() {
+
+	if (!DISABLE_IMGUI) {
+		ImGui::Begin("shahed");
+		
+		bool roomCreator = ImGui::Button("shahedAttack");
+		ImGui::End();
+
+		if (roomCreator) {
+			{
+				auto cam = this->factory->CreateGameObjectOfType<fpvTarget>().lock();
+				cam->SetName("shahed");
+
+			}
+		}
+	}
+
+
+}
+
 void FPVDrone::Tick() {
 	GameObject3D::Tick();
+
+	this->ImGui();
 
 	// 1. Fetch Inputs
 	InputManager::GetInstance().ReadControllerInput(this->controllerInput->GetControllerIndex());
@@ -223,12 +245,12 @@ void FPVDrone::Start() {
 	}
 	
 
-	auto rigidbody = this->factory->CreateGameObjectOfType<RigidBody>().lock();
+	/*auto rigidbody = this->factory->CreateGameObjectOfType<RigidBody>().lock();
 	rigidbody->SetParent(this->GetPtr());
 	auto collider = this->factory->CreateGameObjectOfType<SphereCollider>().lock();
 	collider->SetDynamic(true);
 	collider->SetParent(rigidbody);
-	rigidbody->AddColliderChild(collider);
+	rigidbody->AddColliderChild(collider);*/
 
 	RenderQueue::ChangeSkybox("ocean.dds");
 

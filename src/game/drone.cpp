@@ -5,7 +5,7 @@
 #include <algorithm>
 using namespace DirectX;
 
-FPVDrone::FPVDrone() : GameObject3D() {
+FPVDrone::FPVDrone() : RigidBody() {
 	velocity = XMVectorZero();
 	angularVelocity = XMVectorZero();
 }
@@ -35,8 +35,8 @@ void FPVDrone::SetInput(float throttle, float roll, float pitch, float yaw) {
 	inputYaw = yaw;
 }
 
-void FPVDrone::Tick() {
-	GameObject3D::Tick();
+void FPVDrone::PhysicsTick() {
+	RigidBody::PhysicsTick();
 
 	// 1. Fetch Inputs
 	InputManager::GetInstance().ReadControllerInput(this->controllerInput->GetControllerIndex());
@@ -95,7 +95,7 @@ void FPVDrone::Tick() {
 
 
 	// Replace this with your engine's actual Delta Time!
-	float dt = Time::GetInstance().GetDeltaTime();
+	float dt = Time::GetInstance().GetFixedDeltaTime();
 	if (dt <= 0.0f) return;
 
 	// -----------------------------------------------------------
@@ -133,19 +133,22 @@ void FPVDrone::Tick() {
 	float totalThrustNormalized = mFR + mRL + mFL + mRR;
 	float totalThrustNewtons = totalThrustNormalized * maxThrustPerMotor;
 
+	DirectX::XMVECTOR velocity = DirectX::XMLoadFloat3(&this->linearVelocity);
+	
 	// Thrust pushes exactly out of the drone's physical top
 	XMVECTOR worldThrust = XMVectorScale(transform.GetGlobalUp(), totalThrustNewtons);
 
-	XMVECTOR gravityVec = XMVectorSet(0.0f, -gravity * mass, 0.0f, 0.0f);
+	XMVECTOR gravityVec = XMVectorSet(0.0f, -9.82 * mass, 0.0f, 0.0f);
 	XMVECTOR dragVec = XMVectorScale(velocity, -dragCoefficient);
 
 	XMVECTOR netForce = XMVectorAdd(XMVectorAdd(worldThrust, gravityVec), dragVec);
 	XMVECTOR acceleration = XMVectorScale(netForce, 1.0f / mass);
 
 	velocity = XMVectorAdd(velocity, XMVectorScale(acceleration, dt));
+	DirectX::XMFLOAT3 velocityf;
+	DirectX::XMStoreFloat3(&velocityf, velocity);
 
-	XMVECTOR currentPos = transform.GetPosition();
-	transform.SetPosition(XMVectorAdd(currentPos, XMVectorScale(velocity, dt)));
+	this->linearVelocity = velocityf;
 
 	// -----------------------------------------------------------
 	// 4. ANGULAR PHYSICS (Rotation)
@@ -189,13 +192,13 @@ void FPVDrone::Tick() {
 }
 
 void FPVDrone::Start() { 
+	this->RigidBody::Start();
 	auto cam = this->factory->CreateGameObjectOfType<CameraObject>().lock(); 
 	cam->SetParent(this->GetPtr());
+	this->gravity = 0;
 
-	auto rigidbody = this->factory->CreateGameObjectOfType<RigidBody>().lock();
-	rigidbody->SetParent(this->GetPtr());
 	auto collider = this->factory->CreateGameObjectOfType<SphereCollider>().lock();
 	collider->SetDynamic(true);
-	collider->SetParent(rigidbody);
-	rigidbody->AddColliderChild(collider);
+	collider->SetParent(this->GetPtr());
+	this->AddColliderChild(collider);
 }

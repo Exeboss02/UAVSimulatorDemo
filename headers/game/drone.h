@@ -9,12 +9,12 @@
 #include <windows.h>
 #include <mmsystem.h>
 
-class FPVDrone : public GameObject3D {
+class FPVDrone : public RigidBody {
 public:
 	FPVDrone();
 	virtual ~FPVDrone() = default;
 
-	virtual void Tick() override;
+	virtual void PhysicsTick() override;
 	virtual void Start() override;
 
 	/// <summary>

@@ -18,7 +18,7 @@ std::weak_ptr<GameManager> GameManager::instance;
 GameManager::~GameManager() { this->shipSpeaker.lock()->Stop(); }
 
 GameManager::GameManager()
-	: playerSpawnPoint(DirectX::XMVectorSet(140.0, 5.0, -23.0f, 0.0)), currentRound(0), inCombat(false),
+	: playerSpawnPoint(DirectX::XMVectorSet(0, 5.0, -0, 0.0)), currentRound(0), inCombat(false),
 	  enemySpawnTimer(1), unspawnedEnemies(0), startIdleTime(10), idleTimeTimer(0) {}
 
 void GameManager::Start() {
@@ -41,9 +41,6 @@ void GameManager::Start() {
 	} else {
 		Logger::Error("Failed to find spaceship, add one to the scene.");
 	}
-
-	this->storyManager = this->factory->CreateGameObjectOfType<StoryManager>();
-	this->storyManager.lock()->PlayNextStoryPart();
 
 	// Set up rounds
 	this->rounds.reserve(10);
@@ -161,26 +158,11 @@ void GameManager::Tick() {
 	} else if (currentRound < this->rounds.size()) {
 
 		if (this->idleTimeTimer > 0) {
-			if (!this->storyManager.expired() && !this->storyManager.lock()->GetStoryPlaying()) {
-				this->idleTimeTimer -= Time::GetInstance().GetDeltaTime();
-			}
+
 		} else {
 			SpawnNextRound();
 		}
 	}
-
-	if (this->storyManager.expired()) {
-		std::string error = "Story Manager expired before it should";
-		Logger::Error(error);
-		throw std::runtime_error(error);
-	}
-
-	// If not in a round currently and we haven't completed all rounds, showTime == True
-	bool showTime = !this->GetInCombat() && (this->currentRound != this->rounds.size()) && !this->storyManager.lock()->GetStoryPlaying();
-
-	// Display current round info in player hud
-	//this->GetPlayer()->hud->SetRoundIndicator(this->rounds.size() - this->GetCurrentRound(), this->idleTimeTimer,
-	//										  showTime);
 
 	if (!DISABLE_IMGUI) {
 		ImGui::Begin("Rounds");
@@ -223,9 +205,6 @@ void GameManager::Win() {
 			playerPtr->hud->OnDestroy();
 		}
 		playerPtr->addGun(Player::Guns::none);
-		if (auto storySpeaker = playerPtr->storySpeaker.lock()) {
-			storySpeaker->Stop();
-		}
 
 		AudioManager::GetInstance().Play("courage");
 	}
@@ -467,10 +446,6 @@ void GameManager::EndRound() {
 		player->resources.carbonFiber.IncrementAmount(15 + this->currentRound * 3);
 		player->resources.lubricant.IncrementAmount(10 + this->currentRound * 2);
 		player->resources.circuit.IncrementAmount(1 + this->currentRound * 0.2);
-	}
-
-	if (auto sm = this->storyManager.lock()) {
-		sm->PlayNextStoryPart();
 	}
 }
 

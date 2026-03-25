@@ -191,4 +191,7 @@ void FPVDrone::Tick() {
 void FPVDrone::Start() { 
 	auto cam = this->factory->CreateGameObjectOfType<CameraObject>().lock(); 
 	cam->SetParent(this->GetPtr());
+	auto collider = this->factory->CreateGameObjectOfType<SphereCollider>().lock();
+	collider->SetParent(this->GetPtr());
+	collider->SetDynamic(true);
 }

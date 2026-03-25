@@ -179,7 +179,7 @@ void SceneManager::LoadScene(Scenes scene) {
 		LoadSceneFromFile((FilepathHolder::GetAssetsDirectory() / "scenes" / "EndCredits.scene").string());
 		break;
 	case Scenes::DEMO:
-		LoadSceneFromFile((FilepathHolder::GetAssetsDirectory() / "scenes" / "testresult.json").string());
+		LoadSceneFromFile((FilepathHolder::GetAssetsDirectory() / "scenes" / "playerScene.json").string());
 		break;
 	default:
 		break;

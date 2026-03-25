@@ -5,6 +5,7 @@
 #include <DirectXMath.h>
 #include <algorithm>
 #include <memory>
+#include "gameObjects/meshObject.h"
 
 #include <windows.h>
 #include <mmsystem.h>
@@ -27,11 +28,21 @@ public:
 	void SetInput(float throttle, float roll, float pitch, float yaw);
 
 private:
+
+	void rototatePropelers();
+
+	std::weak_ptr<CameraObject> fpvCamera;
+	std::weak_ptr<CameraObject> chaseCamera;
+
+	std::weak_ptr<MeshObject> droneBody;
+	std::weak_ptr<MeshObject> propelers[4];
+
+
+
 	std::shared_ptr<ControllerInput> controllerInput = std::make_shared<ControllerInput>(0);
 
 	//controller type
-	enum ControllerType {
-		XINPUT, RADIOMASTER } controllerType = ControllerType::XINPUT;
+	enum ControllerType { XINPUT, RADIOMASTER } controllerType = ControllerType::RADIOMASTER;
 
 	// --- Input State ---
 	float inputThrottle = 0.0f;

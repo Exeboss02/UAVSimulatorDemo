@@ -3,6 +3,8 @@
 #include "utilities/time.h" // Assuming you have a time manager for DeltaTime
 #include "gameObjects/cameraObject.h"
 #include <algorithm>
+#include <numbers>
+
 using namespace DirectX;
 
 FPVDrone::FPVDrone() : GameObject3D() {
@@ -33,6 +35,17 @@ void FPVDrone::SetInput(float throttle, float roll, float pitch, float yaw) {
 	inputRoll = roll;
 	inputPitch = pitch;
 	inputYaw = yaw;
+}
+
+void FPVDrone::rototatePropelers() {
+
+	float maxRPS = 20;
+
+	for (size_t i = 0; i < 4; i++) {
+
+		this->propelers[i].lock()->transform.Rotate(0, std::numbers::pi * 2 * maxRPS  * Time::GetInstance().GetDeltaTime() * this->inputThrottle, 0);
+	}
+
 }
 
 void FPVDrone::Tick() {
@@ -92,7 +105,7 @@ void FPVDrone::Tick() {
 
 		SetInput(rawThrottleFloat, rawRollFloat, rawPitchFloat, rawYawFloat);
 	}
-
+	this->rototatePropelers();
 
 	// Replace this with your engine's actual Delta Time!
 	float dt = Time::GetInstance().GetDeltaTime();
@@ -189,8 +202,26 @@ void FPVDrone::Tick() {
 }
 
 void FPVDrone::Start() { 
-	auto cam = this->factory->CreateGameObjectOfType<CameraObject>().lock(); 
-	cam->SetParent(this->GetPtr());
+	{
+		auto cam = this->factory->CreateGameObjectOfType<CameraObject>().lock();
+		cam->SetNearPlane(0.01);
+		cam->transform.SetPosition(0, -0.010, 0.13f);
+		cam->transform.SetRotationRPY(0, -0.3490f, 0);
+		cam->SetFov(120);
+		cam->SetName("fpvCamera");
+		this->fpvCamera = cam;
+		cam->SetParent(this->GetPtr());
+	}
+	{
+		auto cam = this->factory->CreateGameObjectOfType<CameraObject>().lock();
+		cam->transform.SetPosition(0.0f, 0.3f, -1.0f);
+		cam->SetFov(80);
+		this->chaseCamera = cam;
+		cam->SetName("chaseCamera");
+		cam->SetMainCamera();
+		cam->SetParent(this->GetPtr());
+	}
+	
 
 	auto rigidbody = this->factory->CreateGameObjectOfType<RigidBody>().lock();
 	rigidbody->SetParent(this->GetPtr());
@@ -198,4 +229,97 @@ void FPVDrone::Start() {
 	collider->SetDynamic(true);
 	collider->SetParent(rigidbody);
 	rigidbody->AddColliderChild(collider);
+
+	RenderQueue::ChangeSkybox("ocean.dds");
+
+	
+	{
+		auto meshobjweak = this->factory->CreateGameObjectOfType<MeshObject>();
+
+		auto meshobj = meshobjweak.lock();
+		meshobj->SetName("bodyMesh");
+
+		meshobj->SetParent(this->GetPtr());
+
+		MeshObjData meshdata = AssetManager::GetInstance().GetMeshObjData("drones/kamikazeDrone.glb:Mesh_0");
+		meshobj->SetMesh(meshdata);
+		/*meshobj->transform.SetScale(DirectX::XMLoadFloat3(&this->visualScale));
+		meshobj->transform.SetRotationRPY(this->visualRotationRPY.x, this->visualRotationRPY.y,
+										  this->visualRotationRPY.z);*/
+		meshobj->SetCastShadow(false);
+		this->droneBody = meshobj;
+	}
+	{ // propeler 1
+
+		auto meshobjweak = this->factory->CreateGameObjectOfType<MeshObject>();
+
+		auto meshobj = meshobjweak.lock();
+		meshobj->SetName("prop1");
+		this->propelers[0] = meshobj;
+
+		meshobj->SetParent(this->GetPtr());
+
+		MeshObjData meshdata = AssetManager::GetInstance().GetMeshObjData("drones/kamikazeDrone.glb:Mesh_1");
+		meshobj->SetMesh(meshdata);
+		meshobj->transform.SetPosition(-0.145f, 0, 0.145f);
+		/*meshobj->transform.SetScale(DirectX::XMLoadFloat3(&this->visualScale));
+		meshobj->transform.SetRotationRPY(this->visualRotationRPY.x, this->visualRotationRPY.y,
+										  this->visualRotationRPY.z);*/
+		meshobj->SetCastShadow(false);
+	}
+	{ // propeler 2
+
+		auto meshobjweak = this->factory->CreateGameObjectOfType<MeshObject>();
+
+		auto meshobj = meshobjweak.lock();
+		meshobj->SetName("prop2");
+		this->propelers[1] = meshobj;
+		meshobj->SetParent(this->GetPtr());
+
+		MeshObjData meshdata = AssetManager::GetInstance().GetMeshObjData("drones/kamikazeDrone.glb:Mesh_1");
+		meshobj->SetMesh(meshdata);
+		meshobj->transform.SetPosition(0.145f, 0, -0.145f);
+		/*meshobj->transform.SetScale(DirectX::XMLoadFloat3(&this->visualScale));
+		meshobj->transform.SetRotationRPY(this->visualRotationRPY.x, this->visualRotationRPY.y,
+										  this->visualRotationRPY.z);*/
+		meshobj->SetCastShadow(false);
+	}
+	{ // propeler 3
+
+		auto meshobjweak = this->factory->CreateGameObjectOfType<MeshObject>();
+
+		auto meshobj = meshobjweak.lock();
+		meshobj->SetName("prop3");
+		this->propelers[2] = meshobj;
+
+		meshobj->SetParent(this->GetPtr());
+
+		MeshObjData meshdata = AssetManager::GetInstance().GetMeshObjData("drones/kamikazeDrone.glb:Mesh_1");
+		meshobj->SetMesh(meshdata);
+		meshobj->transform.SetPosition(-0.145f, 0, -0.145f);
+		/*meshobj->transform.SetScale(DirectX::XMLoadFloat3(&this->visualScale));
+		meshobj->transform.SetRotationRPY(this->visualRotationRPY.x, this->visualRotationRPY.y,
+										  this->visualRotationRPY.z);*/
+		meshobj->SetCastShadow(false);
+	}
+	{ // propeler 4
+
+		auto meshobjweak = this->factory->CreateGameObjectOfType<MeshObject>();
+
+		auto meshobj = meshobjweak.lock();
+		meshobj->SetName("prop4");
+		this->propelers[3] = meshobj;
+
+
+		meshobj->SetParent(this->GetPtr());
+
+		MeshObjData meshdata = AssetManager::GetInstance().GetMeshObjData("drones/kamikazeDrone.glb:Mesh_1");
+		meshobj->SetMesh(meshdata);
+		meshobj->transform.SetPosition(0.145f, 0, 0.145f);
+		/*meshobj->transform.SetScale(DirectX::XMLoadFloat3(&this->visualScale));
+		meshobj->transform.SetRotationRPY(this->visualRotationRPY.x, this->visualRotationRPY.y,
+										  this->visualRotationRPY.z);*/
+		meshobj->SetCastShadow(false);
+	}
+	
 }

@@ -24,8 +24,8 @@ void fpvTarget::Start() {
 	
 
 	
-		auto colliderobj = this->factory->CreateStaticGameObject<BoxCollider>();
-
+		auto colliderobj = this->factory->CreateGameObjectOfType<BoxCollider>().lock();
+		colliderobj->SetDynamic(true);
 		DirectX::XMFLOAT3 pos(0.0f, 0.0f, 0.0f);
 		colliderobj->transform.SetPosition(DirectX::XMLoadFloat3(&pos));
 		colliderobj->SetSolid(false);

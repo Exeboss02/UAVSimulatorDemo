@@ -8,16 +8,32 @@ void Boat::Start() {
 	this->SetMesh(AssetManager::GetInstance().GetMeshObjData("Karlskrona/Stridsbat90h.glb:Mesh_0"));
 	this->MeshObject::Start();
 
+
+	auto shipCollider = this->factory->CreateGameObjectOfType<BoxCollider>().lock();
+	shipCollider->SetParent(this->GetPtr());
+	shipCollider->SetDynamic(true);
+	shipCollider->transform.SetScale(2, 1.5, 8);
+	//shipCollider->ShowDebug(true);
+
+
 	auto landingCollider = this->factory->CreateGameObjectOfType<BoxCollider>().lock();
 	landingCollider->SetParent(this->GetPtr());
 	landingCollider->SetDynamic(true);
+	landingCollider->SetTag(Tag::INTERACTABLE | Tag::OBJECT);
 	landingCollider->ShowDebug(true);
-
-	landingCollider->transform.SetPosition(0, 3, -5);
+	landingCollider->SetOnCollision(
+		[&](std::weak_ptr<GameObject>, std::weak_ptr<Collider>) { 
+			this->colliding = true; 
+			Logger::Error("Test");
+		});
+	landingCollider->transform.SetPosition(0, 3.5, -5);
 	landingCollider->transform.SetScale(2, 2, 3);
 }
 
 void Boat::Tick() { 
+	if (colliding)
+		this->time -= Time::GetInstance().GetDeltaTime();
+	else this->time = landingTime;
 
 	float rotation = this->speed* Time::GetInstance().GetSessionTime() / this -> radius;
 
@@ -32,6 +48,11 @@ void Boat::Tick() {
 	this->transform.SetPosition(this->rotationPoint.x + x, this->rotationPoint.y, this->rotationPoint.z + z);
 
 	this->MeshObject::Tick();
+}
+
+void Boat::PhysicsTick() { 
+	this->MeshObject::PhysicsTick();
+	this->colliding = false;
 }
 
 void Boat::SetRotationPoint(DirectX::XMFLOAT3 point) { 

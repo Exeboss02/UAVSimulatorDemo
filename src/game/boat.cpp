@@ -5,7 +5,7 @@
 #include "core/physics/boxCollider.h"
 
 void Boat::Start() { 
-	this->SetMesh(AssetManager::GetInstance().GetMeshObjData("Karlskrona/Stridsbat90h.glb:Mesh_0"));
+	this->SetMesh(AssetManager::GetInstance().GetMeshObjData("Karlskrona/stridsbat_90h.glb:Mesh_0")); 
 	this->MeshObject::Start();
 
 	auto landingCollider = this->factory->CreateGameObjectOfType<BoxCollider>().lock();

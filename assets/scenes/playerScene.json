@@ -95,8 +95,7 @@
       },
       "type": "Boat"
     },
-
-        {
+    {
       "meshIdentifier": "Karlskrona/hav2.glb:Mesh_0",
       "name": "havet",
       "transform": {

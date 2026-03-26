@@ -13,7 +13,7 @@ void MusicPlayer::Start()
 {
     this->GameObject3D::Start();
 
-    RenderQueue::ChangeSkybox("bright_planet.dds");
+    RenderQueue::ChangeSkybox("ocean.dds");
 
     // Master Volume
 	AudioManager::GetInstance().SetMasterMusicVolume(0.5f);

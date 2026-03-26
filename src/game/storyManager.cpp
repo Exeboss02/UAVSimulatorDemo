@@ -107,7 +107,7 @@ void StoryManager::Tick() {
 
 	if (this->playing) {
 		if (this->player.expired()) {
-			Logger::Error("StoryManager player ref was expired!");
+			//Logger::Error("StoryManager player ref was expired!");
 			return;
 		}
 		StoryPart& storyPart = this->storyParts[this->currentStoryPart - 1];

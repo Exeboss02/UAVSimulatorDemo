@@ -59,6 +59,7 @@ void FPVDrone::ImGui() {
 		if (roomCreator) {
 			{
 				auto cam = this->factory->CreateGameObjectOfType<fpvTarget>().lock();
+				cam->transform.SetPosition(0, 100, 0);
 				cam->SetName("shahed");
 
 			}
@@ -245,8 +246,8 @@ void FPVDrone::Start() {
 	}
 	
 	{
-		auto colliderobj = this->factory->CreateStaticGameObject<BoxCollider>();
-
+		auto colliderobj = this->factory->CreateGameObjectOfType<BoxCollider>().lock();
+		colliderobj->SetDynamic(true);
 		
 		colliderobj->SetSolid(false);
 		DirectX::XMFLOAT3 scale(0.3f, 0.3f, 0.3f);

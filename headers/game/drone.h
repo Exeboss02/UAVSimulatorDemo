@@ -7,6 +7,8 @@
 #include <memory>
 #include "gameObjects/meshObject.h"
 #include "game/fpvTarget.h"
+#include "core/physics/collision.h"
+
 
 #include <windows.h>
 #include <mmsystem.h>
@@ -42,6 +44,7 @@ private:
 	std::weak_ptr<MeshObject> droneBody;
 	std::weak_ptr<MeshObject> propelers[4];
 
+	std::weak_ptr<BoxCollider> droneCollider;
 
 
 	std::shared_ptr<ControllerInput> controllerInput = std::make_shared<ControllerInput>(0);
@@ -77,9 +80,9 @@ private:
 	DirectX::XMVECTOR angularVelocity; // X=Pitch, Y=Yaw, Z=Roll
 
 	// --- Drone Specifications (Tuned for 5-inch racing drone) ---
-	float mass = 0.6f;				// kg
+	float mass = 0.7f;				// kg
 	float gravity = 9.81f;			// m/s^2
-	float maxThrustPerMotor = 7.0f; // Newtons (Total thrust = 20N)
+	float maxThrustPerMotor = 6.0f; // Newtons (Total thrust = 20N)
 	float dragCoefficient = 0.3f;	// Air resistance
 	float maxAcroRate = 8.0f;		// Max rotation speed in rad/s
 

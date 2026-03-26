@@ -244,6 +244,18 @@ void FPVDrone::Start() {
 		cam->SetParent(this->GetPtr());
 	}
 	
+	{
+		auto colliderobj = this->factory->CreateStaticGameObject<BoxCollider>();
+
+		
+		colliderobj->SetSolid(false);
+		DirectX::XMFLOAT3 scale(0.3f, 0.3f, 0.3f);
+		colliderobj->transform.SetScale(DirectX::XMLoadFloat3(&scale));
+		colliderobj->SetParent(this->GetPtr());
+		
+		this->droneCollider = colliderobj;
+	}
+	this->droneCollider.lock()->ShowDebug(true);
 
 	/*auto rigidbody = this->factory->CreateGameObjectOfType<RigidBody>().lock();
 	rigidbody->SetParent(this->GetPtr());

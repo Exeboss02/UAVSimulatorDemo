@@ -4,6 +4,7 @@
 #include "utilities/time.h" // Assuming you have a time manager for DeltaTime
 #include <algorithm>
 #include <numbers>
+#include <format>
 
 using namespace DirectX;
 
@@ -255,11 +256,20 @@ void FPVDrone::Start() {
 		auto canvas = this->factory->CreateGameObjectOfType<UI::CanvasObject>().lock();
 		this->canvasObj = canvas;
 		this->objectiveText = this->MakeText("ObjectiveText", "Test", 0, 100, 0, UI::Anchor::TopCenter);
+		this->objectiveText.lock()->SetFontSize(48);
+		this->objectiveText.lock()->SetColor({0, 1, 0, 1});
 	}
 	{
 		auto canvas = this->factory->CreateGameObjectOfType<UI::CanvasObject>().lock();
 		this->canvasObj = canvas;
-		this->objectiveCompletionText = this->MakeText("ObjectiveText", " ", 0, 100, 0, UI::Anchor::TopCenter);
+		this->speedText = this->MakeText("Speed", "Test", -100, -100, 0, UI::Anchor::BottomRight);
+		this->speedText.lock()->SetFontSize(64);
+		this->speedText.lock()->SetColor({0, 0, 1, 1});
+	}
+	{
+		auto canvas = this->factory->CreateGameObjectOfType<UI::CanvasObject>().lock();
+		this->canvasObj = canvas;
+		this->objectiveCompletionText = this->MakeText("ObjectiveCompletionText", " ", 0, 100, 0, UI::Anchor::TopCenter);
 		this->objectiveCompletionText.lock()->SetColor({1, 1, 0, 1});
 	}
 	{
@@ -392,7 +402,13 @@ void FPVDrone::Start() {
 		meshobj->SetCastShadow(false);
 	}
 }
-void FPVDrone::PhysicsTick() { this->targetColliding = false; }
+void FPVDrone::PhysicsTick() { 
+	this->targetColliding = false;
+	float speed = DirectX::XMVector3Length(this->velocity).m128_f32[0];
+	if (auto speedText = this->speedText.lock()) {
+		speedText->SetText(std::format("{:.1f}m/s", speed));
+	}
+}
 std::weak_ptr<UI::Text> FPVDrone::MakeText(const std::string& name, const std::string& text, float x, float y,
 										   float width, UI::Anchor anchor) {
 	if (this->canvasObj.expired()) {

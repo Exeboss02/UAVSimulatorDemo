@@ -51,9 +51,12 @@ private:
 
 	std::weak_ptr<UI::Text> objectiveText;
 	std::weak_ptr<UI::Text> objectiveCompletionText;
+	std::weak_ptr<UI::Text> speedText;
 
 	float objectiveCompletionTimer = 0;
 	float objectiveCompletionMaxTime = 5;
+
+
 
 
 

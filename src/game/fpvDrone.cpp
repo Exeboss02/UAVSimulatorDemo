@@ -1,7 +1,7 @@
 #include "game/fpvDrone.h"
 #include "core/input/inputManager.h"
-#include "utilities/time.h" // Assuming you have a time manager for DeltaTime
 #include "gameObjects/cameraObject.h"
+#include "utilities/time.h" // Assuming you have a time manager for DeltaTime
 #include <algorithm>
 #include <numbers>
 
@@ -37,12 +37,12 @@ void FPVDrone::SetInput(float throttle, float roll, float pitch, float yaw) {
 	inputYaw = yaw;
 }
 
-void FPVDrone::SetText(const std::string& text) { 
+void FPVDrone::SetText(const std::string& text) {
 	if (this->objectiveText.expired()) return;
 	auto objectiveText = this->objectiveText.lock();
 	if (text != "") {
-		objectiveText->SetText(text); 
-		objectiveText->SetVisible(true);
+		 objectiveText->SetText(text);
+		 objectiveText->SetVisible(true);
 	} else {
 		objectiveText->SetVisible(false);
 	}
@@ -54,16 +54,16 @@ void FPVDrone::rototatePropelers() {
 
 	for (size_t i = 0; i < 4; i++) {
 
-		this->propelers[i].lock()->transform.Rotate(0, std::numbers::pi * 2 * maxRPS  * Time::GetInstance().GetDeltaTime() * this->inputThrottle, 0);
+		this->propelers[i].lock()->transform.Rotate(
+			0, std::numbers::pi * 2 * maxRPS * Time::GetInstance().GetDeltaTime() * this->inputThrottle, 0);
 	}
-
 }
 
 void FPVDrone::ImGui() {
 
 	if (!DISABLE_IMGUI) {
 		ImGui::Begin("shahed");
-		
+
 		bool roomCreator = ImGui::Button("shahedAttack");
 		ImGui::End();
 
@@ -71,26 +71,22 @@ void FPVDrone::ImGui() {
 			{
 				auto cam = this->factory->CreateGameObjectOfType<fpvTarget>().lock();
 				cam->SetName("shahed");
-
 			}
 		}
 	}
-
-
 }
 
 void FPVDrone::Tick() {
 	GameObject3D::Tick();
 
 	if (!this->targetColliding && !this->objectiveText.expired()) {
-		this->objectiveText.lock()->SetText("");
+		this->SetText("");
 	}
 
 	this->ImGui();
 
 	// 1. Fetch Inputs
 	InputManager::GetInstance().ReadControllerInput(this->controllerInput->GetControllerIndex());
-
 
 	if (this->controllerType == ControllerType::XINPUT) {
 		float throttle = this->controllerInput->GetMovementVector()[1];
@@ -238,11 +234,11 @@ void FPVDrone::Tick() {
 	transform.SetRotationQuaternion(newRot);
 }
 
-void FPVDrone::Start() { 
+void FPVDrone::Start() {
 	{
 		auto canvas = this->factory->CreateGameObjectOfType<UI::CanvasObject>().lock();
 		this->canvasObj = canvas;
-		this->objectiveText = this->MakeText("ObjectiveText", " ", 0, -50, 0, UI::Anchor::TopCenter);
+		this->objectiveText = this->MakeText("ObjectiveText", "Test", 0, 100, 0, UI::Anchor::TopCenter);
 	}
 	{
 		auto cam = this->factory->CreateGameObjectOfType<CameraObject>().lock();
@@ -263,17 +259,16 @@ void FPVDrone::Start() {
 		cam->SetMainCamera();
 		cam->SetParent(this->GetPtr());
 	}
-	
+
 	{
 		auto colliderobj = this->factory->CreateGameObjectOfType<BoxCollider>().lock();
 
-		
-		//colliderobj->SetSolid(false);
+		// colliderobj->SetSolid(false);
 		DirectX::XMFLOAT3 scale(0.3f, 0.3f, 0.3f);
 		colliderobj->transform.SetScale(DirectX::XMLoadFloat3(&scale));
 		colliderobj->SetParent(this->GetPtr());
 		colliderobj->SetDynamic(true);
-		
+
 		this->droneCollider = colliderobj;
 	}
 	this->droneCollider.lock()->ShowDebug(true);
@@ -287,7 +282,6 @@ void FPVDrone::Start() {
 
 	RenderQueue::ChangeSkybox("ocean.dds");
 
-	
 	{
 		auto meshobjweak = this->factory->CreateGameObjectOfType<MeshObject>();
 
@@ -365,7 +359,6 @@ void FPVDrone::Start() {
 		meshobj->SetName("prop4");
 		this->propelers[3] = meshobj;
 
-
 		meshobj->SetParent(this->GetPtr());
 
 		MeshObjData meshdata = AssetManager::GetInstance().GetMeshObjData("drones/kamikazeDrone.glb:Mesh_1");
@@ -376,11 +369,10 @@ void FPVDrone::Start() {
 										  this->visualRotationRPY.z);*/
 		meshobj->SetCastShadow(false);
 	}
-	
 }
 void FPVDrone::PhysicsTick() { this->targetColliding = false; }
-std::weak_ptr<UI::Text> FPVDrone::MakeText(const std::string& name, const std::string& text, float x, float y, float width,
-									  UI::Anchor anchor) {
+std::weak_ptr<UI::Text> FPVDrone::MakeText(const std::string& name, const std::string& text, float x, float y,
+										   float width, UI::Anchor anchor) {
 	if (this->canvasObj.expired()) {
 		std::string error = "MakeText was called before canvas existed";
 		Logger::Error(error);

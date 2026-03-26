@@ -6,7 +6,7 @@
 #include "core/eventManager.h"
 #include "core/filepathHolder.h"
 #include "game/crosshair.h"
-#include "game/drone.h"
+#include "game/fpvDrone.h"
 #include "game/events.h"
 #include "game/footBall.h"
 #include "game/gameManager.h"

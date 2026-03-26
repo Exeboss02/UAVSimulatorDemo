@@ -9,6 +9,8 @@
 #include "game/fpvTarget.h"
 #include "core/physics/collision.h"
 #include "gameObjects/cameraObject.h"
+#include "UI/canvasObject.h"
+#include "UI/text.h"
 
 
 #include <windows.h>
@@ -21,6 +23,7 @@ public:
 
 	virtual void Tick() override;
 	virtual void Start() override;
+	virtual void PhysicsTick() override;
 
 	/// <summary>
 	/// Feed your controller inputs here every frame.
@@ -32,12 +35,20 @@ public:
 	void SetInput(float throttle, float roll, float pitch, float yaw);
 
 	
+	void SetText(const std::string& text);
 
+	bool targetColliding = false;
 private:
+	std::weak_ptr<UI::Text> MakeText(const std::string& name, const std::string& text, float x, float y, float width,
+					  UI::Anchor anchor);
 
 	void rototatePropelers();
 
 	void ImGui();
+
+	std::weak_ptr<UI::CanvasObject> canvasObj;
+
+	std::weak_ptr<UI::Text> objectiveText;
 
 	std::weak_ptr<CameraObject> fpvCamera;
 	std::weak_ptr<CameraObject> chaseCamera;

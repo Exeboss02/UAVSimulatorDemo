@@ -1,4 +1,4 @@
-#include "game/drone.h"
+#include "game/fpvDrone.h"
 #include "core/input/inputManager.h"
 #include "utilities/time.h" // Assuming you have a time manager for DeltaTime
 #include "gameObjects/cameraObject.h"
@@ -37,6 +37,17 @@ void FPVDrone::SetInput(float throttle, float roll, float pitch, float yaw) {
 	inputYaw = yaw;
 }
 
+void FPVDrone::SetText(const std::string& text) { 
+	if (this->objectiveText.expired()) return;
+	auto objectiveText = this->objectiveText.lock();
+	if (text != "") {
+		objectiveText->SetText(text); 
+		objectiveText->SetVisible(true);
+	} else {
+		objectiveText->SetVisible(false);
+	}
+}
+
 void FPVDrone::rototatePropelers() {
 
 	float maxRPS = 20;
@@ -70,6 +81,10 @@ void FPVDrone::ImGui() {
 
 void FPVDrone::Tick() {
 	GameObject3D::Tick();
+
+	if (!this->targetColliding && !this->objectiveText.expired()) {
+		this->objectiveText.lock()->SetText("");
+	}
 
 	this->ImGui();
 
@@ -225,6 +240,11 @@ void FPVDrone::Tick() {
 
 void FPVDrone::Start() { 
 	{
+		auto canvas = this->factory->CreateGameObjectOfType<UI::CanvasObject>().lock();
+		this->canvasObj = canvas;
+		this->objectiveText = this->MakeText("ObjectiveText", " ", 0, -50, 0, UI::Anchor::TopCenter);
+	}
+	{
 		auto cam = this->factory->CreateGameObjectOfType<CameraObject>().lock();
 		cam->SetNearPlane(0.01);
 		cam->transform.SetPosition(0, -0.010, 0.13f);
@@ -245,13 +265,14 @@ void FPVDrone::Start() {
 	}
 	
 	{
-		auto colliderobj = this->factory->CreateStaticGameObject<BoxCollider>();
+		auto colliderobj = this->factory->CreateGameObjectOfType<BoxCollider>().lock();
 
 		
-		colliderobj->SetSolid(false);
+		//colliderobj->SetSolid(false);
 		DirectX::XMFLOAT3 scale(0.3f, 0.3f, 0.3f);
 		colliderobj->transform.SetScale(DirectX::XMLoadFloat3(&scale));
 		colliderobj->SetParent(this->GetPtr());
+		colliderobj->SetDynamic(true);
 		
 		this->droneCollider = colliderobj;
 	}
@@ -356,4 +377,34 @@ void FPVDrone::Start() {
 		meshobj->SetCastShadow(false);
 	}
 	
+}
+void FPVDrone::PhysicsTick() { this->targetColliding = false; }
+std::weak_ptr<UI::Text> FPVDrone::MakeText(const std::string& name, const std::string& text, float x, float y, float width,
+									  UI::Anchor anchor) {
+	if (this->canvasObj.expired()) {
+		std::string error = "MakeText was called before canvas existed";
+		Logger::Error(error);
+		throw std::runtime_error(error);
+	}
+	auto textWeak = this->factory->CreateGameObjectOfType<UI::Text>();
+	if (textWeak.expired()) return std::weak_ptr<UI::Text>();
+
+	auto textShared = textWeak.lock();
+	textShared->SetName(name);
+	textShared->SetText(text);
+	textShared->SetPosition(UI::Vec2{x, y});
+	textShared->SetSize(UI::Vec2{width, 32.0f});
+	textShared->SetFontSize(24.0f);
+	textShared->SetFont("Lucida Console");
+
+	// Alignment: use right-aligned behavior only when requested
+	textShared->SetAnchor(anchor);
+
+	auto canvasShared = this->canvasObj.lock();
+
+	std::weak_ptr<GameObject> me = canvasShared->GetPtr();
+	textShared->SetParent(me);
+	canvasShared->AddChild(std::static_pointer_cast<UI::Widget>(textShared));
+	RenderQueue::AddUIWidget(textShared);
+	return std::weak_ptr<UI::Text>(textShared);
 }

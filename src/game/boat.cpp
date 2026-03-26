@@ -3,6 +3,7 @@
 #include "utilities/logger.h"
 #include "core/assetManager.h"
 #include "core/physics/boxCollider.h"
+#include "game/fpvdrone.h"
 
 void Boat::Start() { 
 	this->SetMesh(AssetManager::GetInstance().GetMeshObjData("Karlskrona/Stridsbat90h.glb:Mesh_0"));
@@ -13,7 +14,7 @@ void Boat::Start() {
 	shipCollider->SetParent(this->GetPtr());
 	shipCollider->SetDynamic(true);
 	shipCollider->transform.SetScale(2, 1.5, 8);
-	//shipCollider->ShowDebug(true);
+	shipCollider->ShowDebug(true);
 
 
 	auto landingCollider = this->factory->CreateGameObjectOfType<BoxCollider>().lock();
@@ -21,20 +22,27 @@ void Boat::Start() {
 	landingCollider->SetDynamic(true);
 	landingCollider->SetTag(Tag::INTERACTABLE | Tag::OBJECT);
 	landingCollider->ShowDebug(true);
+	landingCollider->SetSolid(false);
 	landingCollider->SetOnCollision(
-		[&](std::weak_ptr<GameObject>, std::weak_ptr<Collider>) { 
+		[&](std::weak_ptr<GameObject> object, std::weak_ptr<Collider>) { 
 			this->colliding = true; 
-			Logger::Error("Test");
+			if (auto drone = dynamic_pointer_cast<FPVDrone>(object.lock())) {
+				drone->targetColliding = true;
+				drone->SetText(std::to_string(this->time));
+			}
 		});
 	landingCollider->transform.SetPosition(0, 3.5, -5);
 	landingCollider->transform.SetScale(2, 2, 3);
 }
 
 void Boat::Tick() { 
-	if (colliding)
+	if (colliding) {
 		this->time -= Time::GetInstance().GetDeltaTime();
-	else this->time = landingTime;
+		
+	} else {
 
+		this->time = landingTime;
+	}
 	float rotation = this->speed* Time::GetInstance().GetSessionTime() / this -> radius;
 
 	float z = sin(rotation) * this->radius;

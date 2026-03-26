@@ -1,5 +1,6 @@
 #include "game/fpvTarget.h"
-
+#include <numbers>
+#include "game/drone.h"
 fpvTarget::fpvTarget() { 
 	
 }
@@ -10,7 +11,7 @@ void fpvTarget::Start() {
 
 	GameObject3D::Start();
 	{
-	
+		this->transform.SetRotationRPY(0, 0.588, 0);
 		auto meshobjweak = this->factory->CreateGameObjectOfType<MeshObject>();
 
 		auto meshobj = meshobjweak.lock();
@@ -24,8 +25,8 @@ void fpvTarget::Start() {
 	
 
 	
-		auto colliderobj = this->factory->CreateStaticGameObject<BoxCollider>();
-
+		auto colliderobj = this->factory->CreateGameObjectOfType<BoxCollider>().lock();
+		colliderobj->SetDynamic(true);
 		DirectX::XMFLOAT3 pos(0.0f, 0.0f, 0.0f);
 		colliderobj->transform.SetPosition(DirectX::XMLoadFloat3(&pos));
 		colliderobj->SetSolid(false);
@@ -44,8 +45,34 @@ void fpvTarget::Start() {
 
 }
 
+void fpvTarget::Tick() { this->move();
+
+}
+
 void fpvTarget::OnExplode() {
+	std::shared_ptr<FPVDrone> fpv = this->factory->FindObjectOfType<FPVDrone>().lock();
+
+	fpv->transform.SetPosition(50, 10, 50);
 
 	this->factory->QueueDeleteGameObject(this->GetPtr());
 
 }
+
+Vector3D fpvTarget::Lerp(const Vector3D& start, const Vector3D& end, float val) { return start + (end - start) * val; }
+
+void fpvTarget::move() {
+
+	this->timer += Time::GetInstance().GetDeltaTime();
+
+	if (this->timer > this->hitTime) {
+		
+		
+		
+		this->factory->QueueDeleteGameObject(this->GetPtr());
+	}
+
+	this->transform.SetPosition(this->Lerp(this->startPos, this->endPos, this->timer / this->hitTime).getXMVector());
+
+
+}
+

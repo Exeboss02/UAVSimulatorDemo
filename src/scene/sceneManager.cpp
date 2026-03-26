@@ -6,7 +6,7 @@
 #include "core/eventManager.h"
 #include "core/filepathHolder.h"
 #include "game/crosshair.h"
-#include "game/drone.h"
+#include "game/fpvDrone.h"
 #include "game/events.h"
 #include "game/footBall.h"
 #include "game/gameManager.h"
@@ -19,6 +19,7 @@
 #include "gameObjects/pointLightObject.h"
 #include "gameObjects/room.h"
 #include "gameObjects/turret.h"
+#include "game/boat.h"
 
 // std
 #include <Windows.h>
@@ -96,6 +97,7 @@ SceneManager::SceneManager(Renderer* rend)
 
 	this->objectFromString.RegisterType<RotatingCamera>(NAMEOF(RotatingCamera));
 	this->objectFromString.RegisterType<StartButton>(NAMEOF(StartButton));
+	this->objectFromString.RegisterType<Boat>(NAMEOF(Boat));
 
 	CreateNewScene(this->emptyScene);
 	this->emptyScene->CreateGameObjectOfType<CameraObject>();

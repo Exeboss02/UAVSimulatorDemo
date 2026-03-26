@@ -44,8 +44,29 @@ void fpvTarget::Start() {
 
 }
 
+void fpvTarget::Tick() { this->move();
+
+}
+
 void fpvTarget::OnExplode() {
 
 	this->factory->QueueDeleteGameObject(this->GetPtr());
 
 }
+
+Vector3D fpvTarget::Lerp(const Vector3D& start, const Vector3D& end, float val) { return start + (end - start) * val; }
+
+void fpvTarget::move() {
+
+	this->timer += Time::GetInstance().GetDeltaTime();
+
+	if (this->timer > this->hitTime) {
+		this->factory->QueueDeleteGameObject(this->GetPtr());
+
+	}
+
+	this->transform.SetPosition(this->Lerp(this->startPos, this->endPos, this->timer / this->hitTime).getXMVector());
+
+
+}
+

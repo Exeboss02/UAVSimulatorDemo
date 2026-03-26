@@ -59,6 +59,7 @@ void FPVDrone::ImGui() {
 		if (roomCreator) {
 			{
 				auto cam = this->factory->CreateGameObjectOfType<fpvTarget>().lock();
+				cam->transform.SetPosition(0, 100, 0);
 				cam->SetName("shahed");
 
 			}

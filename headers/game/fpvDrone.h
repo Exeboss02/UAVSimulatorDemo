@@ -33,7 +33,6 @@ public:
 	/// <param name="pitch">-1.0 to 1.0 (Right Stick Y)</param>
 	/// <param name="yaw">-1.0 to 1.0 (Left Stick X)</param>
 	void SetInput(float throttle, float roll, float pitch, float yaw);
-
 	
 	void SetText(const std::string& text);
 	void SetCompletionText(const std::string& text);
@@ -72,7 +71,7 @@ private:
 	std::shared_ptr<ControllerInput> controllerInput = std::make_shared<ControllerInput>(0);
 
 	//controller type
-	enum ControllerType { XINPUT, RADIOMASTER } controllerType = ControllerType::XINPUT;
+	enum ControllerType { XINPUT, RADIOMASTER } controllerType = ControllerType::RADIOMASTER;
 
 	// --- Input State ---
 	float inputThrottle = 0.0f;

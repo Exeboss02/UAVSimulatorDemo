@@ -41,7 +41,7 @@ void fpvTarget::Start() {
 
 		this->targetCollider = colliderobj;
 	}
-	this->targetCollider.lock()->ShowDebug(true);
+	//this->targetCollider.lock()->ShowDebug(true);
 
 }
 

@@ -304,7 +304,7 @@ void FPVDrone::Start() {
 
 		this->droneCollider = colliderobj;
 	}
-	this->droneCollider.lock()->ShowDebug(true);
+	//this->droneCollider.lock()->ShowDebug(true);
 
 	/*auto rigidbody = this->factory->CreateGameObjectOfType<RigidBody>().lock();
 	rigidbody->SetParent(this->GetPtr());

@@ -71,7 +71,7 @@ private:
 	std::shared_ptr<ControllerInput> controllerInput = std::make_shared<ControllerInput>(0);
 
 	//controller type
-	enum ControllerType { XINPUT, RADIOMASTER } controllerType = ControllerType::RADIOMASTER;
+	enum ControllerType { XINPUT, RADIOMASTER } controllerType = ControllerType::XINPUT;
 
 	// --- Input State ---
 	float inputThrottle = 0.0f;

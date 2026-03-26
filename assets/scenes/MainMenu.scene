@@ -4,21 +4,24 @@
       "fov": 80.0,
       "name": "cam",
       "transform": {
-        "position": [0.0, 0.0, 0.0],
-        "rotation": [-0.4, 90.0, 0.0, 1.0],
-        "scale": [1.0, 1.0, 1.0]
+        "position": [ 0.0, 0.0, 0.0 ],
+        "rotation": [ -0.4, 90.0, 0.0, 1.0 ],
+        "scale": [ 1.0, 1.0, 1.0 ]
       },
       "type": "RotatingCamera"
     },
     {
+      "type": "SkyBoxLoader"
+    },
+    {
       "canvas": {
         "scaleMode": "pixel",
-        "size": [1920.0, 1080.0]
+        "size": [ 1920.0, 1080.0 ]
       },
       "children": [
         {
           "anchor": "BottomCenter",
-          "color": [0.30980393290519714, 0.16078431904315948, 0.3490196168422699, 1.0],
+          "color": [ 0.30980393290519714, 0.16078431904315948, 0.3490196168422699, 1.0 ],
           "enabled": true,
           "hAlign": "center",
           "label": "START",
@@ -26,8 +29,8 @@
           "name": "Start",
           "onClickEvent": 1,
           "transform": {
-            "position": [0.0, -220.0],
-            "size": [200.0, 50.0]
+            "position": [ 0.0, -140.0 ],
+            "size": [ 200.0, 50.0 ]
           },
           "type": "UI::Button",
           "vAlign": "top",
@@ -36,25 +39,7 @@
         },
         {
           "anchor": "BottomCenter",
-          "color": [0.30980393290519714, 0.16078431904315948, 0.3490196168422699, 1.0],
-          "enabled": true,
-          "hAlign": "center",
-          "label": "CREDITS",
-          "labelFontSize": 34.0,
-          "name": "Credits",
-          "onClickEvent": 16,
-          "transform": {
-            "position": [0.0, -140.0],
-            "size": [200.0, 50.0]
-          },
-          "type": "UI::Button",
-          "vAlign": "top",
-          "visible": true,
-          "zIndex": 0
-        },
-        {
-          "anchor": "BottomCenter",
-          "color": [0.30980393290519714, 0.16078431904315948, 0.3490196168422699, 1.0],
+          "color": [ 0.30980393290519714, 0.16078431904315948, 0.3490196168422699, 1.0 ],
           "enabled": true,
           "hAlign": "center",
           "label": "QUIT",
@@ -62,8 +47,8 @@
           "name": "Quit",
           "onClickEvent": 2,
           "transform": {
-            "position": [0.0, -60.0],
-            "size": [200.0, 50.0]
+            "position": [ 0.0, -60.0 ],
+            "size": [ 200.0, 50.0 ]
           },
           "type": "UI::Button",
           "vAlign": "top",
@@ -73,26 +58,12 @@
         {
           "anchor": "TopCenter",
           "enabled": true,
-          "image": "assets/images/game_logo.png",
+          "image": "assets/images/DroneSimulator.png",
           "name": "Title",
-          "tint": [1.0, 1.0, 1.0, 1.0],
+          "tint": [ 1.0, 1.0, 1.0, 1.0 ],
           "transform": {
-            "position": [0.0, 200.0],
-            "size": [1200.0, 144.0]
-          },
-          "type": "UI::Image",
-          "visible": true,
-          "zIndex": 0
-        },
-        {
-          "anchor": "BottomLeft",
-          "enabled": true,
-          "image": "assets/images/GNOM.png",
-          "name": "Logo",
-          "tint": [1.0, 1.0, 1.0, 1.0],
-          "transform": {
-            "position": [50.0, 20.0],
-            "size": [300.0, 300.0]
+            "position": [ 0.0, 100.0 ],
+            "size": [ 1000.0, 144.0 ]
           },
           "type": "UI::Image",
           "visible": true,

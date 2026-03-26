@@ -20,6 +20,7 @@
 #include "gameObjects/room.h"
 #include "gameObjects/turret.h"
 #include "game/boat.h"
+#include "game/SkyBox.h"
 
 // std
 #include <Windows.h>
@@ -94,6 +95,7 @@ SceneManager::SceneManager(Renderer* rend)
 	this->objectFromString.RegisterType<GameManager>(NAMEOF(GameManager));
 	this->objectFromString.RegisterType<GunPickUp>(NAMEOF(GunPickUp));
 	this->objectFromString.RegisterType<MusicPlayer>(NAMEOF(MusicPlayer));
+	this->objectFromString.RegisterType<SkyBoxLoader>(NAMEOF(SkyBoxLoader));
 
 	this->objectFromString.RegisterType<RotatingCamera>(NAMEOF(RotatingCamera));
 	this->objectFromString.RegisterType<StartButton>(NAMEOF(StartButton));

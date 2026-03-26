@@ -260,7 +260,7 @@ void FPVDrone::Start() {
 		auto canvas = this->factory->CreateGameObjectOfType<UI::CanvasObject>().lock();
 		this->canvasObj = canvas;
 		this->objectiveCompletionText = this->MakeText("ObjectiveText", " ", 0, 100, 0, UI::Anchor::TopCenter);
-		this->objectiveCompletionText.lock()->SetColor({0, 1, 0, 1});
+		this->objectiveCompletionText.lock()->SetColor({1, 1, 0, 1});
 	}
 	{
 		auto cam = this->factory->CreateGameObjectOfType<CameraObject>().lock();

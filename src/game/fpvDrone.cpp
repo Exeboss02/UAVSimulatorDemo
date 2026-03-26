@@ -38,6 +38,7 @@ void FPVDrone::SetInput(float throttle, float roll, float pitch, float yaw) {
 	inputYaw = yaw;
 }
 
+
 void FPVDrone::SetText(const std::string& text) {
 	if (this->objectiveText.expired()) return;
 	auto objectiveText = this->objectiveText.lock();

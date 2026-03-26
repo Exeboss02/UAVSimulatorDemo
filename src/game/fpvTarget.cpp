@@ -54,6 +54,8 @@ void fpvTarget::OnExplode() {
 
 	fpv->transform.SetPosition(50, 10, 50);
 
+	fpv->SetCompletionText("Uppgift avklarad. Shahed utslagen.");
+
 	this->factory->QueueDeleteGameObject(this->GetPtr());
 
 }

@@ -1,7 +1,7 @@
-#include "game/drone.h"
+#include "game/fpvDrone.h"
 #include "core/input/inputManager.h"
-#include "utilities/time.h" // Assuming you have a time manager for DeltaTime
 #include "gameObjects/cameraObject.h"
+#include "utilities/time.h" // Assuming you have a time manager for DeltaTime
 #include <algorithm>
 #include <numbers>
 
@@ -37,45 +37,72 @@ void FPVDrone::SetInput(float throttle, float roll, float pitch, float yaw) {
 	inputYaw = yaw;
 }
 
+void FPVDrone::SetText(const std::string& text) {
+	if (this->objectiveText.expired()) return;
+	auto objectiveText = this->objectiveText.lock();
+	if (text != "") {
+		 objectiveText->SetText(text);
+		 objectiveText->SetVisible(true);
+	} else {
+		objectiveText->SetVisible(false);
+	}
+}
+
+void FPVDrone::SetCompletionText(const std::string& text) {
+	if (auto textobj = this->objectiveCompletionText.lock()) {
+
+		this->objectiveCompletionTimer = this->objectiveCompletionMaxTime;
+
+		textobj->SetText(text);
+		textobj->SetVisible(true);
+	}
+}
+
 void FPVDrone::rototatePropelers() {
 
 	float maxRPS = 20;
 
 	for (size_t i = 0; i < 4; i++) {
 
-		this->propelers[i].lock()->transform.Rotate(0, std::numbers::pi * 2 * maxRPS  * Time::GetInstance().GetDeltaTime() * this->inputThrottle, 0);
+		this->propelers[i].lock()->transform.Rotate(
+			0, std::numbers::pi * 2 * maxRPS * Time::GetInstance().GetDeltaTime() * this->inputThrottle, 0);
 	}
-
 }
 
 void FPVDrone::ImGui() {
 
 	if (!DISABLE_IMGUI) {
 		ImGui::Begin("shahed");
-		
+
 		bool roomCreator = ImGui::Button("shahedAttack");
 		ImGui::End();
 
 		if (roomCreator) {
 			{
 				auto cam = this->factory->CreateGameObjectOfType<fpvTarget>().lock();
+				cam->transform.SetPosition(0, 100, 0);
 				cam->SetName("shahed");
-
 			}
 		}
 	}
-
-
 }
 
 void FPVDrone::Tick() {
 	GameObject3D::Tick();
 
+	if (!this->targetColliding && !this->objectiveText.expired()) {
+		this->SetText("");
+	}
+	if (this->objectiveCompletionTimer > 0) {
+		this->objectiveCompletionTimer -= Time::GetInstance().GetDeltaTime();
+	} else {
+		this->objectiveCompletionText.lock()->SetVisible(false);
+	}
+
 	this->ImGui();
 
 	// 1. Fetch Inputs
 	InputManager::GetInstance().ReadControllerInput(this->controllerInput->GetControllerIndex());
-
 
 	if (this->controllerType == ControllerType::XINPUT) {
 		float throttle = this->controllerInput->GetMovementVector()[1];
@@ -223,7 +250,18 @@ void FPVDrone::Tick() {
 	transform.SetRotationQuaternion(newRot);
 }
 
-void FPVDrone::Start() { 
+void FPVDrone::Start() {
+	{
+		auto canvas = this->factory->CreateGameObjectOfType<UI::CanvasObject>().lock();
+		this->canvasObj = canvas;
+		this->objectiveText = this->MakeText("ObjectiveText", "Test", 0, 100, 0, UI::Anchor::TopCenter);
+	}
+	{
+		auto canvas = this->factory->CreateGameObjectOfType<UI::CanvasObject>().lock();
+		this->canvasObj = canvas;
+		this->objectiveCompletionText = this->MakeText("ObjectiveText", " ", 0, 100, 0, UI::Anchor::TopCenter);
+		this->objectiveCompletionText.lock()->SetColor({1, 1, 0, 1});
+	}
 	{
 		auto cam = this->factory->CreateGameObjectOfType<CameraObject>().lock();
 		cam->SetNearPlane(0.01);
@@ -243,16 +281,16 @@ void FPVDrone::Start() {
 		cam->SetMainCamera();
 		cam->SetParent(this->GetPtr());
 	}
-	
-	{
-		auto colliderobj = this->factory->CreateStaticGameObject<BoxCollider>();
 
-		
-		colliderobj->SetSolid(false);
+	{
+		auto colliderobj = this->factory->CreateGameObjectOfType<BoxCollider>().lock();
+
+		// colliderobj->SetSolid(false);
 		DirectX::XMFLOAT3 scale(0.3f, 0.3f, 0.3f);
 		colliderobj->transform.SetScale(DirectX::XMLoadFloat3(&scale));
 		colliderobj->SetParent(this->GetPtr());
-		
+		colliderobj->SetDynamic(true);
+
 		this->droneCollider = colliderobj;
 	}
 	this->droneCollider.lock()->ShowDebug(true);
@@ -266,7 +304,6 @@ void FPVDrone::Start() {
 
 	RenderQueue::ChangeSkybox("ocean.dds");
 
-	
 	{
 		auto meshobjweak = this->factory->CreateGameObjectOfType<MeshObject>();
 
@@ -344,7 +381,6 @@ void FPVDrone::Start() {
 		meshobj->SetName("prop4");
 		this->propelers[3] = meshobj;
 
-
 		meshobj->SetParent(this->GetPtr());
 
 		MeshObjData meshdata = AssetManager::GetInstance().GetMeshObjData("drones/kamikazeDrone.glb:Mesh_1");
@@ -355,5 +391,34 @@ void FPVDrone::Start() {
 										  this->visualRotationRPY.z);*/
 		meshobj->SetCastShadow(false);
 	}
-	
+}
+void FPVDrone::PhysicsTick() { this->targetColliding = false; }
+std::weak_ptr<UI::Text> FPVDrone::MakeText(const std::string& name, const std::string& text, float x, float y,
+										   float width, UI::Anchor anchor) {
+	if (this->canvasObj.expired()) {
+		std::string error = "MakeText was called before canvas existed";
+		Logger::Error(error);
+		throw std::runtime_error(error);
+	}
+	auto textWeak = this->factory->CreateGameObjectOfType<UI::Text>();
+	if (textWeak.expired()) return std::weak_ptr<UI::Text>();
+
+	auto textShared = textWeak.lock();
+	textShared->SetName(name);
+	textShared->SetText(text);
+	textShared->SetPosition(UI::Vec2{x, y});
+	textShared->SetSize(UI::Vec2{width, 32.0f});
+	textShared->SetFontSize(24.0f);
+	textShared->SetFont("Lucida Console");
+
+	// Alignment: use right-aligned behavior only when requested
+	textShared->SetAnchor(anchor);
+
+	auto canvasShared = this->canvasObj.lock();
+
+	std::weak_ptr<GameObject> me = canvasShared->GetPtr();
+	textShared->SetParent(me);
+	canvasShared->AddChild(std::static_pointer_cast<UI::Widget>(textShared));
+	RenderQueue::AddUIWidget(textShared);
+	return std::weak_ptr<UI::Text>(textShared);
 }

@@ -3,22 +3,52 @@
 #include "utilities/logger.h"
 #include "core/assetManager.h"
 #include "core/physics/boxCollider.h"
+#include "game/fpvdrone.h"
+#include <cmath>
 
 void Boat::Start() { 
 	this->SetMesh(AssetManager::GetInstance().GetMeshObjData("Karlskrona/stridsbat_90h.glb:Mesh_0")); 
 	this->MeshObject::Start();
 
+
+	auto shipCollider = this->factory->CreateGameObjectOfType<BoxCollider>().lock();
+	shipCollider->SetParent(this->GetPtr());
+	shipCollider->SetDynamic(true);
+	shipCollider->transform.SetScale(2, 1.5, 8);
+	//shipCollider->ShowDebug(true);
+
+
 	auto landingCollider = this->factory->CreateGameObjectOfType<BoxCollider>().lock();
 	landingCollider->SetParent(this->GetPtr());
 	landingCollider->SetDynamic(true);
+	landingCollider->SetTag(Tag::INTERACTABLE | Tag::OBJECT);
 	landingCollider->ShowDebug(true);
-
-	landingCollider->transform.SetPosition(0, 3, -5);
+	landingCollider->SetSolid(false);
+	landingCollider->SetOnCollision(
+		[&](std::weak_ptr<GameObject> object, std::weak_ptr<Collider>) { 
+			this->colliding = true; 
+			if (auto drone = dynamic_pointer_cast<FPVDrone>(object.lock())) {
+				Logger::Error("Collision");
+				drone->targetColliding = true;
+				drone->SetText(std::format("{:.1f}", this->time));
+				if (this->time < 0) {
+					drone->transform.SetPosition(0, 50, 0);
+					drone->SetCompletionText("Uppgift avklarad. Landning Lyckad.");
+				}
+			}
+		});
+	landingCollider->transform.SetPosition(0, 3.5, -5);
 	landingCollider->transform.SetScale(2, 2, 3);
 }
 
 void Boat::Tick() { 
+	if (colliding) {
+		this->time -= Time::GetInstance().GetDeltaTime();
+		
+	} else {
 
+		this->time = landingTime;
+	}
 	float rotation = this->speed* Time::GetInstance().GetSessionTime() / this -> radius;
 
 	float z = sin(rotation) * this->radius;
@@ -32,6 +62,11 @@ void Boat::Tick() {
 	this->transform.SetPosition(this->rotationPoint.x + x, this->rotationPoint.y, this->rotationPoint.z + z);
 
 	this->MeshObject::Tick();
+}
+
+void Boat::PhysicsTick() { 
+	this->MeshObject::PhysicsTick();
+	this->colliding = false;
 }
 
 void Boat::SetRotationPoint(DirectX::XMFLOAT3 point) { 

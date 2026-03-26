@@ -66,8 +66,6 @@ void GameManager::Start() {
 		RenderQueue::ChangeSkybox("bright_asteroid.dds");
 	}
 
-	this->factory->CreateGameObjectOfType<Boat>();
-
 	this->idleTimeTimer = this->startIdleTime;
 
 	//Music handling

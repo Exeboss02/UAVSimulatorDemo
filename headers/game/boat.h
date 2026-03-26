@@ -2,7 +2,7 @@
 #include "gameObjects/meshObject.h"
 #include "DirectXMath.h"
 
-class Boat : MeshObject {
+class Boat : public MeshObject {
 public:
 	void Start() override;
 	void Tick() override;
@@ -11,11 +11,11 @@ public:
 	void SetRadius(float radius);
 
 
-	float speed = 1;
+	float speed = 20;
 	float GetRadius() const;
 	DirectX::XMFLOAT3 GetRotationPoint() const;
 
 private:
 	DirectX::XMFLOAT3 rotationPoint{};
-	float radius;
+	float radius = 100;
 };

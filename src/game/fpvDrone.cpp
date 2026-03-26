@@ -48,6 +48,16 @@ void FPVDrone::SetText(const std::string& text) {
 	}
 }
 
+void FPVDrone::SetCompletionText(const std::string& text) {
+	if (auto textobj = this->objectiveCompletionText.lock()) {
+
+		this->objectiveCompletionTimer = this->objectiveCompletionMaxTime;
+
+		textobj->SetText(text);
+		textobj->SetVisible(true);
+	}
+}
+
 void FPVDrone::rototatePropelers() {
 
 	float maxRPS = 20;
@@ -83,6 +93,11 @@ void FPVDrone::Tick() {
 	if (!this->targetColliding && !this->objectiveText.expired()) {
 		this->SetText("");
 	}
+	if (this->objectiveCompletionTimer > 0) {
+		this->objectiveCompletionTimer -= Time::GetInstance().GetDeltaTime();
+	} else {
+		this->objectiveCompletionText.lock()->SetVisible(false);
+	}
 
 	this->ImGui();
 
@@ -95,10 +110,10 @@ void FPVDrone::Tick() {
 		float pitch = this->controllerInput->GetLookVector()[1];
 		float roll = this->controllerInput->GetLookVector()[0];
 
-		// Deadzones
-		if (abs(yaw) < 0.1f) yaw = 0.0f;
-		if (abs(pitch) < 0.1f) pitch = 0.0f;
-		if (abs(roll) < 0.1f) roll = 0.0f;
+		//// Deadzones
+		//if (abs(yaw) < 0.02f) yaw = 0.0f;
+		//if (abs(pitch) < 0.02f) pitch = 0.0f;
+		//if (abs(roll) < 0.02f) roll = 0.0f;
 
 		// Scale throttle so bottom is 0.0 and top is 1.0
 		float mappedThrottle = std::clamp(throttle, 0.0f, 1.0f);
@@ -240,6 +255,12 @@ void FPVDrone::Start() {
 		auto canvas = this->factory->CreateGameObjectOfType<UI::CanvasObject>().lock();
 		this->canvasObj = canvas;
 		this->objectiveText = this->MakeText("ObjectiveText", "Test", 0, 100, 0, UI::Anchor::TopCenter);
+	}
+	{
+		auto canvas = this->factory->CreateGameObjectOfType<UI::CanvasObject>().lock();
+		this->canvasObj = canvas;
+		this->objectiveCompletionText = this->MakeText("ObjectiveText", " ", 0, 100, 0, UI::Anchor::TopCenter);
+		this->objectiveCompletionText.lock()->SetColor({1, 1, 0, 1});
 	}
 	{
 		auto cam = this->factory->CreateGameObjectOfType<CameraObject>().lock();

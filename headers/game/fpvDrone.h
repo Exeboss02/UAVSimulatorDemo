@@ -36,6 +36,7 @@ public:
 
 	
 	void SetText(const std::string& text);
+	void SetCompletionText(const std::string& text);
 
 	bool targetColliding = false;
 private:
@@ -49,6 +50,12 @@ private:
 	std::weak_ptr<UI::CanvasObject> canvasObj;
 
 	std::weak_ptr<UI::Text> objectiveText;
+	std::weak_ptr<UI::Text> objectiveCompletionText;
+
+	float objectiveCompletionTimer = 0;
+	float objectiveCompletionMaxTime = 5;
+
+
 
 	std::weak_ptr<CameraObject> fpvCamera;
 	std::weak_ptr<CameraObject> chaseCamera;

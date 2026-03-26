@@ -15,7 +15,7 @@ void Boat::Start() {
 	shipCollider->SetParent(this->GetPtr());
 	shipCollider->SetDynamic(true);
 	shipCollider->transform.SetScale(2, 1.5, 8);
-	shipCollider->ShowDebug(true);
+	//shipCollider->ShowDebug(true);
 
 
 	auto landingCollider = this->factory->CreateGameObjectOfType<BoxCollider>().lock();
@@ -30,9 +30,10 @@ void Boat::Start() {
 			if (auto drone = dynamic_pointer_cast<FPVDrone>(object.lock())) {
 				Logger::Error("Collision");
 				drone->targetColliding = true;
-				drone->SetText(std::to_string(std::roundf(this->time)));
+				drone->SetText(std::format("{:.1f}", this->time));
 				if (this->time < 0) {
 					drone->transform.SetPosition(0, 50, 0);
+					drone->SetCompletionText("Uppgift avklarad. Landning Lyckad.");
 				}
 			}
 		});

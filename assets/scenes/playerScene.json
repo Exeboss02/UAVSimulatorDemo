@@ -74,6 +74,30 @@
       "type": "MeshObject"
     },
 
+        {
+      "meshIdentifier": "Karlskrona/hav2.glb:Mesh_0",
+      "name": "havet",
+      "transform": {
+        "position": [
+          0.0,
+          -2.0,
+          0.0
+        ],
+        "rotation": [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ],
+        "scale": [
+          2.0,
+          2.0,
+          2.0
+        ]
+      },
+      "type": "MeshObject"
+    },
+
 
     {              
       "transform": {

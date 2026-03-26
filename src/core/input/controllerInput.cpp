@@ -27,7 +27,7 @@ std::array<float, 2> ControllerInput::GetMovementVector() const
 		movement[1] /= magnitude;
 	}
 
-	return movement;
+	return InputManager::GetInstance().GetLeftThumbMovement(this->controllerIndex);
 }
 
 std::array<float, 2> ControllerInput::GetLookVector() const

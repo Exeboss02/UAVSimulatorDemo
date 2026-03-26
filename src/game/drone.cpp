@@ -83,10 +83,10 @@ void FPVDrone::Tick() {
 		float pitch = this->controllerInput->GetLookVector()[1];
 		float roll = this->controllerInput->GetLookVector()[0];
 
-		// Deadzones
-		if (abs(yaw) < 0.1f) yaw = 0.0f;
-		if (abs(pitch) < 0.1f) pitch = 0.0f;
-		if (abs(roll) < 0.1f) roll = 0.0f;
+		//// Deadzones
+		//if (abs(yaw) < 0.02f) yaw = 0.0f;
+		//if (abs(pitch) < 0.02f) pitch = 0.0f;
+		//if (abs(roll) < 0.02f) roll = 0.0f;
 
 		// Scale throttle so bottom is 0.0 and top is 1.0
 		float mappedThrottle = std::clamp(throttle, 0.0f, 1.0f);

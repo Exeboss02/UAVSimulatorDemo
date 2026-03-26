@@ -4,8 +4,8 @@
 
 #include "utilities/logger.h"
 
-static constexpr unsigned int leftThumbDeadzone = 7849;
-static constexpr unsigned int rightThumbDeadzone = 8689;
+static constexpr unsigned int leftThumbDeadzone = 2000;
+static constexpr unsigned int rightThumbDeadzone = 2000;
 static constexpr unsigned int triggerDeadzone = 30;
 
 static constexpr float maxThumbMagnitude = 32767.0f;

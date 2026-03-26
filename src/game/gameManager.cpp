@@ -12,6 +12,7 @@
 #include <format>
 #include <random>
 #include "core/imguiManager.h"
+#include "game/boat.h"
 
 std::weak_ptr<GameManager> GameManager::instance;
 
@@ -65,6 +66,7 @@ void GameManager::Start() {
 		RenderQueue::ChangeSkybox("bright_asteroid.dds");
 	}
 
+	this->factory->CreateGameObjectOfType<Boat>();
 
 	this->idleTimeTimer = this->startIdleTime;
 

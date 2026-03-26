@@ -18,10 +18,10 @@ public:
 private:
 
 	Vector3D Lerp(const Vector3D& start, const Vector3D& end, float val);
-	Vector3D startPos = Vector3D(200, 200, 0);
+	Vector3D startPos = Vector3D(0, 200, -300);
 	Vector3D endPos = Vector3D(0, 0, 0);
 	float timer = 0.0f;
-	float hitTime = 20.0f;
+	float hitTime = 30.0f;
 
 	void move();
 

@@ -1,5 +1,6 @@
 #include "game/fpvTarget.h"
-
+#include <numbers>
+#include "game/drone.h"
 fpvTarget::fpvTarget() { 
 	
 }
@@ -10,7 +11,7 @@ void fpvTarget::Start() {
 
 	GameObject3D::Start();
 	{
-	
+		this->transform.SetRotationRPY(0, 0.588, 0);
 		auto meshobjweak = this->factory->CreateGameObjectOfType<MeshObject>();
 
 		auto meshobj = meshobjweak.lock();
@@ -49,6 +50,9 @@ void fpvTarget::Tick() { this->move();
 }
 
 void fpvTarget::OnExplode() {
+	std::shared_ptr<FPVDrone> fpv = this->factory->FindObjectOfType<FPVDrone>().lock();
+
+	fpv->transform.SetPosition(50, 10, 50);
 
 	this->factory->QueueDeleteGameObject(this->GetPtr());
 
@@ -61,8 +65,10 @@ void fpvTarget::move() {
 	this->timer += Time::GetInstance().GetDeltaTime();
 
 	if (this->timer > this->hitTime) {
+		
+		
+		
 		this->factory->QueueDeleteGameObject(this->GetPtr());
-
 	}
 
 	this->transform.SetPosition(this->Lerp(this->startPos, this->endPos, this->timer / this->hitTime).getXMVector());
